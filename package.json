@@ -1,0 +1,17 @@
+{
+  "name": "dak",
+  "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "format:check": "pnpm -r format:check",
+    "format": "pnpm -r format",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm --filter family-chores build && pnpm --filter health-tracker build && pnpm --filter notes-app build:web",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
+  }
+}

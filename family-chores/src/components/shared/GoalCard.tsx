@@ -9,7 +9,11 @@ interface GoalCardProps {
   onDecrement: () => void;
 }
 
-export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) {
+export function GoalCard({
+  progress,
+  onIncrement,
+  onDecrement,
+}: GoalCardProps) {
   const { chore, member, target_count, completions_this_period, is_complete } =
     progress;
   const { settings } = useSettingsStore();

@@ -8,7 +8,10 @@ interface SettingsModalProps {
   onShowWalkthrough?: () => void;
 }
 
-export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps) {
+export function SettingsModal({
+  onClose,
+  onShowWalkthrough,
+}: SettingsModalProps) {
   const { settings, setPin, setHidePoints } = useSettingsStore();
   const { ensureTodayInstances } = useInstancesStore();
   const [showPinChange, setShowPinChange] = useState(false);

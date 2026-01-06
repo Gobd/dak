@@ -35,11 +35,41 @@ export function ActionBar({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const allButtons = [
-    { icon: Settings, label: "Settings", onClick: onOpenSettings, pin: true, hideWhenPointsHidden: false },
-    { icon: Users, label: "Family", onClick: onOpenFamily, pin: true, hideWhenPointsHidden: false },
-    { icon: ClipboardList, label: "Chores", onClick: onOpenChores, pin: true, hideWhenPointsHidden: false },
-    { icon: Gift, label: "Redeem", onClick: onOpenRedeem, pin: true, hideWhenPointsHidden: true },
-    { icon: History, label: "History", onClick: onOpenHistory, pin: false, hideWhenPointsHidden: true },
+    {
+      icon: Settings,
+      label: "Settings",
+      onClick: onOpenSettings,
+      pin: true,
+      hideWhenPointsHidden: false,
+    },
+    {
+      icon: Users,
+      label: "Family",
+      onClick: onOpenFamily,
+      pin: true,
+      hideWhenPointsHidden: false,
+    },
+    {
+      icon: ClipboardList,
+      label: "Chores",
+      onClick: onOpenChores,
+      pin: true,
+      hideWhenPointsHidden: false,
+    },
+    {
+      icon: Gift,
+      label: "Redeem",
+      onClick: onOpenRedeem,
+      pin: true,
+      hideWhenPointsHidden: true,
+    },
+    {
+      icon: History,
+      label: "History",
+      onClick: onOpenHistory,
+      pin: false,
+      hideWhenPointsHidden: true,
+    },
   ];
 
   const buttons = hidePoints

@@ -27,8 +27,11 @@ export function TodayView({
   const { instances, loading, completeTask, uncompleteTask } =
     useInstancesStore();
   const { members } = useMembersStore();
-  const { progress: goalProgress, recordCompletion, removeLastCompletion } =
-    useGoalsStore();
+  const {
+    progress: goalProgress,
+    recordCompletion,
+    removeLastCompletion,
+  } = useGoalsStore();
 
   // Group goals by period
   const { dailyGoals, weeklyGoals, monthlyGoals } = useMemo(() => {
@@ -273,7 +276,10 @@ export function TodayView({
                       recordCompletion(progress.chore.id, progress.member.id)
                     }
                     onDecrement={() =>
-                      removeLastCompletion(progress.chore.id, progress.member.id)
+                      removeLastCompletion(
+                        progress.chore.id,
+                        progress.member.id,
+                      )
                     }
                   />
                 ))}
@@ -304,7 +310,10 @@ export function TodayView({
                       recordCompletion(progress.chore.id, progress.member.id)
                     }
                     onDecrement={() =>
-                      removeLastCompletion(progress.chore.id, progress.member.id)
+                      removeLastCompletion(
+                        progress.chore.id,
+                        progress.member.id,
+                      )
                     }
                   />
                 ))}
@@ -335,7 +344,10 @@ export function TodayView({
                       recordCompletion(progress.chore.id, progress.member.id)
                     }
                     onDecrement={() =>
-                      removeLastCompletion(progress.chore.id, progress.member.id)
+                      removeLastCompletion(
+                        progress.chore.id,
+                        progress.member.id,
+                      )
                     }
                   />
                 ))}

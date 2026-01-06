@@ -7,7 +7,13 @@ interface ChoreInput {
   name: string;
   description?: string;
   points: number;
-  schedule_type: "daily" | "every_x_days" | "weekly" | "monthly" | "as_needed" | "goal";
+  schedule_type:
+    | "daily"
+    | "every_x_days"
+    | "weekly"
+    | "monthly"
+    | "as_needed"
+    | "goal";
   interval_days?: number;
   weekly_days?: number[];
   monthly_day?: number;

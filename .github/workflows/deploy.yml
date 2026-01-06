@@ -35,24 +35,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: pnpm
 
-      - name: Install and check family-chores
-        working-directory: family-chores
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint && pnpm typecheck && pnpm format:check && pnpm build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Install and check health-tracker
-        working-directory: health-tracker
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint && pnpm typecheck && pnpm format:check && pnpm build
-
-      - name: Install and check notes-app
-        working-directory: notes-app
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint && pnpm typecheck && pnpm format:check && pnpm build:web
+      - name: Build all apps
+        run: pnpm build
 
       - name: Prepare deployment
         run: |

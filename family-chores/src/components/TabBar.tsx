@@ -7,13 +7,16 @@ interface TabBarProps {
   onViewChange: (view: DashboardView) => void;
 }
 
-const allTabs: { id: DashboardView; label: string; icon: typeof CalendarDays }[] =
-  [
-    { id: "today", label: "Today", icon: CalendarDays },
-    { id: "my-tasks", label: "By Person", icon: User },
-    { id: "weekly", label: "Weekly", icon: Calendar },
-    { id: "leaderboard", label: "Points", icon: Trophy },
-  ];
+const allTabs: {
+  id: DashboardView;
+  label: string;
+  icon: typeof CalendarDays;
+}[] = [
+  { id: "today", label: "Today", icon: CalendarDays },
+  { id: "my-tasks", label: "By Person", icon: User },
+  { id: "weekly", label: "Weekly", icon: Calendar },
+  { id: "leaderboard", label: "Points", icon: Trophy },
+];
 
 export function TabBar({ activeView, onViewChange }: TabBarProps) {
   const { settings } = useSettingsStore();

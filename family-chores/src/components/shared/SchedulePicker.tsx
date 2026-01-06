@@ -173,7 +173,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
       {value.type === "goal" && (
         <div className="space-y-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
           <p className="text-xs text-purple-600 dark:text-purple-400">
-            Set a target to complete this habit a certain number of times within a period.
+            Set a target to complete this habit a certain number of times within
+            a period.
           </p>
 
           {/* Period selector */}
@@ -193,7 +194,10 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                   onClick={() =>
                     onChange({
                       ...value,
-                      goalPeriod: option.value as "daily" | "weekly" | "monthly",
+                      goalPeriod: option.value as
+                        | "daily"
+                        | "weekly"
+                        | "monthly",
                     })
                   }
                   className={`px-3 py-2 rounded-lg text-sm font-medium ${
