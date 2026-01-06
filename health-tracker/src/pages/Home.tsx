@@ -4,6 +4,7 @@ import { usePeopleStore } from "../stores/people-store";
 import { useShotsStore } from "../stores/shots-store";
 import { useMedicineStore } from "../stores/medicine-store";
 import { usePrnStore } from "../stores/prn-store";
+import { PendingInvitesBanner } from "../components/PendingInvitesBanner";
 import {
   format,
   isToday,
@@ -145,6 +146,8 @@ export function Home() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Home</h1>
+
+      <PendingInvitesBanner />
 
       {people.length === 0 ? (
         <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center">

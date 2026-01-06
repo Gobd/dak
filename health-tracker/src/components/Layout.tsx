@@ -6,6 +6,7 @@ import {
   Pill,
   Clock,
   Users,
+  Settings,
   LogOut,
   Moon,
   Sun,
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/medicine", icon: Pill, label: "Courses" },
   { to: "/prn", icon: Clock, label: "As-Needed" },
   { to: "/people", icon: Users, label: "People" },
+  { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
