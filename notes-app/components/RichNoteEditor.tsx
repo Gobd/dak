@@ -213,7 +213,7 @@ const WebRichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>(
         <iframe
           ref={iframeRef}
           id="tiptap-editor-frame"
-          src="/tiptap-editor.html"
+          src="./tiptap-editor.html"
           style={{
             width: '100%',
             height: '100%',
