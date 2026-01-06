@@ -1,0 +1,77 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: false
+        default: 'main'
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check family-chores
+        working-directory: family-chores
+        run: pnpm lint && pnpm typecheck && pnpm format:check && pnpm build
+
+      - name: Check health-tracker
+        working-directory: health-tracker
+        run: pnpm lint && pnpm typecheck && pnpm format:check && pnpm build
+
+      - name: Check notes-app
+        working-directory: notes-app
+        run: pnpm lint && pnpm typecheck && pnpm format:check && pnpm build:web
+
+      - name: Prepare deployment
+        run: |
+          mkdir -p _site
+          cp -r family-chores/dist _site/family-chores
+          cp -r health-tracker/dist _site/health-tracker
+          cp -r notes-app/dist _site/notes-app
+          echo '<html><head><title>DAK Apps</title></head><body><h1>Apps</h1><ul><li><a href="family-chores/">Family Chores</a></li><li><a href="health-tracker/">Health Tracker</a></li><li><a href="notes-app/">Notes App</a></li></ul></body></html>' > _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
