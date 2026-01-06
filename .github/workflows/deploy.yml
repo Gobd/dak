@@ -45,11 +45,9 @@ jobs:
 
       - name: Prepare deployment
         run: |
-          mkdir -p _site
           cp -r family-chores/dist _site/family-chores
           cp -r health-tracker/dist _site/health-tracker
           cp -r notes-app/dist _site/notes-app
-          echo '<html><head><title>DAK Apps</title></head><body><h1>Apps</h1><ul><li><a href="family-chores/">Family Chores</a></li><li><a href="health-tracker/">Health Tracker</a></li><li><a href="notes-app/">Notes App</a></li></ul></body></html>' > _site/index.html
 
       - uses: actions/configure-pages@v5
 
