@@ -84,7 +84,8 @@ export function ChoreEditModal({
         // Multi-daily (only for daily schedule)
         times_per_day: schedule.type === "daily" ? timesPerDay : 1,
         // Goal fields
-        target_count: schedule.type === "goal" ? schedule.targetCount : undefined,
+        target_count:
+          schedule.type === "goal" ? schedule.targetCount : undefined,
         goal_period: schedule.type === "goal" ? schedule.goalPeriod : undefined,
       },
       assigneeIds,

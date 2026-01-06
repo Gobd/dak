@@ -1,7 +1,9 @@
 # Plan: Multi-Daily Chores + Habits/Goals
 
 ## Summary
+
 Two features extending the chores system:
+
 1. **Multi-daily chores**: Tasks done multiple times per day (e.g., brush teeth 2x)
 2. **Habits/Goals**: Counter-based targets over a period (e.g., gym 3x/week)
 
@@ -12,6 +14,7 @@ Two features extending the chores system:
 **Behavior**: Generate N separate checkbox instances per day.
 
 ### Schema Changes
+
 ```sql
 -- Add to chores table
 ALTER TABLE chores ADD COLUMN times_per_day INT NOT NULL DEFAULT 1;
@@ -30,6 +33,7 @@ CREATE UNIQUE INDEX idx_chore_instances_unique ON chore_instances(
 ```
 
 ### Files to Modify
+
 - `sql/schema.sql` - Add columns and update index
 - `src/types.ts` - Add `times_per_day` to Chore, `occurrence_number` to ChoreInstance
 - `src/stores/instances-store.ts` - Loop `times_per_day` times in `ensureTodayInstances()`
@@ -43,6 +47,7 @@ CREATE UNIQUE INDEX idx_chore_instances_unique ON chore_instances(
 **Behavior**: Counter-based progress toward a target. Always per-person, no race mode. Allow over-achievement.
 
 ### Schema Changes
+
 ```sql
 -- Add to chores table (reuse chores table with new schedule type)
 ALTER TABLE chores
@@ -77,6 +82,7 @@ CREATE POLICY "Users can manage own goal_completions"
 ```
 
 ### Files to Modify
+
 - `sql/schema.sql` - Add columns, new table, RLS
 - `src/types.ts` - Add new fields to Chore, new `GoalCompletion` and `GoalProgress` types
 - `src/stores/goals-store.ts` - **NEW** store for goal progress and completions
@@ -107,6 +113,7 @@ THIS MONTH
 ```
 
 ### GoalCard Behavior
+
 - Tap card or + button to increment completion count
 - Shows progress dots: `●●○○○`
 - Shows fraction: `2/5`
@@ -118,6 +125,7 @@ THIS MONTH
 ## Implementation Order
 
 ### Phase 1: Multi-Daily Chores
+
 1. Run schema migration (add columns, update index)
 2. Update `types.ts`
 3. Update `instances-store.ts` - modify `ensureTodayInstances()` loop
@@ -126,6 +134,7 @@ THIS MONTH
 6. Test: Create "Brush teeth" 2x/day, verify 2 separate checkboxes
 
 ### Phase 2: Goals/Habits
+
 1. Run schema migration (add columns, new table)
 2. Update `types.ts` with goal types
 3. Create `goals-store.ts`
@@ -139,14 +148,14 @@ THIS MONTH
 
 ## Key Files
 
-| File | Changes |
-|------|---------|
-| `sql/schema.sql` | Add columns, new table, updated constraints |
-| `src/types.ts` | New fields and types |
-| `src/stores/instances-store.ts` | Multi-daily instance generation |
-| `src/stores/goals-store.ts` | **NEW** - goal progress and completions |
-| `src/components/shared/TaskCard.tsx` | Occurrence label display |
-| `src/components/shared/GoalCard.tsx` | **NEW** - progress dots, increment |
-| `src/components/views/TodayView.tsx` | Period-based sections |
-| `src/components/modals/ChoreEditModal.tsx` | Goal mode UI |
-| `src/Dashboard.tsx` | Store init, sync handling |
+| File                                       | Changes                                     |
+| ------------------------------------------ | ------------------------------------------- |
+| `sql/schema.sql`                           | Add columns, new table, updated constraints |
+| `src/types.ts`                             | New fields and types                        |
+| `src/stores/instances-store.ts`            | Multi-daily instance generation             |
+| `src/stores/goals-store.ts`                | **NEW** - goal progress and completions     |
+| `src/components/shared/TaskCard.tsx`       | Occurrence label display                    |
+| `src/components/shared/GoalCard.tsx`       | **NEW** - progress dots, increment          |
+| `src/components/views/TodayView.tsx`       | Period-based sections                       |
+| `src/components/modals/ChoreEditModal.tsx` | Goal mode UI                                |
+| `src/Dashboard.tsx`                        | Store init, sync handling                   |

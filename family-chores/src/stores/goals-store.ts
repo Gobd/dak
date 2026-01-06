@@ -1,10 +1,5 @@
 import { create } from "zustand";
-import {
-  startOfWeek,
-  startOfMonth,
-  startOfDay,
-  format,
-} from "date-fns";
+import { startOfWeek, startOfMonth, startOfDay, format } from "date-fns";
 import { supabase } from "../lib/supabase";
 import { broadcastSync } from "../lib/realtime";
 import { useChoresStore } from "./chores-store";
@@ -19,9 +14,7 @@ interface GoalsState {
   removeLastCompletion: (choreId: string, memberId: string) => Promise<void>;
 }
 
-function getPeriodStart(
-  period: "daily" | "weekly" | "monthly",
-): string {
+function getPeriodStart(period: "daily" | "weekly" | "monthly"): string {
   const now = new Date();
   if (period === "daily") {
     return format(startOfDay(now), "yyyy-MM-dd");

@@ -11,14 +11,20 @@ export interface Chore {
   name: string;
   description: string | null;
   points: number;
-  schedule_type: "daily" | "every_x_days" | "weekly" | "monthly" | "as_needed" | "goal";
+  schedule_type:
+    | "daily"
+    | "every_x_days"
+    | "weekly"
+    | "monthly"
+    | "as_needed"
+    | "goal";
   interval_days: number | null;
   weekly_days: number[] | null;
   monthly_day: number | null;
   assignment_type: "anyone" | "everyone";
-  times_per_day: number;  // For multi-daily tasks (default 1)
+  times_per_day: number; // For multi-daily tasks (default 1)
   // Goal/habit fields (used when schedule_type = 'goal')
-  target_count: number | null;  // Target completions per period
+  target_count: number | null; // Target completions per period
   goal_period: "daily" | "weekly" | "monthly" | null;
   is_active: boolean;
   created_at: string;
@@ -47,7 +53,7 @@ export interface ChoreInstance {
   completed: boolean;
   completed_at: string | null;
   points_awarded: number | null;
-  occurrence_number: number;  // For multi-daily (1, 2, 3...)
+  occurrence_number: number; // For multi-daily (1, 2, 3...)
   created_at: string;
 }
 
@@ -72,7 +78,7 @@ export interface PointsLedgerEntry {
 export interface AppSettings {
   id: string;
   parent_pin: string | null;
-  hide_points: boolean;  // Hide all points UI
+  hide_points: boolean; // Hide all points UI
   created_at: string;
 }
 
@@ -94,7 +100,7 @@ export interface GoalProgress {
   target_count: number;
   completions_this_period: number;
   period_start: string;
-  is_complete: boolean;  // completions >= target
+  is_complete: boolean; // completions >= target
 }
 
 export type DashboardView = "today" | "my-tasks" | "weekly" | "leaderboard";
