@@ -11,7 +11,6 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "deploy": "pnpm build && wrangler pages deploy dist --project-name=health-tracker --branch=main",
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
@@ -40,13 +39,11 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
-    "vite-plugin-pwa": "^1.2.0",
-    "wrangler": "^4.54.0"
+    "vite-plugin-pwa": "^1.2.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild",
-      "workerd"
+      "esbuild"
     ]
   }
 }

@@ -6,6 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import type { PluginOption } from "vite";
 
 export default defineConfig({
+  base: "/dak/health-tracker/",
   plugins: [
     react(),
     tailwindcss(),

@@ -21,8 +21,6 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "deploy": "wrangler pages deploy dist --project-name notes-app",
-    "deploy:prod": "wrangler pages deploy dist --project-name notes-app --branch main",
     "prebuild:android": "NODE_ENV=production pnpm build:editor",
     "build:android": "eas build --platform android --profile preview",
     "prebuild:ios": "NODE_ENV=production pnpm build:editor",
@@ -98,8 +96,7 @@
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "vitest": "^4.0.16",
-    "wrangler": "^4.23.0"
+    "vitest": "^4.0.16"
   },
   "private": true
 }

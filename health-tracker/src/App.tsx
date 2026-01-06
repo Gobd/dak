@@ -2,6 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/auth-store";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
+import { SignUp } from "./pages/SignUp";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 import { Home } from "./pages/Home";
 import { Shots } from "./pages/Shots";
 import { Courses } from "./pages/Courses";
@@ -41,6 +44,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/*"
         element={

@@ -56,7 +56,8 @@
     },
     "plugins": ["expo-router", "expo-secure-store"],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/dak/notes-app"
     },
     "extra": {
       "router": {},

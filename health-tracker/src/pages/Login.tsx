@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { Moon, Sun } from "lucide-react";
@@ -76,6 +76,20 @@ export function Login() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+          <div className="flex justify-between text-sm">
+            <Link
+              to="/signup"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Create Account
+            </Link>
+            <Link
+              to="/forgot-password"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
       </div>
     </div>
