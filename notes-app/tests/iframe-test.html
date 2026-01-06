@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Iframe Keyboard Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h2 { margin-top: 30px; }
+    iframe { width: 100%; height: 200px; border: 2px solid #ccc; }
+    .test-section { margin-bottom: 40px; }
+    .hidden-input-container {
+      position: relative;
+    }
+    .hidden-textarea {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Iframe Keyboard Test</h1>
+  <p>Tap/click in each editor to test if the keyboard appears. Check the log at bottom.</p>
+
+  <div class="test-section">
+    <h2>1. Regular Input (should work)</h2>
+    <input type="text" id="test1" placeholder="Tap here - keyboard should appear" style="width: 100%; padding: 10px; font-size: 16px;">
+  </div>
+
+  <div class="test-section">
+    <h2>2. Contenteditable (should work)</h2>
+    <div contenteditable="true" role="textbox" id="test2" style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ccc; font-size: 16px;">
+      Tap here to edit...
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Iframe with src (likely won't work)</h2>
+    <iframe id="iframe3" src="data:text/html,
+      <html><body>
+        <div contenteditable='true' role='textbox' id='editor'
+             style='padding:10px;min-height:100px;border:1px solid %23ccc;'>
+          Tap here in iframe with src...
+        </div>
+        <script>
+          const editor = document.getElementById('editor');
+          editor.addEventListener('focus', () => {
+            console.log('[iframe3] focus event');
+            window.parent.postMessage({type:'focus', source:'iframe3'}, '*');
+          });
+          editor.addEventListener('click', () => {
+            console.log('[iframe3] click event');
+            window.parent.postMessage({type:'click', source:'iframe3'}, '*');
+          });
+          editor.addEventListener('touchend', () => {
+            console.log('[iframe3] touchend event');
+            window.parent.postMessage({type:'touchend', source:'iframe3'}, '*');
+          });
+        </script>
+      </body></html>
+    "></iframe>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Iframe with srcdoc (same origin)</h2>
+    <iframe id="iframe4" srcdoc="
+      <html><body>
+        <div contenteditable='true' role='textbox' id='editor'
+             style='padding:10px;min-height:100px;border:1px solid #ccc;'>
+          Tap here in iframe with srcdoc...
+        </div>
+        <script>
+          const editor = document.getElementById('editor');
+          editor.addEventListener('focus', () => {
+            console.log('[iframe4] focus event');
+            window.parent.postMessage({type:'focus', source:'iframe4'}, '*');
+          });
+          editor.addEventListener('click', () => {
+            console.log('[iframe4] click event');
+            window.parent.postMessage({type:'click', source:'iframe4'}, '*');
+          });
+          editor.addEventListener('touchend', () => {
+            console.log('[iframe4] touchend event');
+            window.parent.postMessage({type:'touchend', source:'iframe4'}, '*');
+          });
+        </script>
+      </body></html>
+    "></iframe>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Iframe with Hidden Textarea Workaround (THE FIX)</h2>
+    <p style="color: #666; font-size: 14px;">This uses a hidden textarea outside the iframe that gets focused when you tap the editor. Keystrokes are forwarded to the iframe.</p>
+    <div class="hidden-input-container">
+      <textarea id="hiddenTextarea" class="hidden-textarea" autocapitalize="sentences" autocomplete="off"></textarea>
+      <iframe id="iframe5" srcdoc="
+        <html><body>
+          <div contenteditable='true' role='textbox' id='editor'
+               style='padding:10px;min-height:100px;border:1px solid #ccc; outline: none;'>
+            Tap here - hidden textarea workaround...
+          </div>
+          <script>
+            const editor = document.getElementById('editor');
+
+            // Notify parent when editor is clicked/touched
+            editor.addEventListener('click', () => {
+              window.parent.postMessage({type: 'editorClicked', source:'iframe5'}, '*');
+            });
+            editor.addEventListener('touchend', () => {
+              window.parent.postMessage({type: 'editorClicked', source:'iframe5'}, '*');
+            });
+
+            // Handle forwarded keystrokes from parent
+            window.addEventListener('message', (e) => {
+              const data = e.data;
+              if (data.type === 'keyInput' && data.text) {
+                editor.innerHTML += data.text;
+              } else if (data.type === 'keyDown') {
+                if (data.key === 'Backspace') {
+                  const html = editor.innerHTML;
+                  if (html.endsWith('<br>')) {
+                    editor.innerHTML = html.slice(0, -4);
+                  } else if (html.length > 0) {
+                    editor.innerHTML = html.slice(0, -1);
+                  }
+                } else if (data.key === 'Enter') {
+                  editor.innerHTML += '<br>';
+                }
+              }
+            });
+          </script>
+        </body></html>
+      "></iframe>
+    </div>
+  </div>
+
+  <script>
+    // Listen for editorClicked message from iframe5
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (data && data.type === 'editorClicked' && data.source === 'iframe5') {
+        document.getElementById('hiddenTextarea').focus();
+      }
+    });
+
+    // Hidden textarea - forward keystrokes to iframe5
+    const hiddenTextarea = document.getElementById('hiddenTextarea');
+    const iframe5 = document.getElementById('iframe5');
+
+    // Keep a sentinel character so backspace has something to delete
+    const SENTINEL = '\u200B'; // zero-width space
+    hiddenTextarea.value = SENTINEL;
+
+    hiddenTextarea.addEventListener('focus', () => {
+      // Ensure sentinel is there and cursor is at end
+      if (!hiddenTextarea.value.startsWith(SENTINEL)) {
+        hiddenTextarea.value = SENTINEL + hiddenTextarea.value;
+      }
+      hiddenTextarea.selectionStart = hiddenTextarea.selectionEnd = hiddenTextarea.value.length;
+    });
+
+    hiddenTextarea.addEventListener('input', (e) => {
+      const text = e.target.value;
+
+      // Check if sentinel was deleted (backspace was pressed)
+      if (!text.startsWith(SENTINEL)) {
+        iframe5.contentWindow.postMessage({ type: 'keyDown', key: 'Backspace' }, '*');
+        // Restore sentinel
+        hiddenTextarea.value = SENTINEL;
+        hiddenTextarea.selectionStart = hiddenTextarea.selectionEnd = 1;
+        return;
+      }
+
+      // Get new text after sentinel
+      const newText = text.slice(1); // Remove sentinel
+      if (newText) {
+        // Check for newlines (Enter key)
+        if (newText.includes('\n')) {
+          iframe5.contentWindow.postMessage({ type: 'keyDown', key: 'Enter' }, '*');
+        } else {
+          iframe5.contentWindow.postMessage({ type: 'keyInput', text: newText }, '*');
+        }
+        // Reset to just sentinel
+        hiddenTextarea.value = SENTINEL;
+        hiddenTextarea.selectionStart = hiddenTextarea.selectionEnd = 1;
+      }
+    });
+
+  </script>
+</body>
+</html>
