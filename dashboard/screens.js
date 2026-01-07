@@ -1,6 +1,7 @@
 export default {
   config: {
     navPosition: 'bottom-right', // bottom-right, bottom-left, top-right, top-left
+    navButtons: 'both', // 'both', 'next', 'prev', 'none' (swipe only)
     navColor: 'rgba(255, 255, 255, 0.6)', // button text/arrow color
     navBackground: 'rgba(255, 255, 255, 0.1)', // button background
   },

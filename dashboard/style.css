@@ -42,10 +42,17 @@ body {
   border: none;
 }
 
-#nav-btn {
+#nav-buttons {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+}
+
+#nav-prev,
+#nav-next {
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -55,13 +62,294 @@ body {
   font-size: 24px;
   cursor: pointer;
   transition: background 0.2s;
-  z-index: 1000;
 }
 
-#nav-btn:hover {
+#nav-prev:hover,
+#nav-next:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-#nav-btn:active {
+#nav-prev:active,
+#nav-next:active {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Edit button - hidden in kiosk mode */
+#edit-btn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(100, 150, 255, 0.3);
+  border: 1px solid rgba(100, 150, 255, 0.5);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 1000;
+}
+
+#edit-btn:hover {
+  background: rgba(100, 150, 255, 0.5);
+}
+
+body.edit-mode #edit-btn {
+  display: block;
+}
+
+/* Edit Mode */
+#edit-toolbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: rgba(30, 30, 30, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+body.edit-mode #edit-toolbar {
+  display: flex;
+}
+
+body.edit-mode #screens {
+  top: 48px;
+  height: calc(100% - 48px);
+}
+
+#edit-toolbar button {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#edit-toolbar button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#exit-edit-btn {
+  background: rgba(200, 50, 50, 0.3);
+}
+
+#exit-edit-btn:hover {
+  background: rgba(200, 50, 50, 0.5);
+}
+
+/* Edit mode panel styles */
+body.edit-mode .panel {
+  border: 2px dashed rgba(100, 150, 255, 0.5);
+  cursor: move;
+}
+
+body.edit-mode .panel:hover {
+  border-color: rgba(100, 150, 255, 0.8);
+}
+
+body.edit-mode .panel iframe {
+  pointer-events: none;
+}
+
+/* Resize handles */
+.resize-handle {
+  display: none;
+  position: absolute;
+  background: rgba(100, 150, 255, 0.8);
+  z-index: 10;
+}
+
+body.edit-mode .resize-handle {
+  display: block;
+}
+
+.resize-handle.corner {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 2px solid #fff;
+}
+
+.resize-handle.edge {
+  background: rgba(100, 150, 255, 0.6);
+}
+
+.resize-handle.nw { top: -8px; left: -8px; cursor: nw-resize; }
+.resize-handle.ne { top: -8px; right: -8px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -8px; left: -8px; cursor: sw-resize; }
+.resize-handle.se { bottom: -8px; right: -8px; cursor: se-resize; }
+
+.resize-handle.n { top: -6px; left: 24px; right: 24px; height: 12px; cursor: n-resize; }
+.resize-handle.s { bottom: -6px; left: 24px; right: 24px; height: 12px; cursor: s-resize; }
+.resize-handle.w { left: -6px; top: 24px; bottom: 24px; width: 12px; cursor: w-resize; }
+.resize-handle.e { right: -6px; top: 24px; bottom: 24px; width: 12px; cursor: e-resize; }
+
+/* Position tooltip */
+.position-tooltip {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: monospace;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 20;
+  display: none;
+}
+
+body.edit-mode .panel:hover .position-tooltip,
+body.edit-mode .panel.dragging .position-tooltip,
+body.edit-mode .panel.resizing .position-tooltip {
+  display: block;
+}
+
+/* Settings Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal-content {
+  background: #222;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 400px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin: 0 0 16px 0;
+  color: #fff;
+  font-size: 18px;
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 16px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.modal-content input[type="text"],
+.modal-content select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.modal-content input[type="text"]:focus,
+.modal-content select:focus {
+  outline: none;
+  border-color: #6af;
+}
+
+#args-container {
+  margin-bottom: 16px;
+}
+
+#args-list {
+  margin: 8px 0;
+}
+
+.arg-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.arg-row input {
+  flex: 1;
+  padding: 6px 10px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.arg-row button {
+  padding: 6px 10px;
+  background: rgba(200, 50, 50, 0.3);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+#add-arg-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #333;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.modal-actions button.primary {
+  background: #4a9eff;
+  color: #fff;
+}
+
+.modal-actions button.danger {
+  background: rgba(200, 50, 50, 0.5);
+  color: #fff;
+  margin-right: auto;
+}
+
+.modal-actions button:not(.primary):not(.danger) {
+  background: #444;
+  color: #fff;
 }
