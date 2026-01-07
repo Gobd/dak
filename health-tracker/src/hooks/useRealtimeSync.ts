@@ -4,6 +4,7 @@ import { useShotsStore } from "../stores/shots-store";
 import { useMedicineStore } from "../stores/medicine-store";
 import { usePrnStore } from "../stores/prn-store";
 import { usePeopleStore } from "../stores/people-store";
+import { useSharingStore } from "../stores/sharing-store";
 
 /**
  * Hook to sync data across devices using Supabase Realtime broadcast
@@ -16,6 +17,7 @@ export function useRealtimeSync(userId: string | undefined) {
   const fetchCourses = useMedicineStore((s) => s.fetchCourses);
   const fetchMeds = usePrnStore((s) => s.fetchMeds);
   const fetchPeople = usePeopleStore((s) => s.fetchPeople);
+  const fetchSharing = useSharingStore((s) => s.fetchAll);
 
   useEffect(() => {
     if (!userId) return;
@@ -38,6 +40,14 @@ export function useRealtimeSync(userId: string | undefined) {
           fetchCourses();
           fetchMeds();
           break;
+        case "sharing":
+          fetchSharing();
+          // Sharing changes may affect accessible people
+          fetchPeople();
+          fetchSchedules();
+          fetchCourses();
+          fetchMeds();
+          break;
       }
     });
 
@@ -48,6 +58,7 @@ export function useRealtimeSync(userId: string | undefined) {
         fetchCourses();
         fetchMeds();
         fetchPeople();
+        fetchSharing();
       }
     };
 
@@ -57,5 +68,12 @@ export function useRealtimeSync(userId: string | undefined) {
       unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [userId, fetchSchedules, fetchCourses, fetchMeds, fetchPeople]);
+  }, [
+    userId,
+    fetchSchedules,
+    fetchCourses,
+    fetchMeds,
+    fetchPeople,
+    fetchSharing,
+  ]);
 }

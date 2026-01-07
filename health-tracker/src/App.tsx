@@ -10,6 +10,7 @@ import { Shots } from "./pages/Shots";
 import { Courses } from "./pages/Courses";
 import { AsNeeded } from "./pages/AsNeeded";
 import { People } from "./pages/People";
+import { Settings } from "./pages/Settings";
 import { useEffect } from "react";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
@@ -58,6 +59,7 @@ export default function App() {
                 <Route path="/medicine" element={<Courses />} />
                 <Route path="/prn" element={<AsNeeded />} />
                 <Route path="/people" element={<People />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
