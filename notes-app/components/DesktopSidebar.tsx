@@ -55,7 +55,7 @@ export function DesktopSidebar({
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingHorizontal: 16,
-          paddingVertical: 12,
+          paddingVertical: 9,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         }}

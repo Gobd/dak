@@ -140,9 +140,17 @@ export function NoteListItem({
           marginBottom: 4,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            flex: 1,
+            minWidth: 0,
+            marginRight: 8,
+          }}
+        >
           {selectionMode && canSelect && (
-            <View style={{ marginRight: 8 }}>
+            <View style={{ marginRight: 8, flexShrink: 0 }}>
               {isChecked ? (
                 <SquareCheck size={18} color={colors.primary} />
               ) : (
@@ -150,25 +158,37 @@ export function NoteListItem({
               )}
             </View>
           )}
-          {note.pinned && <Pin size={12} color={colors.primary} style={{ marginRight: 4 }} />}
+          {note.pinned && (
+            <Pin size={12} color={colors.primary} style={{ marginRight: 4, flexShrink: 0 }} />
+          )}
           {isSharedWithMe ? (
             // Note shared with me - show person icon
-            <CircleUser size={12} color={colors.info || '#3b82f6'} style={{ marginRight: 4 }} />
+            <CircleUser
+              size={12}
+              color={colors.info || '#3b82f6'}
+              style={{ marginRight: 4, flexShrink: 0 }}
+            />
           ) : note.is_private ? (
             // My private note
-            <Lock size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
+            <Lock size={12} color={colors.textMuted} style={{ marginRight: 4, flexShrink: 0 }} />
           ) : (
             // My shared note
-            <Users size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
+            <Users size={12} color={colors.textMuted} style={{ marginRight: 4, flexShrink: 0 }} />
           )}
           <HighlightedText
             text={title}
             query={query}
-            baseStyle={{ color: colors.text, fontWeight: '500', fontSize: 16, flex: 1 }}
+            baseStyle={{
+              color: colors.text,
+              fontWeight: '500',
+              fontSize: 16,
+              flex: 1,
+              minWidth: 0,
+            }}
             highlightColor={colors.searchHighlight || '#fef08a'}
           />
         </View>
-        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+        <Text style={{ color: colors.textMuted, fontSize: 12, flexShrink: 0 }}>
           {formatRelativeTime(note.updated_at)}
         </Text>
       </View>

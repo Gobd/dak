@@ -588,7 +588,7 @@ export default function HomeScreen() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingHorizontal: 16,
-                paddingVertical: 12,
+                paddingVertical: 7,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
                 backgroundColor: colors.bgSecondary,
@@ -641,7 +641,7 @@ export default function HomeScreen() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingHorizontal: 16,
-                paddingVertical: 12,
+                paddingVertical: 7,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
                 zIndex: 10,
@@ -678,7 +678,10 @@ export default function HomeScreen() {
                   <ChevronDown size={16} color={colors.textMuted} />
                 </Pressable>
               )}
-              <Pressable onPress={enterSelectionMode} style={{ padding: 6, marginRight: 4 }}>
+              <Pressable
+                onPress={enterSelectionMode}
+                style={{ padding: 6, marginRight: 4, flexShrink: 0 }}
+              >
                 <SquareCheck size={18} color={colors.iconMuted} />
               </Pressable>
               <View style={{ position: 'relative', zIndex: 10 }}>
