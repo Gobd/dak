@@ -87,21 +87,56 @@ export interface Subscription {
 
 ### Phase 3: Gate Realtime
 
+**Key principle**: Realtime follows the **data owner's** subscription, not the viewer's.
+
+| Viewer | Viewing... | Gets realtime if... |
+|--------|------------|---------------------|
+| Owner | Own kids | Owner is paid |
+| Caregiver | Owner's kids | **Owner** is paid |
+| Caregiver | Their own data | **Caregiver** is paid |
+| Co-owner | Shared person | **Original owner** is paid |
+
+This means:
+- Caregivers get live updates for kids they're watching (owner pays for this)
+- Caregivers' own data is still free tier unless they pay themselves
+
 **File: `src/hooks/useRealtimeSync.ts`**
 
-Add early return for free tier:
+Query which people the user can subscribe to realtime for (based on data owner's subscription):
 ```typescript
-import { useSubscriptionStore } from "../stores/subscription-store";
+import { supabase } from "../lib/supabase";
 
 export function useRealtimeSync(userId: string | undefined) {
-  const isPaid = useSubscriptionStore((s) => s.isPaid());
+  const [realtimePersonIds, setRealtimePersonIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // Free users don't get realtime - they refresh manually
-    if (!userId || !isPaid) return;
+    if (!userId) return;
 
-    // ... existing subscription code
-  }, [userId, isPaid]);
+    // Fetch person IDs where data owner is paid (includes own data if user is paid)
+    const fetchRealtimeAccess = async () => {
+      const { data } = await supabase.rpc('ht_realtime_person_ids');
+      setRealtimePersonIds(data || []);
+    };
+    fetchRealtimeAccess();
+  }, [userId]);
+
+  useEffect(() => {
+    // Only subscribe to realtime for people whose owners are paid
+    if (!userId || realtimePersonIds.length === 0) return;
+
+    const channel = supabase
+      .channel('realtime-sync')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'medications',
+        filter: `person_id=in.(${realtimePersonIds.join(',')})`,
+      }, handleChange)
+      // ... other tables
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, realtimePersonIds]);
 }
 ```
 
@@ -177,18 +212,43 @@ useEffect(() => {
 
 Paid features must be enforced at the database level, not just UI.
 
-**Helper function to check tier:**
+**Helper function to check if a specific user is paid:**
 ```sql
-CREATE OR REPLACE FUNCTION ht_user_is_paid()
+CREATE OR REPLACE FUNCTION ht_user_is_paid(check_user_id UUID DEFAULT auth.uid())
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM ht_subscriptions
-    WHERE user_id = auth.uid()
+    WHERE user_id = check_user_id
     AND tier = 'paid'
     AND (current_period_end IS NULL OR current_period_end > NOW())
   );
 $$ LANGUAGE SQL SECURITY DEFINER STABLE;
 ```
+
+**Helper function to get person IDs eligible for realtime (owner is paid):**
+```sql
+-- Returns person IDs where the DATA OWNER is paid
+-- Used by frontend to know which people to subscribe to realtime for
+CREATE OR REPLACE FUNCTION ht_realtime_person_ids()
+RETURNS SETOF UUID AS $$
+  -- Own people (if current user is paid)
+  SELECT p.id FROM people p
+  WHERE p.user_id = auth.uid()
+  AND ht_user_is_paid(auth.uid())
+
+  UNION
+
+  -- Shared people (co-owner or caregiver) where OWNER is paid
+  SELECT sa.person_id FROM ht_sharing_access sa
+  JOIN people p ON p.id = sa.person_id
+  WHERE sa.member_id = auth.uid()
+  AND ht_user_is_paid(p.user_id)  -- Check if data OWNER is paid
+$$ LANGUAGE SQL SECURITY DEFINER STABLE;
+```
+
+**Note**: Realtime follows the data owner's subscription:
+- Caregiver viewing owner's kids → owner must be paid for realtime
+- Caregiver viewing their own data → caregiver must be paid for realtime
 
 **RLS policy for caregiver invites:**
 ```sql
@@ -388,6 +448,73 @@ const session = await stripe.billingPortal.sessions.create({
 3. Deploy `stripe-webhook` edge function
 4. Add webhook endpoint in Stripe dashboard pointing to edge function URL
 5. Add Stripe keys to Supabase secrets
+
+---
+
+## Sharing Scenarios
+
+### Scenario 1: Owner invites caregiver
+
+```
+Owner (paid) --[caregiver]--> Caregiver (free)
+     |
+   [kids]
+```
+
+| Question | Answer |
+|----------|--------|
+| Caregiver sees owner's kids? | Yes |
+| Caregiver gets realtime for kids? | **Yes** (owner is paid) |
+| Caregiver gets realtime for own data? | No (caregiver is free) |
+
+**Key**: Caregiver benefits from owner's subscription for the shared kids.
+
+---
+
+### Scenario 2: Caregiver adds co-owner (e.g., husband)
+
+```
+Owner (paid) --[caregiver]--> Caregiver (free) --[co-owner]--> Husband
+     |                              |
+   [kids]                     [caregiver's data]
+```
+
+| Question | Answer |
+|----------|--------|
+| Husband sees owner's kids? | **No** (sharing doesn't cascade) |
+| Husband sees caregiver's data? | Yes |
+| Husband gets realtime for caregiver's data? | No (caregiver is free) |
+
+**Key**: Co-owner only gets access to what the person **owns**, not what they can **view**. Sharing doesn't cascade.
+
+---
+
+### Scenario 3: Caregiver shares account credentials with husband
+
+```
+Owner (paid) --[caregiver]--> Caregiver (free) <-- Husband (same login)
+     |                              |
+   [kids]                     [caregiver's data]
+```
+
+| Question | Answer |
+|----------|--------|
+| Husband sees owner's kids? | Yes (same account as caregiver) |
+| Husband gets realtime for kids? | Yes (owner is paid) |
+| Husband sees caregiver's data? | Yes (same account) |
+| Husband gets realtime for caregiver's data? | No (caregiver is free) |
+
+**Key**: Account credential sharing gives full access. System can't distinguish users sharing a login. This is the caregiver's responsibility.
+
+---
+
+### Summary: Realtime follows the data owner
+
+| Data being viewed | Realtime requires |
+|-------------------|-------------------|
+| Your own kids | You are paid |
+| Someone else's kids (as caregiver) | **They** are paid |
+| Your own medications | You are paid |
 
 ---
 
