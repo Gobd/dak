@@ -1,85 +1,134 @@
-# Delete Confirmation Modal Implementation Plan
+# Delete & Bulk Delete Implementation Plan
 
 ## Problem
 When deleting a note, it immediately moves to the next note with no feedback, leaving users confused about what happened.
 
 ## Solution
-Add a confirmation dialog when trashing notes with an option to skip confirmation for bulk operations.
+1. Single delete always returns to list view (with confirmation)
+2. Add explicit bulk delete UI with checkboxes in both Notes list and Trash list
 
-## Design
+---
 
-### Confirmation Dialog Behavior
-When user clicks delete/trash on a note:
-1. Show modal: "Delete this note?"
-2. Two buttons:
-   - **Cancel** - dismiss, no action
-   - **Delete** - trash note
-3. Checkbox: **"Don't ask again"**
-   - When checked, subsequent deletes skip the modal for 30 seconds
-   - Timer resets with each delete
-   - After 30 seconds of inactivity, confirmation re-enables
+## Part 1: Single Delete Behavior
 
-### Navigation After Delete
-- **Regular delete (with confirmation shown)**: Return to list view after delete
-- **Bulk delete mode (confirmation skipped)**: Move to next note, stay in editor view
-- **If no next note exists**: Always return to list view
+### Notes View
+- Delete note → show confirmation → trash note → return to list view
 
-### UI Mockup
+### Trash View
+- Delete note → show confirmation → permanently delete → stay in trash list
+
+Both show confirmation dialog before any delete action.
+
+---
+
+## Part 2: Bulk Delete UI
+
+### Design
+Both Notes list and Trash list get:
+- "Select" button in header to enter selection mode
+- Checkbox on each note row (only visible in selection mode)
+- "Select All" checkbox in header (selection mode)
+- Action bar with count + delete button (selection mode)
+- "✕" cancel button to exit selection mode
+
+### UI Mockup - Normal Mode
 ```
 ┌─────────────────────────────────────┐
-│          Delete this note?          │
+│ All Notes              [+] [Select] │
+├─────────────────────────────────────┤
+│ Note title one...                   │
+│ Note title two...                   │
+│ Note title three...                 │
+└─────────────────────────────────────┘
+```
+
+### UI Mockup - Selection Mode
+```
+┌─────────────────────────────────────┐
+│ ☐ All    2 selected   [Delete] [✕] │
+├─────────────────────────────────────┤
+│ ☑ Note title one...                 │
+│ ☐ Note title two...                 │
+│ ☑ Note title three...               │
+└─────────────────────────────────────┘
+```
+
+- Tap "Select" → enters selection mode, checkboxes appear
+- Tap "✕" or complete bulk action → exits selection mode, checkboxes hide
+
+### Bulk Delete Confirmation - Notes
+```
+┌─────────────────────────────────────┐
+│      Delete 3 notes?                │
 │                                     │
-│  "Note title preview here..."       │
-│                                     │
-│  ☐ Don't ask again                  │
+│  This will move 3 notes to trash.   │
 │                                     │
 │     [Cancel]         [Delete]       │
 └─────────────────────────────────────┘
 ```
 
+### Bulk Delete Confirmation - Trash
+```
+┌─────────────────────────────────────┐
+│  Permanently delete 3 notes?        │
+│                                     │
+│  This action cannot be undone.      │
+│                                     │
+│     [Cancel]         [Delete]       │
+└─────────────────────────────────────┘
+```
+
+---
+
 ## Implementation Steps
 
-### 1. Extend `ConfirmDialog` component
-- Add optional `children?: React.ReactNode` prop
-- Render children between message and buttons
-- No changes to existing usage in trash.tsx (children is optional)
+### 1. Update single delete to return to list
+- Modify `handleTrashNote` in `app/(main)/index.tsx`:
+  - After trash, call `setCurrentNote(null)`
+  - On mobile, also `setShowSidebar(true)`
+- Same pattern for trash view permanent delete
 
-### 2. Add state to `notes-store.ts`
-- Add `skipDeleteConfirmation: boolean` to store state
-- Add `skipDeleteConfirmationTimeout: NodeJS.Timeout | null` for the timer
-- Add `setSkipDeleteConfirmation(skip: boolean)` action that:
-  - Sets the flag
-  - Clears any existing timeout
-  - If enabling, starts a 30-second timeout to auto-disable
-- Add `resetSkipDeleteConfirmationTimer()` to reset the 30s timer on each delete
+### 2. Add selection state
+- Add to component state (not store - selection is ephemeral):
+  - `selectedNoteIds: Set<string>`
+  - `isSelectionMode: boolean`
+- "Select" button in header toggles `isSelectionMode`
+- "✕" button or completing action exits selection mode
 
-### 3. Update `app/(main)/index.tsx`
-- Add state for delete confirmation dialog visibility
-- Add state for note pending deletion
-- Add local state for checkbox in dialog
-- Modify `handleTrashNote` to check `skipDeleteConfirmation`:
-  - If true (bulk mode): proceed directly, reset the 30s timer, move to next note
-  - If false: show confirmation dialog, set pending note
-- Add `handleConfirmTrash()` that:
-  - Checks checkbox state, calls `setSkipDeleteConfirmation` if checked
-  - Performs the trash operation
-  - Navigates based on mode:
-    - Regular delete (confirmation shown): go back to list view
-    - Bulk mode (confirmation skipped): move to next note
-    - No next note: always go back to list view
-  - Clears dialog state
+### 3. Update NotesList component
+- Add `selectionMode` prop (boolean)
+- Add `selectedIds` prop (Set<string>)
+- Add `onToggleSelect` prop (id: string) => void
+- Show checkbox on each row only when `selectionMode` is true
 
-### 4. Add ConfirmDialog to index.tsx
-- Reuse existing `ConfirmDialog` component from `/components/ui/confirm-dialog.tsx`
-- Add checkbox for "don't ask again" option
-- Wire up confirm/cancel handlers
+### 4. Update header in selection mode
+- Replace normal header with selection header when `isSelectionMode`
+- Show: "☐ All" checkbox | "X selected" count | [Delete] button | [✕] cancel
+- "☐ All" toggles select all / deselect all
+
+### 5. Add bulk trash action
+- `bulkTrashNotes(ids: string[], userId: string)` in notes-store
+- Show confirmation with count
+- After bulk trash, clear selection, exit selection mode
+
+### 6. Update Trash view
+- Same selection mode UI as Notes list
+- "Select" button to enter selection mode
+- Bulk permanent delete action with confirmation
+- "Delete All" button (selects all + confirms permanent delete)
+
+---
 
 ## Files to Modify
-- `/components/ui/confirm-dialog.tsx` - add optional `children` prop for custom content (checkbox)
-- `/stores/notes-store.ts` - add skip confirmation state with timeout logic
-- `/app/(main)/index.tsx` - add dialog and modified trash flow
+- `/app/(main)/index.tsx` - single delete returns to list, add selection state, bulk trash
+- `/app/trash.tsx` - single delete with confirmation, add selection state, bulk permanent delete
+- `/components/NotesList.tsx` - add checkbox selection UI, select all
+- `/stores/notes-store.ts` - add `bulkTrashNotes` and `bulkDeletePermanently` actions
+- `/components/ui/confirm-dialog.tsx` - no changes needed (already supports dynamic message)
+
+---
 
 ## Notes
-- Reuses existing `ConfirmDialog` component (already used in trash.tsx)
-- 30-second timeout prevents accidental deletes if you forget bulk mode is on
-- Timer resets with each delete, so rapid bulk deletes work smoothly
+- Selection state is local (not persisted) - clears on navigation
+- Long-press to enter selection mode (mobile), or header toggle (desktop)
+- Confirmation always shown for delete operations
