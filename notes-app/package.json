@@ -45,7 +45,7 @@
     "@tiptap/markdown": "^3.14.0",
     "@tiptap/react": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
-    "expo": "~54.0.30",
+    "expo": "~54.0.31",
     "expo-clipboard": "^8.0.8",
     "expo-constants": "~18.0.12",
     "expo-crypto": "^15.0.8",
