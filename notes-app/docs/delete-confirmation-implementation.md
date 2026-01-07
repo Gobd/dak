@@ -13,11 +13,16 @@ When user clicks delete/trash on a note:
 1. Show modal: "Delete this note?"
 2. Two buttons:
    - **Cancel** - dismiss, no action
-   - **Delete** - trash note, move to next note
+   - **Delete** - trash note
 3. Checkbox: **"Don't ask again"**
    - When checked, subsequent deletes skip the modal for 30 seconds
    - Timer resets with each delete
    - After 30 seconds of inactivity, confirmation re-enables
+
+### Navigation After Delete
+- **Regular delete (with confirmation shown)**: Return to list view after delete
+- **Bulk delete mode (confirmation skipped)**: Move to next note, stay in editor view
+- **If no next note exists**: Always return to list view
 
 ### UI Mockup
 ```
@@ -53,11 +58,15 @@ When user clicks delete/trash on a note:
 - Add state for note pending deletion
 - Add local state for checkbox in dialog
 - Modify `handleTrashNote` to check `skipDeleteConfirmation`:
-  - If true: proceed directly, reset the 30s timer
+  - If true (bulk mode): proceed directly, reset the 30s timer, move to next note
   - If false: show confirmation dialog, set pending note
 - Add `handleConfirmTrash()` that:
   - Checks checkbox state, calls `setSkipDeleteConfirmation` if checked
   - Performs the trash operation
+  - Navigates based on mode:
+    - Regular delete (confirmation shown): go back to list view
+    - Bulk mode (confirmation skipped): move to next note
+    - No next note: always go back to list view
   - Clears dialog state
 
 ### 4. Add ConfirmDialog to index.tsx
