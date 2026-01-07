@@ -15,10 +15,16 @@
   <div id="container">
     <div id="loading">Loading forecast...</div>
   </div>
-  <iframe id="source" src="https://forecast.weather.gov/MapClick.php?lat=34.70083&lon=-119.31778"></iframe>
+  <iframe id="source"></iframe>
   <script>
     const iframe = document.getElementById('source');
     const loading = document.getElementById('loading');
+
+    // Get lat/lon from URL args, with defaults
+    const params = new URLSearchParams(window.location.search);
+    const lat = params.get('lat') || '34.70083';
+    const lon = params.get('lon') || '-119.31778';
+    iframe.src = `https://forecast.weather.gov/MapClick.php?lat=${lat}&lon=${lon}`;
 
     iframe.onload = () => {
       try {

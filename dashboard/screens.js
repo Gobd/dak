@@ -18,6 +18,7 @@ export default {
       panels: [
         {
           src: '/widgets/weather.html',
+          args: { lat: '34.70083', lon: '-119.31778' },
           x: '0%',
           y: '0%',
           w: '100%',
@@ -58,6 +59,7 @@ export default {
         // bottom-right 35% - weather widget
         {
           src: '/widgets/weather.html',
+          args: { lat: '34.70083', lon: '-119.31778' },
           x: '50%',
           y: '65%',
           w: '50%',
@@ -96,6 +98,7 @@ export default {
         // bottom-right quarter - weather
         {
           src: '/widgets/weather.html',
+          args: { lat: '34.70083', lon: '-119.31778' },
           x: '50%',
           y: '50%',
           w: '50%',

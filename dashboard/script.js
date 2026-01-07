@@ -73,14 +73,21 @@ function renderScreens() {
       }
 
       const iframe = document.createElement('iframe');
-      iframe.src = panel.src;
+      // Build src with optional args as query params
+      let src = panel.src;
+      if (panel.args && Object.keys(panel.args).length > 0) {
+        const separator = src.includes('?') ? '&' : '?';
+        const params = new URLSearchParams(panel.args).toString();
+        src = src + separator + params;
+      }
+      iframe.src = src;
       iframe.loading = 'lazy';
 
       // Set up refresh interval if specified
       const refreshMs = parseDuration(panel.refresh);
       if (refreshMs) {
         const intervalId = setInterval(() => {
-          iframe.src = panel.src;
+          iframe.src = src;
         }, refreshMs);
         refreshIntervals.push(intervalId);
       }
