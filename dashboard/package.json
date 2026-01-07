@@ -1,0 +1,20 @@
+{
+  "name": "dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "serve -l 8080",
+    "lint": "eslint .",
+    "typecheck": "echo 'No typecheck configured'",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.7.4",
+    "serve": "^14.2.4"
+  }
+}
