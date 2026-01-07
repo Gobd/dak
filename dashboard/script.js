@@ -80,6 +80,11 @@ function init() {
 }
 
 function applyConfig() {
+  // Background color
+  if (config.background) {
+    document.body.style.background = config.background;
+  }
+
   const navButtonsContainer = document.getElementById('nav-buttons');
   const navPrev = document.getElementById('nav-prev');
   const navNext = document.getElementById('nav-next');

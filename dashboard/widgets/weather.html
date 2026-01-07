@@ -5,7 +5,7 @@
   <base href="https://forecast.weather.gov/">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #fff; overflow: hidden; }
+    html, body { width: 100%; height: 100%; background: transparent; overflow: hidden !important; }
     #container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
     #loading { color: #666; font-family: sans-serif; }
     iframe { display: none; width: 100%; height: 100%; border: none; }
@@ -52,6 +52,43 @@
             if (child.id !== 'seven-day-forecast-body') child.remove();
           });
         }
+
+        // Inject CSS to shrink images and overall height
+        const style = doc.createElement('style');
+        style.textContent = `
+          html, body, main, .container, .contentArea, #seven-day-forecast, #seven-day-forecast-body {
+            overflow: hidden !important;
+            background: transparent !important;
+            min-height: 100% !important;
+          }
+          #seven-day-forecast-body img.forecast-icon {
+            width: 43px !important;
+            height: 43px !important;
+          }
+          #seven-day-forecast-body .tombstone-container {
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 2px !important;
+          }
+          #seven-day-forecast-body .period-name {
+            font-size: 11px !important;
+          }
+          #seven-day-forecast-body .temp {
+            font-size: 12px !important;
+          }
+          #seven-day-forecast-body .short-desc {
+            font-size: 10px !important;
+            height: auto !important;
+            min-height: 0 !important;
+          }
+          #seven-day-forecast-body #seven-day-forecast-list {
+            padding-top: 10px !important;
+          }
+          #seven-day-forecast-body #headline-container {
+            display: none !important;
+          }
+        `;
+        doc.head.appendChild(style);
 
         // Show the cleaned iframe, hide our loading container
         document.getElementById('container').style.display = 'none';
