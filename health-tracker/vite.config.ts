@@ -7,6 +7,10 @@ import type { PluginOption } from "vite";
 
 export default defineConfig({
   base: "/health-tracker/",
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [
     react(),
     tailwindcss(),

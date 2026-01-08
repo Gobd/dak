@@ -5,6 +5,10 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   base: "/family-chores/",
+  server: {
+    port: 5174,
+    strictPort: true,
+  },
   plugins: [
     react(),
     tailwindcss(),

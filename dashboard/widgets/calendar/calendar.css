@@ -27,18 +27,16 @@
   overflow: hidden;
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .calendar-widget {
-    --cal-bg: #000;
-    --cal-surface: #262626;
-    --cal-border: #404040;
-    --cal-text: #f9fafb;
-    --cal-text-muted: #9ca3af;
-    --cal-primary: #525252;
-    --cal-primary-hover: #737373;
-    --cal-danger: #f87171;
-  }
+/* Dark mode - controlled by dashboard config */
+.calendar-widget.dark {
+  --cal-bg: #000;
+  --cal-surface: #262626;
+  --cal-border: #404040;
+  --cal-text: #f9fafb;
+  --cal-text-muted: #d1d5db;
+  --cal-primary: #60a5fa;
+  --cal-primary-hover: #3b82f6;
+  --cal-danger: #f87171;
 }
 
 /* Header */
@@ -442,18 +440,16 @@
   display: flex;
 }
 
-/* Dark mode for modal (must come after base definition) */
-@media (prefers-color-scheme: dark) {
-  .cal-modal {
-    --cal-bg: #000;
-    --cal-surface: #262626;
-    --cal-border: #404040;
-    --cal-text: #f9fafb;
-    --cal-text-muted: #9ca3af;
-    --cal-primary: #525252;
-    --cal-primary-hover: #737373;
-    --cal-danger: #f87171;
-  }
+/* Dark mode for modal - controlled by dashboard config via body class */
+body.dark .cal-modal {
+  --cal-bg: #171717;
+  --cal-surface: #262626;
+  --cal-border: #404040;
+  --cal-text: #f9fafb;
+  --cal-text-muted: #e5e7eb;
+  --cal-primary: #60a5fa;
+  --cal-primary-hover: #3b82f6;
+  --cal-danger: #f87171;
 }
 
 .cal-modal-content {
@@ -491,7 +487,8 @@
 .cal-modal-content input[type='text'],
 .cal-modal-content input[type='date'],
 .cal-modal-content input[type='time'],
-.cal-modal-content select {
+.cal-modal-content select,
+.cal-modal-content textarea {
   display: block;
   width: 100%;
   margin-top: 4px;
@@ -545,10 +542,17 @@
   margin: 0 0 12px 0;
 }
 
+.event-location {
+  color: var(--cal-text-muted);
+  font-size: 13px;
+  margin: 0 0 8px 0;
+}
+
 .event-desc {
   color: var(--cal-text-muted);
   font-size: 13px;
   margin: 0 0 16px 0;
+  white-space: pre-wrap;
 }
 
 .cal-modal-actions {
@@ -609,4 +613,375 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ===================== */
+/* WHEEL PICKER */
+/* ===================== */
+
+.wheel-picker {
+  background: var(--cal-bg);
+  border-radius: 12px;
+  padding: 16px 8px;
+}
+
+.wheel-picker-wheels {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.wheel-container {
+  position: relative;
+  height: 132px;
+  overflow: hidden;
+}
+
+.wheel-month {
+  width: 56px;
+}
+.wheel-day {
+  width: 40px;
+}
+.wheel-year {
+  width: 56px;
+}
+.wheel-hour {
+  width: 48px;
+}
+.wheel-minute {
+  width: 48px;
+}
+
+.wheel-spacer {
+  width: 12px;
+}
+
+.wheel-colon {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--cal-text-muted);
+  padding: 0 2px;
+}
+
+.wheel-gradient-top,
+.wheel-gradient-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 44px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.wheel-gradient-top {
+  top: 0;
+  background: linear-gradient(to bottom, var(--cal-bg), transparent);
+}
+
+.wheel-gradient-bottom {
+  bottom: 0;
+  background: linear-gradient(to top, var(--cal-bg), transparent);
+}
+
+.wheel-selection {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44px;
+  height: 44px;
+  border-top: 1px solid color-mix(in srgb, var(--cal-primary) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--cal-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--cal-primary) 10%, transparent);
+  pointer-events: none;
+}
+
+.wheel-scroll {
+  height: 132px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wheel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--cal-text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.wheel-item.selected {
+  color: var(--cal-primary);
+}
+
+/* AM/PM Toggle */
+.wheel-ampm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.ampm-btn {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--cal-surface);
+  color: var(--cal-text-muted);
+}
+
+.ampm-btn:hover {
+  background: var(--cal-border);
+}
+
+.ampm-btn.active {
+  background: var(--cal-primary);
+  color: #fff;
+}
+
+/* ===================== */
+/* DATE/TIME PICKER (Google style) */
+/* ===================== */
+
+.datetime-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.date-picker-btn {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--cal-surface);
+  border: 1px solid var(--cal-border);
+  border-radius: 6px;
+  color: var(--cal-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.date-picker-btn:hover {
+  border-color: var(--cal-primary);
+}
+
+.time-picker-select {
+  width: auto;
+  min-width: 100px;
+  padding: 10px 12px;
+  background: var(--cal-surface);
+  border: 1px solid var(--cal-border);
+  border-radius: 6px;
+  color: var(--cal-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.time-picker-select:focus {
+  outline: none;
+  border-color: var(--cal-primary);
+}
+
+/* Mini Calendar Popup */
+.mini-cal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+}
+
+.mini-cal-popup {
+  /* Define colors directly since popup is outside calendar widget */
+  --cal-bg: #ffffff;
+  --cal-surface: #f3f4f6;
+  --cal-border: #e5e7eb;
+  --cal-text: #1f2937;
+  --cal-text-muted: #6b7280;
+  --cal-primary: #3b82f6;
+
+  background: var(--cal-bg);
+  border: 1px solid var(--cal-border);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  color: var(--cal-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+body.dark .mini-cal-popup {
+  --cal-bg: #171717;
+  --cal-surface: #262626;
+  --cal-border: #404040;
+  --cal-text: #f9fafb;
+  --cal-text-muted: #e5e7eb;
+  --cal-primary: #60a5fa;
+}
+
+.mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mini-cal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cal-text);
+}
+
+.mini-cal-nav {
+  background: transparent;
+  border: 1px solid var(--cal-border);
+  border-radius: 6px;
+  color: var(--cal-text);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.mini-cal-nav:hover {
+  background: var(--cal-surface);
+}
+
+.mini-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.mini-cal-weekdays div {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cal-text-muted);
+  padding: 4px;
+}
+
+.mini-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.mini-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--cal-text);
+  transition: background 0.15s;
+}
+
+.mini-cal-day:not(.empty):hover {
+  background: var(--cal-surface);
+}
+
+.mini-cal-day.empty {
+  cursor: default;
+}
+
+.mini-cal-day.today {
+  border: 1px solid var(--cal-primary);
+}
+
+.mini-cal-day.selected {
+  background: var(--cal-primary);
+  color: #fff;
+}
+
+/* ===================== */
+/* HYBRID PICKER (calendar date + wheel time) */
+/* ===================== */
+
+.hybrid-datetime-picker {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hybrid-date-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.hybrid-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cal-text);
+  margin-bottom: 4px;
+}
+
+.hybrid-datetime-picker .date-picker-btn {
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+.hybrid-datetime-picker .wheel-picker.time-only {
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.hybrid-datetime-picker .wheel-picker-wheels {
+  justify-content: flex-end;
+}
+
+/* Compact wheels for inline layout */
+.wheel-compact .wheel-item {
+  font-size: 14px;
+}
+
+.hybrid-datetime-picker .wheel-colon {
+  font-size: 16px;
+}
+
+.hybrid-datetime-picker .ampm-btn {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.hybrid-datetime-picker .wheel-picker.time-only {
+  padding: 0;
 }

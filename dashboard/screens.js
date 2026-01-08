@@ -7,6 +7,7 @@
  *
  * CONFIG OPTIONS:
  *   background    - Dashboard background color (default: '#111')
+ *   dark          - Enable dark mode for all panels/widgets (default: true)
  *   navPosition   - Button position: 'bottom-right', 'bottom-left', 'top-right', 'top-left'
  *   navButtons    - Which nav buttons to show:
  *                   'both' = prev + next buttons
@@ -34,7 +35,8 @@
  * URL PARAMS:
  *   ?edit       - Enter edit mode
  *   ?screen=N   - Start on screen N (0-indexed)
- *   ?edit&screen=1 - Both work together
+ *   ?local      - Use localhost URLs for iframes (for development)
+ *   ?edit&screen=1&local - All work together
  *
  * EDIT MODE:
  *   - Drag panels to move (snaps to 5% grid)
@@ -48,6 +50,7 @@
 export default {
   config: {
     background: '#111',
+    dark: true,
     navPosition: 'bottom-right',
     navButtons: 'both',
     navColor: 'rgba(255, 255, 255, 0.6)',

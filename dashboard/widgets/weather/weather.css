@@ -28,17 +28,15 @@
   box-sizing: border-box;
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .weather-widget {
-    --weather-bg: #000;
-    --weather-surface: #262626;
-    --weather-border: #374151;
-    --weather-text: #f9fafb;
-    --weather-text-muted: #9ca3af;
-    --weather-high: #f87171;
-    --weather-low: #60a5fa;
-  }
+/* Dark mode - controlled by dashboard config */
+.weather-widget.dark {
+  --weather-bg: #000;
+  --weather-surface: #262626;
+  --weather-border: #374151;
+  --weather-text: #f9fafb;
+  --weather-text-muted: #9ca3af;
+  --weather-high: #f87171;
+  --weather-low: #60a5fa;
 }
 
 /* Alerts Section */
@@ -189,9 +187,9 @@
   flex-direction: row;
   min-width: unset;
   justify-content: flex-start;
-  padding: 8px 12px;
-  gap: 12px;
-  flex: 0 0 auto;
+  padding: 8px 16px 8px 8px;
+  gap: 8px;
+  flex: 1;
 }
 
 .weather-widget.vertical .period-name {
@@ -419,17 +417,15 @@
   color: var(--weather-text-muted);
 }
 
-/* Dark mode for modal (must come after base .weather-modal definition) */
-@media (prefers-color-scheme: dark) {
-  .weather-modal {
-    --weather-bg: #000;
-    --weather-surface: #262626;
-    --weather-border: #374151;
-    --weather-text: #f9fafb;
-    --weather-text-muted: #9ca3af;
-    --weather-high: #f87171;
-    --weather-low: #60a5fa;
-  }
+/* Dark mode for modal - controlled by dashboard config via body class */
+body.dark .weather-modal {
+  --weather-bg: #000;
+  --weather-surface: #262626;
+  --weather-border: #374151;
+  --weather-text: #f9fafb;
+  --weather-text-muted: #9ca3af;
+  --weather-high: #f87171;
+  --weather-low: #60a5fa;
 }
 
 /* Responsive adjustments */

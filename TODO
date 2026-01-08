@@ -1,0 +1,23 @@
+  1. Already done:
+  - Privacy policy at dak.bkemper.me/dashboard/privacy.html with your contact email
+
+  2. In Google Cloud Console → OAuth consent screen:
+  - App name, logo, support email
+  - App domain: dak.bkemper.me
+  - Privacy policy link: https://dak.bkemper.me/dashboard/privacy.html
+  - Authorized domain: bkemper.me (verify via Search Console if not already)
+  - Scope: https://www.googleapis.com/auth/calendar
+
+  3. For the verification submission:
+  - YouTube video (can be unlisted) - show the app in action: signing in, viewing events, creating/editing events
+  - Written justification - something like:
+
+  "This is a personal kiosk dashboard for displaying and managing Google Calendar events on a wall-mounted display. Users can view their upcoming events, create new events, and edit or delete existing ones directly from the dashboard interface. Full calendar access is required to support event creation and modification."
+
+  4. Submit:
+  - Click "Publish App" then "Prepare for verification"
+  - Fill out the form, attach video link, submit
+
+  Google will review and may ask follow-up questions. Takes 1-4 weeks typically.
+
+  Want help with anything specific - the video script, justification wording, or privacy policy updates?

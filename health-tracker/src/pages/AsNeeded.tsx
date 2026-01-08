@@ -334,25 +334,41 @@ export function AsNeeded() {
                               )}
                               <button
                                 onClick={() => {
-                                  setShowTimeInput(
-                                    showTimeInput === med.id ? null : med.id,
-                                  );
-                                  setCustomTime(null);
+                                  if (showTimeInput === med.id) {
+                                    setShowTimeInput(null);
+                                    setCustomTime(null);
+                                  } else {
+                                    setShowTimeInput(med.id);
+                                    setCustomTime(null);
+                                  }
                                 }}
-                                className="p-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300"
-                                title="Log with custom time"
+                                className={`text-sm px-3 py-1.5 rounded-full ${
+                                  showTimeInput === med.id
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300"
+                                }`}
                               >
-                                <Clock size={16} />
+                                {showTimeInput === med.id
+                                  ? "Custom time"
+                                  : "Now"}
                               </button>
                               <button
-                                onClick={() => giveMed(med.id)}
+                                onClick={() => {
+                                  if (showTimeInput === med.id && customTime) {
+                                    giveMed(med.id, customTime);
+                                  } else {
+                                    giveMed(med.id);
+                                  }
+                                  setShowTimeInput(null);
+                                  setCustomTime(null);
+                                }}
                                 className={`px-4 py-2 rounded-lg font-medium ${
                                   okToGive
                                     ? "bg-green-600 text-white hover:bg-green-700"
                                     : "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50"
                                 }`}
                               >
-                                Give Now
+                                Give
                               </button>
                             </div>
                           </div>
@@ -362,29 +378,6 @@ export function AsNeeded() {
                                 value={customTime}
                                 onChange={handleCustomTimeChange}
                               />
-                              <div className="flex gap-2 mt-3">
-                                <button
-                                  onClick={() => {
-                                    setShowTimeInput(null);
-                                    setCustomTime(null);
-                                  }}
-                                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-600 dark:text-neutral-300"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (customTime) {
-                                      giveMed(med.id, customTime);
-                                      setShowTimeInput(null);
-                                      setCustomTime(null);
-                                    }
-                                  }}
-                                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                                >
-                                  Log at this time
-                                </button>
-                              </div>
                             </div>
                           )}
                         </div>

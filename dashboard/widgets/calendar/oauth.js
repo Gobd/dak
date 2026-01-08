@@ -6,6 +6,61 @@ const STORAGE_KEY = 'google-auth';
 const VERIFIER_KEY = 'google-auth-verifier';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
+// Dev mode detection
+export function isDevMode() {
+  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+}
+
+// Get auth URL for dev mode (implicit flow - no server needed)
+export function getDevAuthUrl() {
+  const redirectUri = window.location.origin + window.location.pathname;
+
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'token', // Implicit flow - token returned directly
+    scope: SCOPES,
+    prompt: 'select_account', // Let user pick account
+  });
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+// Handle implicit flow callback (token in URL hash)
+export function handleDevCallback() {
+  if (!isDevMode()) return null;
+
+  // Check for token in URL hash (implicit flow returns #access_token=xxx&expires_in=3600&...)
+  const hash = window.location.hash.substring(1);
+  if (!hash) return null;
+
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get('access_token');
+  const expiresIn = params.get('expires_in');
+
+  if (!accessToken) return null;
+
+  // Store token
+  const auth = storeAuth(accessToken, Number(expiresIn) || 3600, null);
+
+  // Clear hash from URL
+  history.replaceState(null, '', window.location.pathname);
+
+  return auth;
+}
+
+// Set a dev token manually (call from console or paste UI)
+export function setDevToken(accessToken) {
+  const auth = {
+    accessToken,
+    expiresAt: Date.now() + 3600 * 1000, // 1 hour
+    refreshToken: null,
+    isDev: true,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+  window.location.reload();
+}
+
 const CLIENT_ID = '386481992006-vc0ljc7cj1oefnd47mevvqgfd7d3rp0g.apps.googleusercontent.com';
 const TOKEN_ENDPOINT = '/api/oauth/token';
 
