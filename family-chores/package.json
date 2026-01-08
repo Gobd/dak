@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
     "preview": "vite preview"
   },
   "dependencies": {

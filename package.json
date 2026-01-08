@@ -2,7 +2,7 @@
   "name": "dak",
   "private": true,
   "volta": {
-    "node": "24"
+    "node": "24.12.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -14,7 +14,7 @@
     "format:check": "pnpm -r format:check",
     "format": "pnpm -r format",
     "typecheck": "pnpm -r typecheck",
-    "build": "pnpm --filter family-chores build && pnpm --filter health-tracker build && pnpm --filter notes-app build:web",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
+    "build": "pnpm -r build",
+    "check": "pnpm -r check"
   }
 }

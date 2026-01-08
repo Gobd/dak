@@ -8,7 +8,9 @@
     "lint": "eslint .",
     "typecheck": "echo 'No typecheck configured'",
     "format:check": "prettier --check .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build": "rm -rf dist && mkdir -p dist && cp *.html *.css *.js dist/ && cp -r widgets dist/",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

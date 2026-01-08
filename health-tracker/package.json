@@ -11,6 +11,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "preview": "vite preview",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
