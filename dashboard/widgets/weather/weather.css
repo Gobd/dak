@@ -127,6 +127,15 @@
   background: var(--weather-surface);
   border-radius: 8px;
   gap: 4px;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+
+.weather-period:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
 }
 
 .period-name {
@@ -361,6 +370,55 @@
   background: var(--weather-border);
 }
 
+/* Period modal styles */
+.period-header {
+  background: var(--weather-surface);
+}
+
+.period-modal-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.period-modal-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.period-modal-title h3 {
+  margin: 0;
+}
+
+.period-modal-temp {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.period-modal-temp.high {
+  color: var(--weather-high, #dc2626);
+}
+
+.period-modal-temp.low {
+  color: var(--weather-low, #2563eb);
+}
+
+.period-short-forecast {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.period-detailed-forecast {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.period-wind {
+  font-size: 14px;
+  color: var(--weather-text-muted);
+}
+
 /* Dark mode for modal (must come after base .weather-modal definition) */
 @media (prefers-color-scheme: dark) {
   .weather-modal {
@@ -369,6 +427,8 @@
     --weather-border: #374151;
     --weather-text: #f9fafb;
     --weather-text-muted: #9ca3af;
+    --weather-high: #f87171;
+    --weather-low: #60a5fa;
   }
 }
 
