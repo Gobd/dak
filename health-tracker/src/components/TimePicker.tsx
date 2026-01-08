@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useRef, useEffect, useState, useMemo } from "react";
+import { getDaysInMonth } from "date-fns";
 
 const ITEM_HEIGHT = 44;
 
@@ -88,22 +88,28 @@ function Wheel({ items, value, onChange }: WheelProps) {
 interface TimePickerProps {
   value: Date | null;
   onChange: (date: Date) => void;
-  showYesterday?: boolean;
+  showDatePicker?: boolean;
+  allowFuture?: boolean;
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function TimePicker({
   value,
   onChange,
-  showYesterday = true,
+  showDatePicker = true,
+  allowFuture = false,
 }: TimePickerProps) {
   const now = new Date();
   const baseDate = value || now;
 
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDay = now.getDate();
 
-  const [isYesterday, setIsYesterday] = useState(false);
+  const [year, setYear] = useState(() => baseDate.getFullYear());
+  const [month, setMonth] = useState(() => baseDate.getMonth());
+  const [day, setDay] = useState(() => baseDate.getDate());
   const [hour, setHour] = useState(() => {
     const h = baseDate.getHours();
     return h === 0 ? 12 : h > 12 ? h - 12 : h;
@@ -113,16 +119,75 @@ export function TimePicker({
   });
   const [isPM, setIsPM] = useState(() => baseDate.getHours() >= 12);
 
+  // Available years: past year + current for logging, current + next for future
+  const availableYears = useMemo(() => {
+    if (allowFuture) {
+      return [String(currentYear), String(currentYear + 1)];
+    }
+    return [String(currentYear - 1), String(currentYear)];
+  }, [allowFuture, currentYear]);
+
+  // Calculate days in selected month/year
+  const daysInMonth = useMemo(() => {
+    return getDaysInMonth(new Date(year, month));
+  }, [year, month]);
+
+  // Filter months based on allowFuture and selected year
+  const availableMonths = useMemo(() => {
+    if (allowFuture) {
+      // Future: if current year, only future months; if next year, all months
+      if (year === currentYear) {
+        return MONTHS.slice(currentMonth);
+      }
+      return MONTHS;
+    } else {
+      // Past: if current year, only past months; if last year, all months
+      if (year === currentYear) {
+        return MONTHS.slice(0, currentMonth + 1);
+      }
+      return MONTHS;
+    }
+  }, [allowFuture, year, currentYear, currentMonth]);
+
+  // Clamp month if year changes and month is out of range
+  useEffect(() => {
+    if (!availableMonths.includes(MONTHS[month])) {
+      const newMonthIndex = MONTHS.indexOf(availableMonths[allowFuture ? 0 : availableMonths.length - 1]);
+      setMonth(newMonthIndex);
+    }
+  }, [availableMonths, month, allowFuture]);
+
+  // Filter days based on allowFuture, selected year/month
+  const availableDays = useMemo(() => {
+    const isCurrentYearMonth = year === currentYear && month === currentMonth;
+    let maxDay: number;
+
+    if (allowFuture) {
+      // For future dates, show all days in month
+      maxDay = daysInMonth;
+    } else {
+      // For past dates, limit to today if current year/month
+      maxDay = isCurrentYearMonth ? currentDay : daysInMonth;
+    }
+
+    return Array.from({ length: maxDay }, (_, i) => String(i + 1));
+  }, [allowFuture, year, month, currentYear, currentMonth, currentDay, daysInMonth]);
+
+  // Clamp day if it exceeds available days
+  useEffect(() => {
+    const maxAvailableDay = Number(availableDays[availableDays.length - 1]);
+    if (day > maxAvailableDay) {
+      setDay(maxAvailableDay);
+    }
+  }, [availableDays, day]);
+
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1));
   const minutes = Array.from({ length: 12 }, (_, i) =>
     String(i * 5).padStart(2, "0"),
   );
 
   useEffect(() => {
-    const date = new Date();
-    if (isYesterday) {
-      date.setDate(date.getDate() - 1);
-    }
+    const date = new Date(year, month, day);
 
     let h = hour;
     if (isPM && hour !== 12) h = hour + 12;
@@ -130,37 +195,38 @@ export function TimePicker({
 
     date.setHours(h, minute, 0, 0);
     onChange(date);
-  }, [hour, minute, isPM, isYesterday, onChange]);
+  }, [hour, minute, isPM, month, day, year, onChange]);
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 space-y-4">
-      {showYesterday && (
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={() => setIsYesterday(false)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              !isYesterday
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
-            }`}
-          >
-            Today ({format(today, "MMM d")})
-          </button>
-          <button
-            onClick={() => setIsYesterday(true)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              isYesterday
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
-            }`}
-          >
-            Yesterday ({format(yesterday, "MMM d")})
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-center gap-2">
-        <div className="w-16">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl p-4">
+      <div className="flex items-center justify-center gap-1">
+        {showDatePicker && (
+          <>
+            <div className="w-14">
+              <Wheel
+                items={availableMonths}
+                value={MONTHS[month]}
+                onChange={(v) => setMonth(MONTHS.indexOf(v))}
+              />
+            </div>
+            <div className="w-10">
+              <Wheel
+                items={availableDays}
+                value={String(day)}
+                onChange={(v) => setDay(Number(v))}
+              />
+            </div>
+            <div className="w-14">
+              <Wheel
+                items={availableYears}
+                value={String(year)}
+                onChange={(v) => setYear(Number(v))}
+              />
+            </div>
+            <div className="w-3" />
+          </>
+        )}
+        <div className="w-14">
           <Wheel
             items={hours}
             value={String(hour)}
@@ -168,17 +234,17 @@ export function TimePicker({
           />
         </div>
         <div className="text-2xl font-bold text-gray-400">:</div>
-        <div className="w-16">
+        <div className="w-14">
           <Wheel
             items={minutes}
             value={String(minute).padStart(2, "0")}
             onChange={(v) => setMinute(Number(v))}
           />
         </div>
-        <div className="flex flex-col gap-1 ml-2">
+        <div className="flex flex-col gap-1 ml-1">
           <button
             onClick={() => setIsPM(false)}
-            className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+            className={`px-2 py-2 rounded-lg font-medium text-sm transition-colors ${
               !isPM
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
@@ -188,7 +254,7 @@ export function TimePicker({
           </button>
           <button
             onClick={() => setIsPM(true)}
-            className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+            className={`px-2 py-2 rounded-lg font-medium text-sm transition-colors ${
               isPM
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
