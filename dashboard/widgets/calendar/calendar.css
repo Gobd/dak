@@ -34,9 +34,9 @@
     --cal-surface: #262626;
     --cal-border: #404040;
     --cal-text: #f9fafb;
-    --cal-text-muted: #9ca3af;
-    --cal-primary: #525252;
-    --cal-primary-hover: #737373;
+    --cal-text-muted: #d1d5db;
+    --cal-primary: #60a5fa;
+    --cal-primary-hover: #3b82f6;
     --cal-danger: #f87171;
   }
 }
@@ -445,13 +445,13 @@
 /* Dark mode for modal (must come after base definition) */
 @media (prefers-color-scheme: dark) {
   .cal-modal {
-    --cal-bg: #000;
+    --cal-bg: #171717;
     --cal-surface: #262626;
     --cal-border: #404040;
     --cal-text: #f9fafb;
-    --cal-text-muted: #9ca3af;
-    --cal-primary: #525252;
-    --cal-primary-hover: #737373;
+    --cal-text-muted: #e5e7eb;
+    --cal-primary: #60a5fa;
+    --cal-primary-hover: #3b82f6;
     --cal-danger: #f87171;
   }
 }
@@ -609,4 +609,136 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ===================== */
+/* WHEEL PICKER */
+/* ===================== */
+
+.wheel-picker {
+  background: var(--cal-bg);
+  border-radius: 12px;
+  padding: 16px 8px;
+}
+
+.wheel-picker-wheels {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.wheel-container {
+  position: relative;
+  height: 132px;
+  overflow: hidden;
+}
+
+.wheel-month { width: 56px; }
+.wheel-day { width: 40px; }
+.wheel-year { width: 56px; }
+.wheel-hour { width: 48px; }
+.wheel-minute { width: 48px; }
+
+.wheel-spacer {
+  width: 12px;
+}
+
+.wheel-colon {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--cal-text-muted);
+  padding: 0 2px;
+}
+
+.wheel-gradient-top,
+.wheel-gradient-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 44px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.wheel-gradient-top {
+  top: 0;
+  background: linear-gradient(to bottom, var(--cal-bg), transparent);
+}
+
+.wheel-gradient-bottom {
+  bottom: 0;
+  background: linear-gradient(to top, var(--cal-bg), transparent);
+}
+
+.wheel-selection {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44px;
+  height: 44px;
+  border-top: 1px solid color-mix(in srgb, var(--cal-primary) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--cal-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--cal-primary) 10%, transparent);
+  pointer-events: none;
+}
+
+.wheel-scroll {
+  height: 132px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wheel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--cal-text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.wheel-item.selected {
+  color: var(--cal-primary);
+}
+
+/* AM/PM Toggle */
+.wheel-ampm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.ampm-btn {
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--cal-surface);
+  color: var(--cal-text-muted);
+}
+
+.ampm-btn:hover {
+  background: var(--cal-border);
+}
+
+.ampm-btn.active {
+  background: var(--cal-primary);
+  color: #fff;
 }

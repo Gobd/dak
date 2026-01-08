@@ -6,8 +6,12 @@ import {
   clearAuth,
   isConfigured,
   getValidAccessToken,
+  isDevMode,
+  getDevAuthUrl,
+  handleDevCallback,
 } from './oauth.js';
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from './api.js';
+import { createDateTimePicker } from './wheel-picker.js';
 
 // Calendar Widget - Month grid and list views
 
@@ -555,7 +559,6 @@ function showEventModal(event) {
 }
 
 function showAddEventModal(date) {
-  const dateStr = formatLocalDate(date);
   const calendarOptions = calendars
     .filter((cal) => cal.accessRole === 'owner' || cal.accessRole === 'writer')
     .map(
@@ -573,23 +576,15 @@ function showAddEventModal(date) {
         Title
         <input type="text" id="event-title" placeholder="Event title">
       </label>
-      <label>
-        Date
-        <input type="date" id="event-date" value="${dateStr}">
-      </label>
-      <div class="time-row">
-        <label>
-          Start
-          <input type="time" id="event-start" value="09:00">
-        </label>
-        <label>
-          End
-          <input type="time" id="event-end" value="10:00">
-        </label>
-      </div>
-      <label>
+      <label style="margin-bottom: 8px;">
         <input type="checkbox" id="event-allday"> All day
       </label>
+      <div id="start-picker-container">
+        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Start</div>
+      </div>
+      <div id="end-picker-container">
+        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">End</div>
+      </div>
       <label>
         Calendar
         <select id="event-calendar">${calendarOptions}</select>
@@ -601,33 +596,73 @@ function showAddEventModal(date) {
     </div>
   `;
 
+  // Set up initial dates
+  const startDate = new Date(date);
+  startDate.setHours(9, 0, 0, 0);
+  const endDate = new Date(date);
+  endDate.setHours(10, 0, 0, 0);
+
+  let selectedStart = startDate;
+  let selectedEnd = endDate;
+  let isAllDay = false;
+
+  // Create start picker (date + time)
+  const startContainer = modal.querySelector('#start-picker-container');
+  const startPicker = createDateTimePicker(startDate, (newDate) => {
+    selectedStart = newDate;
+    // Auto-adjust end to be 1 hour after start if end is before start
+    if (selectedEnd <= selectedStart) {
+      selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+    }
+  }, { allowFuture: true });
+  startContainer.appendChild(startPicker);
+
+  // Create end picker (full date + time for multi-day events)
+  const endContainer = modal.querySelector('#end-picker-container');
+  const endPicker = createDateTimePicker(endDate, (newDate) => {
+    selectedEnd = newDate;
+  }, { allowFuture: true });
+  endContainer.appendChild(endPicker);
+
+  // All day toggle
+  const allDayCheckbox = modal.querySelector('#event-allday');
+  allDayCheckbox.addEventListener('change', () => {
+    isAllDay = allDayCheckbox.checked;
+    // Hide/show time portions
+    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
+    timeElements.forEach((el) => {
+      el.style.display = isAllDay ? 'none' : '';
+    });
+    endContainer.style.display = isAllDay ? 'none' : '';
+  });
+
   modal.addEventListener('click', async (e) => {
     const action = e.target.dataset.action;
     if (action === 'cancel' || e.target === modal) {
       modal.remove();
     } else if (action === 'save') {
       const title = modal.querySelector('#event-title').value;
-      const date = modal.querySelector('#event-date').value;
-      const startTime = modal.querySelector('#event-start').value;
-      const endTime = modal.querySelector('#event-end').value;
-      const allDay = modal.querySelector('#event-allday').checked;
       const calendarId = modal.querySelector('#event-calendar').value;
 
       const event = {
         summary: title || '(No title)',
       };
 
-      if (allDay) {
-        event.start = { date };
-        event.end = { date };
+      if (isAllDay) {
+        const dateStr = formatLocalDate(selectedStart);
+        event.start = { date: dateStr };
+        event.end = { date: dateStr };
       } else {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const startStr = selectedStart.toISOString().slice(0, 19);
+        const endStr = selectedEnd.toISOString().slice(0, 19);
         event.start = {
-          dateTime: `${date}T${startTime}:00`,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          dateTime: startStr,
+          timeZone: tz,
         };
         event.end = {
-          dateTime: `${date}T${endTime}:00`,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          dateTime: endStr,
+          timeZone: tz,
         };
       }
 
@@ -646,12 +681,12 @@ function showAddEventModal(date) {
 }
 
 function showEditEventModal(event) {
-  const startDate = (event.start.dateTime || event.start.date).split('T')[0];
-  const startTime = event.start.dateTime
-    ? event.start.dateTime.split('T')[1].substring(0, 5)
-    : '09:00';
-  const endTime = event.end.dateTime ? event.end.dateTime.split('T')[1].substring(0, 5) : '10:00';
-  const isAllDay = !event.start.dateTime;
+  const eventIsAllDay = !event.start.dateTime;
+  const eventStart = new Date(event.start.dateTime || event.start.date + 'T09:00:00');
+  const eventEnd = new Date(event.end.dateTime || event.end.date + 'T10:00:00');
+  const endTimeStr = event.end.dateTime
+    ? event.end.dateTime.split('T')[1].substring(0, 5)
+    : '10:00';
 
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
@@ -662,23 +697,15 @@ function showEditEventModal(event) {
         Title
         <input type="text" id="event-title" value="${event.summary || ''}">
       </label>
-      <label>
-        Date
-        <input type="date" id="event-date" value="${startDate}">
+      <label style="margin-bottom: 8px;">
+        <input type="checkbox" id="event-allday" ${eventIsAllDay ? 'checked' : ''}> All day
       </label>
-      <div class="time-row">
-        <label>
-          Start
-          <input type="time" id="event-start" value="${startTime}">
-        </label>
-        <label>
-          End
-          <input type="time" id="event-end" value="${endTime}">
-        </label>
+      <div id="start-picker-container">
+        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Start</div>
       </div>
-      <label>
-        <input type="checkbox" id="event-allday" ${isAllDay ? 'checked' : ''}> All day
-      </label>
+      <div id="end-picker-container" ${eventIsAllDay ? 'style="display: none;"' : ''}>
+        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">End</div>
+      </div>
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="cancel">Cancel</button>
         <button class="cal-btn primary" data-action="save">Save</button>
@@ -686,33 +713,73 @@ function showEditEventModal(event) {
     </div>
   `;
 
+  let selectedStart = eventStart;
+  let selectedEnd = eventEnd;
+  let isAllDay = eventIsAllDay;
+
+  // Create start picker (date + time)
+  const startContainer = modal.querySelector('#start-picker-container');
+  const startPicker = createDateTimePicker(eventStart, (newDate) => {
+    selectedStart = newDate;
+    if (selectedEnd <= selectedStart) {
+      selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+    }
+  }, { allowFuture: true });
+  startContainer.appendChild(startPicker);
+
+  // Create end picker (full date + time for multi-day events)
+  const endContainer = modal.querySelector('#end-picker-container');
+  const endPicker = createDateTimePicker(eventEnd, (newDate) => {
+    selectedEnd = newDate;
+  }, { allowFuture: true });
+  endContainer.appendChild(endPicker);
+
+  // Hide time elements if all day
+  if (eventIsAllDay) {
+    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
+    timeElements.forEach((el) => {
+      el.style.display = 'none';
+    });
+  }
+
+  // All day toggle
+  const allDayCheckbox = modal.querySelector('#event-allday');
+  allDayCheckbox.addEventListener('change', () => {
+    isAllDay = allDayCheckbox.checked;
+    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
+    timeElements.forEach((el) => {
+      el.style.display = isAllDay ? 'none' : '';
+    });
+    endContainer.style.display = isAllDay ? 'none' : '';
+  });
+
   modal.addEventListener('click', async (e) => {
     const action = e.target.dataset.action;
     if (action === 'cancel' || e.target === modal) {
       modal.remove();
     } else if (action === 'save') {
       const title = modal.querySelector('#event-title').value;
-      const date = modal.querySelector('#event-date').value;
-      const startTime = modal.querySelector('#event-start').value;
-      const endTime = modal.querySelector('#event-end').value;
-      const allDay = modal.querySelector('#event-allday').checked;
 
       const updatedEvent = {
         ...event,
         summary: title || '(No title)',
       };
 
-      if (allDay) {
-        updatedEvent.start = { date };
-        updatedEvent.end = { date };
+      if (isAllDay) {
+        const dateStr = formatLocalDate(selectedStart);
+        updatedEvent.start = { date: dateStr };
+        updatedEvent.end = { date: dateStr };
       } else {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const startStr = selectedStart.toISOString().slice(0, 19);
+        const endStr = selectedEnd.toISOString().slice(0, 19);
         updatedEvent.start = {
-          dateTime: `${date}T${startTime}:00`,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          dateTime: startStr,
+          timeZone: tz,
         };
         updatedEvent.end = {
-          dateTime: `${date}T${endTime}:00`,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          dateTime: endStr,
+          timeZone: tz,
         };
       }
 
@@ -791,6 +858,24 @@ function renderSignIn(container) {
     return;
   }
 
+  // Dev mode: use implicit flow (one-click, no server needed)
+  if (isDevMode()) {
+    container.innerHTML = `
+      <div class="calendar-widget calendar-signin">
+        <div class="signin-message">
+          <h3>Dev Mode</h3>
+          <p>Sign in with Google (implicit flow)</p>
+          <button class="cal-btn primary signin-btn">Sign in with Google</button>
+        </div>
+      </div>
+    `;
+
+    container.querySelector('.signin-btn').addEventListener('click', () => {
+      window.location.href = getDevAuthUrl();
+    });
+    return;
+  }
+
   container.innerHTML = `
     <div class="calendar-widget calendar-signin">
       <div class="signin-message">
@@ -844,10 +929,18 @@ async function renderCalendarWidget(container, panel, { refreshIntervals, parseD
   // Reset grid start date when widget is initialized
   gridStartDate = null;
 
-  // Check for OAuth callback first (async - exchanges code for tokens)
-  const callbackAuth = await handleOAuthCallback();
-  if (callbackAuth) {
-    accessToken = callbackAuth.accessToken;
+  // Check for dev mode callback first (implicit flow - token in hash)
+  const devAuth = handleDevCallback();
+  if (devAuth) {
+    accessToken = devAuth.accessToken;
+  }
+
+  // Check for OAuth callback (async - exchanges code for tokens)
+  if (!accessToken) {
+    const callbackAuth = await handleOAuthCallback();
+    if (callbackAuth) {
+      accessToken = callbackAuth.accessToken;
+    }
   }
 
   // Check for stored auth if no callback
