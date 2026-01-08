@@ -555,7 +555,7 @@ function showEventModal(event) {
             modal.remove();
             await loadEvents();
           } catch {
-            alert('Failed to delete event');
+            showErrorModal('Failed to delete event');
           }
         }
       }
@@ -597,7 +597,7 @@ function showRecurringDeleteModal(event) {
         modal.remove();
         await loadEvents();
       } catch {
-        alert('Failed to delete event');
+        showErrorModal('Failed to delete event');
       }
     } else if (action === 'all') {
       try {
@@ -606,7 +606,7 @@ function showRecurringDeleteModal(event) {
         modal.remove();
         await loadEvents();
       } catch {
-        alert('Failed to delete series');
+        showErrorModal('Failed to delete series');
       }
     }
   });
@@ -646,7 +646,7 @@ function showRecurringEditModal(event) {
         modal.remove();
         showEditEventModal(masterEvent, true); // Edit master (all in series)
       } catch {
-        alert('Failed to load recurring event');
+        showErrorModal('Failed to load recurring event');
       }
     }
   });
@@ -817,7 +817,7 @@ function showAddEventModal(date) {
         modal.remove();
         await loadEvents();
       } catch {
-        alert('Failed to create event');
+        showErrorModal('Failed to create event');
       }
     }
   });
@@ -955,8 +955,31 @@ function showEditEventModal(event, editAll = false) {
         modal.remove();
         await loadEvents();
       } catch {
-        alert('Failed to update event');
+        showErrorModal('Failed to update event');
       }
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showErrorModal(message) {
+  const darkClass = isDarkMode ? 'dark' : '';
+  const modal = document.createElement('div');
+  modal.className = `cal-modal open ${darkClass}`;
+  modal.innerHTML = `
+    <div class="cal-modal-content">
+      <h3>Error</h3>
+      <p>${message}</p>
+      <div class="cal-modal-actions">
+        <button class="cal-btn primary" data-action="close">OK</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target.dataset.action === 'close' || e.target === modal) {
+      modal.remove();
     }
   });
 
