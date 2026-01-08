@@ -10,6 +10,7 @@
     ]
   },
   "scripts": {
+    "dev": "pnpm -r --parallel dev",
     "lint": "pnpm -r lint",
     "format:check": "pnpm -r format:check",
     "format": "pnpm -r format",

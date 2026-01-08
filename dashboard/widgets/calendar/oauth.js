@@ -6,7 +6,7 @@ const STORAGE_KEY = 'google-auth';
 const VERIFIER_KEY = 'google-auth-verifier';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
-const CLIENT_ID = '386481992006-mpg18b3bv0dg2tn8k2apbke2rnrp0psl.apps.googleusercontent.com';
+const CLIENT_ID = '386481992006-vc0ljc7cj1oefnd47mevvqgfd7d3rp0g.apps.googleusercontent.com';
 const TOKEN_ENDPOINT = '/api/oauth/token';
 
 // Generate cryptographically random string for PKCE

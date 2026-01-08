@@ -9,7 +9,7 @@
     "start": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start\"",
     "android": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start --android\"",
     "ios": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start --ios\"",
-    "web": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start --web\"",
+    "dev": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start --web\"",
     "prebuild:web": "NODE_ENV=production tsx scripts/build-tiptap-editor.ts",
     "build:web": "expo export --platform web",
     "build": "NODE_ENV=production tsx scripts/build-tiptap-editor.ts && expo export --platform web",
