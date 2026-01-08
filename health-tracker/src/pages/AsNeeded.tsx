@@ -348,7 +348,9 @@ export function AsNeeded() {
                                     : "bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300"
                                 }`}
                               >
-                                {showTimeInput === med.id ? "Custom time" : "Now"}
+                                {showTimeInput === med.id
+                                  ? "Custom time"
+                                  : "Now"}
                               </button>
                               <button
                                 onClick={() => {

@@ -720,37 +720,53 @@ function showAddEventModal(date) {
 
   // Create start picker (hybrid: mini calendar + wheel time)
   const startContainer = modal.querySelector('#start-picker-container');
-  const startPicker = createHybridDateTimePicker(startDate, (newDate) => {
-    // Calculate date difference and apply to end date (sync dates)
-    const startDateOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
-    const newStartDateOnly = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
-    const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
+  const startPicker = createHybridDateTimePicker(
+    startDate,
+    (newDate) => {
+      // Calculate date difference and apply to end date (sync dates)
+      const startDateOnly = new Date(
+        lastStartDate.getFullYear(),
+        lastStartDate.getMonth(),
+        lastStartDate.getDate()
+      );
+      const newStartDateOnly = new Date(
+        newDate.getFullYear(),
+        newDate.getMonth(),
+        newDate.getDate()
+      );
+      const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
 
-    if (dayDiff !== 0) {
-      // Move end date by same amount
-      const newEndDate = new Date(selectedEnd);
-      newEndDate.setDate(newEndDate.getDate() + dayDiff);
-      selectedEnd = newEndDate;
-      endPicker.setDate(newEndDate);
-    }
+      if (dayDiff !== 0) {
+        // Move end date by same amount
+        const newEndDate = new Date(selectedEnd);
+        newEndDate.setDate(newEndDate.getDate() + dayDiff);
+        selectedEnd = newEndDate;
+        endPicker.setDate(newEndDate);
+      }
 
-    selectedStart = newDate;
-    lastStartDate = new Date(newDate);
+      selectedStart = newDate;
+      lastStartDate = new Date(newDate);
 
-    // Ensure end is after start
-    if (selectedEnd <= selectedStart) {
-      selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
-      endPicker.setDate(selectedEnd);
-    }
-  }, { allowFuture: true, label: 'Start' });
+      // Ensure end is after start
+      if (selectedEnd <= selectedStart) {
+        selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+        endPicker.setDate(selectedEnd);
+      }
+    },
+    { allowFuture: true, label: 'Start' }
+  );
   startContainer.appendChild(startPicker);
 
   // Create end picker (hybrid: mini calendar + wheel time)
   const endContainer = modal.querySelector('#end-picker-container');
-  const endPicker = createHybridDateTimePicker(endDate, (newDate) => {
-    // End date changes independently (for multi-day events)
-    selectedEnd = newDate;
-  }, { allowFuture: true, label: 'End' });
+  const endPicker = createHybridDateTimePicker(
+    endDate,
+    (newDate) => {
+      // End date changes independently (for multi-day events)
+      selectedEnd = newDate;
+    },
+    { allowFuture: true, label: 'End' }
+  );
   endContainer.appendChild(endPicker);
 
   // All day toggle
@@ -830,7 +846,7 @@ function showEditEventModal(event, editAll = false) {
   const eventIsAllDay = !event.start.dateTime;
   const eventStart = new Date(event.start.dateTime || event.start.date + 'T09:00:00');
   const eventEnd = new Date(event.end.dateTime || event.end.date + 'T10:00:00');
-  const escapeHtml = (str) => str ? str.replace(/"/g, '&quot;').replace(/</g, '&lt;') : '';
+  const escapeHtml = (str) => (str ? str.replace(/"/g, '&quot;').replace(/</g, '&lt;') : '');
 
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
@@ -868,37 +884,53 @@ function showEditEventModal(event, editAll = false) {
 
   // Create start picker (hybrid: mini calendar + wheel time)
   const startContainer = modal.querySelector('#start-picker-container');
-  const startPicker = createHybridDateTimePicker(eventStart, (newDate) => {
-    // Calculate date difference and apply to end date (sync dates)
-    const startDateOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
-    const newStartDateOnly = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
-    const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
+  const startPicker = createHybridDateTimePicker(
+    eventStart,
+    (newDate) => {
+      // Calculate date difference and apply to end date (sync dates)
+      const startDateOnly = new Date(
+        lastStartDate.getFullYear(),
+        lastStartDate.getMonth(),
+        lastStartDate.getDate()
+      );
+      const newStartDateOnly = new Date(
+        newDate.getFullYear(),
+        newDate.getMonth(),
+        newDate.getDate()
+      );
+      const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
 
-    if (dayDiff !== 0) {
-      // Move end date by same amount
-      const newEndDate = new Date(selectedEnd);
-      newEndDate.setDate(newEndDate.getDate() + dayDiff);
-      selectedEnd = newEndDate;
-      endPicker.setDate(newEndDate);
-    }
+      if (dayDiff !== 0) {
+        // Move end date by same amount
+        const newEndDate = new Date(selectedEnd);
+        newEndDate.setDate(newEndDate.getDate() + dayDiff);
+        selectedEnd = newEndDate;
+        endPicker.setDate(newEndDate);
+      }
 
-    selectedStart = newDate;
-    lastStartDate = new Date(newDate);
+      selectedStart = newDate;
+      lastStartDate = new Date(newDate);
 
-    // Ensure end is after start
-    if (selectedEnd <= selectedStart) {
-      selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
-      endPicker.setDate(selectedEnd);
-    }
-  }, { allowFuture: true, label: 'Start' });
+      // Ensure end is after start
+      if (selectedEnd <= selectedStart) {
+        selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+        endPicker.setDate(selectedEnd);
+      }
+    },
+    { allowFuture: true, label: 'Start' }
+  );
   startContainer.appendChild(startPicker);
 
   // Create end picker (hybrid: mini calendar + wheel time)
   const endContainer = modal.querySelector('#end-picker-container');
-  const endPicker = createHybridDateTimePicker(eventEnd, (newDate) => {
-    // End date changes independently (for multi-day events)
-    selectedEnd = newDate;
-  }, { allowFuture: true, label: 'End' });
+  const endPicker = createHybridDateTimePicker(
+    eventEnd,
+    (newDate) => {
+      // End date changes independently (for multi-day events)
+      selectedEnd = newDate;
+    },
+    { allowFuture: true, label: 'End' }
+  );
   endContainer.appendChild(endPicker);
 
   // Hide time elements if all day
@@ -1093,7 +1125,11 @@ function renderLoading(container) {
 
 // Main widget render function
 // Options: args.view ('month' or 'list'), args.weekStart ('sunday' or 'monday'), args.weeks (number)
-async function renderCalendarWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
+async function renderCalendarWidget(
+  container,
+  panel,
+  { refreshIntervals, parseDuration, dark = true }
+) {
   currentContainer = container;
   isDarkMode = dark;
 

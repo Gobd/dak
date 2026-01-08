@@ -11,7 +11,7 @@
     ]
   },
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "(sleep 2 && open http://localhost:8080/?local) & pnpm -r --parallel dev",
     "lint": "pnpm -r lint",
     "format:check": "pnpm -r format:check",
     "format": "pnpm -r format",

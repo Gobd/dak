@@ -87,8 +87,18 @@ function Wheel({ items, value, onChange }: WheelProps) {
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const FULL_MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 interface MiniCalendarProps {
@@ -98,7 +108,12 @@ interface MiniCalendarProps {
   allowFuture?: boolean;
 }
 
-function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: MiniCalendarProps) {
+function MiniCalendar({
+  selectedDate,
+  onSelect,
+  onClose,
+  allowFuture = false,
+}: MiniCalendarProps) {
   const [viewMonth, setViewMonth] = useState(selectedDate.getMonth());
   const [viewYear, setViewYear] = useState(selectedDate.getFullYear());
   const today = new Date();
@@ -128,7 +143,11 @@ function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: 
     const newDate = new Date(viewYear, viewMonth, day);
     // Check if date is allowed
     if (!allowFuture) {
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      );
       if (newDate > todayStart) return;
     }
     onSelect(newDate);
@@ -137,24 +156,35 @@ function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: 
   const isDayDisabled = (day: number) => {
     if (allowFuture) return false;
     const date = new Date(viewYear, viewMonth, day);
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
     return date > todayStart;
   };
 
   const isDaySelected = (day: number) => {
-    return day === selectedDate.getDate() &&
-           viewMonth === selectedDate.getMonth() &&
-           viewYear === selectedDate.getFullYear();
+    return (
+      day === selectedDate.getDate() &&
+      viewMonth === selectedDate.getMonth() &&
+      viewYear === selectedDate.getFullYear()
+    );
   };
 
   const isDayToday = (day: number) => {
-    return day === today.getDate() &&
-           viewMonth === today.getMonth() &&
-           viewYear === today.getFullYear();
+    return (
+      day === today.getDate() &&
+      viewMonth === today.getMonth() &&
+      viewYear === today.getFullYear()
+    );
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
       <div
         className="bg-white dark:bg-neutral-800 rounded-xl p-4 min-w-[280px] shadow-xl border border-gray-200 dark:border-neutral-700"
         onClick={(e) => e.stopPropagation()}
@@ -181,7 +211,10 @@ function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: 
         {/* Weekday headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {DAYS.map((day) => (
-            <div key={day} className="text-center text-xs font-semibold text-gray-500 dark:text-neutral-400 py-1">
+            <div
+              key={day}
+              className="text-center text-xs font-semibold text-gray-500 dark:text-neutral-400 py-1"
+            >
               {day.charAt(0)}
             </div>
           ))}

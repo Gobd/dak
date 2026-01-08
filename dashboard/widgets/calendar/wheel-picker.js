@@ -6,8 +6,20 @@ const ITEM_HEIGHT = 44;
 const COMPACT_ITEM_HEIGHT = 32;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
-                     'July', 'August', 'September', 'October', 'November', 'December'];
+const FULL_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 // Will be set from calendar config
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday
@@ -36,7 +48,6 @@ function createWheel(items, selectedValue, onChange, compact = false) {
   `;
 
   const scrollEl = container.querySelector('.wheel-scroll');
-  let isScrolling = false;
   let scrollTimeout = null;
 
   // Add padding + items
@@ -79,7 +90,6 @@ function createWheel(items, selectedValue, onChange, compact = false) {
   }
 
   function handleScroll() {
-    isScrolling = true;
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const scrollTop = scrollEl.scrollTop;
@@ -91,7 +101,6 @@ function createWheel(items, selectedValue, onChange, compact = false) {
         onChange(newValue);
         updateSelection(newValue);
       }
-      isScrolling = false;
     }, 100);
   }
 
@@ -216,7 +225,9 @@ export function createDateTimePicker(initialDate, onChange, options = {}) {
   function updateMonthWheel() {
     const availableMonths = getAvailableMonths();
     if (!availableMonths.includes(MONTHS[month])) {
-      month = allowFuture ? MONTHS.indexOf(availableMonths[0]) : MONTHS.indexOf(availableMonths[availableMonths.length - 1]);
+      month = allowFuture
+        ? MONTHS.indexOf(availableMonths[0])
+        : MONTHS.indexOf(availableMonths[availableMonths.length - 1]);
     }
     if (monthWheel) {
       monthWheel.updateItems(availableMonths, MONTHS[month]);
@@ -312,7 +323,8 @@ export function createDateTimePicker(initialDate, onChange, options = {}) {
 // Create a time-only picker (for start/end times)
 export function createTimePicker(initialTime, onChange) {
   // Parse time string like "09:00" or "14:30"
-  let hour = 9, minute = 0;
+  let hour = 9,
+    minute = 0;
   if (initialTime) {
     const [h, m] = initialTime.split(':').map(Number);
     hour = h;
@@ -322,11 +334,15 @@ export function createTimePicker(initialTime, onChange) {
   const date = new Date();
   date.setHours(hour, minute, 0, 0);
 
-  return createDateTimePicker(date, (newDate) => {
-    const h = String(newDate.getHours()).padStart(2, '0');
-    const m = String(newDate.getMinutes()).padStart(2, '0');
-    onChange(`${h}:${m}`);
-  }, { showDate: false, showTime: true });
+  return createDateTimePicker(
+    date,
+    (newDate) => {
+      const h = String(newDate.getHours()).padStart(2, '0');
+      const m = String(newDate.getMinutes()).padStart(2, '0');
+      onChange(`${h}:${m}`);
+    },
+    { showDate: false, showTime: true }
+  );
 }
 
 // Format date display like "Wed, Jan 8, 2026"
@@ -373,12 +389,12 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
     }
     // Days of month
     for (let d = 1; d <= daysInMonth; d++) {
-      const isSelected = d === selectedDate.getDate() &&
-                         viewMonth === selectedDate.getMonth() &&
-                         viewYear === selectedDate.getFullYear();
-      const isToday = d === today.getDate() &&
-                      viewMonth === today.getMonth() &&
-                      viewYear === today.getFullYear();
+      const isSelected =
+        d === selectedDate.getDate() &&
+        viewMonth === selectedDate.getMonth() &&
+        viewYear === selectedDate.getFullYear();
+      const isToday =
+        d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
       const classes = ['mini-cal-day'];
       if (isSelected) classes.push('selected');
       if (isToday) classes.push('today');
@@ -392,7 +408,7 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
         <button class="mini-cal-nav" data-dir="1">&gt;</button>
       </div>
       <div class="mini-cal-weekdays">
-        ${orderedDays.map(d => `<div>${d.charAt(0)}</div>`).join('')}
+        ${orderedDays.map((d) => `<div>${d.charAt(0)}</div>`).join('')}
       </div>
       <div class="mini-cal-days">
         ${daysHtml}
@@ -440,7 +456,7 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
 
 // Create hybrid picker: mini calendar button for date + wheel picker for time
 export function createHybridDateTimePicker(initialDate, onChange, options = {}) {
-  const { showTime = true, allowFuture = true, label = '' } = options;
+  const { showTime = true, label = '' } = options;
 
   let selectedDate = initialDate ? new Date(initialDate) : new Date();
   let selectedHour = selectedDate.getHours();
@@ -485,10 +501,15 @@ export function createHybridDateTimePicker(initialDate, onChange, options = {}) 
 
     // Hour wheel (compact for inline layout)
     const hours = Array.from({ length: 12 }, (_, i) => String(i + 1));
-    hourWheel = createWheel(hours, String(hour12), (val) => {
-      hour12 = Number(val);
-      emitChange();
-    }, true);
+    hourWheel = createWheel(
+      hours,
+      String(hour12),
+      (val) => {
+        hour12 = Number(val);
+        emitChange();
+      },
+      true
+    );
     hourWheel.classList.add('wheel-hour');
     wheelsContainer.appendChild(hourWheel);
 
@@ -500,10 +521,15 @@ export function createHybridDateTimePicker(initialDate, onChange, options = {}) 
 
     // Minute wheel (compact for inline layout)
     const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
-    minuteWheel = createWheel(minutes, String(selectedMinute).padStart(2, '0'), (val) => {
-      selectedMinute = Number(val);
-      emitChange();
-    }, true);
+    minuteWheel = createWheel(
+      minutes,
+      String(selectedMinute).padStart(2, '0'),
+      (val) => {
+        selectedMinute = Number(val);
+        emitChange();
+      },
+      true
+    );
     minuteWheel.classList.add('wheel-minute');
     wheelsContainer.appendChild(minuteWheel);
 

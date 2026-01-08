@@ -30,7 +30,10 @@ const queryTheme = getThemeFromQueryParam();
 // If query param is present on web, persist it to storage so it survives navigation
 if (queryTheme !== null && Platform.OS === 'web') {
   try {
-    localStorage.setItem('theme-storage', JSON.stringify({ state: { theme: queryTheme }, version: 0 }));
+    localStorage.setItem(
+      'theme-storage',
+      JSON.stringify({ state: { theme: queryTheme }, version: 0 })
+    );
   } catch {
     // Ignore storage errors
   }

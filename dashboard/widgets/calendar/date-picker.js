@@ -2,8 +2,20 @@
 // Mini calendar popup for date, dropdown for time
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 // Will be set from calendar config
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday
@@ -68,12 +80,12 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
     }
     // Days of month
     for (let d = 1; d <= daysInMonth; d++) {
-      const isSelected = d === selectedDate.getDate() &&
-                         viewMonth === selectedDate.getMonth() &&
-                         viewYear === selectedDate.getFullYear();
-      const isToday = d === today.getDate() &&
-                      viewMonth === today.getMonth() &&
-                      viewYear === today.getFullYear();
+      const isSelected =
+        d === selectedDate.getDate() &&
+        viewMonth === selectedDate.getMonth() &&
+        viewYear === selectedDate.getFullYear();
+      const isToday =
+        d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
       const classes = ['mini-cal-day'];
       if (isSelected) classes.push('selected');
       if (isToday) classes.push('today');
@@ -87,7 +99,7 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
         <button class="mini-cal-nav" data-dir="1">&gt;</button>
       </div>
       <div class="mini-cal-weekdays">
-        ${orderedDays.map(d => `<div>${d.charAt(0)}</div>`).join('')}
+        ${orderedDays.map((d) => `<div>${d.charAt(0)}</div>`).join('')}
       </div>
       <div class="mini-cal-days">
         ${daysHtml}
@@ -134,7 +146,7 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
 }
 
 export function createDateTimePicker(initialDate, onChange, options = {}) {
-  const { showTime = true, allowFuture = true } = options;
+  const { showTime = true } = options;
 
   let selectedDate = initialDate ? new Date(initialDate) : new Date();
   let selectedHour = selectedDate.getHours();
@@ -154,7 +166,7 @@ export function createDateTimePicker(initialDate, onChange, options = {}) {
     timeSelect = document.createElement('select');
     timeSelect.className = 'time-picker-select';
     const timeOptions = generateTimeOptions();
-    timeOptions.forEach(opt => {
+    timeOptions.forEach((opt) => {
       const option = document.createElement('option');
       option.value = opt.value;
       option.textContent = opt.display;

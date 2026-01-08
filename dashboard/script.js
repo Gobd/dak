@@ -4,14 +4,33 @@ const STORAGE_KEY = 'dashboard-config';
 const GRID_SNAP = 5; // 5% snap
 const MIN_SIZE = 10; // 10% minimum
 
+// Local dev URL mappings (used when ?local is in URL)
+const LOCAL_URL_MAP = {
+  'https://dak.bkemper.me/notes-app/': 'http://localhost:8081/',
+  'https://dak.bkemper.me/health-tracker/': 'http://localhost:5173/health-tracker/',
+  'https://dak.bkemper.me/family-chores/': 'http://localhost:5174/family-chores/',
+};
+
 let screens = [];
 let config = {};
 let currentIndex = 0;
 let editMode = false;
+let localMode = false;
 const refreshIntervals = [];
 
 // Widget registry - widgets register themselves here
 const widgets = {};
+
+// Convert production URLs to local dev URLs when in local mode
+function toLocalUrl(url) {
+  if (!localMode || !url) return url;
+  for (const [prod, local] of Object.entries(LOCAL_URL_MAP)) {
+    if (url.startsWith(prod)) {
+      return url.replace(prod, local);
+    }
+  }
+  return url;
+}
 
 export function registerWidget(type, renderFn) {
   widgets[type] = renderFn;
@@ -81,12 +100,15 @@ function saveConfig() {
 }
 
 function init() {
+  // Check URL for local mode: ?local
+  const params = new URLSearchParams(window.location.search);
+  localMode = params.has('local');
+
   loadConfig();
   applyConfig();
   renderScreens();
 
   // Check URL for screen param: ?screen=1 (0-indexed)
-  const params = new URLSearchParams(window.location.search);
   const screenParam = params.get('screen');
   const startScreen = screenParam ? parseInt(screenParam, 10) : 0;
   showScreen(Math.min(startScreen, screens.length - 1));
@@ -208,7 +230,7 @@ function createPanelElement(panel, screenIndex, panelIndex) {
   } else if (panel.src) {
     // Fallback: iframe for legacy configs with just src
     const iframe = document.createElement('iframe');
-    let src = panel.src;
+    let src = toLocalUrl(panel.src);
     const params = new URLSearchParams();
     // Add dark mode param
     params.append('dark', isDark ? 'true' : 'false');

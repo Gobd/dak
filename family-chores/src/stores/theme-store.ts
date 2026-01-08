@@ -24,7 +24,10 @@ const queryDark = getDarkFromQueryParam();
 // If query param is present, persist it to storage so it survives navigation
 if (queryDark !== null) {
   try {
-    localStorage.setItem("family-chores-theme", JSON.stringify({ state: { dark: queryDark }, version: 0 }));
+    localStorage.setItem(
+      "family-chores-theme",
+      JSON.stringify({ state: { dark: queryDark }, version: 0 }),
+    );
   } catch {
     // Ignore storage errors
   }

@@ -638,11 +638,21 @@ body.dark .cal-modal {
   overflow: hidden;
 }
 
-.wheel-month { width: 56px; }
-.wheel-day { width: 40px; }
-.wheel-year { width: 56px; }
-.wheel-hour { width: 48px; }
-.wheel-minute { width: 48px; }
+.wheel-month {
+  width: 56px;
+}
+.wheel-day {
+  width: 40px;
+}
+.wheel-year {
+  width: 56px;
+}
+.wheel-hour {
+  width: 48px;
+}
+.wheel-minute {
+  width: 48px;
+}
 
 .wheel-spacer {
   width: 12px;

@@ -35,7 +35,8 @@
  * URL PARAMS:
  *   ?edit       - Enter edit mode
  *   ?screen=N   - Start on screen N (0-indexed)
- *   ?edit&screen=1 - Both work together
+ *   ?local      - Use localhost URLs for iframes (for development)
+ *   ?edit&screen=1&local - All work together
  *
  * EDIT MODE:
  *   - Drag panels to move (snaps to 5% grid)
