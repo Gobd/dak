@@ -5,6 +5,7 @@ import {
   handleOAuthCallback,
   clearAuth,
   isConfigured,
+  getValidAccessToken,
 } from './oauth.js';
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from './api.js';
 
@@ -473,9 +474,14 @@ function refreshCalendar() {
 }
 
 async function loadEvents() {
-  if (!accessToken) return;
-
   try {
+    // Get a valid token, auto-refreshing if needed
+    accessToken = await getValidAccessToken();
+    if (!accessToken) {
+      renderSignIn(currentContainer);
+      return;
+    }
+
     // Load 3 months of events for month view navigation
     const start = new Date();
     start.setMonth(start.getMonth() - 1);
@@ -487,7 +493,7 @@ async function loadEvents() {
     events = data.events;
     refreshCalendar();
   } catch (err) {
-    if (err.message === 'AUTH_EXPIRED') {
+    if (err.message === 'AUTH_EXPIRED' || err.message === 'AUTH_REVOKED') {
       clearAuth();
       accessToken = null;
       renderSignIn(currentContainer);
@@ -795,8 +801,8 @@ function renderSignIn(container) {
     </div>
   `;
 
-  container.querySelector('.signin-btn').addEventListener('click', () => {
-    window.location.href = getAuthUrl();
+  container.querySelector('.signin-btn').addEventListener('click', async () => {
+    window.location.href = await getAuthUrl();
   });
 }
 
@@ -810,7 +816,7 @@ function renderLoading(container) {
 
 // Main widget render function
 // Options: args.view ('month' or 'list'), args.weekStart ('sunday' or 'monday'), args.weeks (number)
-function renderCalendarWidget(container, panel, { refreshIntervals, parseDuration }) {
+async function renderCalendarWidget(container, panel, { refreshIntervals, parseDuration }) {
   currentContainer = container;
 
   // Load hidden calendars preference
@@ -838,16 +844,18 @@ function renderCalendarWidget(container, panel, { refreshIntervals, parseDuratio
   // Reset grid start date when widget is initialized
   gridStartDate = null;
 
-  // Check for OAuth callback first
-  const callbackAuth = handleOAuthCallback();
+  // Check for OAuth callback first (async - exchanges code for tokens)
+  const callbackAuth = await handleOAuthCallback();
   if (callbackAuth) {
     accessToken = callbackAuth.accessToken;
   }
 
-  // Check for stored auth
-  const storedAuth = getStoredAuth();
-  if (storedAuth) {
-    accessToken = storedAuth.accessToken;
+  // Check for stored auth if no callback
+  if (!accessToken) {
+    const storedAuth = getStoredAuth();
+    if (storedAuth) {
+      accessToken = storedAuth.accessToken;
+    }
   }
 
   if (accessToken) {

@@ -4,9 +4,10 @@
 
 | App | URL | Stack |
 |-----|-----|-------|
-| Family Chores | https://gobd.github.io/dak/family-chores/ | Vite + React + Tailwind |
-| Health Tracker | https://gobd.github.io/dak/health-tracker/ | Vite + React + Tailwind |
-| Notes App | https://gobd.github.io/dak/notes-app/ | Expo + React Native Web |
+| Dashboard | https://dak.bkemper.me/dashboard/ | Vanilla JS |
+| Family Chores | https://dak.bkemper.me/family-chores/ | Vite + React + Tailwind |
+| Health Tracker | https://dak.bkemper.me/health-tracker/ | Vite + React + Tailwind |
+| Notes App | https://dak.bkemper.me/notes-app/ | Expo + React Native Web |
 
 All apps use TypeScript, Zustand for state, and Supabase for backend.
 
@@ -18,6 +19,9 @@ cd <app> && pnpm install && pnpm dev
 
 # Notes App (runs editor build + expo concurrently)
 cd notes-app && pnpm install && pnpm start
+
+# Dashboard
+cd dashboard && pnpm dev
 ```
 
 ## Quality Checks
@@ -33,6 +37,6 @@ pnpm format        # Auto-fix formatting
 
 ## Deployment
 
-Push to `main` to automatically deploy all apps to GitHub Pages.
+Push to `main` to automatically deploy all apps to Cloudflare Pages.
 
-Manual deploy: Actions tab → "Deploy to GitHub Pages" → "Run workflow" → enter branch name.
+Hosted at `dak.bkemper.me` with preview deployments for PRs.

@@ -1,3 +1,9 @@
 .claude
 .wrangler
 .vscode
+_site
+dist
+node_modules
+
+# Local secrets for development
+secrets.local.js

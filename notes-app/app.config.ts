@@ -60,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: ['expo-router', 'expo-secure-store'],
   experiments: {
     typedRoutes: true,
-    baseUrl: '/dak/notes-app',
+    baseUrl: '/notes-app',
   },
   extra: {
     router: {},
