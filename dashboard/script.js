@@ -10,6 +10,18 @@ let currentIndex = 0;
 let editMode = false;
 const refreshIntervals = [];
 
+// Widget registry - widgets register themselves here
+const widgets = {};
+
+export function registerWidget(type, renderFn) {
+  widgets[type] = renderFn;
+}
+
+// Get available widget types for UI
+export function getWidgetTypes() {
+  return Object.keys(widgets);
+}
+
 // Currently editing panel
 let editingPanel = null;
 let editingScreenIndex = null;
@@ -23,10 +35,14 @@ function parseDuration(str) {
   const value = parseInt(match[1], 10);
   const unit = match[2];
   switch (unit) {
-    case 's': return value * 1000;
-    case 'm': return value * 60 * 1000;
-    case 'h': return value * 60 * 60 * 1000;
-    default: return null;
+    case 's':
+      return value * 1000;
+    case 'm':
+      return value * 60 * 1000;
+    case 'h':
+      return value * 60 * 60 * 1000;
+    default:
+      return null;
   }
 }
 
@@ -52,7 +68,7 @@ function loadConfig() {
       if (parsed.screens && parsed.screens.length > 0) {
         screens = parsed.screens;
       }
-    } catch (e) {
+    } catch {
       console.warn('Failed to parse stored config, using defaults');
     }
   }
@@ -96,8 +112,8 @@ function applyConfig() {
     navButtonsContainer.style.display = 'none';
   } else {
     navButtonsContainer.style.display = 'flex';
-    navPrev.style.display = (buttonMode === 'both' || buttonMode === 'prev') ? 'block' : 'none';
-    navNext.style.display = (buttonMode === 'both' || buttonMode === 'next') ? 'block' : 'none';
+    navPrev.style.display = buttonMode === 'both' || buttonMode === 'prev' ? 'block' : 'none';
+    navNext.style.display = buttonMode === 'both' || buttonMode === 'next' ? 'block' : 'none';
   }
 
   // Position
@@ -112,7 +128,7 @@ function applyConfig() {
   if (pos.includes('right')) navButtonsContainer.style.right = '20px';
 
   // Colors
-  [navPrev, navNext].forEach(btn => {
+  [navPrev, navNext].forEach((btn) => {
     if (config.navColor) btn.style.color = config.navColor;
     if (config.navBackground) btn.style.background = config.navBackground;
   });
@@ -120,7 +136,7 @@ function applyConfig() {
 
 function renderScreens() {
   // Clear refresh intervals
-  refreshIntervals.forEach(id => clearInterval(id));
+  refreshIntervals.forEach((id) => clearInterval(id));
   refreshIntervals.length = 0;
 
   const container = document.getElementById('screens');
@@ -162,33 +178,57 @@ function createPanelElement(panel, screenIndex, panelIndex) {
 
   // Resize handles
   const handles = ['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se'];
-  handles.forEach(dir => {
+  handles.forEach((dir) => {
     const handle = document.createElement('div');
     handle.className = `resize-handle ${dir} ${['nw', 'ne', 'sw', 'se'].includes(dir) ? 'corner' : 'edge'}`;
     handle.dataset.direction = dir;
     panelEl.appendChild(handle);
   });
 
-  // iframe
-  const iframe = document.createElement('iframe');
-  let src = panel.src;
-  if (panel.args && Object.keys(panel.args).length > 0) {
-    const separator = src.includes('?') ? '&' : '?';
-    const params = new URLSearchParams(panel.args).toString();
-    src = src + separator + params;
-  }
-  iframe.src = src;
-  iframe.loading = 'lazy';
+  // Determine widget type
+  const widgetType = panel.type || (panel.src ? 'iframe' : null);
 
-  const refreshMs = parseDuration(panel.refresh);
-  if (refreshMs) {
-    const intervalId = setInterval(() => {
-      iframe.src = src;
-    }, refreshMs);
-    refreshIntervals.push(intervalId);
+  // Content container for widget
+  const content = document.createElement('div');
+  content.className = 'panel-content';
+
+  if (widgetType && widgets[widgetType]) {
+    // Use registered widget
+    widgets[widgetType](content, panel, { refreshIntervals, parseDuration });
+  } else if (panel.src) {
+    // Fallback: iframe for legacy configs with just src
+    const iframe = document.createElement('iframe');
+    let src = panel.src;
+    if (panel.args && Object.keys(panel.args).length > 0) {
+      const separator = src.includes('?') ? '&' : '?';
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(panel.args)) {
+        if (Array.isArray(value)) {
+          value.forEach((v) => params.append(key, v));
+        } else {
+          params.append(key, value);
+        }
+      }
+      src = src + separator + params.toString();
+    }
+    iframe.src = src;
+    iframe.loading = 'lazy';
+
+    const refreshMs = parseDuration(panel.refresh);
+    if (refreshMs) {
+      const intervalId = setInterval(() => {
+        iframe.src = src;
+      }, refreshMs);
+      refreshIntervals.push(intervalId);
+    }
+
+    content.appendChild(iframe);
+  } else {
+    // Empty panel
+    content.innerHTML = '<div class="empty-panel">No widget configured</div>';
   }
 
-  panelEl.appendChild(iframe);
+  panelEl.appendChild(content);
 
   // Drag handlers
   setupPanelDrag(panelEl, screenIndex, panelIndex);
@@ -232,109 +272,6 @@ function prevScreen() {
 function setupNavigation() {
   document.getElementById('nav-next').addEventListener('click', nextScreen);
   document.getElementById('nav-prev').addEventListener('click', prevScreen);
-
-  // Edge-based swipe navigation
-  const leftEdge = document.getElementById('swipe-edge-left');
-  const rightEdge = document.getElementById('swipe-edge-right');
-  const minSwipeDistance = 50;
-  const maxTapDistance = 10; // Max movement to count as a tap
-  const maxTapDuration = 200; // Max ms to count as a tap
-
-  // Apply edge width and visibility from config
-  function applyEdgeConfig() {
-    const width = config.swipeEdgeWidth || 40;
-    const shouldShow = width > 0 && screens.length > 1;
-
-    if (shouldShow) {
-      leftEdge.style.width = width + 'px';
-      rightEdge.style.width = width + 'px';
-      leftEdge.style.display = 'block';
-      rightEdge.style.display = 'block';
-
-      if (config.showSwipeEdges) {
-        leftEdge.classList.add('visible');
-        rightEdge.classList.add('visible');
-      } else {
-        leftEdge.classList.remove('visible');
-        rightEdge.classList.remove('visible');
-      }
-    } else {
-      // Hide edges if disabled or only 1 screen
-      leftEdge.style.display = 'none';
-      rightEdge.style.display = 'none';
-    }
-  }
-  applyEdgeConfig();
-
-  // Store applyEdgeConfig for later use when config changes
-  window.applyEdgeConfig = applyEdgeConfig;
-
-  // Setup swipe detection for each edge
-  function setupEdgeSwipe(edge, direction) {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-
-    edge.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].screenX;
-      touchStartY = e.touches[0].screenY;
-      touchStartTime = Date.now();
-    }, { passive: true });
-
-    edge.addEventListener('touchend', (e) => {
-      const touchEndX = e.changedTouches[0].screenX;
-      const touchEndY = e.changedTouches[0].screenY;
-      const distanceX = touchEndX - touchStartX;
-      const distanceY = touchEndY - touchStartY;
-      const duration = Date.now() - touchStartTime;
-      const totalDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-
-      // Check if this is a tap (minimal movement, short duration)
-      if (totalDistance < maxTapDistance && duration < maxTapDuration) {
-        // Pass tap through to element underneath
-        const touch = e.changedTouches[0];
-        edge.style.pointerEvents = 'none';
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        edge.style.pointerEvents = '';
-
-        if (elementBelow && elementBelow !== edge) {
-          // If we hit an iframe, drill into it to find the actual element
-          // (requires --disable-web-security for cross-origin iframes)
-          if (elementBelow.tagName === 'IFRAME') {
-            try {
-              const rect = elementBelow.getBoundingClientRect();
-              const iframeX = touch.clientX - rect.left;
-              const iframeY = touch.clientY - rect.top;
-              const innerElement = elementBelow.contentDocument.elementFromPoint(iframeX, iframeY);
-              if (innerElement) {
-                innerElement.click();
-              }
-            } catch (err) {
-              // Cross-origin blocked (security enabled), fall back to iframe click
-              elementBelow.click();
-            }
-          } else {
-            elementBelow.click();
-          }
-        }
-        return;
-      }
-
-      // Only trigger navigation if horizontal swipe is dominant
-      if (Math.abs(distanceX) > minSwipeDistance && Math.abs(distanceX) > Math.abs(distanceY)) {
-        if (distanceX > 0 && direction === 'left') {
-          // Swipe right from left edge = previous screen
-          prevScreen();
-        } else if (distanceX < 0 && direction === 'right') {
-          // Swipe left from right edge = next screen
-          nextScreen();
-        }
-      }
-    }, { passive: true });
-  }
-
-  setupEdgeSwipe(leftEdge, 'left');
-  setupEdgeSwipe(rightEdge, 'right');
 }
 
 // =====================
@@ -597,7 +534,7 @@ function savePanelSettings() {
 
   // Collect args
   const args = {};
-  document.querySelectorAll('#args-list .arg-row').forEach(row => {
+  document.querySelectorAll('#args-list .arg-row').forEach((row) => {
     const key = row.querySelector('.arg-key').value.trim();
     const value = row.querySelector('.arg-value').value.trim();
     if (key) {
@@ -679,7 +616,7 @@ function importConfig(e) {
       } else {
         alert('Invalid configuration file');
       }
-    } catch (err) {
+    } catch {
       alert('Failed to parse configuration file');
     }
   };
@@ -699,4 +636,11 @@ function resetConfig() {
   alert('Configuration reset to defaults!');
 }
 
-init();
+// Load widgets dynamically then initialize
+// Dynamic imports avoid circular dependency (widgets import registerWidget from this file)
+Promise.all([
+  import('./widgets/weather/weather.js'),
+  import('./widgets/calendar/calendar.js'),
+]).then(() => {
+  init();
+});

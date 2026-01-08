@@ -31,53 +31,36 @@ body {
   display: block;
 }
 
-.swipe-edge {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  z-index: 500;
-  /* Width set dynamically by JS based on orientation */
-}
-
-#swipe-edge-left {
-  left: 0;
-}
-
-#swipe-edge-right {
-  right: 0;
-}
-
-/* Visual indicator when enabled */
-.swipe-edge.visible {
-  background: linear-gradient(
-    to right,
-    rgba(100, 150, 255, 0.15),
-    transparent
-  );
-}
-
-#swipe-edge-right.visible {
-  background: linear-gradient(
-    to left,
-    rgba(100, 150, 255, 0.15),
-    transparent
-  );
-}
-
-/* Disable edges in edit mode */
-body.edit-mode .swipe-edge {
-  pointer-events: none;
-}
-
 .panel {
   position: absolute;
   overflow: hidden;
 }
 
-.panel iframe {
+.panel-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-content iframe {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+.empty-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #666;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+body.edit-mode .panel-content {
+  pointer-events: none;
 }
 
 #nav-buttons {
@@ -197,10 +180,6 @@ body.edit-mode .panel:hover {
   border-color: rgba(100, 150, 255, 0.8);
 }
 
-body.edit-mode .panel iframe {
-  pointer-events: none;
-}
-
 /* Resize handles */
 .resize-handle {
   display: none;
@@ -224,15 +203,55 @@ body.edit-mode .resize-handle {
   background: rgba(100, 150, 255, 0.6);
 }
 
-.resize-handle.nw { top: -8px; left: -8px; cursor: nw-resize; }
-.resize-handle.ne { top: -8px; right: -8px; cursor: ne-resize; }
-.resize-handle.sw { bottom: -8px; left: -8px; cursor: sw-resize; }
-.resize-handle.se { bottom: -8px; right: -8px; cursor: se-resize; }
+.resize-handle.nw {
+  top: -8px;
+  left: -8px;
+  cursor: nw-resize;
+}
+.resize-handle.ne {
+  top: -8px;
+  right: -8px;
+  cursor: ne-resize;
+}
+.resize-handle.sw {
+  bottom: -8px;
+  left: -8px;
+  cursor: sw-resize;
+}
+.resize-handle.se {
+  bottom: -8px;
+  right: -8px;
+  cursor: se-resize;
+}
 
-.resize-handle.n { top: -6px; left: 24px; right: 24px; height: 12px; cursor: n-resize; }
-.resize-handle.s { bottom: -6px; left: 24px; right: 24px; height: 12px; cursor: s-resize; }
-.resize-handle.w { left: -6px; top: 24px; bottom: 24px; width: 12px; cursor: w-resize; }
-.resize-handle.e { right: -6px; top: 24px; bottom: 24px; width: 12px; cursor: e-resize; }
+.resize-handle.n {
+  top: -6px;
+  left: 24px;
+  right: 24px;
+  height: 12px;
+  cursor: n-resize;
+}
+.resize-handle.s {
+  bottom: -6px;
+  left: 24px;
+  right: 24px;
+  height: 12px;
+  cursor: s-resize;
+}
+.resize-handle.w {
+  left: -6px;
+  top: 24px;
+  bottom: 24px;
+  width: 12px;
+  cursor: w-resize;
+}
+.resize-handle.e {
+  right: -6px;
+  top: 24px;
+  bottom: 24px;
+  width: 12px;
+  cursor: e-resize;
+}
 
 /* Position tooltip */
 .position-tooltip {
@@ -297,7 +316,7 @@ body.edit-mode .panel.resizing .position-tooltip {
   font-size: 14px;
 }
 
-.modal-content input[type="text"],
+.modal-content input[type='text'],
 .modal-content select {
   display: block;
   width: 100%;
@@ -310,7 +329,7 @@ body.edit-mode .panel.resizing .position-tooltip {
   font-size: 14px;
 }
 
-.modal-content input[type="text"]:focus,
+.modal-content input[type='text']:focus,
 .modal-content select:focus {
   outline: none;
   border-color: #6af;

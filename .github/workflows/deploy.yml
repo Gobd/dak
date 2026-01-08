@@ -48,6 +48,10 @@ jobs:
           cp -r family-chores/dist _site/family-chores
           cp -r health-tracker/dist _site/health-tracker
           cp -r notes-app/dist _site/notes-app
+          # Dashboard is static files (no build step)
+          mkdir -p _site/dashboard
+          cp dashboard/*.html dashboard/*.css dashboard/*.js _site/dashboard/
+          cp -r dashboard/widgets _site/dashboard/widgets
 
       - uses: actions/configure-pages@v5
 

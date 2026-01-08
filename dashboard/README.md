@@ -1,6 +1,6 @@
 # Dashboard
 
-A simple kiosk dashboard with multiple screens. Configure layouts via JSON, navigate with swipe or button.
+A simple kiosk dashboard with multiple screens. Configure layouts via JSON, navigate with buttons.
 
 ## Kiosk Setup
 
@@ -49,47 +49,12 @@ sudo apt-get install -y --no-install-recommends \
   chromium \
   openbox \
   lightdm \
-  unclutter \
-  git \
-  curl
+  unclutter
 ```
 
 > **Note:** Package is `chromium` on Debian, `chromium-browser` on Raspberry Pi OS. Adjust if needed.
 
-### 4. Clone dashboard
-
-```bash
-cd ~
-git clone https://github.com/Gobd/dak.git
-
-# Copy dashboard files to serve location
-cp -r ~/dak/dashboard ~/dashboard
-```
-
-### 5. Set up dashboard server (systemd)
-
-```bash
-sudo tee /etc/systemd/system/dashboard.service > /dev/null << 'EOF'
-[Unit]
-Description=Dashboard HTTP Server
-After=network.target
-
-[Service]
-Type=simple
-User=kiosk
-WorkingDirectory=/home/kiosk/dashboard
-ExecStart=/usr/bin/python3 -m http.server 8080
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl enable dashboard
-sudo systemctl start dashboard
-```
-
-### 6. Configure auto-login
+### 4. Configure auto-login
 
 ```bash
 sudo tee /etc/lightdm/lightdm.conf > /dev/null << 'EOF'
@@ -99,7 +64,7 @@ user-session=openbox
 EOF
 ```
 
-### 7. Create kiosk autostart
+### 5. Create kiosk autostart
 
 ```bash
 mkdir -p ~/.config/openbox
@@ -118,15 +83,13 @@ unclutter -idle 0.5 -root &
 # Launch Chromium kiosk
 chromium \
   --kiosk \
-  --disable-web-security \
-  --disable-site-isolation-trials \
   --user-data-dir=/home/kiosk/.chromium-kiosk \
   --no-first-run \
   --disable-translate \
   --disable-infobars \
   --noerrdialogs \
   --disable-session-crashed-bubble \
-  http://localhost:8080 &
+  https://bkemper.me/dak/dashboard &
 EOF
 
 chmod +x ~/.config/openbox/autostart
@@ -134,38 +97,7 @@ chmod +x ~/.config/openbox/autostart
 
 > **Note:** Use `chromium-browser` instead of `chromium` on Raspberry Pi OS.
 
-### Security flags explained
-
-The `--disable-web-security` and `--disable-site-isolation-trials` flags are **required for virtual keyboard extensions** to work across iframes from different origins (like embedded widgets, calendars, etc.).
-
-**What these flags disable:**
-
-| Protection | Normal behavior | With flags disabled |
-|------------|-----------------|---------------------|
-| Same-Origin Policy | JavaScript can only access content from the same domain | JavaScript can access content from ANY domain |
-| CORS | Cross-origin fetch/XHR requests are blocked unless server allows | All cross-origin requests succeed |
-| iframe isolation | Parent page cannot access cross-origin iframe content | Parent page can read/modify iframe content |
-
-**Why it's needed:**
-
-Browser extensions inject a content script into each frame. Normally, the keyboard in the top frame cannot detect focus or send keystrokes to inputs inside cross-origin iframes (like your weather widget from weatherwidget.io or Google Calendar). These flags allow a single keyboard instance to control inputs across all frames.
-
-**Risk assessment:**
-
-| Scenario | Risk level |
-|----------|------------|
-| Dedicated kiosk loading only your dashboard | **Low** - you control all content |
-| Kiosk with navigation to arbitrary websites | **High** - malicious sites could steal cookies/data from other origins |
-| General browsing | **Dangerous** - do not use for normal browsing |
-
-**What's still protected:**
-- HTTPS encryption (still works)
-- OAuth/login flows (still work - they use redirects, not CORS)
-- Cookies (still sent only to their origin, but JS can now read cross-origin DOM)
-
-**If you're uncomfortable with this:** Remove the security flags and each iframe will have its own independent keyboard instance instead of one unified keyboard.
-
-### 8. Reboot
+### 6. Reboot
 
 ```bash
 sudo reboot
@@ -173,21 +105,14 @@ sudo reboot
 
 ## Configuration
 
-Edit `screens.js` to configure screens and layouts. The file is self-documenting with comments and ASCII diagrams.
-
-```bash
-# On the kiosk:
-ssh kiosk@kiosk.local
-nano ~/dashboard/screens.js
-# Changes take effect on browser refresh (or reboot)
-```
+Edit `screens.js` to configure screens and layouts. The file is self-documenting with comments and ASCII diagrams. Changes deploy automatically via GitHub Pages.
 
 ## Custom Widgets
 
-For script-based widgets (like WeatherWidget.io), wrap them in a local HTML file. See `widgets/weather.html` for an example, then reference it in `screens.js`:
+Add widgets under `widgets/`. Reference them in `screens.js`:
 
 ```javascript
-{ src: '/widgets/weather.html', x: '50%', y: '50%', w: '50%', h: '50%' }
+{ src: '/widgets/weather/index.html', x: '50%', y: '50%', w: '50%', h: '50%' }
 ```
 
 ## Optional: Automatic Brightness (eyesome)

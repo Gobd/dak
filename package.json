@@ -1,6 +1,9 @@
 {
   "name": "dak",
   "private": true,
+  "volta": {
+    "node": "24"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
