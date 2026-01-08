@@ -8,6 +8,8 @@
   </head>
   <body>
     <div id="screens"></div>
+    <div id="swipe-edge-left" class="swipe-edge"></div>
+    <div id="swipe-edge-right" class="swipe-edge"></div>
     <div id="nav-buttons">
       <button id="nav-prev" aria-label="Previous screen">&#8249;</button>
       <button id="nav-next" aria-label="Next screen">&#8250;</button>
@@ -44,6 +46,28 @@
             <option value="1h">1 hour</option>
           </select>
         </label>
+        <div class="position-size-group">
+          <div class="field-row">
+            <label>
+              X
+              <input type="text" id="panel-x" placeholder="0%" />
+            </label>
+            <label>
+              Y
+              <input type="text" id="panel-y" placeholder="0%" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              Width
+              <input type="text" id="panel-w" placeholder="50%" />
+            </label>
+            <label>
+              Height
+              <input type="text" id="panel-h" placeholder="50%" />
+            </label>
+          </div>
+        </div>
         <div id="args-container">
           <label>Arguments</label>
           <div id="args-list"></div>

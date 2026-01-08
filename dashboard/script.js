@@ -233,26 +233,92 @@ function setupNavigation() {
   document.getElementById('nav-next').addEventListener('click', nextScreen);
   document.getElementById('nav-prev').addEventListener('click', prevScreen);
 
-  let touchStartX = 0;
-  let touchEndX = 0;
+  // Edge-based swipe navigation
+  const leftEdge = document.getElementById('swipe-edge-left');
+  const rightEdge = document.getElementById('swipe-edge-right');
   const minSwipeDistance = 50;
+  const maxTapDistance = 10; // Max movement to count as a tap
+  const maxTapDuration = 200; // Max ms to count as a tap
 
-  document.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, { passive: true });
+  // Apply edge width and visibility from config
+  function applyEdgeConfig() {
+    const width = config.swipeEdgeWidth || 40;
+    const shouldShow = width > 0 && screens.length > 1;
 
-  document.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    const distance = touchEndX - touchStartX;
+    if (shouldShow) {
+      leftEdge.style.width = width + 'px';
+      rightEdge.style.width = width + 'px';
+      leftEdge.style.display = 'block';
+      rightEdge.style.display = 'block';
 
-    if (Math.abs(distance) > minSwipeDistance) {
-      if (distance < 0) {
-        nextScreen();
+      if (config.showSwipeEdges) {
+        leftEdge.classList.add('visible');
+        rightEdge.classList.add('visible');
       } else {
-        prevScreen();
+        leftEdge.classList.remove('visible');
+        rightEdge.classList.remove('visible');
       }
+    } else {
+      // Hide edges if disabled or only 1 screen
+      leftEdge.style.display = 'none';
+      rightEdge.style.display = 'none';
     }
-  }, { passive: true });
+  }
+  applyEdgeConfig();
+
+  // Store applyEdgeConfig for later use when config changes
+  window.applyEdgeConfig = applyEdgeConfig;
+
+  // Setup swipe detection for each edge
+  function setupEdgeSwipe(edge, direction) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    edge.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].screenX;
+      touchStartY = e.touches[0].screenY;
+      touchStartTime = Date.now();
+    }, { passive: true });
+
+    edge.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      const distanceX = touchEndX - touchStartX;
+      const distanceY = touchEndY - touchStartY;
+      const duration = Date.now() - touchStartTime;
+      const totalDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+      // Check if this is a tap (minimal movement, short duration)
+      if (totalDistance < maxTapDistance && duration < maxTapDuration) {
+        // Pass tap through to element underneath
+        const touch = e.changedTouches[0];
+        edge.style.pointerEvents = 'none';
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        edge.style.pointerEvents = '';
+
+        if (elementBelow && elementBelow !== edge) {
+          // Simulate click on element below
+          elementBelow.click();
+        }
+        return;
+      }
+
+      // Only trigger navigation if horizontal swipe is dominant
+      if (Math.abs(distanceX) > minSwipeDistance && Math.abs(distanceX) > Math.abs(distanceY)) {
+        if (distanceX > 0 && direction === 'left') {
+          // Swipe right from left edge = previous screen
+          prevScreen();
+        } else if (distanceX < 0 && direction === 'right') {
+          // Swipe left from right edge = next screen
+          nextScreen();
+        }
+      }
+    }, { passive: true });
+  }
+
+  setupEdgeSwipe(leftEdge, 'left');
+  setupEdgeSwipe(rightEdge, 'right');
 }
 
 // =====================
@@ -463,6 +529,12 @@ function openPanelSettings(screenIndex, panelIndex) {
   document.getElementById('panel-src').value = editingPanel.src || '';
   document.getElementById('panel-refresh').value = editingPanel.refresh || '';
 
+  // Populate position/size
+  document.getElementById('panel-x').value = editingPanel.x || '0%';
+  document.getElementById('panel-y').value = editingPanel.y || '0%';
+  document.getElementById('panel-w').value = editingPanel.w || '50%';
+  document.getElementById('panel-h').value = editingPanel.h || '50%';
+
   // Populate args
   const argsList = document.getElementById('args-list');
   argsList.innerHTML = '';
@@ -500,6 +572,12 @@ function savePanelSettings() {
 
   editingPanel.src = document.getElementById('panel-src').value;
   editingPanel.refresh = document.getElementById('panel-refresh').value || undefined;
+
+  // Save position/size
+  editingPanel.x = document.getElementById('panel-x').value || '0%';
+  editingPanel.y = document.getElementById('panel-y').value || '0%';
+  editingPanel.w = document.getElementById('panel-w').value || '50%';
+  editingPanel.h = document.getElementById('panel-h').value || '50%';
 
   // Collect args
   const args = {};

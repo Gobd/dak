@@ -31,6 +31,44 @@ body {
   display: block;
 }
 
+.swipe-edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 500;
+  /* Width set dynamically by JS based on orientation */
+}
+
+#swipe-edge-left {
+  left: 0;
+}
+
+#swipe-edge-right {
+  right: 0;
+}
+
+/* Visual indicator when enabled */
+.swipe-edge.visible {
+  background: linear-gradient(
+    to right,
+    rgba(100, 150, 255, 0.15),
+    transparent
+  );
+}
+
+#swipe-edge-right.visible {
+  background: linear-gradient(
+    to left,
+    rgba(100, 150, 255, 0.15),
+    transparent
+  );
+}
+
+/* Disable edges in edit mode */
+body.edit-mode .swipe-edge {
+  pointer-events: none;
+}
+
 .panel {
   position: absolute;
   overflow: hidden;
@@ -276,6 +314,19 @@ body.edit-mode .panel.resizing .position-tooltip {
 .modal-content select:focus {
   outline: none;
   border-color: #6af;
+}
+
+.position-size-group {
+  margin-bottom: 16px;
+}
+
+.field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.field-row label {
+  flex: 1;
 }
 
 #args-container {

@@ -11,6 +11,8 @@
  *                   'none' = no buttons (swipe only)
  *   navColor      - Button text/arrow color
  *   navBackground - Button background color
+ *   swipeEdgeWidth - Swipe edge width in pixels (default: 40), set to 0 to disable edge swipe
+ *   showSwipeEdges - Show visual indicators for swipe zones (default: false)
  *
  * PANEL OPTIONS:
  *   src     - URL to load in the panel iframe
@@ -41,6 +43,8 @@ export default {
     navButtons: 'both',
     navColor: 'rgba(255, 255, 255, 0.6)',
     navBackground: 'rgba(255, 255, 255, 0.1)',
+    swipeEdgeWidth: 40,
+    showSwipeEdges: false,
   },
 
   screens: [
