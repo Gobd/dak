@@ -10,8 +10,8 @@ import {
   getDevAuthUrl,
   handleDevCallback,
 } from './oauth.js';
-import { getAllEvents, createEvent, updateEvent, deleteEvent } from './api.js';
-import { createDateTimePicker } from './wheel-picker.js';
+import { getAllEvents, getEvent, createEvent, updateEvent, deleteEvent } from './api.js';
+import { createHybridDateTimePicker, setWeekStart } from './wheel-picker.js';
 
 // Calendar Widget - Month grid and list views
 
@@ -26,6 +26,7 @@ let currentView = 'month'; // 'month' or 'list'
 let gridStartDate = null; // Start date for grid view (most recent week start)
 let weeksToShow = 4; // Configurable number of weeks
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday (default Monday)
+let isDarkMode = true; // Controlled by dashboard config
 
 // Load hidden calendars from localStorage
 function loadHiddenCalendars() {
@@ -215,8 +216,9 @@ function renderMonthView(container) {
     days.push(date);
   }
 
+  const darkClass = isDarkMode ? 'dark' : '';
   container.innerHTML = `
-    <div class="calendar-widget">
+    <div class="calendar-widget ${darkClass}">
       <div class="calendar-header">
         <button class="cal-nav-btn" data-action="prev-week">‹</button>
         <span class="cal-title">${dateRange}</span>
@@ -302,9 +304,10 @@ function renderListView(container) {
   }
 
   const today = formatLocalDate(new Date());
+  const darkClass = isDarkMode ? 'dark' : '';
 
   container.innerHTML = `
-    <div class="calendar-widget">
+    <div class="calendar-widget ${darkClass}">
       <div class="calendar-header">
         <button class="cal-nav-btn cal-today-btn" data-action="today">Today</button>
         <span class="cal-title">Calendar</span>
@@ -511,6 +514,7 @@ function showEventModal(event) {
   const startTime = formatTime(event.start.dateTime || event.start.date);
   const endTime = formatTime(event.end.dateTime || event.end.date);
   const isAllDay = !event.start.dateTime;
+  const isRecurring = !!event.recurringEventId;
   const eventDate = new Date(event.start.dateTime || event.start.date);
   const dateStr = eventDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -523,8 +527,9 @@ function showEventModal(event) {
   modal.innerHTML = `
     <div class="cal-modal-content">
       <h3>${event.summary || '(No title)'}</h3>
-      <p class="event-date">${dateStr}</p>
+      <p class="event-date">${dateStr}${isRecurring ? ' <span style="opacity: 0.6;">(repeating)</span>' : ''}</p>
       <p class="event-time">${isAllDay ? 'All day' : `${startTime} - ${endTime}`}</p>
+      ${event.location ? `<p class="event-location">📍 ${event.location}</p>` : ''}
       <p class="event-calendar" style="color: ${event.calendarColor}">${event.calendarName}</p>
       ${event.description ? `<p class="event-desc">${event.description}</p>` : ''}
       <div class="cal-modal-actions">
@@ -540,18 +545,109 @@ function showEventModal(event) {
     if (action === 'close' || e.target === modal) {
       modal.remove();
     } else if (action === 'delete') {
-      if (confirm('Delete this event?')) {
-        try {
-          await deleteEvent(accessToken, event.calendarId, event.id);
-          modal.remove();
-          await loadEvents();
-        } catch {
-          alert('Failed to delete event');
+      if (isRecurring) {
+        modal.remove();
+        showRecurringDeleteModal(event);
+      } else {
+        if (confirm('Delete this event?')) {
+          try {
+            await deleteEvent(accessToken, event.calendarId, event.id);
+            modal.remove();
+            await loadEvents();
+          } catch {
+            alert('Failed to delete event');
+          }
         }
       }
     } else if (action === 'edit') {
       modal.remove();
-      showEditEventModal(event);
+      if (isRecurring) {
+        showRecurringEditModal(event);
+      } else {
+        showEditEventModal(event);
+      }
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showRecurringDeleteModal(event) {
+  const modal = document.createElement('div');
+  modal.className = 'cal-modal open';
+  modal.innerHTML = `
+    <div class="cal-modal-content">
+      <h3>Delete recurring event</h3>
+      <p>This is a recurring event. What would you like to delete?</p>
+      <div class="cal-modal-actions" style="flex-direction: column; gap: 8px;">
+        <button class="cal-btn" data-action="this" style="width: 100%;">This event only</button>
+        <button class="cal-btn danger" data-action="all" style="width: 100%;">All events in series</button>
+        <button class="cal-btn" data-action="cancel" style="width: 100%;">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', async (e) => {
+    const action = e.target.dataset.action;
+    if (action === 'cancel' || e.target === modal) {
+      modal.remove();
+    } else if (action === 'this') {
+      try {
+        await deleteEvent(accessToken, event.calendarId, event.id);
+        modal.remove();
+        await loadEvents();
+      } catch {
+        alert('Failed to delete event');
+      }
+    } else if (action === 'all') {
+      try {
+        // Delete the master recurring event
+        await deleteEvent(accessToken, event.calendarId, event.recurringEventId);
+        modal.remove();
+        await loadEvents();
+      } catch {
+        alert('Failed to delete series');
+      }
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showRecurringEditModal(event) {
+  const modal = document.createElement('div');
+  modal.className = 'cal-modal open';
+  modal.innerHTML = `
+    <div class="cal-modal-content">
+      <h3>Edit recurring event</h3>
+      <p>This is a recurring event. What would you like to edit?</p>
+      <div class="cal-modal-actions" style="flex-direction: column; gap: 8px;">
+        <button class="cal-btn primary" data-action="this" style="width: 100%;">This event only</button>
+        <button class="cal-btn" data-action="all" style="width: 100%;">All events in series</button>
+        <button class="cal-btn" data-action="cancel" style="width: 100%;">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', async (e) => {
+    const action = e.target.dataset.action;
+    if (action === 'cancel' || e.target === modal) {
+      modal.remove();
+    } else if (action === 'this') {
+      modal.remove();
+      showEditEventModal(event, false); // Edit this instance only
+    } else if (action === 'all') {
+      // Fetch the master event and edit that
+      try {
+        const masterEvent = await getEvent(accessToken, event.calendarId, event.recurringEventId);
+        masterEvent.calendarId = event.calendarId;
+        masterEvent.calendarColor = event.calendarColor;
+        masterEvent.calendarName = event.calendarName;
+        modal.remove();
+        showEditEventModal(masterEvent, true); // Edit master (all in series)
+      } catch {
+        alert('Failed to load recurring event');
+      }
     }
   });
 
@@ -579,12 +675,27 @@ function showAddEventModal(date) {
       <label style="margin-bottom: 8px;">
         <input type="checkbox" id="event-allday"> All day
       </label>
-      <div id="start-picker-container">
-        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Start</div>
-      </div>
-      <div id="end-picker-container">
-        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">End</div>
-      </div>
+      <div id="start-picker-container"></div>
+      <div id="end-picker-container"></div>
+      <label>
+        Location
+        <input type="text" id="event-location" placeholder="Add location">
+      </label>
+      <label>
+        Description
+        <textarea id="event-description" placeholder="Add description" rows="2" style="resize: vertical;"></textarea>
+      </label>
+      <label>
+        Repeat
+        <select id="event-recurrence">
+          <option value="">Does not repeat</option>
+          <option value="DAILY">Daily</option>
+          <option value="WEEKLY">Weekly</option>
+          <option value="MONTHLY">Monthly</option>
+          <option value="YEARLY">Yearly</option>
+          <option value="WEEKDAYS">Every weekday (Mon-Fri)</option>
+        </select>
+      </label>
       <label>
         Calendar
         <select id="event-calendar">${calendarOptions}</select>
@@ -605,34 +716,50 @@ function showAddEventModal(date) {
   let selectedStart = startDate;
   let selectedEnd = endDate;
   let isAllDay = false;
+  let lastStartDate = new Date(startDate); // Track for sync
 
-  // Create start picker (date + time)
+  // Create start picker (hybrid: mini calendar + wheel time)
   const startContainer = modal.querySelector('#start-picker-container');
-  const startPicker = createDateTimePicker(startDate, (newDate) => {
+  const startPicker = createHybridDateTimePicker(startDate, (newDate) => {
+    // Calculate date difference and apply to end date (sync dates)
+    const startDateOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
+    const newStartDateOnly = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+    const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
+
+    if (dayDiff !== 0) {
+      // Move end date by same amount
+      const newEndDate = new Date(selectedEnd);
+      newEndDate.setDate(newEndDate.getDate() + dayDiff);
+      selectedEnd = newEndDate;
+      endPicker.setDate(newEndDate);
+    }
+
     selectedStart = newDate;
-    // Auto-adjust end to be 1 hour after start if end is before start
+    lastStartDate = new Date(newDate);
+
+    // Ensure end is after start
     if (selectedEnd <= selectedStart) {
       selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+      endPicker.setDate(selectedEnd);
     }
-  }, { allowFuture: true });
+  }, { allowFuture: true, label: 'Start' });
   startContainer.appendChild(startPicker);
 
-  // Create end picker (full date + time for multi-day events)
+  // Create end picker (hybrid: mini calendar + wheel time)
   const endContainer = modal.querySelector('#end-picker-container');
-  const endPicker = createDateTimePicker(endDate, (newDate) => {
+  const endPicker = createHybridDateTimePicker(endDate, (newDate) => {
+    // End date changes independently (for multi-day events)
     selectedEnd = newDate;
-  }, { allowFuture: true });
+  }, { allowFuture: true, label: 'End' });
   endContainer.appendChild(endPicker);
 
   // All day toggle
   const allDayCheckbox = modal.querySelector('#event-allday');
   allDayCheckbox.addEventListener('change', () => {
     isAllDay = allDayCheckbox.checked;
-    // Hide/show time portions
-    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
-    timeElements.forEach((el) => {
-      el.style.display = isAllDay ? 'none' : '';
-    });
+    // Hide/show time using the exposed method
+    startPicker.setShowTime(!isAllDay);
+    endPicker.setShowTime(!isAllDay);
     endContainer.style.display = isAllDay ? 'none' : '';
   });
 
@@ -642,11 +769,17 @@ function showAddEventModal(date) {
       modal.remove();
     } else if (action === 'save') {
       const title = modal.querySelector('#event-title').value;
+      const location = modal.querySelector('#event-location').value;
+      const description = modal.querySelector('#event-description').value;
       const calendarId = modal.querySelector('#event-calendar').value;
+      const recurrence = modal.querySelector('#event-recurrence').value;
 
       const event = {
         summary: title || '(No title)',
       };
+
+      if (location) event.location = location;
+      if (description) event.description = description;
 
       if (isAllDay) {
         const dateStr = formatLocalDate(selectedStart);
@@ -666,6 +799,19 @@ function showAddEventModal(date) {
         };
       }
 
+      // Add recurrence rule if selected
+      if (recurrence) {
+        const dayOfWeek = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][selectedStart.getDay()];
+        const recurrenceRules = {
+          DAILY: 'RRULE:FREQ=DAILY',
+          WEEKLY: `RRULE:FREQ=WEEKLY;BYDAY=${dayOfWeek}`,
+          MONTHLY: 'RRULE:FREQ=MONTHLY',
+          YEARLY: 'RRULE:FREQ=YEARLY',
+          WEEKDAYS: 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',
+        };
+        event.recurrence = [recurrenceRules[recurrence]];
+      }
+
       try {
         await createEvent(accessToken, calendarId, event);
         modal.remove();
@@ -680,32 +826,34 @@ function showAddEventModal(date) {
   modal.querySelector('#event-title').focus();
 }
 
-function showEditEventModal(event) {
+function showEditEventModal(event, editAll = false) {
   const eventIsAllDay = !event.start.dateTime;
   const eventStart = new Date(event.start.dateTime || event.start.date + 'T09:00:00');
   const eventEnd = new Date(event.end.dateTime || event.end.date + 'T10:00:00');
-  const endTimeStr = event.end.dateTime
-    ? event.end.dateTime.split('T')[1].substring(0, 5)
-    : '10:00';
+  const escapeHtml = (str) => str ? str.replace(/"/g, '&quot;').replace(/</g, '&lt;') : '';
 
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
   modal.innerHTML = `
     <div class="cal-modal-content">
-      <h3>Edit Event</h3>
+      <h3>Edit ${editAll ? 'Recurring ' : ''}Event</h3>
       <label>
         Title
-        <input type="text" id="event-title" value="${event.summary || ''}">
+        <input type="text" id="event-title" value="${escapeHtml(event.summary)}">
       </label>
       <label style="margin-bottom: 8px;">
         <input type="checkbox" id="event-allday" ${eventIsAllDay ? 'checked' : ''}> All day
       </label>
-      <div id="start-picker-container">
-        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Start</div>
-      </div>
-      <div id="end-picker-container" ${eventIsAllDay ? 'style="display: none;"' : ''}>
-        <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">End</div>
-      </div>
+      <div id="start-picker-container"></div>
+      <div id="end-picker-container" ${eventIsAllDay ? 'style="display: none;"' : ''}></div>
+      <label>
+        Location
+        <input type="text" id="event-location" value="${escapeHtml(event.location)}">
+      </label>
+      <label>
+        Description
+        <textarea id="event-description" rows="2" style="resize: vertical;">${escapeHtml(event.description)}</textarea>
+      </label>
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="cancel">Cancel</button>
         <button class="cal-btn primary" data-action="save">Save</button>
@@ -716,40 +864,55 @@ function showEditEventModal(event) {
   let selectedStart = eventStart;
   let selectedEnd = eventEnd;
   let isAllDay = eventIsAllDay;
+  let lastStartDate = new Date(eventStart); // Track for sync
 
-  // Create start picker (date + time)
+  // Create start picker (hybrid: mini calendar + wheel time)
   const startContainer = modal.querySelector('#start-picker-container');
-  const startPicker = createDateTimePicker(eventStart, (newDate) => {
+  const startPicker = createHybridDateTimePicker(eventStart, (newDate) => {
+    // Calculate date difference and apply to end date (sync dates)
+    const startDateOnly = new Date(lastStartDate.getFullYear(), lastStartDate.getMonth(), lastStartDate.getDate());
+    const newStartDateOnly = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate());
+    const dayDiff = Math.round((newStartDateOnly - startDateOnly) / (1000 * 60 * 60 * 24));
+
+    if (dayDiff !== 0) {
+      // Move end date by same amount
+      const newEndDate = new Date(selectedEnd);
+      newEndDate.setDate(newEndDate.getDate() + dayDiff);
+      selectedEnd = newEndDate;
+      endPicker.setDate(newEndDate);
+    }
+
     selectedStart = newDate;
+    lastStartDate = new Date(newDate);
+
+    // Ensure end is after start
     if (selectedEnd <= selectedStart) {
       selectedEnd = new Date(selectedStart.getTime() + 60 * 60 * 1000);
+      endPicker.setDate(selectedEnd);
     }
-  }, { allowFuture: true });
+  }, { allowFuture: true, label: 'Start' });
   startContainer.appendChild(startPicker);
 
-  // Create end picker (full date + time for multi-day events)
+  // Create end picker (hybrid: mini calendar + wheel time)
   const endContainer = modal.querySelector('#end-picker-container');
-  const endPicker = createDateTimePicker(eventEnd, (newDate) => {
+  const endPicker = createHybridDateTimePicker(eventEnd, (newDate) => {
+    // End date changes independently (for multi-day events)
     selectedEnd = newDate;
-  }, { allowFuture: true });
+  }, { allowFuture: true, label: 'End' });
   endContainer.appendChild(endPicker);
 
   // Hide time elements if all day
   if (eventIsAllDay) {
-    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
-    timeElements.forEach((el) => {
-      el.style.display = 'none';
-    });
+    startPicker.setShowTime(false);
+    endPicker.setShowTime(false);
   }
 
   // All day toggle
   const allDayCheckbox = modal.querySelector('#event-allday');
   allDayCheckbox.addEventListener('change', () => {
     isAllDay = allDayCheckbox.checked;
-    const timeElements = modal.querySelectorAll('.wheel-hour, .wheel-minute, .wheel-colon, .wheel-ampm');
-    timeElements.forEach((el) => {
-      el.style.display = isAllDay ? 'none' : '';
-    });
+    startPicker.setShowTime(!isAllDay);
+    endPicker.setShowTime(!isAllDay);
     endContainer.style.display = isAllDay ? 'none' : '';
   });
 
@@ -759,10 +922,14 @@ function showEditEventModal(event) {
       modal.remove();
     } else if (action === 'save') {
       const title = modal.querySelector('#event-title').value;
+      const location = modal.querySelector('#event-location').value;
+      const description = modal.querySelector('#event-description').value;
 
       const updatedEvent = {
         ...event,
         summary: title || '(No title)',
+        location: location || null,
+        description: description || null,
       };
 
       if (isAllDay) {
@@ -845,9 +1012,10 @@ function showCalendarFilterModal() {
 }
 
 function renderSignIn(container) {
+  const darkClass = isDarkMode ? 'dark' : '';
   if (!isConfigured()) {
     container.innerHTML = `
-      <div class="calendar-widget calendar-setup">
+      <div class="calendar-widget calendar-setup ${darkClass}">
         <div class="setup-message">
           <h3>Calendar Setup Required</h3>
           <p>Add your Google OAuth Client ID to:</p>
@@ -861,7 +1029,7 @@ function renderSignIn(container) {
   // Dev mode: use implicit flow (one-click, no server needed)
   if (isDevMode()) {
     container.innerHTML = `
-      <div class="calendar-widget calendar-signin">
+      <div class="calendar-widget calendar-signin ${darkClass}">
         <div class="signin-message">
           <h3>Dev Mode</h3>
           <p>Sign in with Google (implicit flow)</p>
@@ -877,7 +1045,7 @@ function renderSignIn(container) {
   }
 
   container.innerHTML = `
-    <div class="calendar-widget calendar-signin">
+    <div class="calendar-widget calendar-signin ${darkClass}">
       <div class="signin-message">
         <h3>Google Calendar</h3>
         <p>Sign in to view and manage your calendars</p>
@@ -892,8 +1060,9 @@ function renderSignIn(container) {
 }
 
 function renderLoading(container) {
+  const darkClass = isDarkMode ? 'dark' : '';
   container.innerHTML = `
-    <div class="calendar-widget calendar-loading">
+    <div class="calendar-widget calendar-loading ${darkClass}">
       <div class="loading-message">Loading calendar...</div>
     </div>
   `;
@@ -901,8 +1070,9 @@ function renderLoading(container) {
 
 // Main widget render function
 // Options: args.view ('month' or 'list'), args.weekStart ('sunday' or 'monday'), args.weeks (number)
-async function renderCalendarWidget(container, panel, { refreshIntervals, parseDuration }) {
+async function renderCalendarWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
   currentContainer = container;
+  isDarkMode = dark;
 
   // Load hidden calendars preference
   loadHiddenCalendars();
@@ -919,6 +1089,7 @@ async function renderCalendarWidget(container, panel, { refreshIntervals, parseD
   } else {
     weekStartsOn = 1; // Default to Monday
   }
+  setWeekStart(weekStartsOn); // Sync with wheel-picker mini calendar
 
   if (panel.args?.weeks && typeof panel.args.weeks === 'number') {
     weeksToShow = panel.args.weeks;

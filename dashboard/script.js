@@ -101,6 +101,13 @@ function applyConfig() {
     document.body.style.background = config.background;
   }
 
+  // Dark mode - add/remove class for widget modals
+  if (config.dark !== false) {
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+  }
+
   const navButtonsContainer = document.getElementById('nav-buttons');
   const navPrev = document.getElementById('nav-prev');
   const navNext = document.getElementById('nav-next');
@@ -192,16 +199,21 @@ function createPanelElement(panel, screenIndex, panelIndex) {
   const content = document.createElement('div');
   content.className = 'panel-content';
 
+  // Get dark mode setting from config
+  const isDark = config.dark !== false;
+
   if (widgetType && widgets[widgetType]) {
-    // Use registered widget
-    widgets[widgetType](content, panel, { refreshIntervals, parseDuration });
+    // Use registered widget - pass dark mode in options
+    widgets[widgetType](content, panel, { refreshIntervals, parseDuration, dark: isDark });
   } else if (panel.src) {
     // Fallback: iframe for legacy configs with just src
     const iframe = document.createElement('iframe');
     let src = panel.src;
+    const params = new URLSearchParams();
+    // Add dark mode param
+    params.append('dark', isDark ? 'true' : 'false');
+    // Add panel args
     if (panel.args && Object.keys(panel.args).length > 0) {
-      const separator = src.includes('?') ? '&' : '?';
-      const params = new URLSearchParams();
       for (const [key, value] of Object.entries(panel.args)) {
         if (Array.isArray(value)) {
           value.forEach((v) => params.append(key, v));
@@ -209,8 +221,9 @@ function createPanelElement(panel, screenIndex, panelIndex) {
           params.append(key, value);
         }
       }
-      src = src + separator + params.toString();
     }
+    const separator = src.includes('?') ? '&' : '?';
+    src = src + separator + params.toString();
     iframe.src = src;
     iframe.loading = 'lazy';
 

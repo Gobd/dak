@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState, useMemo } from "react";
-import { getDaysInMonth } from "date-fns";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { getDaysInMonth, format } from "date-fns";
 
 const ITEM_HEIGHT = 44;
 
@@ -85,14 +85,150 @@ function Wheel({ items, value, onChange }: WheelProps) {
   );
 }
 
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const FULL_MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+interface MiniCalendarProps {
+  selectedDate: Date;
+  onSelect: (date: Date) => void;
+  onClose: () => void;
+  allowFuture?: boolean;
+}
+
+function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: MiniCalendarProps) {
+  const [viewMonth, setViewMonth] = useState(selectedDate.getMonth());
+  const [viewYear, setViewYear] = useState(selectedDate.getFullYear());
+  const today = new Date();
+
+  const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = getDaysInMonth(new Date(viewYear, viewMonth));
+
+  const handlePrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  const handleDayClick = (day: number) => {
+    const newDate = new Date(viewYear, viewMonth, day);
+    // Check if date is allowed
+    if (!allowFuture) {
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (newDate > todayStart) return;
+    }
+    onSelect(newDate);
+  };
+
+  const isDayDisabled = (day: number) => {
+    if (allowFuture) return false;
+    const date = new Date(viewYear, viewMonth, day);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return date > todayStart;
+  };
+
+  const isDaySelected = (day: number) => {
+    return day === selectedDate.getDate() &&
+           viewMonth === selectedDate.getMonth() &&
+           viewYear === selectedDate.getFullYear();
+  };
+
+  const isDayToday = (day: number) => {
+    return day === today.getDate() &&
+           viewMonth === today.getMonth() &&
+           viewYear === today.getFullYear();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-neutral-800 rounded-xl p-4 min-w-[280px] shadow-xl border border-gray-200 dark:border-neutral-700"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={handlePrevMonth}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+          >
+            &lt;
+          </button>
+          <span className="font-semibold text-gray-900 dark:text-white">
+            {FULL_MONTHS[viewMonth]} {viewYear}
+          </span>
+          <button
+            onClick={handleNextMonth}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-600 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+          >
+            &gt;
+          </button>
+        </div>
+
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {DAYS.map((day) => (
+            <div key={day} className="text-center text-xs font-semibold text-gray-500 dark:text-neutral-400 py-1">
+              {day.charAt(0)}
+            </div>
+          ))}
+        </div>
+
+        {/* Days grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Empty cells for days before first of month */}
+          {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square" />
+          ))}
+          {/* Days of month */}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const disabled = isDayDisabled(day);
+            const selected = isDaySelected(day);
+            const isToday = isDayToday(day);
+
+            return (
+              <button
+                key={day}
+                onClick={() => !disabled && handleDayClick(day)}
+                disabled={disabled}
+                className={`
+                  aspect-square flex items-center justify-center text-sm rounded-full transition-colors
+                  ${disabled ? "text-gray-300 dark:text-neutral-600 cursor-not-allowed" : "cursor-pointer"}
+                  ${selected ? "bg-blue-600 text-white" : ""}
+                  ${isToday && !selected ? "border border-blue-500" : ""}
+                  ${!selected && !disabled ? "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-700" : ""}
+                `}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface TimePickerProps {
   value: Date | null;
   onChange: (date: Date) => void;
   showDatePicker?: boolean;
   allowFuture?: boolean;
 }
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function TimePicker({
   value,
@@ -103,13 +239,7 @@ export function TimePicker({
   const now = new Date();
   const baseDate = value || now;
 
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  const currentDay = now.getDate();
-
-  const [year, setYear] = useState(() => baseDate.getFullYear());
-  const [month, setMonth] = useState(() => baseDate.getMonth());
-  const [day, setDay] = useState(() => baseDate.getDate());
+  const [selectedDate, setSelectedDate] = useState(() => new Date(baseDate));
   const [hour, setHour] = useState(() => {
     const h = baseDate.getHours();
     return h === 0 ? 12 : h > 12 ? h - 12 : h;
@@ -118,76 +248,20 @@ export function TimePicker({
     return Math.floor(baseDate.getMinutes() / 5) * 5;
   });
   const [isPM, setIsPM] = useState(() => baseDate.getHours() >= 12);
-
-  // Available years: past year + current for logging, current + next for future
-  const availableYears = useMemo(() => {
-    if (allowFuture) {
-      return [String(currentYear), String(currentYear + 1)];
-    }
-    return [String(currentYear - 1), String(currentYear)];
-  }, [allowFuture, currentYear]);
-
-  // Calculate days in selected month/year
-  const daysInMonth = useMemo(() => {
-    return getDaysInMonth(new Date(year, month));
-  }, [year, month]);
-
-  // Filter months based on allowFuture and selected year
-  const availableMonths = useMemo(() => {
-    if (allowFuture) {
-      // Future: if current year, only future months; if next year, all months
-      if (year === currentYear) {
-        return MONTHS.slice(currentMonth);
-      }
-      return MONTHS;
-    } else {
-      // Past: if current year, only past months; if last year, all months
-      if (year === currentYear) {
-        return MONTHS.slice(0, currentMonth + 1);
-      }
-      return MONTHS;
-    }
-  }, [allowFuture, year, currentYear, currentMonth]);
-
-  // Clamp month if year changes and month is out of range
-  useEffect(() => {
-    if (!availableMonths.includes(MONTHS[month])) {
-      const newMonthIndex = MONTHS.indexOf(availableMonths[allowFuture ? 0 : availableMonths.length - 1]);
-      setMonth(newMonthIndex);
-    }
-  }, [availableMonths, month, allowFuture]);
-
-  // Filter days based on allowFuture, selected year/month
-  const availableDays = useMemo(() => {
-    const isCurrentYearMonth = year === currentYear && month === currentMonth;
-    let maxDay: number;
-
-    if (allowFuture) {
-      // For future dates, show all days in month
-      maxDay = daysInMonth;
-    } else {
-      // For past dates, limit to today if current year/month
-      maxDay = isCurrentYearMonth ? currentDay : daysInMonth;
-    }
-
-    return Array.from({ length: maxDay }, (_, i) => String(i + 1));
-  }, [allowFuture, year, month, currentYear, currentMonth, currentDay, daysInMonth]);
-
-  // Clamp day if it exceeds available days
-  useEffect(() => {
-    const maxAvailableDay = Number(availableDays[availableDays.length - 1]);
-    if (day > maxAvailableDay) {
-      setDay(maxAvailableDay);
-    }
-  }, [availableDays, day]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1));
   const minutes = Array.from({ length: 12 }, (_, i) =>
     String(i * 5).padStart(2, "0"),
   );
 
+  const handleDateSelect = useCallback((date: Date) => {
+    setSelectedDate(date);
+    setShowCalendar(false);
+  }, []);
+
   useEffect(() => {
-    const date = new Date(year, month, day);
+    const date = new Date(selectedDate);
 
     let h = hour;
     if (isPM && hour !== 12) h = hour + 12;
@@ -195,75 +269,74 @@ export function TimePicker({
 
     date.setHours(h, minute, 0, 0);
     onChange(date);
-  }, [hour, minute, isPM, month, day, year, onChange]);
+  }, [hour, minute, isPM, selectedDate, onChange]);
+
+  const formattedDate = format(selectedDate, "MMM d, yyyy");
 
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-xl p-4">
-      <div className="flex items-center justify-center gap-1">
+      <div className="flex items-center justify-center gap-4">
+        {/* Date button */}
         {showDatePicker && (
-          <>
-            <div className="w-14">
-              <Wheel
-                items={availableMonths}
-                value={MONTHS[month]}
-                onChange={(v) => setMonth(MONTHS.indexOf(v))}
-              />
-            </div>
-            <div className="w-10">
-              <Wheel
-                items={availableDays}
-                value={String(day)}
-                onChange={(v) => setDay(Number(v))}
-              />
-            </div>
-            <div className="w-14">
-              <Wheel
-                items={availableYears}
-                value={String(year)}
-                onChange={(v) => setYear(Number(v))}
-              />
-            </div>
-            <div className="w-3" />
-          </>
+          <button
+            onClick={() => setShowCalendar(true)}
+            className="px-3 py-2 bg-gray-100 dark:bg-neutral-700 rounded-lg text-gray-900 dark:text-white font-medium text-sm border border-gray-200 dark:border-neutral-600 hover:border-blue-500 transition-colors"
+          >
+            {formattedDate}
+          </button>
         )}
-        <div className="w-14">
-          <Wheel
-            items={hours}
-            value={String(hour)}
-            onChange={(v) => setHour(Number(v))}
-          />
-        </div>
-        <div className="text-2xl font-bold text-gray-400">:</div>
-        <div className="w-14">
-          <Wheel
-            items={minutes}
-            value={String(minute).padStart(2, "0")}
-            onChange={(v) => setMinute(Number(v))}
-          />
-        </div>
-        <div className="flex flex-col gap-1 ml-1">
-          <button
-            onClick={() => setIsPM(false)}
-            className={`px-2 py-2 rounded-lg font-medium text-sm transition-colors ${
-              !isPM
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
-            }`}
-          >
-            AM
-          </button>
-          <button
-            onClick={() => setIsPM(true)}
-            className={`px-2 py-2 rounded-lg font-medium text-sm transition-colors ${
-              isPM
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
-            }`}
-          >
-            PM
-          </button>
+
+        {/* Time wheels */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="w-10">
+            <Wheel
+              items={hours}
+              value={String(hour)}
+              onChange={(v) => setHour(Number(v))}
+            />
+          </div>
+          <div className="text-xl font-bold text-gray-400">:</div>
+          <div className="w-10">
+            <Wheel
+              items={minutes}
+              value={String(minute).padStart(2, "0")}
+              onChange={(v) => setMinute(Number(v))}
+            />
+          </div>
+          <div className="flex flex-col gap-1 ml-1">
+            <button
+              onClick={() => setIsPM(false)}
+              className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
+                !isPM
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+              }`}
+            >
+              AM
+            </button>
+            <button
+              onClick={() => setIsPM(true)}
+              className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
+                isPM
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+              }`}
+            >
+              PM
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mini calendar popup */}
+      {showCalendar && (
+        <MiniCalendar
+          selectedDate={selectedDate}
+          onSelect={handleDateSelect}
+          onClose={() => setShowCalendar(false)}
+          allowFuture={allowFuture}
+        />
+      )}
     </div>
   );
 }

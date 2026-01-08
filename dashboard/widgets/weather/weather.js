@@ -183,11 +183,12 @@ function showPeriodModal(period) {
   document.body.appendChild(modal);
 }
 
-function renderForecast(container, data, layout = 'horizontal') {
+function renderForecast(container, data, layout = 'horizontal', dark = true) {
   const { forecast, alerts } = data;
   currentAlerts = alerts; // Store for click handling
   const periods = forecast.properties.periods.slice(0, 10); // Show 10 periods (5 days)
   currentPeriods = periods; // Store for click handling
+  const darkClass = dark ? 'dark' : '';
 
   // Render alerts if any
   const alertsHtml =
@@ -217,7 +218,7 @@ function renderForecast(container, data, layout = 'horizontal') {
   const layoutClass = layout === 'vertical' ? 'vertical' : '';
 
   container.innerHTML = `
-    <div class="weather-widget ${layoutClass}">
+    <div class="weather-widget ${layoutClass} ${darkClass}">
       ${alertsHtml}
       <div class="weather-periods">
         ${periods
@@ -257,17 +258,19 @@ function renderForecast(container, data, layout = 'horizontal') {
   });
 }
 
-function renderError(container, message) {
+function renderError(container, message, dark = true) {
+  const darkClass = dark ? 'dark' : '';
   container.innerHTML = `
-    <div class="weather-widget weather-error">
+    <div class="weather-widget weather-error ${darkClass}">
       <div class="error-message">${message}</div>
     </div>
   `;
 }
 
-function renderLoading(container) {
+function renderLoading(container, dark = true) {
+  const darkClass = dark ? 'dark' : '';
   container.innerHTML = `
-    <div class="weather-widget weather-loading">
+    <div class="weather-widget weather-loading ${darkClass}">
       <div class="loading-message">Loading forecast...</div>
     </div>
   `;
@@ -275,19 +278,19 @@ function renderLoading(container) {
 
 // Widget render function
 // Options: args.lat, args.lon, args.layout ('horizontal' or 'vertical')
-function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration }) {
+function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
   const lat = panel.args?.lat || '40.7608'; // Default: Salt Lake City
   const lon = panel.args?.lon || '-111.8910';
   const layout = panel.args?.layout || 'horizontal';
 
-  renderLoading(container);
+  renderLoading(container, dark);
 
   async function loadForecast() {
     try {
       const data = await fetchForecast(lat, lon);
-      renderForecast(container, data, layout);
+      renderForecast(container, data, layout, dark);
     } catch {
-      renderError(container, 'Failed to load forecast');
+      renderError(container, 'Failed to load forecast', dark);
     }
   }
 

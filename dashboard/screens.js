@@ -7,6 +7,7 @@
  *
  * CONFIG OPTIONS:
  *   background    - Dashboard background color (default: '#111')
+ *   dark          - Enable dark mode for all panels/widgets (default: true)
  *   navPosition   - Button position: 'bottom-right', 'bottom-left', 'top-right', 'top-left'
  *   navButtons    - Which nav buttons to show:
  *                   'both' = prev + next buttons
@@ -48,6 +49,7 @@
 export default {
   config: {
     background: '#111',
+    dark: true,
     navPosition: 'bottom-right',
     navButtons: 'both',
     navColor: 'rgba(255, 255, 255, 0.6)',

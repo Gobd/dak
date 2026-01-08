@@ -43,6 +43,13 @@ export async function listEvents(accessToken, calendarId, timeMin, timeMax) {
   return data.items || [];
 }
 
+export async function getEvent(accessToken, calendarId, eventId) {
+  return apiRequest(
+    `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    accessToken
+  );
+}
+
 export async function createEvent(accessToken, calendarId, event) {
   return apiRequest(`/calendars/${encodeURIComponent(calendarId)}/events`, accessToken, {
     method: 'POST',
