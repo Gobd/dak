@@ -68,7 +68,7 @@ export default {
       panels: [
         {
           type: 'iframe',
-          src: 'https://bkemper.me/dak/notes-app/',
+          src: 'https://dak.bkemper.me/notes-app/',
           x: '0%',
           y: '0%',
           w: '30%',
@@ -111,7 +111,7 @@ export default {
         },
         {
           type: 'iframe',
-          src: 'https://bkemper.me/dak/health-tracker/',
+          src: 'https://dak.bkemper.me/health-tracker/',
           x: '30%',
           y: '0%',
           w: '70%',

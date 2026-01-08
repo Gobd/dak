@@ -15,6 +15,7 @@
     "format": "pnpm -r format",
     "typecheck": "pnpm -r typecheck",
     "build": "pnpm -r build",
-    "check": "pnpm -r check"
+    "check": "pnpm -r check",
+    "build:pages": "pnpm build && rm -rf _site && mkdir -p _site && cp _site_index.html _site/index.html && cp -r dashboard/dist _site/dashboard && cp -r family-chores/dist _site/family-chores && cp -r health-tracker/dist _site/health-tracker && cp -r notes-app/dist _site/notes-app"
   }
 }

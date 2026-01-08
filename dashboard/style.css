@@ -121,6 +121,22 @@ body.edit-mode #edit-btn {
   display: block;
 }
 
+/* Privacy link - small and unobtrusive */
+#privacy-link {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+  font-family: system-ui, sans-serif;
+  z-index: 999;
+}
+
+#privacy-link:hover {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 /* Edit Mode */
 #edit-toolbar {
   display: none;
