@@ -6,8 +6,9 @@ import { registerWidget } from '../../script.js';
 const CACHE_KEY = 'weather-cache';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-// Store alerts for click handling
+// Store alerts and periods for click handling
 let currentAlerts = [];
+let currentPeriods = [];
 
 async function fetchForecast(lat, lon) {
   // Check cache first
@@ -150,10 +151,43 @@ function showAlertModal(alert) {
   document.body.appendChild(modal);
 }
 
+function showPeriodModal(period) {
+  const modal = document.createElement('div');
+  modal.className = 'weather-modal open';
+  modal.innerHTML = `
+    <div class="weather-modal-content">
+      <div class="weather-modal-header period-header">
+        <img class="period-modal-icon" src="${period.icon}" alt="${period.shortForecast}">
+        <div class="period-modal-title">
+          <h3>${period.name}</h3>
+          <span class="period-modal-temp ${period.isDaytime ? 'high' : 'low'}">${period.temperature}°${period.temperatureUnit}</span>
+        </div>
+      </div>
+      <div class="weather-modal-body">
+        <p class="period-short-forecast">${period.shortForecast}</p>
+        ${period.detailedForecast ? `<p class="period-detailed-forecast">${period.detailedForecast}</p>` : ''}
+        ${period.windSpeed ? `<p class="period-wind"><strong>Wind:</strong> ${period.windDirection} ${period.windSpeed}</p>` : ''}
+      </div>
+      <div class="weather-modal-actions">
+        <button class="weather-modal-close">Close</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.classList.contains('weather-modal-close')) {
+      modal.remove();
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
 function renderForecast(container, data, layout = 'horizontal') {
   const { forecast, alerts } = data;
   currentAlerts = alerts; // Store for click handling
   const periods = forecast.properties.periods.slice(0, 10); // Show 10 periods (5 days)
+  currentPeriods = periods; // Store for click handling
 
   // Render alerts if any
   const alertsHtml =
@@ -188,8 +222,8 @@ function renderForecast(container, data, layout = 'horizontal') {
       <div class="weather-periods">
         ${periods
           .map(
-            (period) => `
-          <div class="weather-period">
+            (period, index) => `
+          <div class="weather-period" data-period-index="${index}">
             <div class="period-name">${period.name}</div>
             <img class="period-icon" src="${period.icon}" alt="${period.shortForecast}">
             <div class="period-temp ${period.isDaytime ? 'high' : 'low'}">${period.temperature}°${period.temperatureUnit}</div>
@@ -208,6 +242,16 @@ function renderForecast(container, data, layout = 'horizontal') {
       const index = parseInt(el.dataset.alertIndex, 10);
       if (currentAlerts[index]) {
         showAlertModal(currentAlerts[index]);
+      }
+    });
+  });
+
+  // Add click handlers for periods
+  container.querySelectorAll('.weather-period').forEach((el) => {
+    el.addEventListener('click', () => {
+      const index = parseInt(el.dataset.periodIndex, 10);
+      if (currentPeriods[index]) {
+        showPeriodModal(currentPeriods[index]);
       }
     });
   });

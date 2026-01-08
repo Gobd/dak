@@ -1,6 +1,7 @@
 {
   "name": "dak",
   "private": true,
+  "packageManager": "pnpm@10.23.0",
   "volta": {
     "node": "24.12.0"
   },
