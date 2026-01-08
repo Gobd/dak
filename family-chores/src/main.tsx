@@ -6,7 +6,7 @@ import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename="/dak/family-chores">
+    <BrowserRouter basename="/family-chores">
       <App />
     </BrowserRouter>
   </StrictMode>,

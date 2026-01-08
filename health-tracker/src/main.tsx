@@ -6,7 +6,7 @@ import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename="/dak/health-tracker">
+    <BrowserRouter basename="/health-tracker">
       <App />
     </BrowserRouter>
   </StrictMode>,
