@@ -298,8 +298,24 @@ function setupNavigation() {
         edge.style.pointerEvents = '';
 
         if (elementBelow && elementBelow !== edge) {
-          // Simulate click on element below
-          elementBelow.click();
+          // If we hit an iframe, drill into it to find the actual element
+          // (requires --disable-web-security for cross-origin iframes)
+          if (elementBelow.tagName === 'IFRAME') {
+            try {
+              const rect = elementBelow.getBoundingClientRect();
+              const iframeX = touch.clientX - rect.left;
+              const iframeY = touch.clientY - rect.top;
+              const innerElement = elementBelow.contentDocument.elementFromPoint(iframeX, iframeY);
+              if (innerElement) {
+                innerElement.click();
+              }
+            } catch (err) {
+              // Cross-origin blocked (security enabled), fall back to iframe click
+              elementBelow.click();
+            }
+          } else {
+            elementBelow.click();
+          }
         }
         return;
       }
