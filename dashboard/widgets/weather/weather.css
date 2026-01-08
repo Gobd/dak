@@ -128,7 +128,9 @@
   border-radius: 8px;
   gap: 4px;
   cursor: pointer;
-  transition: filter 0.15s, transform 0.15s;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
 }
 
 .weather-period:hover {
