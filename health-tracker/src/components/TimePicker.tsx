@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { getDaysInMonth, format } from "date-fns";
 
 const ITEM_HEIGHT = 44;
