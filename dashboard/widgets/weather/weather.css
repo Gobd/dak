@@ -187,9 +187,9 @@
   flex-direction: row;
   min-width: unset;
   justify-content: flex-start;
-  padding: 8px 12px;
-  gap: 12px;
-  flex: 0 0 auto;
+  padding: 8px 16px 8px 8px;
+  gap: 8px;
+  flex: 1;
 }
 
 .weather-widget.vertical .period-name {
