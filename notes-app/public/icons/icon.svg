@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#000000"/>
+  <!-- Paper/Note -->
+  <rect x="112" y="72" width="288" height="368" rx="20" fill="white"/>
+  <!-- Folded corner -->
+  <path d="M400 72 L400 140 L332 72 Z" fill="#e5e5e5"/>
+  <path d="M332 72 L400 140 L332 140 Z" fill="#d4d4d4"/>
+  <!-- Lines of text -->
+  <rect x="152" y="172" width="200" height="12" rx="6" fill="#a3a3a3"/>
+  <rect x="152" y="204" width="160" height="12" rx="6" fill="#d4d4d4"/>
+  <rect x="152" y="252" width="180" height="12" rx="6" fill="#a3a3a3"/>
+  <rect x="152" y="284" width="140" height="12" rx="6" fill="#d4d4d4"/>
+  <rect x="152" y="332" width="200" height="12" rx="6" fill="#a3a3a3"/>
+  <rect x="152" y="364" width="100" height="12" rx="6" fill="#d4d4d4"/>
+</svg>

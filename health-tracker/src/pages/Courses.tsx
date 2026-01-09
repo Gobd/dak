@@ -321,6 +321,11 @@ export function Courses() {
                     • Started{" "}
                     {format(new Date(course.start_date + "T00:00:00"), "MMM d")}
                   </div>
+                  {course.notes && (
+                    <div className="mt-2 text-sm text-gray-500 dark:text-neutral-500 italic">
+                      {course.notes}
+                    </div>
+                  )}
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 bg-gray-200 dark:bg-neutral-700 rounded-full h-2">
                       <div
@@ -419,6 +424,11 @@ export function Courses() {
                               "MMM d",
                             )}
                           </div>
+                          {course.notes && (
+                            <div className="text-xs text-gray-500 dark:text-neutral-500 italic mt-1">
+                              {course.notes}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-gray-500 dark:text-neutral-400">

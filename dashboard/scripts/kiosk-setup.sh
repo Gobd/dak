@@ -34,11 +34,7 @@ echo "Using: $CHROMIUM_BIN"
 echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
 
-echo "=== Installing virtual keyboard extension ==="
-mkdir -p ~/.config/chromium-extensions
-curl -Lo /tmp/smartkey.zip https://github.com/Gobd/chrome-virtual-keyboard/releases/download/v3.0.1/smartkey-v3.0.1.zip
-unzip -o /tmp/smartkey.zip -d ~/.config/chromium-extensions/
-rm /tmp/smartkey.zip
+bash ~/scripts/install-keyboard.sh
 
 echo "=== Adding kiosk user to required groups ==="
 sudo usermod -a -G tty,video,i2c kiosk 2>/dev/null || sudo usermod -a -G tty,video kiosk
@@ -64,6 +60,9 @@ exec cage -- $CHROMIUM_BIN \\
   --disable-session-crashed-bubble \\
   --disable-pinch \\
   --overscroll-history-navigation=0 \\
+  --password-store=basic \\
+  --disable-save-password-bubble \\
+  --disable-features=PasswordManager,Autofill \\
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \\
   --ozone-platform=wayland \\
   https://dak.bkemper.me/dashboard

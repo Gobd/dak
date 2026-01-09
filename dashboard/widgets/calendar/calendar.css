@@ -486,6 +486,8 @@ span.cal-title {
 
 .cal-modal.open {
   display: flex;
+  align-items: flex-start;
+  padding-top: 5vh;
 }
 
 /* Dark mode for modal - controlled by dashboard config via body class */
@@ -516,6 +518,37 @@ body.dark .cal-modal {
     'Segoe UI',
     Roboto,
     sans-serif;
+}
+
+/* Wide modal for add/edit forms */
+.cal-modal-content.wide {
+  width: 600px;
+  max-width: 95vw;
+  padding: 16px 20px;
+}
+
+.cal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+}
+
+.cal-form-grid label {
+  margin-bottom: 0;
+}
+
+.cal-form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 550px) {
+  .cal-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cal-modal-content.wide {
+    width: auto;
+  }
 }
 
 .cal-modal-content h3 {
@@ -617,8 +650,8 @@ body.dark .cal-modal {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid var(--cal-border);
 }
 

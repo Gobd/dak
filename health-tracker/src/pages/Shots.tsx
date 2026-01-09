@@ -32,6 +32,10 @@ export function Shots() {
   const [showHistory, setShowHistory] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmLogDelete, setConfirmLogDelete] = useState<{
+    scheduleId: string;
+    logId: string;
+  } | null>(null);
 
   const [personId, setPersonId] = useState("");
   const [name, setName] = useState("");
@@ -118,6 +122,17 @@ export function Shots() {
             setConfirmDelete(null);
           }}
           onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {confirmLogDelete && (
+        <ConfirmModal
+          message="Delete this history entry?"
+          onConfirm={() => {
+            deleteLog(confirmLogDelete.scheduleId, confirmLogDelete.logId);
+            setConfirmLogDelete(null);
+          }}
+          onCancel={() => setConfirmLogDelete(null)}
         />
       )}
 
@@ -316,30 +331,39 @@ export function Shots() {
                       No shots logged yet.
                     </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                       {(logs[schedule.id] || []).map((log) => (
-                        <div
-                          key={log.id}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span>
-                            {format(
-                              new Date(log.taken_at),
-                              "MMM d, yyyy h:mm a",
-                            )}
-                          </span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-gray-600 dark:text-neutral-400">
-                              {log.dose}
+                        <div key={log.id} className="text-sm">
+                          <div className="flex items-center justify-between">
+                            <span>
+                              {format(
+                                new Date(log.taken_at),
+                                "MMM d, yyyy h:mm a",
+                              )}
                             </span>
-                            <button
-                              onClick={() => deleteLog(schedule.id, log.id)}
-                              className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
-                              title="Delete this entry"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <span className="text-gray-600 dark:text-neutral-400">
+                                {log.dose}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  setConfirmLogDelete({
+                                    scheduleId: schedule.id,
+                                    logId: log.id,
+                                  })
+                                }
+                                className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                                title="Delete this entry"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
+                          {log.notes && (
+                            <p className="text-gray-500 dark:text-neutral-500 text-xs mt-1 ml-1">
+                              {log.notes}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

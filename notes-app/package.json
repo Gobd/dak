@@ -12,7 +12,8 @@
     "dev": "concurrently -n editor,expo -c blue,green \"pnpm dev:editor\" \"expo start --web\"",
     "prebuild:web": "NODE_ENV=production tsx scripts/build-tiptap-editor.ts",
     "build:web": "expo export --platform web",
-    "build": "NODE_ENV=production tsx scripts/build-tiptap-editor.ts && expo export --platform web",
+    "postbuild:web": "tsx scripts/post-build-pwa.ts",
+    "build": "NODE_ENV=production tsx scripts/build-tiptap-editor.ts && expo export --platform web && tsx scripts/post-build-pwa.ts",
     "analyze": "EXPO_ATLAS=true expo export --platform web && expo-atlas .expo/atlas.jsonl",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -99,7 +100,13 @@
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.16",
+    "workbox-build": "^7.4.0",
+    "workbox-cacheable-response": "^7.4.0",
+    "workbox-expiration": "^7.4.0",
+    "workbox-precaching": "^7.4.0",
+    "workbox-routing": "^7.4.0",
+    "workbox-strategies": "^7.4.0"
   },
   "private": true
 }
