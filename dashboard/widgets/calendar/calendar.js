@@ -1270,6 +1270,11 @@ function showSettingsModal() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section-title">Refresh</div>
+        <button class="cal-btn" data-action="refresh" style="width: 100%;">Reload Widget</button>
+      </div>
+
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="close">Close</button>
         <button class="cal-btn primary" data-action="apply">Apply</button>
@@ -1289,6 +1294,8 @@ function showSettingsModal() {
     const action = e.target.dataset.action;
     if (action === 'close' || e.target === modal) {
       modal.remove();
+    } else if (action === 'refresh') {
+      window.location.reload();
     } else if (action === 'apply') {
       // Update view
       const activeViewBtn = modal.querySelector('[data-view].active');
