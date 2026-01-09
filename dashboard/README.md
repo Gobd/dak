@@ -193,6 +193,7 @@ chmod +x ~/scripts/*.sh
 > **Note:** Replace `kiosk.local` with the Pi's IP address if hostname doesn't resolve.
 
 > **Reimaged your Pi?** If you get "REMOTE HOST IDENTIFICATION HAS CHANGED", clear the old SSH key:
+>
 > ```bash
 > ssh-keygen -R kiosk.local   # or the IP address
 > ```

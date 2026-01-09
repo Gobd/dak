@@ -43,7 +43,9 @@
   font-size: 20px;
   cursor: pointer;
   opacity: 0.3;
-  transition: opacity 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
   z-index: 10;
 }
 
