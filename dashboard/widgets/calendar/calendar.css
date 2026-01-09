@@ -50,12 +50,31 @@
   flex-shrink: 0;
 }
 
-.cal-title {
+button.cal-title {
   font-size: 16px;
   font-weight: 600;
-  width: 180px;
+  min-width: 180px;
   text-align: center;
   flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--cal-text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+button.cal-title:hover {
+  background: var(--cal-bg);
+  border-color: var(--cal-border);
+}
+
+span.cal-title {
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
 }
 
 .cal-nav-btn {
@@ -566,6 +585,16 @@ body.dark .cal-modal {
   margin: 0 0 8px 0;
 }
 
+.event-recurrence {
+  display: inline-block;
+  background: var(--cal-surface);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--cal-text-muted);
+  margin-left: 4px;
+}
+
 .event-calendar {
   font-size: 13px;
   margin: 0 0 12px 0;
@@ -921,7 +950,7 @@ body.dark .cal-modal {
   border: 1px solid var(--cal-border);
   border-radius: 12px;
   padding: 16px;
-  min-width: 280px;
+  width: 300px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   color: var(--cal-text);
   font-family:
@@ -945,8 +974,13 @@ body.dark .mini-cal-popup {
 .mini-cal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.mini-cal-header .mini-cal-title {
+  min-width: 140px;
 }
 
 .mini-cal-title {
@@ -989,6 +1023,7 @@ body.dark .mini-cal-popup {
 .mini-cal-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
   gap: 4px;
 }
 
@@ -1010,6 +1045,11 @@ body.dark .mini-cal-popup {
 
 .mini-cal-day.empty {
   cursor: default;
+}
+
+.mini-cal-day.other-month {
+  color: var(--cal-text-muted);
+  opacity: 0.5;
 }
 
 .mini-cal-day.today {

@@ -87,6 +87,47 @@ function saveViewPreference() {
   localStorage.setItem(CALENDAR_VIEW_KEY, currentView);
 }
 
+// Parse RRULE to human-readable frequency
+function parseRecurrenceRule(recurrence) {
+  if (!recurrence || !recurrence.length) return null;
+
+  const rule = recurrence[0];
+  if (!rule.startsWith('RRULE:')) return 'Repeating';
+
+  const parts = rule.substring(6).split(';');
+  const ruleMap = {};
+  parts.forEach((part) => {
+    const [key, value] = part.split('=');
+    ruleMap[key] = value;
+  });
+
+  const freq = ruleMap.FREQ;
+  const byDay = ruleMap.BYDAY;
+
+  if (freq === 'DAILY') return 'Daily';
+  if (freq === 'WEEKLY') {
+    if (byDay === 'MO,TU,WE,TH,FR') return 'Weekdays';
+    if (byDay) {
+      const dayNames = {
+        SU: 'Sun',
+        MO: 'Mon',
+        TU: 'Tue',
+        WE: 'Wed',
+        TH: 'Thu',
+        FR: 'Fri',
+        SA: 'Sat',
+      };
+      const days = byDay.split(',').map((d) => dayNames[d] || d);
+      return `Weekly on ${days.join(', ')}`;
+    }
+    return 'Weekly';
+  }
+  if (freq === 'MONTHLY') return 'Monthly';
+  if (freq === 'YEARLY') return 'Yearly';
+
+  return 'Repeating';
+}
+
 // Check if calendar is visible
 function isCalendarVisible(calendarId) {
   return !hiddenCalendars.has(calendarId);
@@ -266,7 +307,7 @@ function renderMonthView(container) {
     <div class="calendar-widget ${darkClass}">
       <div class="calendar-header">
         <button class="cal-nav-btn" data-action="prev-week">‹</button>
-        <span class="cal-title">${dateRange}</span>
+        <button class="cal-title" data-action="pick-date">${dateRange}</button>
         <button class="cal-nav-btn" data-action="next-week">›</button>
         <button class="cal-nav-btn cal-today-btn ${todayInView ? 'active' : ''}" data-action="today">Today</button>
         <button class="cal-nav-btn" data-action="settings" title="Settings">⚙</button>
@@ -446,6 +487,106 @@ function renderListView(container) {
   container.querySelector('.calendar-scroll').addEventListener('click', handleListDayClick);
 }
 
+function showDatePickerPopup(currentDate, onSelect) {
+  let viewDate = new Date(currentDate);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'mini-cal-overlay';
+
+  function render() {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startOffset = (firstDay.getDay() - weekStartsOn + 7) % 7;
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const orderedDays = [];
+    for (let i = 0; i < 7; i++) {
+      orderedDays.push(dayNames[(weekStartsOn + i) % 7]);
+    }
+
+    const monthName = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const today = formatLocalDate(new Date());
+    const selected = formatLocalDate(currentDate);
+
+    let daysHtml = '';
+    // Always show 6 rows (42 cells) for consistent height
+    const totalCells = 42;
+
+    // Days from previous month
+    const prevMonth = new Date(year, month, 0);
+    const prevMonthDays = prevMonth.getDate();
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const d = prevMonthDays - i;
+      daysHtml += `<div class="mini-cal-day other-month" data-date="${formatLocalDate(new Date(year, month - 1, d))}">${d}</div>`;
+    }
+
+    // Days of current month
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const isToday = dateStr === today;
+      const isSelected = dateStr === selected;
+      daysHtml += `<div class="mini-cal-day${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}">${d}</div>`;
+    }
+
+    // Days from next month to fill remaining cells
+    const cellsUsed = startOffset + lastDay.getDate();
+    const remaining = totalCells - cellsUsed;
+    for (let d = 1; d <= remaining; d++) {
+      daysHtml += `<div class="mini-cal-day other-month" data-date="${formatLocalDate(new Date(year, month + 1, d))}">${d}</div>`;
+    }
+
+    overlay.innerHTML = `
+      <div class="mini-cal-popup">
+        <div class="mini-cal-header">
+          <button class="mini-cal-nav" data-action="prev-year">‹‹</button>
+          <button class="mini-cal-nav" data-action="prev-month">‹</button>
+          <span class="mini-cal-title">${monthName}</span>
+          <button class="mini-cal-nav" data-action="next-month">›</button>
+          <button class="mini-cal-nav" data-action="next-year">››</button>
+        </div>
+        <div class="mini-cal-weekdays">
+          ${orderedDays.map((d) => `<div>${d.substring(0, 2)}</div>`).join('')}
+        </div>
+        <div class="mini-cal-days">
+          ${daysHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  render();
+
+  overlay.addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    const dateStr = e.target.dataset.date;
+
+    if (e.target === overlay) {
+      overlay.remove();
+    } else if (action === 'prev-year') {
+      viewDate.setFullYear(viewDate.getFullYear() - 1);
+      render();
+    } else if (action === 'next-year') {
+      viewDate.setFullYear(viewDate.getFullYear() + 1);
+      render();
+    } else if (action === 'prev-month') {
+      viewDate.setMonth(viewDate.getMonth() - 1);
+      render();
+    } else if (action === 'next-month') {
+      viewDate.setMonth(viewDate.getMonth() + 1);
+      render();
+    } else if (dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const selectedDate = new Date(y, m - 1, d);
+      overlay.remove();
+      onSelect(selectedDate);
+    }
+  });
+
+  document.body.appendChild(overlay);
+}
+
 function handleMonthHeaderClick(e) {
   const btn = e.target.closest('[data-action]') || e.currentTarget;
   const action = btn.dataset.action;
@@ -459,6 +600,16 @@ function handleMonthHeaderClick(e) {
   } else if (action === 'today') {
     gridStartDate = getMostRecentWeekStart();
     refreshCalendar();
+  } else if (action === 'pick-date') {
+    showDatePickerPopup(gridStartDate, (newDate) => {
+      // Calculate the week start for the selected date
+      const day = newDate.getDay();
+      const daysBack = (day - weekStartsOn + 7) % 7;
+      gridStartDate = new Date(newDate);
+      gridStartDate.setDate(newDate.getDate() - daysBack);
+      gridStartDate.setHours(0, 0, 0, 0);
+      refreshCalendar();
+    });
   } else if (action === 'settings') {
     showSettingsModal();
   } else if (action === 'add') {
@@ -558,7 +709,7 @@ async function loadEvents() {
   }
 }
 
-function showEventModal(event) {
+async function showEventModal(event) {
   const startTime = formatTime(event.start.dateTime || event.start.date);
   const endTime = formatTime(event.end.dateTime || event.end.date);
   const isAllDay = !event.start.dateTime;
@@ -570,12 +721,23 @@ function showEventModal(event) {
     day: 'numeric',
   });
 
+  // Get recurrence frequency for recurring events
+  let recurrenceText = '';
+  if (isRecurring) {
+    try {
+      const masterEvent = await getEvent(accessToken, event.calendarId, event.recurringEventId);
+      recurrenceText = parseRecurrenceRule(masterEvent.recurrence) || 'Repeating';
+    } catch {
+      recurrenceText = 'Repeating';
+    }
+  }
+
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
   modal.innerHTML = `
     <div class="cal-modal-content">
       <h3>${event.summary || '(No title)'}</h3>
-      <p class="event-date">${dateStr}${isRecurring ? ' <span style="opacity: 0.6;">(repeating)</span>' : ''}</p>
+      <p class="event-date">${dateStr}${recurrenceText ? ` <span class="event-recurrence">${recurrenceText}</span>` : ''}</p>
       <p class="event-time">${isAllDay ? 'All day' : `${startTime} - ${endTime}`}</p>
       ${event.location ? `<p class="event-location">📍 ${event.location}</p>` : ''}
       <p class="event-calendar" style="color: ${event.calendarColor}">${event.calendarName}</p>
