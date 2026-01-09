@@ -286,13 +286,14 @@ export default function HomeScreen() {
 
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        {/* Backdrop to close menus when tapping outside (exclude create menu - it uses toggle) */}
-        {(showMobileMenu || showSortMenu) && (
+        {/* Backdrop to close menus when tapping outside */}
+        {(showMobileMenu || showSortMenu || showCreateMenu) && (
           <Pressable
             onPress={() => {
               setShowMobileMenu(false);
               setShowMobileTagsMenu(false);
               setShowSortMenu(false);
+              setShowCreateMenu(false);
             }}
             style={{
               position: 'absolute',
@@ -723,11 +724,12 @@ export default function HomeScreen() {
   // Desktop: side-by-side layout
   return (
     <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colors.bg }}>
-      {/* Backdrop to close menus when clicking/tapping outside (exclude create menu - it uses toggle) */}
-      {showSortMenu && (
+      {/* Backdrop to close menus when clicking/tapping outside */}
+      {(showSortMenu || showCreateMenu) && (
         <Pressable
           onPress={() => {
             setShowSortMenu(false);
+            setShowCreateMenu(false);
           }}
           style={{
             position: 'absolute',

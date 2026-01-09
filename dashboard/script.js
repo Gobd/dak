@@ -5,10 +5,11 @@ const GRID_SNAP = 5; // 5% snap
 const MIN_SIZE = 10; // 10% minimum
 
 // Local dev URL mappings (used when ?local is in URL)
+// Maps relative paths to localhost ports for local development
 const LOCAL_URL_MAP = {
-  'https://dak.bkemper.me/notes-app/': 'http://localhost:8081/',
-  'https://dak.bkemper.me/health-tracker/': 'http://localhost:5173/health-tracker/',
-  'https://dak.bkemper.me/family-chores/': 'http://localhost:5174/family-chores/',
+  '/notes-app/': 'http://localhost:8081/',
+  '/health-tracker/': 'http://localhost:5173/health-tracker/',
+  '/family-chores/': 'http://localhost:5174/family-chores/',
 };
 
 let screens = [];

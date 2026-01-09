@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pointer cursor for all clickable elements (React Native Web renders Pressable as role="button") */
+[role='button'],
+button,
+a,
+select,
+input[type='checkbox'],
+input[type='radio'],
+input[type='submit'],
+input[type='button'] {
+  cursor: pointer !important;
+}
+
 /* Dark mode scrollbar styling - less jarring than bright default */
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar {
