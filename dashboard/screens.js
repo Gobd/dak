@@ -29,7 +29,7 @@
  * WIDGET TYPES:
  *   calendar - Google Calendar (OAuth login, shows your calendars)
  *   weather  - NWS Weather forecast
- *              args: { lat, lon, layout: 'horizontal'|'vertical' }
+ *              args: { lat, lon, layout: 'horizontal'|'vertical', uv: boolean }
  *   iframe   - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
@@ -105,6 +105,7 @@ export default {
             lat: '40.7608', // Salt Lake City, UT - update for your location
             lon: '-111.8910',
             layout: 'vertical',
+            uv: true,
           },
           x: '0%',
           y: '0%',

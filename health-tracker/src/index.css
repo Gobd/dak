@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --default-font-family: "Noto Sans", system-ui, sans-serif;
+  --default-font-family: "Open Sans", system-ui, sans-serif;
 }
 
 @layer base {
@@ -25,7 +25,7 @@ input[type="button"] {
 
 body {
   @apply bg-gray-50 text-gray-900 min-h-screen dark:bg-black dark:text-neutral-100;
-  font-family: "Noto Sans", system-ui, sans-serif;
+  font-family: "Open Sans", system-ui, sans-serif;
 }
 
 .scrollbar-hide {
