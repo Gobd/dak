@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    font-synthesis: weight;
+  }
   body {
     font-family: 'Noto Sans', system-ui, sans-serif;
   }

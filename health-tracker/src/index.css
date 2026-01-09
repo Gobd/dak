@@ -4,6 +4,12 @@
   --default-font-family: "Noto Sans", system-ui, sans-serif;
 }
 
+@layer base {
+  * {
+    font-synthesis: weight;
+  }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 button,
