@@ -2,6 +2,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+button,
+[role="button"],
+a,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"] {
+  cursor: pointer !important;
+}
+
 body {
   @apply bg-gray-50 text-gray-900 min-h-screen dark:bg-black dark:text-neutral-100;
   font-family:
