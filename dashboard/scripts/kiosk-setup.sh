@@ -15,7 +15,28 @@ sudo apt-get install -y --no-install-recommends \
   cage \
   ddcutil \
   curl \
-  unzip
+  unzip \
+  fonts-noto-color-emoji \
+  fonts-noto-core
+
+# Configure Noto Sans as default system font
+echo "=== Configuring fonts ==="
+mkdir -p ~/.config/fontconfig
+cat > ~/.config/fontconfig/fonts.conf << 'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <alias>
+    <family>system-ui</family>
+    <prefer><family>Noto Sans</family></prefer>
+  </alias>
+  <alias>
+    <family>sans-serif</family>
+    <prefer><family>Noto Sans</family></prefer>
+  </alias>
+</fontconfig>
+EOF
+fc-cache -fv
 
 # Install chromium (package name varies by distro)
 if apt-cache show chromium &>/dev/null; then
@@ -35,6 +56,18 @@ echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
 
 bash ~/scripts/install-keyboard.sh
+
+echo "=== Configuring Chromium policies ==="
+sudo mkdir -p /etc/chromium/policies/managed
+sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << 'EOF'
+{
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "PasswordManagerEnabled": false,
+  "AudioCaptureAllowed": true,
+  "AudioCaptureAllowedUrls": ["https://dak.bkemper.me"]
+}
+EOF
 
 echo "=== Adding kiosk user to required groups ==="
 sudo usermod -a -G tty,video,i2c kiosk 2>/dev/null || sudo usermod -a -G tty,video kiosk
@@ -60,9 +93,6 @@ exec cage -- $CHROMIUM_BIN \\
   --disable-session-crashed-bubble \\
   --disable-pinch \\
   --overscroll-history-navigation=0 \\
-  --password-store=basic \\
-  --disable-save-password-bubble \\
-  --disable-features=PasswordManager,Autofill \\
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \\
   --ozone-platform=wayland \\
   https://dak.bkemper.me/dashboard

@@ -25,10 +25,25 @@ NIGHT_BRIGHTNESS=1        # Nighttime brightness
 # Transition settings
 TRANSITION_MINS=60        # How long to fade (30-90 recommended)
 
+# Cache file for sun times (avoids API calls every run)
+CACHE_FILE="/tmp/brightness_sun_cache"
+
 # === FUNCTIONS ===
 
 get_sun_times() {
-  # Use sunrise-sunset.org API (returns UTC)
+  local TODAY=$(date +%Y-%m-%d)
+
+  # Check if we have valid cached data from today
+  if [ -f "$CACHE_FILE" ]; then
+    local CACHED_DATE=$(head -1 "$CACHE_FILE")
+    if [ "$CACHED_DATE" = "$TODAY" ]; then
+      SUNRISE_EPOCH=$(sed -n '2p' "$CACHE_FILE")
+      SUNSET_EPOCH=$(sed -n '3p' "$CACHE_FILE")
+      return 0
+    fi
+  fi
+
+  # Fetch fresh data from API
   local DATA=$(curl -s "https://api.sunrise-sunset.org/json?lat=$LAT&lng=$LON&formatted=0" 2>/dev/null)
 
   # Extract times (UTC)
@@ -43,6 +58,9 @@ get_sun_times() {
   # Convert to local epoch seconds
   SUNRISE_EPOCH=$(date -d "$SUNRISE_UTC" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${SUNRISE_UTC%+*}" +%s 2>/dev/null)
   SUNSET_EPOCH=$(date -d "$SUNSET_UTC" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${SUNSET_UTC%+*}" +%s 2>/dev/null)
+
+  # Cache the results
+  echo -e "$TODAY\n$SUNRISE_EPOCH\n$SUNSET_EPOCH" > "$CACHE_FILE"
 }
 
 calculate_brightness() {
@@ -82,12 +100,12 @@ set_brightness() {
   # Clamp to valid range
   [ $level -lt 1 ] && level=1
   [ $level -gt 100 ] && level=100
-  sudo ddcutil setvcp 10 $level --noverify 2>/dev/null
+  ddcutil setvcp 10 $level --noverify
   echo "$(date '+%H:%M'): Brightness set to $level%"
 }
 
 get_current_brightness() {
-  sudo ddcutil getvcp 10 2>/dev/null | grep -o 'current value = *[0-9]*' | grep -o '[0-9]*'
+  ddcutil getvcp 10 | grep -o 'current value = *[0-9]*' | grep -o '[0-9]*'
 }
 
 # === MAIN ===
