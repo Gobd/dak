@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --default-font-family: "Noto Sans", system-ui, sans-serif;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 button,

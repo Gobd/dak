@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    font-family: 'Noto Sans', system-ui, sans-serif;
+  }
+}
+
 /* Pointer cursor for all clickable elements (React Native Web renders Pressable as role="button") */
 [role='button'],
 button,
