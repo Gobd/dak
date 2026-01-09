@@ -165,105 +165,43 @@ In Cloudflare DNS for bkemper.me:
 
 To update default layouts, edit `screens.js` and push. Users can reset to get the new defaults.
 
-## Kiosk Setup
+## Kiosk Setup (Raspberry Pi 5)
 
-### 1. Install OS
-
-<details>
-<summary><strong>Raspberry Pi 5</strong></summary>
+### 1. Flash OS
 
 1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
 2. Choose **Raspberry Pi OS Lite (64-bit)** (no desktop)
-3. Click the gear icon to pre-configure:
-   - Set hostname (e.g., `kiosk`)
-   - Enable SSH with password auth
-   - Set username/password (e.g., `kiosk` / your password)
-   - Configure WiFi if needed
-4. Flash to SD card and boot the Pi
-
-</details>
-
-<details>
-<summary><strong>x64 (Intel/AMD)</strong></summary>
-
-1. Download [Debian netinst](https://www.debian.org/distrib/netinst) (minimal)
-2. Boot from USB and install with:
+3. Click gear icon to configure:
    - Hostname: `kiosk`
-   - Create user: `kiosk`
-   - Uncheck all desktop environments (minimal install)
-   - Check "SSH server"
-3. Reboot into the new install
+   - Enable SSH (use public key auth for convenience)
+   - Username: `kiosk`, set password
+   - WiFi if needed
+4. Flash to SD card and boot
 
-</details>
-
-### 2. SSH into the box
+### 2. Run setup script
 
 ```bash
+# From dashboard folder on your Mac:
+scp -r scripts kiosk@kiosk.local:~
 ssh kiosk@kiosk.local
-# or use IP: ssh kiosk@192.168.x.x
+bash ~/scripts/kiosk-setup.sh
 ```
 
-### 3. Install system packages
+> **Note:** Replace `kiosk.local` with the Pi's IP address if hostname doesn't resolve.
 
-```bash
-sudo apt-get update
-sudo apt-get install -y --no-install-recommends \
-  xorg \
-  chromium \
-  openbox \
-  lightdm \
-  unclutter
-```
+The Pi reboots and launches the dashboard in kiosk mode.
 
-> **Note:** Package is `chromium` on Debian, `chromium-browser` on Raspberry Pi OS. Adjust if needed.
+### Helper scripts
 
-### 4. Configure auto-login
+After setup, these are available in `~/scripts/`:
 
-```bash
-sudo tee /etc/lightdm/lightdm.conf > /dev/null << 'EOF'
-[Seat:*]
-autologin-user=kiosk
-user-session=openbox
-EOF
-```
+- `restart-kiosk.sh` - Restart chromium after Alt+F4
+- `brightness.sh` - Manual brightness control (day/night/set N/status)
 
-### 5. Create kiosk autostart
+### Keyboard shortcuts
 
-```bash
-mkdir -p ~/.config/openbox
-
-tee ~/.config/openbox/autostart > /dev/null << 'EOF'
-#!/bin/bash
-
-# Disable screen blanking
-xset s off
-xset s noblank
-xset -dpms
-
-# Hide cursor
-unclutter -idle 0.5 -root &
-
-# Launch Chromium kiosk
-chromium \
-  --kiosk \
-  --no-first-run \
-  --disable-translate \
-  --disable-infobars \
-  --noerrdialogs \
-  --disable-session-crashed-bubble \
-  https://dak.bkemper.me/dashboard &
-EOF
-
-chmod +x ~/.config/openbox/autostart
-```
-
-> **Note:** Use `chromium-browser` instead of `chromium` on Raspberry Pi OS.
-
-### 6. Reboot
-
-```bash
-sudo reboot
-```
+- `Ctrl+Alt+F2` - Switch to terminal
+- `Ctrl+Alt+F7` - Back to kiosk
 
 ## Configuration
 
@@ -277,34 +215,28 @@ Add widgets under `widgets/`. Reference them in `screens.js`:
 { src: '/widgets/weather/index.html', x: '50%', y: '50%', w: '50%', h: '50%' }
 ```
 
-## Optional: Automatic Brightness (eyesome)
+## Automatic Brightness
 
-[eyesome](https://github.com/WinEunuuchs2Unix/eyesome) automatically adjusts screen brightness based on sunrise/sunset.
+The setup script installs automatic brightness control using `ddcutil`. It adjusts monitor brightness based on sunrise/sunset.
 
-```bash
-# Install dependencies
-sudo apt-get install -y bc xdotool xrandr
-
-# Clone and install
-git clone https://github.com/WinEunuuchs2Unix/eyesome.git
-cd eyesome
-sudo ./install.sh
-
-# Configure (sets location for sunrise/sunset times)
-eyesome-cfg
-```
-
-Test brightness manually:
+**Configure your location** (edit after setup):
 
 ```bash
-# Check your display name
-xrandr --listmonitors
-
-# Test brightness (0.5 = 50%, 1.0 = 100%)
-xrandr --output HDMI-1 --brightness 0.7
+nano ~/scripts/brightness.sh
+# Set LAT and LON to your coordinates
+# Set DAY_BRIGHTNESS and NIGHT_BRIGHTNESS (1-100)
 ```
 
-> **Note:** Requires X11 (not Wayland). The LightDM + Openbox setup in this guide uses X11, so it works.
+**Manual control:**
+
+```bash
+~/scripts/brightness.sh day      # Set day brightness
+~/scripts/brightness.sh night    # Set night brightness
+~/scripts/brightness.sh set 50   # Set to 50%
+~/scripts/brightness.sh status   # Show current level
+```
+
+> **Note:** Requires a monitor that supports DDC/CI. Most modern monitors do.
 
 ## Development
 
