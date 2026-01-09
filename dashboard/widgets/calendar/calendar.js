@@ -876,40 +876,43 @@ function showAddEventModal(date) {
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
   modal.innerHTML = `
-    <div class="cal-modal-content">
-      <h3>Add Event</h3>
-      <label>
-        Title
-        <input type="text" id="event-title" placeholder="Event title">
-      </label>
-      <label style="margin-bottom: 8px;">
-        <input type="checkbox" id="event-allday"> All day
-      </label>
-      <div id="start-picker-container"></div>
-      <div id="end-picker-container"></div>
-      <label>
-        Location
-        <input type="text" id="event-location" placeholder="Add location">
-      </label>
-      <label>
-        Description
-        <textarea id="event-description" placeholder="Add description" rows="2" style="resize: vertical;"></textarea>
-      </label>
-      <label>
-        Repeat
-        <select id="event-recurrence">
-          <option value="">Does not repeat</option>
-          <option value="DAILY">Daily</option>
-          <option value="WEEKLY">Weekly</option>
-          <option value="MONTHLY">Monthly</option>
-          <option value="YEARLY">Yearly</option>
-          <option value="WEEKDAYS">Every weekday (Mon-Fri)</option>
-        </select>
-      </label>
-      <label>
-        Calendar
-        <select id="event-calendar">${calendarOptions}</select>
-      </label>
+    <div class="cal-modal-content wide">
+      <div class="cal-form-grid">
+        <label class="full-width">
+          Title
+          <input type="text" id="event-title" placeholder="Event title">
+        </label>
+        <label style="margin-bottom: 8px;">
+          <input type="checkbox" id="event-allday"> All day
+        </label>
+        <div></div>
+        <div id="start-picker-container"></div>
+        <div id="end-picker-container"></div>
+        <label>
+          Location
+          <input type="text" id="event-location" placeholder="Add location">
+        </label>
+        <label>
+          Calendar
+          <select id="event-calendar">${calendarOptions}</select>
+        </label>
+        <label>
+          Repeat
+          <select id="event-recurrence">
+            <option value="">Does not repeat</option>
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+            <option value="YEARLY">Yearly</option>
+            <option value="WEEKDAYS">Every weekday (Mon-Fri)</option>
+          </select>
+        </label>
+        <div></div>
+        <label class="full-width">
+          Description
+          <textarea id="event-description" placeholder="Add description" rows="2" style="resize: vertical;"></textarea>
+        </label>
+      </div>
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="cancel">Cancel</button>
         <button class="cal-btn primary" data-action="save">Save</button>
@@ -1052,7 +1055,7 @@ function showAddEventModal(date) {
   modal.querySelector('#event-title').focus();
 }
 
-function showEditEventModal(event, editAll = false) {
+function showEditEventModal(event, _editAll = false) {
   const eventIsAllDay = !event.start.dateTime;
   const eventStart = new Date(event.start.dateTime || event.start.date + 'T09:00:00');
   const eventEnd = new Date(event.end.dateTime || event.end.date + 'T10:00:00');
@@ -1061,25 +1064,27 @@ function showEditEventModal(event, editAll = false) {
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
   modal.innerHTML = `
-    <div class="cal-modal-content">
-      <h3>Edit ${editAll ? 'Recurring ' : ''}Event</h3>
-      <label>
-        Title
-        <input type="text" id="event-title" value="${escapeHtml(event.summary)}">
-      </label>
-      <label style="margin-bottom: 8px;">
-        <input type="checkbox" id="event-allday" ${eventIsAllDay ? 'checked' : ''}> All day
-      </label>
-      <div id="start-picker-container"></div>
-      <div id="end-picker-container" ${eventIsAllDay ? 'style="display: none;"' : ''}></div>
-      <label>
-        Location
-        <input type="text" id="event-location" value="${escapeHtml(event.location)}">
-      </label>
-      <label>
-        Description
-        <textarea id="event-description" rows="2" style="resize: vertical;">${escapeHtml(event.description)}</textarea>
-      </label>
+    <div class="cal-modal-content wide">
+      <div class="cal-form-grid">
+        <label class="full-width">
+          Title
+          <input type="text" id="event-title" value="${escapeHtml(event.summary)}">
+        </label>
+        <label style="margin-bottom: 8px;">
+          <input type="checkbox" id="event-allday" ${eventIsAllDay ? 'checked' : ''}> All day
+        </label>
+        <div></div>
+        <div id="start-picker-container"></div>
+        <div id="end-picker-container" ${eventIsAllDay ? 'style="display: none;"' : ''}></div>
+        <label class="full-width">
+          Location
+          <input type="text" id="event-location" value="${escapeHtml(event.location)}">
+        </label>
+        <label class="full-width">
+          Description
+          <textarea id="event-description" rows="2" style="resize: vertical;">${escapeHtml(event.description)}</textarea>
+        </label>
+      </div>
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="cancel">Cancel</button>
         <button class="cal-btn primary" data-action="save">Save</button>
@@ -1270,6 +1275,11 @@ function showSettingsModal() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section-title">Refresh</div>
+        <button class="cal-btn" data-action="refresh" style="width: 100%;">Reload Widget</button>
+      </div>
+
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="close">Close</button>
         <button class="cal-btn primary" data-action="apply">Apply</button>
@@ -1289,6 +1299,8 @@ function showSettingsModal() {
     const action = e.target.dataset.action;
     if (action === 'close' || e.target === modal) {
       modal.remove();
+    } else if (action === 'refresh') {
+      window.location.reload();
     } else if (action === 'apply') {
       // Update view
       const activeViewBtn = modal.querySelector('[data-view].active');

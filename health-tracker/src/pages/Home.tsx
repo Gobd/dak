@@ -52,9 +52,19 @@ export function Home() {
     });
   }, [courses, fetchDoses]);
 
-  // Get upcoming shots
+  // Get upcoming shots (hide if 3x overdue - likely discontinued)
   const upcomingShots = schedules
-    .filter((s) => s.next_due)
+    .filter((s) => {
+      if (!s.next_due) return false;
+      const dueDate = new Date(s.next_due + "T00:00:00");
+      const now = new Date();
+      const daysPastDue = Math.floor(
+        (now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      // Hide if more than 3x the interval has passed
+      const maxOverdueDays = s.interval_days * 3;
+      return daysPastDue <= maxOverdueDays;
+    })
     .sort(
       (a, b) =>
         new Date(a.next_due + "T00:00:00").getTime() -

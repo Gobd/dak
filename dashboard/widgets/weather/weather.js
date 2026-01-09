@@ -224,11 +224,12 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
         ${periods
           .map(
             (period, index) => `
-          <div class="weather-period" data-period-index="${index}">
+          <div class="weather-period ${index === periods.length - 1 ? 'last-period' : ''}" data-period-index="${index}">
             <div class="period-name">${period.name}</div>
             <img class="period-icon" src="${period.icon}" alt="${period.shortForecast}">
             <div class="period-temp ${period.isDaytime ? 'high' : 'low'}">${period.temperature}°${period.temperatureUnit}</div>
             <div class="period-desc">${period.shortForecast}</div>
+            ${index === periods.length - 1 ? '<button class="weather-refresh-btn" title="Reload widget">↻</button>' : ''}
           </div>
         `
           )
@@ -236,6 +237,11 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
       </div>
     </div>
   `;
+
+  // Add click handler for refresh button
+  container.querySelector('.weather-refresh-btn')?.addEventListener('click', () => {
+    window.location.reload();
+  });
 
   // Add click handlers for alerts
   container.querySelectorAll('.weather-alert').forEach((el) => {

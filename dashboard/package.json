@@ -13,10 +13,10 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1",
-    "globals": "^16.5.0",
-    "prettier": "^3.7.4",
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
     "serve": "^14.2.4"
   }
 }

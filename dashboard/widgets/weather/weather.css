@@ -10,6 +10,7 @@
   --weather-high: #dc2626;
   --weather-low: #2563eb;
 
+  position: relative;
   width: 100%;
   height: 100%;
   background: var(--weather-bg);
@@ -26,6 +27,31 @@
   overflow: hidden;
   padding: 12px;
   box-sizing: border-box;
+}
+
+/* Refresh button - right edge of periods, vertically centered */
+.weather-refresh-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--weather-surface);
+  color: var(--weather-text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+  z-index: 10;
+}
+
+.weather-refresh-btn:hover {
+  opacity: 1;
+  background: var(--weather-border);
 }
 
 /* Dark mode - controlled by dashboard config */
@@ -106,6 +132,7 @@
 
 /* Forecast Periods - Horizontal (default) */
 .weather-periods {
+  position: relative;
   display: flex;
   gap: 8px;
   flex: 1;
@@ -115,6 +142,7 @@
 }
 
 .weather-period {
+  position: relative;
   flex: 1;
   min-width: 70px;
   display: flex;
