@@ -15,7 +15,7 @@
   height: 100%;
   background: var(--cal-bg);
   color: var(--cal-text);
-  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -505,7 +505,7 @@ body.dark .cal-modal {
   max-width: 90vw;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   color: var(--cal-text);
-  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 /* Wide modal for add/edit forms */
@@ -974,7 +974,7 @@ body.dark .cal-modal {
   width: 300px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   color: var(--cal-text);
-  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 body.dark .mini-cal-popup {

@@ -16,27 +16,7 @@ sudo apt-get install -y --no-install-recommends \
   ddcutil \
   curl \
   unzip \
-  fonts-noto-color-emoji \
-  fonts-noto-core
-
-# Configure Noto Sans as default system font
-echo "=== Configuring fonts ==="
-mkdir -p ~/.config/fontconfig
-cat > ~/.config/fontconfig/fonts.conf << 'EOF'
-<?xml version="1.0"?>
-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
-<fontconfig>
-  <alias>
-    <family>system-ui</family>
-    <prefer><family>Noto Sans</family></prefer>
-  </alias>
-  <alias>
-    <family>sans-serif</family>
-    <prefer><family>Noto Sans</family></prefer>
-  </alias>
-</fontconfig>
-EOF
-fc-cache -fv
+  fonts-noto-color-emoji
 
 # Install chromium (package name varies by distro)
 if apt-cache show chromium &>/dev/null; then

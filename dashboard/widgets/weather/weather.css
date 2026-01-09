@@ -15,7 +15,7 @@
   height: 100%;
   background: var(--weather-bg);
   color: var(--weather-text);
-  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -304,7 +304,7 @@
   flex-direction: column;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   color: var(--weather-text);
-  font-family: 'Noto Sans', system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 .weather-modal-header {
