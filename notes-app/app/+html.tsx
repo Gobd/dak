@@ -24,6 +24,14 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta name="apple-mobile-web-app-title" content="Notes" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
+        {/* Google Fonts - Noto Sans */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+
         {/*
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.
           However, body scrolling is often nice to have for mobile web. If you want to enable it, remove this line.
