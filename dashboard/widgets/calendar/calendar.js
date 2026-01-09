@@ -16,10 +16,13 @@ import { createHybridDateTimePicker, setWeekStart } from './wheel-picker.js';
 // Calendar Widget - Month grid and list views
 
 const HIDDEN_CALENDARS_KEY = 'calendar-hidden';
+const CALENDAR_NAMES_KEY = 'calendar-names';
+const CALENDAR_VIEW_KEY = 'calendar-view';
 
 let calendars = [];
 let events = [];
 let hiddenCalendars = new Set(); // Calendar IDs to hide
+let calendarNames = {}; // Custom display names for calendars
 let accessToken = null;
 let currentContainer = null;
 let currentView = 'month'; // 'month' or 'list'
@@ -43,6 +46,45 @@ function loadHiddenCalendars() {
 // Save hidden calendars to localStorage
 function saveHiddenCalendars() {
   localStorage.setItem(HIDDEN_CALENDARS_KEY, JSON.stringify([...hiddenCalendars]));
+}
+
+// Load custom calendar names from localStorage
+function loadCalendarNames() {
+  try {
+    const stored = localStorage.getItem(CALENDAR_NAMES_KEY);
+    if (stored) {
+      calendarNames = JSON.parse(stored);
+    }
+  } catch {
+    calendarNames = {};
+  }
+}
+
+// Save custom calendar names to localStorage
+function saveCalendarNames() {
+  localStorage.setItem(CALENDAR_NAMES_KEY, JSON.stringify(calendarNames));
+}
+
+// Get display name for a calendar (custom name or original)
+function getCalendarDisplayName(calendarId, originalName) {
+  return calendarNames[calendarId] || originalName;
+}
+
+// Load view preference from localStorage
+function loadViewPreference() {
+  try {
+    const stored = localStorage.getItem(CALENDAR_VIEW_KEY);
+    if (stored && (stored === 'month' || stored === 'list')) {
+      currentView = stored;
+    }
+  } catch {
+    // Keep default
+  }
+}
+
+// Save view preference to localStorage
+function saveViewPreference() {
+  localStorage.setItem(CALENDAR_VIEW_KEY, currentView);
 }
 
 // Check if calendar is visible
@@ -216,6 +258,9 @@ function renderMonthView(container) {
     days.push(date);
   }
 
+  // Get visible calendars for legend
+  const visibleCalendars = calendars.filter((cal) => isCalendarVisible(cal.id));
+
   const darkClass = isDarkMode ? 'dark' : '';
   container.innerHTML = `
     <div class="calendar-widget ${darkClass}">
@@ -224,12 +269,20 @@ function renderMonthView(container) {
         <span class="cal-title">${dateRange}</span>
         <button class="cal-nav-btn" data-action="next-week">›</button>
         <button class="cal-nav-btn cal-today-btn ${todayInView ? 'active' : ''}" data-action="today">Today</button>
-        <div class="cal-view-toggle">
-          <button class="cal-view-btn ${currentView === 'month' ? 'active' : ''}" data-view="month">Month</button>
-          <button class="cal-view-btn ${currentView === 'list' ? 'active' : ''}" data-view="list">List</button>
-        </div>
-        <button class="cal-nav-btn" data-action="filter" title="Filter calendars">☰</button>
+        <button class="cal-nav-btn" data-action="settings" title="Settings">⚙</button>
         <button class="cal-nav-btn" data-action="add">+</button>
+      </div>
+      <div class="calendar-legend">
+        ${visibleCalendars
+          .map(
+            (cal) => `
+          <div class="calendar-legend-item">
+            <span class="calendar-legend-dot" style="background: ${cal.backgroundColor}"></span>
+            <span class="calendar-legend-name">${getCalendarDisplayName(cal.id, cal.summary)}</span>
+          </div>
+        `
+          )
+          .join('')}
       </div>
       <div class="calendar-month-grid" style="--weeks: ${weeksToShow}">
         <div class="month-header">
@@ -281,9 +334,6 @@ function renderMonthView(container) {
   container.querySelectorAll('.calendar-header [data-action]').forEach((btn) => {
     btn.addEventListener('click', handleMonthHeaderClick);
   });
-  container.querySelectorAll('.calendar-header [data-view]').forEach((btn) => {
-    btn.addEventListener('click', handleMonthHeaderClick);
-  });
   container.querySelector('.month-days').addEventListener('click', handleMonthDayClick);
 }
 
@@ -304,6 +354,10 @@ function renderListView(container) {
   }
 
   const today = formatLocalDate(new Date());
+
+  // Get visible calendars for legend
+  const visibleCalendars = calendars.filter((cal) => isCalendarVisible(cal.id));
+
   const darkClass = isDarkMode ? 'dark' : '';
 
   container.innerHTML = `
@@ -311,12 +365,20 @@ function renderListView(container) {
       <div class="calendar-header">
         <button class="cal-nav-btn cal-today-btn" data-action="today">Today</button>
         <span class="cal-title">Calendar</span>
-        <div class="cal-view-toggle">
-          <button class="cal-view-btn ${currentView === 'month' ? 'active' : ''}" data-view="month">Month</button>
-          <button class="cal-view-btn ${currentView === 'list' ? 'active' : ''}" data-view="list">List</button>
-        </div>
-        <button class="cal-nav-btn" data-action="filter" title="Filter calendars">☰</button>
+        <button class="cal-nav-btn" data-action="settings" title="Settings">⚙</button>
         <button class="cal-nav-btn" data-action="add">+</button>
+      </div>
+      <div class="calendar-legend">
+        ${visibleCalendars
+          .map(
+            (cal) => `
+          <div class="calendar-legend-item">
+            <span class="calendar-legend-dot" style="background: ${cal.backgroundColor}"></span>
+            <span class="calendar-legend-name">${getCalendarDisplayName(cal.id, cal.summary)}</span>
+          </div>
+        `
+          )
+          .join('')}
       </div>
       <div class="calendar-scroll" id="calendar-scroll">
         ${days
@@ -381,21 +443,14 @@ function renderListView(container) {
   container.querySelectorAll('.calendar-header [data-action]').forEach((btn) => {
     btn.addEventListener('click', handleListHeaderClick);
   });
-  container.querySelectorAll('.calendar-header [data-view]').forEach((btn) => {
-    btn.addEventListener('click', handleListHeaderClick);
-  });
   container.querySelector('.calendar-scroll').addEventListener('click', handleListDayClick);
 }
 
 function handleMonthHeaderClick(e) {
-  const btn = e.target.closest('[data-action], [data-view]') || e.currentTarget;
+  const btn = e.target.closest('[data-action]') || e.currentTarget;
   const action = btn.dataset.action;
-  const view = btn.dataset.view;
 
-  if (view) {
-    currentView = view;
-    refreshCalendar();
-  } else if (action === 'prev-week') {
+  if (action === 'prev-week') {
     gridStartDate.setDate(gridStartDate.getDate() - 7);
     refreshCalendar();
   } else if (action === 'next-week') {
@@ -404,33 +459,26 @@ function handleMonthHeaderClick(e) {
   } else if (action === 'today') {
     gridStartDate = getMostRecentWeekStart();
     refreshCalendar();
-  } else if (action === 'filter') {
-    showCalendarFilterModal();
+  } else if (action === 'settings') {
+    showSettingsModal();
   } else if (action === 'add') {
     showAddEventModal(new Date());
   }
 }
 
 function handleListHeaderClick(e) {
-  const btn = e.target.closest('[data-action], [data-view]') || e.currentTarget;
+  const btn = e.target.closest('[data-action]') || e.currentTarget;
   const action = btn.dataset.action;
-  const view = btn.dataset.view;
 
-  if (view) {
-    currentView = view;
-    if (view === 'month') {
-      gridStartDate = getMostRecentWeekStart(); // Reset to current week when switching
-    }
-    refreshCalendar();
-  } else if (action === 'today') {
+  if (action === 'today') {
     const today = formatLocalDate(new Date());
     const todayEl = currentContainer?.querySelector(`#date-${today}`);
     if (todayEl) {
       const scrollContainer = currentContainer.querySelector('#calendar-scroll');
       scrollContainer.scrollTo({ top: todayEl.offsetTop - 50, behavior: 'smooth' });
     }
-  } else if (action === 'filter') {
-    showCalendarFilterModal();
+  } else if (action === 'settings') {
+    showSettingsModal();
   } else if (action === 'add') {
     showAddEventModal(new Date());
   }
@@ -1018,26 +1066,48 @@ function showErrorModal(message) {
   document.body.appendChild(modal);
 }
 
-function showCalendarFilterModal() {
+function showSettingsModal() {
+  const escapeHtml = (str) => (str ? str.replace(/"/g, '&quot;').replace(/</g, '&lt;') : '');
+
   const modal = document.createElement('div');
   modal.className = 'cal-modal open';
   modal.innerHTML = `
     <div class="cal-modal-content">
-      <h3>Filter Calendars</h3>
-      <div class="calendar-filter-list">
-        ${calendars
-          .map(
-            (cal) => `
-          <label class="calendar-filter-item">
-            <input type="checkbox" data-calendar-id="${cal.id}"
-                   ${isCalendarVisible(cal.id) ? 'checked' : ''}>
-            <span class="calendar-color-dot" style="background: ${cal.backgroundColor}"></span>
-            <span class="calendar-name">${cal.summary}</span>
-          </label>
-        `
-          )
-          .join('')}
+      <h3>Settings</h3>
+
+      <div class="settings-section">
+        <div class="settings-section-title">View</div>
+        <div class="settings-view-toggle">
+          <button class="settings-view-btn ${currentView === 'month' ? 'active' : ''}" data-view="month">Month</button>
+          <button class="settings-view-btn ${currentView === 'list' ? 'active' : ''}" data-view="list">List</button>
+        </div>
       </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Calendars</div>
+        <div class="calendar-settings-list">
+          ${calendars
+            .map(
+              (cal) => `
+            <div class="calendar-settings-item">
+              <div class="calendar-settings-row">
+                <input type="checkbox" data-calendar-id="${cal.id}"
+                       ${isCalendarVisible(cal.id) ? 'checked' : ''}>
+                <span class="calendar-color-dot" style="background: ${cal.backgroundColor}"></span>
+                <span class="calendar-original-name">${cal.summary}</span>
+              </div>
+              <div class="calendar-rename-row">
+                <input type="text" class="calendar-name-input" data-calendar-id="${cal.id}"
+                       value="${escapeHtml(calendarNames[cal.id] || '')}"
+                       placeholder="Display name (optional)">
+              </div>
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+      </div>
+
       <div class="cal-modal-actions">
         <button class="cal-btn" data-action="close">Close</button>
         <button class="cal-btn primary" data-action="apply">Apply</button>
@@ -1045,19 +1115,47 @@ function showCalendarFilterModal() {
     </div>
   `;
 
+  // View toggle handlers
+  modal.querySelectorAll('[data-view]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('[data-view]').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
   modal.addEventListener('click', (e) => {
     const action = e.target.dataset.action;
     if (action === 'close' || e.target === modal) {
       modal.remove();
     } else if (action === 'apply') {
+      // Update view
+      const activeViewBtn = modal.querySelector('[data-view].active');
+      if (activeViewBtn) {
+        currentView = activeViewBtn.dataset.view;
+        saveViewPreference();
+      }
+
       // Update hidden calendars based on checkboxes
       hiddenCalendars.clear();
-      modal.querySelectorAll('input[data-calendar-id]').forEach((checkbox) => {
+      modal.querySelectorAll('input[type="checkbox"][data-calendar-id]').forEach((checkbox) => {
         if (!checkbox.checked) {
           hiddenCalendars.add(checkbox.dataset.calendarId);
         }
       });
       saveHiddenCalendars();
+
+      // Update custom calendar names
+      modal.querySelectorAll('.calendar-name-input').forEach((input) => {
+        const calId = input.dataset.calendarId;
+        const customName = input.value.trim();
+        if (customName) {
+          calendarNames[calId] = customName;
+        } else {
+          delete calendarNames[calId];
+        }
+      });
+      saveCalendarNames();
+
       modal.remove();
       refreshCalendar();
     }
@@ -1133,15 +1231,18 @@ async function renderCalendarWidget(
   currentContainer = container;
   isDarkMode = dark;
 
-  // Load hidden calendars preference
+  // Load preferences from storage
   loadHiddenCalendars();
+  loadCalendarNames();
+  loadViewPreference();
 
-  // Apply config options
+  // Apply config options (only if explicitly set, otherwise use stored preference)
   if (panel.args?.view === 'list') {
     currentView = 'list';
-  } else {
+  } else if (panel.args?.view === 'month') {
     currentView = 'month';
   }
+  // If no panel.args.view, keep the loaded preference
 
   if (panel.args?.weekStart === 'sunday') {
     weekStartsOn = 0;
