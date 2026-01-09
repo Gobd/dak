@@ -24,11 +24,23 @@ else
   curl -Lo /tmp/smartkey.zip "https://nightly.link/Gobd/chrome-virtual-keyboard/workflows/build.yml/${BRANCH}/smartkey-${BRANCH}.zip"
 fi
 
-rm -rf ~/.config/chromium-extensions/smartkey
-unzip -o /tmp/smartkey.zip -d ~/.config/chromium-extensions/
+# Extract to temp dir first to handle varying zip structures
+rm -rf /tmp/smartkey-extract
+mkdir -p /tmp/smartkey-extract
+unzip -o /tmp/smartkey.zip -d /tmp/smartkey-extract/
 rm /tmp/smartkey.zip
 
-# Normalize folder name to 'smartkey' for branch builds
-if [[ -d ~/.config/chromium-extensions/"smartkey-${INPUT}" ]]; then
-  mv ~/.config/chromium-extensions/"smartkey-${INPUT}" ~/.config/chromium-extensions/smartkey
+# Determine what we got: single folder or flat files
+ITEMS=(/tmp/smartkey-extract/*)
+if [[ ${#ITEMS[@]} -eq 1 && -d "${ITEMS[0]}" ]]; then
+  # Single folder - use it directly
+  SRC="${ITEMS[0]}"
+else
+  # Flat files - use the extract dir itself
+  SRC="/tmp/smartkey-extract"
 fi
+
+# Move to final destination
+rm -rf ~/.config/chromium-extensions/smartkey
+mv "$SRC" ~/.config/chromium-extensions/smartkey
+rm -rf /tmp/smartkey-extract
