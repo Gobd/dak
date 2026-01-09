@@ -54,7 +54,7 @@
   --weather-surface: #262626;
   --weather-border: #374151;
   --weather-text: #f9fafb;
-  --weather-text-muted: #9ca3af;
+  --weather-text-muted: #d1d5db;
   --weather-high: #f87171;
   --weather-low: #60a5fa;
 }
@@ -159,7 +159,7 @@
 }
 
 .period-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--weather-text-muted);
   text-align: center;
@@ -189,7 +189,7 @@
 }
 
 .period-desc {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--weather-text-muted);
   text-align: center;
   line-height: 1.3;
