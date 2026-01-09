@@ -3,11 +3,11 @@
 # Usage: install-keyboard.sh [version|branch]
 #   version: semver like v3.0.1 or 3.0.1 - downloads from GitHub releases
 #   branch:  branch name like main - downloads nightly build from GitHub Actions
-#   default: v3.0.1
+#   default: v3.0.2
 
 set -e
 
-INPUT="${1:-v3.0.1}"
+INPUT="${1:-v3.0.2}"
 
 mkdir -p ~/.config/chromium-extensions
 
