@@ -167,6 +167,8 @@ To update default layouts, edit `screens.js` and push. Users can reset to get th
 
 ## Kiosk Setup (Raspberry Pi 5)
 
+Uses Wayland + Cage (minimal kiosk compositor) for a lightweight, modern setup.
+
 ### 1. Flash OS
 
 1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
@@ -184,10 +186,16 @@ To update default layouts, edit `screens.js` and push. Users can reset to get th
 # From dashboard folder on your Mac:
 scp -r scripts kiosk@kiosk.local:~
 ssh kiosk@kiosk.local
-bash ~/scripts/kiosk-setup.sh
+chmod +x ~/scripts/*.sh
+./scripts/kiosk-setup.sh
 ```
 
 > **Note:** Replace `kiosk.local` with the Pi's IP address if hostname doesn't resolve.
+
+> **Reimaged your Pi?** If you get "REMOTE HOST IDENTIFICATION HAS CHANGED", clear the old SSH key:
+> ```bash
+> ssh-keygen -R kiosk.local   # or the IP address
+> ```
 
 The Pi reboots and launches the dashboard in kiosk mode.
 
@@ -195,13 +203,14 @@ The Pi reboots and launches the dashboard in kiosk mode.
 
 After setup, these are available in `~/scripts/`:
 
-- `restart-kiosk.sh` - Restart chromium after Alt+F4
+- `restart-kiosk.sh` - Restart kiosk after closing
+- `config-browser.sh` - Open browser in normal mode to configure extensions
 - `brightness.sh` - Manual brightness control (day/night/set N/status)
 
 ### Keyboard shortcuts
 
-- `Ctrl+Alt+F2` - Switch to terminal
-- `Ctrl+Alt+F7` - Back to kiosk
+- `Ctrl+Alt+F2` - Switch to terminal (login as kiosk)
+- `Ctrl+Alt+F1` - Back to kiosk
 
 ## Configuration
 

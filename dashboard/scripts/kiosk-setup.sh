@@ -1,5 +1,6 @@
 #!/bin/bash
 # Kiosk setup script for Raspberry Pi 5 + Raspberry Pi OS Lite
+# Uses Wayland + Cage (minimal kiosk compositor)
 #
 # Copy scripts folder to Pi and run:
 #   scp -r scripts kiosk@kiosk.local:~
@@ -11,18 +12,10 @@ set -e
 echo "=== Installing packages ==="
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
-  xserver-xorg \
-  lightdm \
-  openbox \
-  unclutter \
-  unzip \
-  wget \
+  cage \
   ddcutil \
-  curl
-
-# Enable i2c for monitor brightness control
-echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
-sudo modprobe i2c-dev
+  curl \
+  unzip
 
 # Install chromium (package name varies by distro)
 if apt-cache show chromium &>/dev/null; then
@@ -37,47 +30,32 @@ else
 fi
 echo "Using: $CHROMIUM_BIN"
 
+# Enable i2c for monitor brightness control
+echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
+sudo modprobe i2c-dev 2>/dev/null || true
+
 echo "=== Installing virtual keyboard extension ==="
 mkdir -p ~/.config/chromium-extensions
-wget -O /tmp/smartkey.zip https://github.com/Gobd/chrome-virtual-keyboard/releases/download/v3.0.1/smartkey-v3.0.1.zip
+curl -Lo /tmp/smartkey.zip https://github.com/Gobd/chrome-virtual-keyboard/releases/download/v3.0.1/smartkey-v3.0.1.zip
 unzip -o /tmp/smartkey.zip -d ~/.config/chromium-extensions/
 rm /tmp/smartkey.zip
 
 echo "=== Adding kiosk user to required groups ==="
-sudo usermod -a -G tty,video kiosk
+sudo usermod -a -G tty,video,i2c kiosk 2>/dev/null || sudo usermod -a -G tty,video kiosk
 
-echo "=== Setting graphical boot target ==="
-sudo systemctl set-default graphical.target
-
-echo "=== Configuring X for Pi 5 ==="
-sudo mkdir -p /etc/X11/xorg.conf.d
-sudo tee /etc/X11/xorg.conf.d/99-pi.conf > /dev/null << 'EOF'
-Section "Device"
-    Identifier "default"
-    Driver "modesetting"
-    Option "kmsdev" "/dev/dri/card1"
-EndSection
+echo "=== Setting up auto-login and kiosk service ==="
+sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
+sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf > /dev/null << 'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 EOF
 
-echo "=== Configuring lightdm ==="
-sudo tee /etc/lightdm/lightdm.conf > /dev/null << 'EOF'
-[Seat:*]
-autologin-user=kiosk
-autologin-session=openbox
-xserver-command=X -s 0 -dpms
-EOF
-
-echo "=== Creating openbox autostart ==="
-mkdir -p ~/.config/openbox
-cat > ~/.config/openbox/autostart << EOF
+echo "=== Creating kiosk startup script ==="
+cat > ~/.kiosk.sh << EOF
 #!/bin/bash
-export DISPLAY=:0
-sleep 2
-xset s off
-xset s noblank
-xset -dpms
-unclutter -idle 0.5 -root &
-$CHROMIUM_BIN \\
+export WLR_LIBINPUT_NO_DEVICES=1
+exec cage -- $CHROMIUM_BIN \\
   --kiosk \\
   --no-first-run \\
   --disable-translate \\
@@ -87,13 +65,25 @@ $CHROMIUM_BIN \\
   --disable-pinch \\
   --overscroll-history-navigation=0 \\
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \\
-  https://dak.bkemper.me/dashboard &
+  --ozone-platform=wayland \\
+  https://dak.bkemper.me/dashboard
 EOF
-chmod +x ~/.config/openbox/autostart
+chmod +x ~/.kiosk.sh
+
+echo "=== Setting up auto-start on login ==="
+cat > ~/.bash_profile << 'EOF'
+if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
+  exec ~/.kiosk.sh
+fi
+EOF
 
 echo "=== Setting up auto brightness cron ==="
 chmod +x ~/scripts/brightness.sh
-(crontab -l 2>/dev/null | grep -v brightness.sh; echo "*/15 * * * * /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1") | crontab -
+# Run on boot and every 2 minutes for smooth gradual transitions
+(crontab -l 2>/dev/null | grep -v brightness.sh
+ echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
+ echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
+) | crontab -
 
 echo "=== Setup complete! ==="
 echo "Helper scripts available in ~/scripts/"
