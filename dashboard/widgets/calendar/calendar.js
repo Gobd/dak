@@ -1055,7 +1055,7 @@ function showAddEventModal(date) {
   modal.querySelector('#event-title').focus();
 }
 
-function showEditEventModal(event, editAll = false) {
+function showEditEventModal(event, _editAll = false) {
   const eventIsAllDay = !event.start.dateTime;
   const eventStart = new Date(event.start.dateTime || event.start.date + 'T09:00:00');
   const eventEnd = new Date(event.end.dateTime || event.end.date + 'T10:00:00');
