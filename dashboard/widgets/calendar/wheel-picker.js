@@ -382,12 +382,19 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
     const today = new Date();
     const orderedDays = getOrderedDays();
 
+    // Always show 6 rows (42 cells) for consistent height
+    const totalCells = 42;
+
     let daysHtml = '';
-    // Empty cells for days before first of month
-    for (let i = 0; i < firstDayOffset; i++) {
-      daysHtml += '<div class="mini-cal-day empty"></div>';
+
+    // Days from previous month
+    const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+    for (let i = firstDayOffset - 1; i >= 0; i--) {
+      const d = prevMonthDays - i;
+      daysHtml += `<div class="mini-cal-day other-month" data-day="${d}" data-month="${viewMonth - 1}">${d}</div>`;
     }
-    // Days of month
+
+    // Days of current month
     for (let d = 1; d <= daysInMonth; d++) {
       const isSelected =
         d === selectedDate.getDate() &&
@@ -398,14 +405,23 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
       const classes = ['mini-cal-day'];
       if (isSelected) classes.push('selected');
       if (isToday) classes.push('today');
-      daysHtml += `<div class="${classes.join(' ')}" data-day="${d}">${d}</div>`;
+      daysHtml += `<div class="${classes.join(' ')}" data-day="${d}" data-month="${viewMonth}">${d}</div>`;
+    }
+
+    // Days from next month to fill remaining cells
+    const cellsUsed = firstDayOffset + daysInMonth;
+    const remaining = totalCells - cellsUsed;
+    for (let d = 1; d <= remaining; d++) {
+      daysHtml += `<div class="mini-cal-day other-month" data-day="${d}" data-month="${viewMonth + 1}">${d}</div>`;
     }
 
     popup.innerHTML = `
       <div class="mini-cal-header">
-        <button class="mini-cal-nav" data-dir="-1">&lt;</button>
+        <button class="mini-cal-nav" data-action="prev-year">‹‹</button>
+        <button class="mini-cal-nav" data-action="prev-month">‹</button>
         <span class="mini-cal-title">${FULL_MONTHS[viewMonth]} ${viewYear}</span>
-        <button class="mini-cal-nav" data-dir="1">&gt;</button>
+        <button class="mini-cal-nav" data-action="next-month">›</button>
+        <button class="mini-cal-nav" data-action="next-year">››</button>
       </div>
       <div class="mini-cal-weekdays">
         ${orderedDays.map((d) => `<div>${d.charAt(0)}</div>`).join('')}
@@ -421,23 +437,43 @@ function createMiniCalendar(selectedDate, onSelect, onClose) {
   popup.addEventListener('click', (e) => {
     const nav = e.target.closest('.mini-cal-nav');
     if (nav) {
-      const dir = parseInt(nav.dataset.dir);
-      viewMonth += dir;
-      if (viewMonth < 0) {
-        viewMonth = 11;
+      const action = nav.dataset.action;
+      if (action === 'prev-year') {
         viewYear--;
-      } else if (viewMonth > 11) {
-        viewMonth = 0;
+      } else if (action === 'next-year') {
         viewYear++;
+      } else if (action === 'prev-month') {
+        viewMonth--;
+        if (viewMonth < 0) {
+          viewMonth = 11;
+          viewYear--;
+        }
+      } else if (action === 'next-month') {
+        viewMonth++;
+        if (viewMonth > 11) {
+          viewMonth = 0;
+          viewYear++;
+        }
       }
       render();
       return;
     }
 
-    const day = e.target.closest('.mini-cal-day:not(.empty)');
-    if (day) {
+    const day = e.target.closest('.mini-cal-day');
+    if (day && day.dataset.day) {
       const d = parseInt(day.dataset.day);
-      const newDate = new Date(viewYear, viewMonth, d);
+      const m = parseInt(day.dataset.month);
+      // Handle month overflow for prev/next month days
+      let targetYear = viewYear;
+      let targetMonth = m;
+      if (m < 0) {
+        targetMonth = 11;
+        targetYear--;
+      } else if (m > 11) {
+        targetMonth = 0;
+        targetYear++;
+      }
+      const newDate = new Date(targetYear, targetMonth, d);
       onSelect(newDate);
       overlay.remove();
     }
