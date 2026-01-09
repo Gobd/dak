@@ -1,6 +1,0 @@
-completely ignore points (no leaderborad, no redeem, no assign points to tasks)
-    - just a ui setting to hide, need a settings menu, do not move theme to settings menu
-    - this ignore points needs to persist to the db, settings is pin protected
-    - family does not like points it offends them
-multiple times a day for like tooth brushing, no times, just brush teeth 2 times day does that currently work?
-habit tracker maybe more like go to the gym 3 times this week then track if we achieved that, can we do that here?
