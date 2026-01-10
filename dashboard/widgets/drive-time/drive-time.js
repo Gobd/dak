@@ -48,7 +48,7 @@ function isInTimeWindow(days, startTime, endTime) {
   const currentDay = now.getDay();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const activeDays = days.map(d => DAY_MAP[d.toLowerCase()]);
+  const activeDays = days.map((d) => DAY_MAP[d.toLowerCase()]);
   if (!activeDays.includes(currentDay)) return false;
 
   const start = parseTime(startTime);
@@ -74,7 +74,9 @@ function dismissForToday(routeId) {
     const dismissed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || '{}');
     dismissed[routeId] = new Date().toDateString();
     localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
-  } catch {}
+  } catch {
+    // Ignore storage errors
+  }
 }
 
 function getActiveRoute(routes) {
@@ -98,7 +100,9 @@ function getCachedDriveTime(origin, destination) {
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
       return entry.data;
     }
-  } catch {}
+  } catch {
+    // Ignore cache read errors
+  }
   return null;
 }
 
@@ -107,7 +111,9 @@ function cacheDriveTime(origin, destination, data) {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
     cache[`${origin}|${destination}`] = { data, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch {
+    // Ignore cache write errors
+  }
 }
 
 async function fetchDriveTime(origin, destination) {
@@ -278,14 +284,18 @@ function setupAddressAutocomplete(input) {
       return;
     }
 
-    dd.innerHTML = predictions.map(p => `
+    dd.innerHTML = predictions
+      .map(
+        (p) => `
       <div class="dt-autocomplete-item" data-description="${p.description}">
         ${p.description}
       </div>
-    `).join('');
+    `
+      )
+      .join('');
     dd.style.display = 'block';
 
-    dd.querySelectorAll('.dt-autocomplete-item').forEach(item => {
+    dd.querySelectorAll('.dt-autocomplete-item').forEach((item) => {
       item.addEventListener('click', () => {
         input.value = item.dataset.description;
         hideDropdown();
@@ -318,7 +328,7 @@ function renderLocationManager(container, dark, routes, onDone) {
   const locations = getLocations();
 
   const locationKeys = new Set();
-  routes.forEach(r => {
+  routes.forEach((r) => {
     if (r.origin) locationKeys.add(r.origin);
     if (r.destination) locationKeys.add(r.destination);
   });
@@ -330,7 +340,9 @@ function renderLocationManager(container, dark, routes, onDone) {
         <p class="dt-setup-desc">Enter addresses for each location used in your routes.</p>
 
         <div class="dt-locations-list">
-          ${Array.from(locationKeys).map(key => `
+          ${Array.from(locationKeys)
+            .map(
+              (key) => `
             <div class="dt-location-item" data-key="${key}">
               <label>
                 <span class="dt-location-key">${key}</span>
@@ -339,18 +351,24 @@ function renderLocationManager(container, dark, routes, onDone) {
                        placeholder="Start typing address...">
               </label>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
         <div class="dt-routes-preview">
           <span class="dt-section-label">Configured Routes</span>
-          ${routes.map(r => `
+          ${routes
+            .map(
+              (r) => `
             <div class="dt-route-preview">
               <span class="dt-route-path">${r.origin} → ${r.destination}</span>
               <span class="dt-route-schedule">${r.days?.join(', ') || 'daily'} ${r.startTime || ''}–${r.endTime || ''}</span>
               ${r.label ? `<span class="dt-route-label">${r.label}</span>` : ''}
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
 
         <div class="drive-time-setup-actions">
@@ -361,13 +379,13 @@ function renderLocationManager(container, dark, routes, onDone) {
   `;
 
   // Setup autocomplete for each address input
-  container.querySelectorAll('.dt-address-input').forEach(input => {
+  container.querySelectorAll('.dt-address-input').forEach((input) => {
     setupAddressAutocomplete(input);
   });
 
   container.querySelector('.dt-save').addEventListener('click', () => {
     const newLocations = {};
-    container.querySelectorAll('.dt-address-input').forEach(input => {
+    container.querySelectorAll('.dt-address-input').forEach((input) => {
       const key = input.dataset.location;
       const value = input.value.trim();
       if (value) {

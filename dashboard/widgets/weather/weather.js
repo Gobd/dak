@@ -62,7 +62,9 @@ function getCachedForecast(lat, lon) {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
     const entry = cache[`${lat},${lon}`];
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
-  } catch {}
+  } catch {
+    // Ignore cache read errors
+  }
   return null;
 }
 
@@ -71,7 +73,9 @@ function cacheForecast(lat, lon, data) {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
     cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch {
+    // Ignore cache write errors
+  }
 }
 
 // =====================
@@ -80,10 +84,14 @@ function cacheForecast(lat, lon, data) {
 
 function getAlertSeverityClass(severity) {
   switch (severity?.toLowerCase()) {
-    case 'extreme': return 'alert-extreme';
-    case 'severe': return 'alert-severe';
-    case 'moderate': return 'alert-moderate';
-    default: return 'alert-minor';
+    case 'extreme':
+      return 'alert-extreme';
+    case 'severe':
+      return 'alert-severe';
+    case 'moderate':
+      return 'alert-moderate';
+    default:
+      return 'alert-minor';
   }
 }
 
@@ -185,24 +193,29 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
   currentPeriods = periods;
   const darkClass = dark ? 'dark' : '';
 
-  const alertsHtml = alerts.length > 0
-    ? `
+  const alertsHtml =
+    alerts.length > 0
+      ? `
     <div class="weather-alerts">
-      ${alerts.slice(0, 3).map((alert, index) => {
-        const props = alert.properties;
-        const severityClass = getAlertSeverityClass(props.severity);
-        const timeRemaining = formatAlertTime(props.onset, props.expires);
-        return `
+      ${alerts
+        .slice(0, 3)
+        .map((alert, index) => {
+          const props = alert.properties;
+          const severityClass = getAlertSeverityClass(props.severity);
+          const timeRemaining = formatAlertTime(props.onset, props.expires);
+          return `
           <div class="weather-alert ${severityClass}" data-alert-index="${index}">
             <span class="alert-icon">⚠</span>
             <span class="alert-event">${props.event}</span>
             <span class="alert-time">${timeRemaining}</span>
           </div>
         `;
-      }).join('')}
+        })
+        .join('')}
       ${alerts.length > 3 ? `<div class="more-alerts">+${alerts.length - 3} more alerts</div>` : ''}
     </div>
-  ` : '';
+  `
+      : '';
 
   const layoutClass = layout === 'vertical' ? 'vertical' : '';
 
@@ -210,7 +223,9 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
     <div class="weather-widget ${layoutClass} ${darkClass}">
       ${alertsHtml}
       <div class="weather-periods">
-        ${periods.map((period, index) => `
+        ${periods
+          .map(
+            (period, index) => `
           <div class="weather-period ${index === periods.length - 1 ? 'last-period' : ''}" data-period-index="${index}">
             <div class="period-name">${period.name}</div>
             <img class="period-icon" src="${period.icon}" alt="${period.shortForecast}">
@@ -218,7 +233,9 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
             <div class="period-desc">${period.shortForecast}</div>
             ${index === periods.length - 1 ? '<button class="weather-refresh-btn" title="Reload widget">↻</button>' : ''}
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     </div>
   `;

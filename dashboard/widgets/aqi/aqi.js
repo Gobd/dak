@@ -28,7 +28,9 @@ function getCachedAQI(lat, lon) {
     const cache = JSON.parse(localStorage.getItem(AQI_CACHE_KEY) || '{}');
     const entry = cache[`${lat},${lon}`];
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
-  } catch {}
+  } catch {
+    // Ignore cache read errors
+  }
   return null;
 }
 
@@ -37,7 +39,9 @@ function cacheAQI(lat, lon, data) {
     const cache = JSON.parse(localStorage.getItem(AQI_CACHE_KEY) || '{}');
     cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
     localStorage.setItem(AQI_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch {
+    // Ignore cache write errors
+  }
 }
 
 function getAQIColor(aqi) {
@@ -94,12 +98,13 @@ function renderAQIChart(container, aqiData, dark) {
     return;
   }
 
-  const currentAQI = aqiData.current?.us_aqi || todayHours.find((h) => !h.isPast)?.aqi || tomorrowHours[0]?.aqi || 0;
+  const currentAQI =
+    aqiData.current?.us_aqi || todayHours.find((h) => !h.isPast)?.aqi || tomorrowHours[0]?.aqi || 0;
   const todayMax = todayHours.length ? Math.max(...todayHours.map((h) => h.aqi)) : 0;
   const tomorrowMax = tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.aqi)) : 0;
 
   const formatHour = (h) => {
-    const hour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+    const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
     const suffix = h >= 12 ? 'pm' : 'am';
     return `${hour}${suffix}`;
   };
@@ -111,16 +116,18 @@ function renderAQIChart(container, aqiData, dark) {
 
     return `
       <div class="aqi-day-bars">
-        ${hours.map((h, i) => {
-          const height = Math.max((h.aqi / 150) * 100, 4);
-          const isPeak = i === peakIndex && maxAQI > 0;
-          const label = isPeak ? `<span class="aqi-peak-time">${formatHour(h.hour)}</span>` : '';
+        ${hours
+          .map((h, i) => {
+            const height = Math.max((h.aqi / 150) * 100, 4);
+            const isPeak = i === peakIndex && maxAQI > 0;
+            const label = isPeak ? `<span class="aqi-peak-time">${formatHour(h.hour)}</span>` : '';
 
-          return `<div class="aqi-bar-container ${h.isPast ? 'past' : ''}" title="${h.hour}:00 AQI ${h.aqi}">
+            return `<div class="aqi-bar-container ${h.isPast ? 'past' : ''}" title="${h.hour}:00 AQI ${h.aqi}">
             ${label}
             <div class="aqi-bar" style="height: ${Math.min(height, 100)}%; background: ${getAQIColor(h.aqi)}"></div>
           </div>`;
-        }).join('')}
+          })
+          .join('')}
       </div>
     `;
   };
@@ -173,8 +180,8 @@ function renderAQIChart(container, aqiData, dark) {
   const backdrop = widget.querySelector('.widget-modal-backdrop');
   const closeBtn = widget.querySelector('.widget-modal-close');
 
-  const openModal = () => modal.style.display = 'flex';
-  const closeModal = () => modal.style.display = 'none';
+  const openModal = () => (modal.style.display = 'flex');
+  const closeModal = () => (modal.style.display = 'none');
 
   infoBtn.addEventListener('click', openModal);
   backdrop.addEventListener('click', closeModal);

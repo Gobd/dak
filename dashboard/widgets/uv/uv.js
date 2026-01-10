@@ -28,7 +28,9 @@ function getCachedUV(lat, lon) {
     const cache = JSON.parse(localStorage.getItem(UV_CACHE_KEY) || '{}');
     const entry = cache[`${lat},${lon}`];
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
-  } catch {}
+  } catch {
+    // Ignore cache read errors
+  }
   return null;
 }
 
@@ -37,7 +39,9 @@ function cacheUV(lat, lon, data) {
     const cache = JSON.parse(localStorage.getItem(UV_CACHE_KEY) || '{}');
     cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
     localStorage.setItem(UV_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch {
+    // Ignore cache write errors
+  }
 }
 
 function getUVColor(uv) {
@@ -97,14 +101,14 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
   const tomorrowMax = tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.uv)) : 0;
 
   const formatHour = (h) => {
-    const hour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+    const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
     const suffix = h >= 12 ? 'pm' : 'am';
     return `${hour}${suffix}`;
   };
 
   // Find when UV crosses the safe threshold (for future hours only)
   const findThresholdCrossings = (hours) => {
-    const futureHours = hours.filter(h => !h.isPast);
+    const futureHours = hours.filter((h) => !h.isPast);
     if (futureHours.length < 2) return { riseTime: null, fallTime: null };
 
     let riseTime = null;
@@ -141,16 +145,18 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
 
     return `
       <div class="uv-day-bars">
-        ${hours.map((h, i) => {
-          const height = Math.max((h.uv / 11) * 100, 4);
-          const isPeak = i === peakIndex && maxUV > 0;
-          const label = isPeak ? `<span class="uv-peak-time">${formatHour(h.hour)}</span>` : '';
+        ${hours
+          .map((h, i) => {
+            const height = Math.max((h.uv / 11) * 100, 4);
+            const isPeak = i === peakIndex && maxUV > 0;
+            const label = isPeak ? `<span class="uv-peak-time">${formatHour(h.hour)}</span>` : '';
 
-          return `<div class="uv-bar-container ${h.isPast ? 'past' : ''}" title="${h.hour}:00 UV ${h.uv.toFixed(1)}">
+            return `<div class="uv-bar-container ${h.isPast ? 'past' : ''}" title="${h.hour}:00 UV ${h.uv.toFixed(1)}">
             ${label}
             <div class="uv-bar" style="height: ${height}%; background: ${getUVColor(h.uv)}"></div>
           </div>`;
-        }).join('')}
+          })
+          .join('')}
       </div>
     `;
   };
@@ -212,8 +218,8 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
   const backdrop = widget.querySelector('.widget-modal-backdrop');
   const closeBtn = widget.querySelector('.widget-modal-close');
 
-  const openModal = () => modal.style.display = 'flex';
-  const closeModal = () => modal.style.display = 'none';
+  const openModal = () => (modal.style.display = 'flex');
+  const closeModal = () => (modal.style.display = 'none');
 
   infoBtn.addEventListener('click', openModal);
   backdrop.addEventListener('click', closeModal);
