@@ -41,9 +41,14 @@ export async function onRequestPost(context) {
       traffic_model: 'best_guess',
     });
 
-    // Add waypoint to force route through specific road
+    // Add waypoints to force route through specific roads
+    // Supports multiple vias separated by | (e.g., "Highland Dr | I-215 E")
     if (via) {
-      params.set('waypoints', `via:${via}`);
+      const waypoints = via
+        .split('|')
+        .map((v) => `via:${v.trim()}`)
+        .join('|');
+      params.set('waypoints', waypoints);
     }
 
     const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);

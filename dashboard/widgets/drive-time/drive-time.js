@@ -524,10 +524,9 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
 
         <div class="dt-form-section">
           <span class="dt-section-label">Via (optional)</span>
-          <p class="dt-field-hint">Force route through a specific road, e.g. "Highland Dr, Salt Lake City"</p>
-          <div class="dt-address-wrap">
-            <input type="text" class="dt-via-input dt-address-input" value="${route.via || ''}" placeholder="Road or intersection to route through...">
-          </div>
+          <p class="dt-field-hint">Force route through specific roads in order</p>
+          <div class="dt-via-list"></div>
+          <button type="button" class="dt-btn dt-add-via">+ Add via point</button>
         </div>
 
         <div class="dt-form-section">
@@ -614,11 +613,34 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   setupLocationSelect('.dt-origin-select', '.dt-new-origin');
   setupLocationSelect('.dt-dest-select', '.dt-new-dest');
 
-  // Setup autocomplete for via input
-  const viaInput = container.querySelector('.dt-via-input');
-  if (viaInput) {
-    setupAddressAutocomplete(viaInput);
+  // Setup via inputs - supports multiple waypoints
+  const viaList = container.querySelector('.dt-via-list');
+  const addViaBtn = container.querySelector('.dt-add-via');
+
+  function createViaInput(value = '') {
+    const row = document.createElement('div');
+    row.className = 'dt-via-row';
+    row.innerHTML = `
+      <div class="dt-address-wrap">
+        <input type="text" class="dt-via-input dt-address-input" value="${value}" placeholder="Road or intersection...">
+      </div>
+      <button type="button" class="dt-via-remove" title="Remove">&times;</button>
+    `;
+    viaList.appendChild(row);
+
+    const input = row.querySelector('.dt-via-input');
+    setupAddressAutocomplete(input);
+
+    row.querySelector('.dt-via-remove').addEventListener('click', () => {
+      row.remove();
+    });
   }
+
+  // Pre-populate existing via points
+  const existingVias = (route.via || '').split('|').map((v) => v.trim()).filter(Boolean);
+  existingVias.forEach((v) => createViaInput(v));
+
+  addViaBtn.addEventListener('click', () => createViaInput())
 
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
@@ -680,7 +702,11 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     saveLocations(currentLocations);
 
     const label = container.querySelector('.dt-label-input').value.trim();
-    const via = container.querySelector('.dt-via-input').value.trim();
+    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
+    const via = Array.from(viaInputs)
+      .map((input) => input.value.trim())
+      .filter(Boolean)
+      .join('|');
 
     const newRoute = {
       origin,
