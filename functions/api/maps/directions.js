@@ -42,12 +42,9 @@ export async function onRequestPost(context) {
     });
 
     // Add waypoints to force route through specific roads
-    // Supports multiple vias separated by | (e.g., "Highland Dr | I-215 E")
-    if (via) {
-      const waypoints = via
-        .split('|')
-        .map((v) => `via:${v.trim()}`)
-        .join('|');
+    // via is an array of waypoint strings (e.g., ["Highland Dr", "I-215 E"])
+    if (via && via.length) {
+      const waypoints = via.map((v) => `via:${v.trim()}`).join('|');
       params.set('waypoints', waypoints);
     }
 
