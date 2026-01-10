@@ -36,13 +36,12 @@
  *                args: { lat, lon }
  *   drive-time - Floating commute time overlay (via Cloudflare Functions → Google Distance Matrix)
  *                API key is server-side in Cloudflare env var GOOGLE_MAPS_API_KEY
- *                args: { routes, dark }
- *                - routes: array of route configs (origin, destination, days, etc.)
- *                - origin/destination: location keys (addresses stored in localStorage)
- *                - days: ['tue', 'thu'] (default) - which days to show
- *                - startTime/endTime: 24hr format, e.g. '5:30', '7:30' (default 5:30-7:30)
- *                - label: optional text label
- *                - minTimeToShow: e.g. '25m', '1h' - only show if drive time exceeds threshold
+ *                args: { dark }
+ *                Routes are configured via UI and stored in localStorage
+ *                Click the gear icon to add/edit routes with:
+ *                - Origin/destination locations with Google Places autocomplete
+ *                - Days of week and time window
+ *                - Optional label and minimum time threshold
  *                Shows traffic warnings when commute is 1.4x-2.5x+ normal
  *   iframe     - Any URL (default if type not specified but src is)
  *
@@ -100,38 +99,14 @@ export default {
           refresh: '5m',
         },
         // Drive time overlay - floats on top of calendar
-        // Routes defined here with location keys, actual addresses in localStorage
-        // Click overlay to manage addresses (with Google Places autocomplete)
+        // Routes configured via UI, stored in localStorage
         {
           type: 'drive-time',
-          args: {
-            dark: true,
-            routes: [
-              // Parent 1: home → workA on Tue/Thu mornings
-              {
-                origin: 'home',
-                destination: 'workA',
-                days: ['tue', 'thu'],
-                startTime: '5:30',
-                endTime: '7:30',
-                label: 'Dad → Office',
-                minTimeToShow: '25m', // Only show if drive time > 25 minutes
-              },
-              // Parent 2: home → workB on Mon/Wed/Fri mornings
-              // {
-              //   origin: 'home',
-              //   destination: 'workB',
-              //   days: ['mon', 'wed', 'fri'],
-              //   startTime: '6:00',
-              //   endTime: '8:00',
-              //   label: 'Mom → Office',
-              // },
-            ],
-          },
+          args: { dark: true },
           x: '30%',
-          y: '15%',
+          y: '37%',
           w: '70%',
-          h: '85%',
+          h: '63%',
         },
       ],
     },
