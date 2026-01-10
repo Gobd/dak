@@ -105,10 +105,10 @@ function getRouteId(route) {
   return `${route.origin}-${route.destination}`;
 }
 
-function getCachedDriveTime(origin, destination) {
+function getCachedDriveTime(origin, destination, via = '') {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    const key = `${origin}|${destination}`;
+    const key = `${origin}|${destination}|${via}`;
     const entry = cache[key];
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
       return entry.data;
@@ -119,35 +119,39 @@ function getCachedDriveTime(origin, destination) {
   return null;
 }
 
-function cacheDriveTime(origin, destination, data) {
+function cacheDriveTime(origin, destination, via, data) {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    cache[`${origin}|${destination}`] = { data, timestamp: Date.now() };
+    cache[`${origin}|${destination}|${via}`] = { data, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
   } catch {
     // Ignore cache write errors
   }
 }
 
-async function fetchDriveTime(origin, destination) {
-  const cached = getCachedDriveTime(origin, destination);
+async function fetchDriveTime(origin, destination, via = '') {
+  const cached = getCachedDriveTime(origin, destination, via);
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${API_BASE}/distance-matrix`, {
+    // Use Directions API when via is specified, otherwise Distance Matrix
+    const endpoint = via ? `${API_BASE}/directions` : `${API_BASE}/distance-matrix`;
+    const body = via ? { origin, destination, via } : { origin, destination };
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ origin, destination }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Distance Matrix error:', error);
+      console.error('Drive time error:', error);
       return null;
     }
 
     const result = await response.json();
-    cacheDriveTime(origin, destination, result);
+    cacheDriveTime(origin, destination, via, result);
     return result;
   } catch (err) {
     console.error('Drive time fetch error:', err);
@@ -202,6 +206,9 @@ function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
     warningText = `${multiplier.toFixed(1)}x normal - Moderate delays`;
   }
 
+  // Show route summary from Directions API (e.g., "via Highland Dr") to confirm via worked
+  const routeSummary = driveData.summary ? `via ${driveData.summary}` : '';
+
   container.innerHTML = `
     <div class="drive-time-overlay ${darkClass} ${severityClass}">
       <button class="drive-time-close" title="Dismiss for today">&times;</button>
@@ -212,6 +219,7 @@ function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
           <div class="drive-time-detail">${delayText}</div>
           ${warningText ? `<div class="drive-time-${severityClass}-text">${warningText}</div>` : ''}
           ${route.label ? `<div class="drive-time-label">${route.label}</div>` : ''}
+          ${routeSummary ? `<div class="drive-time-summary">${routeSummary}</div>` : ''}
         </div>
       </div>
     </div>
@@ -253,10 +261,14 @@ function renderMultiRouteOverlay(container, routeDataList, dark, onDismissAll, o
       const delayMinutes = durationMinutes - normalMinutes;
       const delayText = delayMinutes > 0 ? `+${delayMinutes}` : '';
       const label = route.label || `${route.origin} → ${route.destination}`;
+      const routeSummary = driveData.summary || '';
 
       return `
         <div class="drive-time-route-row">
-          <span class="drive-time-route-label">${label}</span>
+          <div class="drive-time-route-info">
+            <span class="drive-time-route-label">${label}</span>
+            ${routeSummary ? `<span class="drive-time-route-summary">via ${routeSummary}</span>` : ''}
+          </div>
           <span class="drive-time-route-time" style="color: ${trafficColor}">${driveData.durationInTraffic}</span>
           ${delayText ? `<span class="drive-time-route-delay">${delayText}</span>` : ''}
         </div>
@@ -461,6 +473,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   const route = existingRoute || {
     origin: '',
     destination: '',
+    via: '',
     days: ['mon', 'tue', 'wed', 'thu', 'fri'],
     startTime: '6:00',
     endTime: '8:00',
@@ -506,6 +519,14 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
                 <input type="text" class="dt-new-location-address dt-address-input" placeholder="Address...">
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="dt-form-section">
+          <span class="dt-section-label">Via (optional)</span>
+          <p class="dt-field-hint">Force route through a specific road, e.g. "Highland Dr, Salt Lake City"</p>
+          <div class="dt-address-wrap">
+            <input type="text" class="dt-via-input dt-address-input" value="${route.via || ''}" placeholder="Road or intersection to route through...">
           </div>
         </div>
 
@@ -593,6 +614,12 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   setupLocationSelect('.dt-origin-select', '.dt-new-origin');
   setupLocationSelect('.dt-dest-select', '.dt-new-dest');
 
+  // Setup autocomplete for via input
+  const viaInput = container.querySelector('.dt-via-input');
+  if (viaInput) {
+    setupAddressAutocomplete(viaInput);
+  }
+
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
 
@@ -611,7 +638,11 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       const name = newOriginDiv.querySelector('.dt-new-location-name').value.trim();
       const address = newOriginDiv.querySelector('.dt-new-location-address').value.trim();
       if (!name || !address) {
-        showAlertModal(container, dark, 'Please enter both name and address for the new origin location.');
+        showAlertModal(
+          container,
+          dark,
+          'Please enter both name and address for the new origin location.'
+        );
         return;
       }
       origin = name;
@@ -624,7 +655,11 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       const name = newDestDiv.querySelector('.dt-new-location-name').value.trim();
       const address = newDestDiv.querySelector('.dt-new-location-address').value.trim();
       if (!name || !address) {
-        showAlertModal(container, dark, 'Please enter both name and address for the new destination location.');
+        showAlertModal(
+          container,
+          dark,
+          'Please enter both name and address for the new destination location.'
+        );
         return;
       }
       destination = name;
@@ -645,10 +680,12 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     saveLocations(currentLocations);
 
     const label = container.querySelector('.dt-label-input').value.trim();
+    const via = container.querySelector('.dt-via-input').value.trim();
 
     const newRoute = {
       origin,
       destination,
+      via,
       days: Array.from(selectedDays),
       startTime,
       endTime,
@@ -742,6 +779,7 @@ function renderRouteManager(container, dark, onDone) {
                 <div class="dt-route-item" data-index="${i}">
                   <div class="dt-route-item-info">
                     <div class="dt-route-item-path">${r.origin} &rarr; ${r.destination}</div>
+                    ${r.via ? `<div class="dt-route-item-via">via ${r.via}</div>` : ''}
                     <div class="dt-route-item-schedule">${r.days?.join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
                     ${r.label ? `<div class="dt-route-item-label">${r.label}</div>` : ''}
                     ${r.minTimeToShow ? `<div class="dt-route-item-min">Show if &gt; ${r.minTimeToShow} min</div>` : ''}
@@ -1059,7 +1097,7 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
       const routeDataPromises = routesWithAddresses.map(async (route) => {
         const originAddress = locations[route.origin];
         const destAddress = locations[route.destination];
-        const driveData = await fetchDriveTime(originAddress, destAddress);
+        const driveData = await fetchDriveTime(originAddress, destAddress, route.via || '');
         return { route, driveData };
       });
 
