@@ -4,190 +4,33 @@ import { registerWidget } from '../../script.js';
 // Uses api.weather.gov - free, no auth, CORS-enabled
 
 const CACHE_KEY = 'weather-cache';
-const UV_CACHE_KEY = 'uv-cache';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 // Store alerts and periods for click handling
 let currentAlerts = [];
 let currentPeriods = [];
 
-// UV Index fetch from Open-Meteo (free, no API key)
-async function fetchUVIndex(lat, lon) {
-  // Check cache first
-  const cached = getCachedUV(lat, lon);
-  if (cached) return cached;
-
-  try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=2`
-    );
-    if (!res.ok) throw new Error('Failed to fetch UV data');
-    const data = await res.json();
-
-    // Cache the result
-    cacheUV(lat, lon, data);
-    return data;
-  } catch (err) {
-    console.error('UV fetch error:', err);
-    return null;
-  }
-}
-
-function getCachedUV(lat, lon) {
-  try {
-    const cache = JSON.parse(localStorage.getItem(UV_CACHE_KEY) || '{}');
-    const key = `${lat},${lon}`;
-    const entry = cache[key];
-    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
-      return entry.data;
-    }
-  } catch {
-    // Ignore cache errors
-  }
-  return null;
-}
-
-function cacheUV(lat, lon, data) {
-  try {
-    const cache = JSON.parse(localStorage.getItem(UV_CACHE_KEY) || '{}');
-    cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
-    localStorage.setItem(UV_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore cache errors
-  }
-}
-
-// UV Index color based on level
-function getUVColor(uv) {
-  if (uv < 3) return '#4ade80'; // Low - green
-  if (uv < 6) return '#facc15'; // Moderate - yellow
-  if (uv < 8) return '#ef4444'; // High - red
-  if (uv < 11) return '#dc2626'; // Very High - darker red
-  return '#a855f7'; // Extreme - purple
-}
-
-function getUVLabel(uv) {
-  if (uv < 3) return 'Low';
-  if (uv < 6) return 'Moderate';
-  if (uv < 8) return 'High';
-  if (uv < 11) return 'Very High';
-  return 'Extreme';
-}
-
-function renderUVChart(uvData) {
-  if (!uvData || !uvData.hourly) return '';
-
-  const now = new Date();
-  const times = uvData.hourly.time;
-  const uvValues = uvData.hourly.uv_index;
-
-  // Filter to peak UV hours (8am - 8pm) for today and tomorrow
-  const todayHours = [];
-  const tomorrowHours = [];
-
-  for (let i = 0; i < times.length; i++) {
-    const time = new Date(times[i]);
-    const hour = time.getHours();
-    if (hour >= 8 && hour <= 20) {
-      const isToday = time.toDateString() === now.toDateString();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const isTomorrow = time.toDateString() === tomorrow.toDateString();
-
-      const entry = {
-        time,
-        hour,
-        uv: uvValues[i] || 0,
-        isPast: time < now,
-      };
-
-      if (isToday) todayHours.push(entry);
-      else if (isTomorrow) tomorrowHours.push(entry);
-    }
-  }
-
-  if (todayHours.length === 0 && tomorrowHours.length === 0) return '';
-
-  const currentUV = todayHours.find((h) => !h.isPast)?.uv || tomorrowHours[0]?.uv || 0;
-  const todayMax = todayHours.length ? Math.max(...todayHours.map((h) => h.uv)) : 0;
-  const tomorrowMax = tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.uv)) : 0;
-
-  // Find when UV goes above/below 4 (protect threshold)
-  const UV_THRESHOLD = 4;
-  const formatHour = (h) => (h > 12 ? h - 12 : h);
-
-  const renderDayBars = (hours) => {
-    if (hours.length === 0) return '';
-    const maxUV = Math.max(...hours.map((h) => h.uv));
-    const peakIndex = hours.findIndex((h) => h.uv === maxUV);
-    const startIndex = hours.findIndex((h) => h.uv >= UV_THRESHOLD);
-    const endIndex = hours.length - 1 - [...hours].reverse().findIndex((h) => h.uv >= UV_THRESHOLD);
-    const hasProtectWindow = startIndex !== -1;
-
-    return `
-      <div class="uv-day-bars">
-        ${hours
-          .map((h, i) => {
-            const height = Math.max((h.uv / 11) * 100, 4);
-            const isPeak = i === peakIndex && maxUV > 0;
-            const isStart = hasProtectWindow && i === startIndex && startIndex !== peakIndex;
-            const isEnd =
-              hasProtectWindow &&
-              i === endIndex &&
-              endIndex !== peakIndex &&
-              endIndex !== startIndex;
-
-            let label = '';
-            if (isPeak) label = `<span class="uv-peak-time">${formatHour(h.hour)}</span>`;
-            else if (isStart) label = `<span class="uv-start-time">${formatHour(h.hour)}</span>`;
-            else if (isEnd) label = `<span class="uv-end-time">${formatHour(h.hour)}</span>`;
-
-            return `<div class="uv-bar-container ${h.isPast ? 'past' : ''} ${isPeak ? 'peak' : ''}" title="${h.hour}:00 UV ${h.uv.toFixed(1)}">
-              ${label}
-              <div class="uv-bar" style="height: ${height}%; background: ${getUVColor(h.uv)}"></div>
-            </div>`;
-          })
-          .join('')}
-      </div>
-    `;
-  };
-
-  return `
-    <div class="uv-chart">
-      <div class="uv-header">
-        <span class="uv-now" style="color: ${getUVColor(currentUV)}">UV ${currentUV.toFixed(0)} ${getUVLabel(currentUV)}</span>
-        ${todayHours.length ? `<span class="uv-day-label">Today <b style="color: ${getUVColor(todayMax)}">${todayMax.toFixed(0)}</b></span>` : ''}
-        ${tomorrowHours.length ? `<span class="uv-day-label">Tomorrow <b style="color: ${getUVColor(tomorrowMax)}">${tomorrowMax.toFixed(0)}</b></span>` : ''}
-      </div>
-      <div class="uv-days">
-        ${renderDayBars(todayHours)}
-        ${renderDayBars(tomorrowHours)}
-      </div>
-    </div>
-  `;
-}
+// =====================
+// DATA FETCHING
+// =====================
 
 async function fetchForecast(lat, lon) {
-  // Check cache first
   const cached = getCachedForecast(lat, lon);
   if (cached) return cached;
 
   try {
-    // Step 1: Get grid point from coordinates
     const pointRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
       headers: { 'User-Agent': 'Dashboard (bkemper.me)' },
     });
     if (!pointRes.ok) throw new Error('Failed to get location');
     const point = await pointRes.json();
 
-    // Step 2: Get forecast from grid endpoint
     const forecastRes = await fetch(point.properties.forecast, {
       headers: { 'User-Agent': 'Dashboard (bkemper.me)' },
     });
     if (!forecastRes.ok) throw new Error('Failed to get forecast');
     const forecast = await forecastRes.json();
 
-    // Step 3: Get active alerts for the zone
     let alerts = [];
     try {
       const alertsRes = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`, {
@@ -202,10 +45,7 @@ async function fetchForecast(lat, lon) {
     }
 
     const result = { forecast, alerts };
-
-    // Cache the result
     cacheForecast(lat, lon, result);
-
     return result;
   } catch (err) {
     console.error('Weather fetch error:', err);
@@ -213,17 +53,16 @@ async function fetchForecast(lat, lon) {
   }
 }
 
+// =====================
+// CACHING
+// =====================
+
 function getCachedForecast(lat, lon) {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    const key = `${lat},${lon}`;
-    const entry = cache[key];
-    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
-      return entry.data;
-    }
-  } catch {
-    // Ignore cache errors
-  }
+    const entry = cache[`${lat},${lon}`];
+    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
+  } catch {}
   return null;
 }
 
@@ -232,29 +71,25 @@ function cacheForecast(lat, lon, data) {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
     cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore cache errors
-  }
+  } catch {}
 }
+
+// =====================
+// ALERTS
+// =====================
 
 function getAlertSeverityClass(severity) {
   switch (severity?.toLowerCase()) {
-    case 'extreme':
-      return 'alert-extreme';
-    case 'severe':
-      return 'alert-severe';
-    case 'moderate':
-      return 'alert-moderate';
-    default:
-      return 'alert-minor';
+    case 'extreme': return 'alert-extreme';
+    case 'severe': return 'alert-severe';
+    case 'moderate': return 'alert-moderate';
+    default: return 'alert-minor';
   }
 }
 
 function formatAlertTime(_start, end) {
   const endDate = new Date(end);
   const now = new Date();
-
-  // Calculate remaining time
   const remaining = endDate - now;
   if (remaining <= 0) return 'Expired';
 
@@ -266,9 +101,8 @@ function formatAlertTime(_start, end) {
     return `${days}d ${hours % 24}h remaining`;
   } else if (hours > 0) {
     return `${hours}h ${minutes}m remaining`;
-  } else {
-    return `${minutes}m remaining`;
   }
+  return `${minutes}m remaining`;
 }
 
 function showAlertModal(alert) {
@@ -340,37 +174,35 @@ function showPeriodModal(period) {
   document.body.appendChild(modal);
 }
 
-function renderForecast(container, data, uvData = null, layout = 'horizontal', dark = true) {
+// =====================
+// MAIN RENDER
+// =====================
+
+function renderForecast(container, data, layout = 'horizontal', dark = true) {
   const { forecast, alerts } = data;
-  currentAlerts = alerts; // Store for click handling
-  const periods = forecast.properties.periods.slice(0, 10); // Show 10 periods (5 days)
-  currentPeriods = periods; // Store for click handling
+  currentAlerts = alerts;
+  const periods = forecast.properties.periods.slice(0, 10); // 5 days
+  currentPeriods = periods;
   const darkClass = dark ? 'dark' : '';
 
-  // Render alerts if any
-  const alertsHtml =
-    alerts.length > 0
-      ? `
+  const alertsHtml = alerts.length > 0
+    ? `
     <div class="weather-alerts">
-      ${alerts
-        .slice(0, 3)
-        .map((alert, index) => {
-          const props = alert.properties;
-          const severityClass = getAlertSeverityClass(props.severity);
-          const timeRemaining = formatAlertTime(props.onset, props.expires);
-          return `
+      ${alerts.slice(0, 3).map((alert, index) => {
+        const props = alert.properties;
+        const severityClass = getAlertSeverityClass(props.severity);
+        const timeRemaining = formatAlertTime(props.onset, props.expires);
+        return `
           <div class="weather-alert ${severityClass}" data-alert-index="${index}">
             <span class="alert-icon">⚠</span>
             <span class="alert-event">${props.event}</span>
             <span class="alert-time">${timeRemaining}</span>
           </div>
         `;
-        })
-        .join('')}
+      }).join('')}
       ${alerts.length > 3 ? `<div class="more-alerts">+${alerts.length - 3} more alerts</div>` : ''}
     </div>
-  `
-      : '';
+  ` : '';
 
   const layoutClass = layout === 'vertical' ? 'vertical' : '';
 
@@ -378,9 +210,7 @@ function renderForecast(container, data, uvData = null, layout = 'horizontal', d
     <div class="weather-widget ${layoutClass} ${darkClass}">
       ${alertsHtml}
       <div class="weather-periods">
-        ${periods
-          .map(
-            (period, index) => `
+        ${periods.map((period, index) => `
           <div class="weather-period ${index === periods.length - 1 ? 'last-period' : ''}" data-period-index="${index}">
             <div class="period-name">${period.name}</div>
             <img class="period-icon" src="${period.icon}" alt="${period.shortForecast}">
@@ -388,11 +218,8 @@ function renderForecast(container, data, uvData = null, layout = 'horizontal', d
             <div class="period-desc">${period.shortForecast}</div>
             ${index === periods.length - 1 ? '<button class="weather-refresh-btn" title="Reload widget">↻</button>' : ''}
           </div>
-        `
-          )
-          .join('')}
+        `).join('')}
       </div>
-      ${renderUVChart(uvData)}
     </div>
   `;
 
@@ -405,9 +232,7 @@ function renderForecast(container, data, uvData = null, layout = 'horizontal', d
   container.querySelectorAll('.weather-alert').forEach((el) => {
     el.addEventListener('click', () => {
       const index = parseInt(el.dataset.alertIndex, 10);
-      if (currentAlerts[index]) {
-        showAlertModal(currentAlerts[index]);
-      }
+      if (currentAlerts[index]) showAlertModal(currentAlerts[index]);
     });
   });
 
@@ -415,9 +240,7 @@ function renderForecast(container, data, uvData = null, layout = 'horizontal', d
   container.querySelectorAll('.weather-period').forEach((el) => {
     el.addEventListener('click', () => {
       const index = parseInt(el.dataset.periodIndex, 10);
-      if (currentPeriods[index]) {
-        showPeriodModal(currentPeriods[index]);
-      }
+      if (currentPeriods[index]) showPeriodModal(currentPeriods[index]);
     });
   });
 }
@@ -441,22 +264,18 @@ function renderLoading(container, dark = true) {
 }
 
 // Widget render function
-// Options: args.lat, args.lon, args.layout ('horizontal' or 'vertical'), args.uv (boolean)
+// Options: args.lat, args.lon, args.layout ('horizontal' or 'vertical')
 function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
-  const lat = panel.args?.lat || '40.7608'; // Default: Salt Lake City
+  const lat = panel.args?.lat || '40.7608';
   const lon = panel.args?.lon || '-111.8910';
   const layout = panel.args?.layout || 'horizontal';
-  const showUV = panel.args?.uv ?? false;
 
   renderLoading(container, dark);
 
   async function loadForecast() {
     try {
-      const [data, uvData] = await Promise.all([
-        fetchForecast(lat, lon),
-        showUV ? fetchUVIndex(lat, lon) : Promise.resolve(null),
-      ]);
-      renderForecast(container, data, uvData, layout, dark);
+      const data = await fetchForecast(lat, lon);
+      renderForecast(container, data, layout, dark);
     } catch {
       renderError(container, 'Failed to load forecast', dark);
     }
@@ -464,7 +283,6 @@ function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration
 
   loadForecast();
 
-  // Set up refresh if configured
   const refreshMs = parseDuration(panel.refresh);
   if (refreshMs) {
     const intervalId = setInterval(loadForecast, refreshMs);
@@ -472,5 +290,4 @@ function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration
   }
 }
 
-// Register the widget
 registerWidget('weather', renderWeatherWidget);

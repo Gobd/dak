@@ -1,23 +1,21 @@
-  1. Already done:
-  - Privacy policy at dak.bkemper.me/dashboard/privacy.html with your contact email
+Sometiems keyboard stops working
+Back button from note does not close keyboard
+Realtime stopped working on notes
 
-  2. In Google Cloud Console → OAuth consent screen:
-  - App name, logo, support email
-  - App domain: dak.bkemper.me
-  - Privacy policy link: https://dak.bkemper.me/dashboard/privacy.html
-  - Authorized domain: bkemper.me (verify via Search Console if not already)
-  - Scope: https://www.googleapis.com/auth/calendar
 
-  3. For the verification submission:
-  - YouTube video (can be unlisted) - show the app in action: signing in, viewing events, creating/editing events
-  - Written justification - something like:
+## Cloudflare Access Setup
 
-  "This is a personal kiosk dashboard for displaying and managing Google Calendar events on a wall-mounted display. Users can view their upcoming events, create new events, and edit or delete existing ones directly from the dashboard interface. Full calendar access is required to support event creation and modification."
+Protect dak.bkemper.me with Cloudflare Access:
 
-  4. Submit:
-  - Click "Publish App" then "Prepare for verification"
-  - Fill out the form, attach video link, submit
-
-  Google will review and may ask follow-up questions. Takes 1-4 weeks typically.
-
-  Want help with anything specific - the video script, justification wording, or privacy policy updates?
+1. Go to Cloudflare Zero Trust → Access → Applications → Add an application
+2. Choose **Self-hosted**
+3. Configure:
+   - Application name: "DAK Dashboard"
+   - Session duration: 1 week (or whatever)
+   - Application domain: `dak.bkemper.me`
+   - Path: (leave empty)
+4. Click Next to add a policy:
+   - Policy name: "Family"
+   - Action: Allow
+   - Include rule: Emails (add your email + family emails)
+5. Save

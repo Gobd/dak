@@ -27,10 +27,24 @@
  *   css     - Additional CSS to apply to panel
  *
  * WIDGET TYPES:
- *   calendar - Google Calendar (OAuth login, shows your calendars)
- *   weather  - NWS Weather forecast
- *              args: { lat, lon, layout: 'horizontal'|'vertical', uv: boolean }
- *   iframe   - Any URL (default if type not specified but src is)
+ *   calendar   - Google Calendar (OAuth login, shows your calendars)
+ *   weather    - NWS Weather forecast
+ *                args: { lat, lon, layout: 'horizontal'|'vertical' }
+ *   uv         - UV Index chart (Open-Meteo, free)
+ *                args: { lat, lon }
+ *   aqi        - Air Quality Index chart (Open-Meteo, free)
+ *                args: { lat, lon }
+ *   drive-time - Floating commute time overlay (via Cloudflare Functions → Google Distance Matrix)
+ *                API key is server-side in Cloudflare env var GOOGLE_MAPS_API_KEY
+ *                args: { routes, dark }
+ *                - routes: array of route configs (origin, destination, days, etc.)
+ *                - origin/destination: location keys (addresses stored in localStorage)
+ *                - days: ['tue', 'thu'] (default) - which days to show
+ *                - startTime/endTime: 24hr format, e.g. '5:30', '7:30' (default 5:30-7:30)
+ *                - label: optional text label
+ *                - minTimeToShow: e.g. '25m', '1h' - only show if drive time exceeds threshold
+ *                Shows traffic warnings when commute is 1.4x-2.5x+ normal
+ *   iframe     - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
  *   ?edit       - Enter edit mode
@@ -59,9 +73,9 @@ export default {
 
   screens: [
     /*
-     * Screen 1: Calendar + Notes
+     * Screen 1: Calendar + Notes + Drive Time overlay
      * ┌───────┬───────────────┐
-     * │       │               │
+     * │       │  [drive-time] │
      * │ notes │   calendar    │
      * │       │               │
      * └───────┴───────────────┘
@@ -85,15 +99,51 @@ export default {
           h: '100%',
           refresh: '5m',
         },
+        // Drive time overlay - floats on top of calendar
+        // Routes defined here with location keys, actual addresses in localStorage
+        // Click overlay to manage addresses (with Google Places autocomplete)
+        {
+          type: 'drive-time',
+          args: {
+            dark: true,
+            routes: [
+              // Parent 1: home → workA on Tue/Thu mornings
+              {
+                origin: 'home',
+                destination: 'workA',
+                days: ['tue', 'thu'],
+                startTime: '5:30',
+                endTime: '7:30',
+                label: 'Dad → Office',
+                minTimeToShow: '25m', // Only show if drive time > 25 minutes
+              },
+              // Parent 2: home → workB on Mon/Wed/Fri mornings
+              // {
+              //   origin: 'home',
+              //   destination: 'workB',
+              //   days: ['mon', 'wed', 'fri'],
+              //   startTime: '6:00',
+              //   endTime: '8:00',
+              //   label: 'Mom → Office',
+              // },
+            ],
+          },
+          x: '30%',
+          y: '15%',
+          w: '70%',
+          h: '85%',
+        },
       ],
     },
 
     /*
-     * Screen 2: Weather + Health Tracker
+     * Screen 2: Weather + UV + AQI + Health Tracker
      * ┌───────┬───────────────┐
-     * │       │               │
-     * │weather│    health     │
-     * │       │               │
+     * │weather│               │
+     * ├───────┤    health     │
+     * │ UV    │               │
+     * ├───────┤               │
+     * │ AQI   │               │
      * └───────┴───────────────┘
      */
     {
@@ -105,12 +155,36 @@ export default {
             lat: '40.7608', // Salt Lake City, UT - update for your location
             lon: '-111.8910',
             layout: 'vertical',
-            uv: true,
           },
           x: '0%',
           y: '0%',
           w: '30%',
-          h: '100%',
+          h: '80%',
+          refresh: '30m',
+        },
+        {
+          type: 'uv',
+          args: {
+            lat: '40.7608',
+            lon: '-111.8910',
+            safeThreshold: 4,
+          },
+          x: '0%',
+          y: '80%',
+          w: '30%',
+          h: '10%',
+          refresh: '30m',
+        },
+        {
+          type: 'aqi',
+          args: {
+            lat: '40.7608',
+            lon: '-111.8910',
+          },
+          x: '0%',
+          y: '90%',
+          w: '30%',
+          h: '10%',
           refresh: '30m',
         },
         {

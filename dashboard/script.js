@@ -677,6 +677,9 @@ function resetConfig() {
 Promise.all([
   import('./widgets/weather/weather.js'),
   import('./widgets/calendar/calendar.js'),
+  import('./widgets/uv/uv.js'),
+  import('./widgets/aqi/aqi.js'),
+  import('./widgets/drive-time/drive-time.js'),
 ]).then(() => {
   init();
 });
