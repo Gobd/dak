@@ -2,6 +2,7 @@
 // Proxies requests to avoid CORS and keeps API key server-side
 
 const ALLOWED_ORIGINS = [
+  'https://dak.bkemper.me',
   'https://bkemper.me',
   'http://localhost:8080',
   'http://127.0.0.1:8080',
