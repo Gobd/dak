@@ -780,7 +780,7 @@ function renderRouteManager(container, dark, onDone) {
                   <div class="dt-route-item-info">
                     <div class="dt-route-item-path">${r.origin} &rarr; ${r.destination}</div>
                     ${r.via ? `<div class="dt-route-item-via">via ${r.via}</div>` : ''}
-                    <div class="dt-route-item-schedule">${r.days?.join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
+                    <div class="dt-route-item-schedule">${r.days?.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
                     ${r.label ? `<div class="dt-route-item-label">${r.label}</div>` : ''}
                     ${r.minTimeToShow ? `<div class="dt-route-item-min">Show if &gt; ${r.minTimeToShow} min</div>` : ''}
                   </div>
