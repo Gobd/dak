@@ -1,0 +1,463 @@
+/* Drive Time Widget - Floating Overlay */
+
+.drive-time-overlay {
+  --dt-bg: rgba(255, 255, 255, 0.95);
+  --dt-text: #1f2937;
+  --dt-text-muted: #6b7280;
+  --dt-border: #e5e7eb;
+  --dt-shadow: rgba(0, 0, 0, 0.15);
+
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--dt-bg);
+  border: 1px solid var(--dt-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px var(--dt-shadow);
+  font-family: 'Open Sans', system-ui, sans-serif;
+  color: var(--dt-text);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Dark mode */
+.drive-time-overlay.dark {
+  --dt-bg: rgba(0, 0, 0, 0.9);
+  --dt-text: #f9fafb;
+  --dt-text-muted: #9ca3af;
+  --dt-border: #374151;
+  --dt-shadow: rgba(0, 0, 0, 0.4);
+}
+
+.drive-time-close {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--dt-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.drive-time-close:hover {
+  opacity: 1;
+}
+
+.drive-time-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drive-time-icon {
+  font-size: 24px;
+}
+
+.drive-time-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drive-time-duration {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.drive-time-detail {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+}
+
+.drive-time-label {
+  font-size: 10px;
+  color: var(--dt-text-muted);
+  margin-top: 2px;
+}
+
+.drive-time-loading {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+}
+
+.drive-time-error {
+  font-size: 12px;
+  color: #ef4444;
+}
+
+/* Warning banner for bad traffic */
+.drive-time-overlay.warning {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.drive-time-overlay.dark.warning {
+  background: rgba(249, 115, 22, 0.2);
+}
+
+.drive-time-overlay.danger {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.drive-time-overlay.dark.danger {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.drive-time-warning-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f97316;
+  margin-top: 4px;
+}
+
+.drive-time-danger-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+/* Setup UI */
+.drive-time-overlay.setup {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.drive-time-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drive-time-setup-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.drive-time-setup label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drive-time-setup label span {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+}
+
+.drive-time-setup input {
+  padding: 8px 10px;
+  border: 1px solid var(--dt-border);
+  border-radius: 6px;
+  background: var(--dt-bg);
+  color: var(--dt-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.drive-time-setup input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.drive-time-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.dt-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dt-btn.dt-save {
+  background: #3b82f6;
+  color: white;
+}
+
+.dt-btn.dt-save:hover {
+  background: #2563eb;
+}
+
+/* Section styling */
+.dt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dt-section-label {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+}
+
+/* Day selector */
+.dt-day-selector {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.dt-day-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--dt-border);
+  background: transparent;
+  color: var(--dt-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dt-day-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.dt-day-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Time pickers */
+.dt-time-pickers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.dt-time-to {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+}
+
+.dt-time-picker {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--dt-border);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.dt-time-sep {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dt-text);
+  padding: 0 2px;
+}
+
+.dt-time-roller {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 28px;
+}
+
+.dt-ampm-roller {
+  min-width: 32px;
+  margin-left: 4px;
+}
+
+.dt-roller-btn {
+  background: none;
+  border: none;
+  color: var(--dt-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.dt-roller-btn:hover {
+  opacity: 1;
+}
+
+.dt-roller-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dt-text);
+  min-width: 24px;
+  text-align: center;
+}
+
+.dt-ampm-roller .dt-roller-value {
+  font-size: 12px;
+}
+
+/* Address input styling for Places Autocomplete */
+.dt-address-input {
+  width: 100%;
+}
+
+/* Custom autocomplete dropdown */
+.dt-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--dt-bg, #fff);
+  border: 1px solid var(--dt-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  font-family: 'Open Sans', system-ui, sans-serif;
+  margin-top: 4px;
+  z-index: 10000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dt-autocomplete-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--dt-text, #1f2937);
+  border-bottom: 1px solid var(--dt-border, #e5e7eb);
+}
+
+.dt-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.dt-autocomplete-item:hover {
+  background: var(--dt-border, #e5e7eb);
+}
+
+/* Location Manager */
+.location-manager {
+  max-width: 450px;
+}
+
+.dt-setup-desc {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+  margin: 0 0 12px 0;
+}
+
+.dt-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dt-location-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dt-location-key {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dt-text);
+  text-transform: capitalize;
+}
+
+.dt-routes-preview {
+  background: var(--dt-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.dt-routes-preview .dt-section-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.dt-route-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--dt-bg);
+}
+
+.dt-route-preview:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.dt-route-path {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dt-text);
+}
+
+.dt-route-schedule {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+  background: var(--dt-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dt-route-label {
+  font-size: 11px;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+/* Click hint on overlay */
+.drive-time-content {
+  cursor: pointer;
+}
+
+.drive-time-content:hover {
+  opacity: 0.9;
+}
+
+/* Settings icon - shown when widget is hidden due to threshold */
+.drive-time-settings-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.drive-time-settings-icon:hover {
+  opacity: 0.8;
+}
+
+.drive-time-settings-icon.dark {
+  background: rgba(255, 255, 255, 0.05);
+}
