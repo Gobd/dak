@@ -105,10 +105,10 @@ function getRouteId(route) {
   return `${route.origin}-${route.destination}`;
 }
 
-function getCachedDriveTime(origin, destination, via = '') {
+function getCachedDriveTime(origin, destination, via = []) {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    const key = `${origin}|${destination}|${via}`;
+    const key = `${origin}|${destination}|${via.join(',')}`;
     const entry = cache[key];
     if (entry && Date.now() - entry.timestamp < CACHE_DURATION) {
       return entry.data;
@@ -122,21 +122,21 @@ function getCachedDriveTime(origin, destination, via = '') {
 function cacheDriveTime(origin, destination, via, data) {
   try {
     const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    cache[`${origin}|${destination}|${via}`] = { data, timestamp: Date.now() };
+    cache[`${origin}|${destination}|${via.join(',')}`] = { data, timestamp: Date.now() };
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
   } catch {
     // Ignore cache write errors
   }
 }
 
-async function fetchDriveTime(origin, destination, via = '') {
+async function fetchDriveTime(origin, destination, via = []) {
   const cached = getCachedDriveTime(origin, destination, via);
   if (cached) return cached;
 
   try {
     // Use Directions API when via is specified, otherwise Distance Matrix
-    const endpoint = via ? `${API_BASE}/directions` : `${API_BASE}/distance-matrix`;
-    const body = via ? { origin, destination, via } : { origin, destination };
+    const endpoint = via.length ? `${API_BASE}/directions` : `${API_BASE}/distance-matrix`;
+    const body = via.length ? { origin, destination, via } : { origin, destination };
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -524,10 +524,9 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
 
         <div class="dt-form-section">
           <span class="dt-section-label">Via (optional)</span>
-          <p class="dt-field-hint">Force route through a specific road, e.g. "Highland Dr, Salt Lake City"</p>
-          <div class="dt-address-wrap">
-            <input type="text" class="dt-via-input dt-address-input" value="${route.via || ''}" placeholder="Road or intersection to route through...">
-          </div>
+          <p class="dt-field-hint">Force route through specific roads in order</p>
+          <div class="dt-via-list"></div>
+          <button type="button" class="dt-btn dt-add-via">+ Add via point</button>
         </div>
 
         <div class="dt-form-section">
@@ -614,11 +613,34 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   setupLocationSelect('.dt-origin-select', '.dt-new-origin');
   setupLocationSelect('.dt-dest-select', '.dt-new-dest');
 
-  // Setup autocomplete for via input
-  const viaInput = container.querySelector('.dt-via-input');
-  if (viaInput) {
-    setupAddressAutocomplete(viaInput);
+  // Setup via inputs - supports multiple waypoints
+  const viaList = container.querySelector('.dt-via-list');
+  const addViaBtn = container.querySelector('.dt-add-via');
+
+  function createViaInput(value = '') {
+    const row = document.createElement('div');
+    row.className = 'dt-via-row';
+    row.innerHTML = `
+      <div class="dt-address-wrap">
+        <input type="text" class="dt-via-input dt-address-input" value="${value}" placeholder="Road or intersection...">
+      </div>
+      <button type="button" class="dt-via-remove" title="Remove">&times;</button>
+    `;
+    viaList.appendChild(row);
+
+    const input = row.querySelector('.dt-via-input');
+    setupAddressAutocomplete(input);
+
+    row.querySelector('.dt-via-remove').addEventListener('click', () => {
+      row.remove();
+    });
   }
+
+  // Pre-populate existing via points
+  const existingVias = route.via || [];
+  existingVias.forEach((v) => createViaInput(v));
+
+  addViaBtn.addEventListener('click', () => createViaInput());
 
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
@@ -680,7 +702,10 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     saveLocations(currentLocations);
 
     const label = container.querySelector('.dt-label-input').value.trim();
-    const via = container.querySelector('.dt-via-input').value.trim();
+    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
+    const via = Array.from(viaInputs)
+      .map((input) => input.value.trim())
+      .filter(Boolean);
 
     const newRoute = {
       origin,
@@ -779,7 +804,7 @@ function renderRouteManager(container, dark, onDone) {
                 <div class="dt-route-item" data-index="${i}">
                   <div class="dt-route-item-info">
                     <div class="dt-route-item-path">${r.origin} &rarr; ${r.destination}</div>
-                    ${r.via ? `<div class="dt-route-item-via">via ${r.via}</div>` : ''}
+                    ${r.via?.length ? `<div class="dt-route-item-via">via ${r.via.join(' → ')}</div>` : ''}
                     <div class="dt-route-item-schedule">${r.days?.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
                     ${r.label ? `<div class="dt-route-item-label">${r.label}</div>` : ''}
                     ${r.minTimeToShow ? `<div class="dt-route-item-min">Show if &gt; ${r.minTimeToShow} min</div>` : ''}
@@ -1097,7 +1122,7 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
       const routeDataPromises = routesWithAddresses.map(async (route) => {
         const originAddress = locations[route.origin];
         const destAddress = locations[route.destination];
-        const driveData = await fetchDriveTime(originAddress, destAddress, route.via || '');
+        const driveData = await fetchDriveTime(originAddress, destAddress, route.via || []);
         return { route, driveData };
       });
 

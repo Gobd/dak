@@ -41,9 +41,11 @@ export async function onRequestPost(context) {
       traffic_model: 'best_guess',
     });
 
-    // Add waypoint to force route through specific road
-    if (via) {
-      params.set('waypoints', `via:${via}`);
+    // Add waypoints to force route through specific roads
+    // via is an array of waypoint strings (e.g., ["Highland Dr", "I-215 E"])
+    if (via && via.length) {
+      const waypoints = via.map((v) => `via:${v.trim()}`).join('|');
+      params.set('waypoints', waypoints);
     }
 
     const response = await fetch(`https://maps.googleapis.com/maps/api/directions/json?${params}`);
