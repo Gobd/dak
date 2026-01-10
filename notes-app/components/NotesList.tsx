@@ -14,6 +14,11 @@ interface NotesListProps {
   isRefreshing: boolean;
   emptyStateType?: 'default' | 'search' | 'tag';
   searchQuery?: string;
+  // Selection mode props
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  currentUserId?: string;
 }
 
 export function NotesList({
@@ -24,6 +29,10 @@ export function NotesList({
   isRefreshing,
   emptyStateType = 'default',
   searchQuery,
+  selectionMode = false,
+  selectedIds = new Set(),
+  onToggleSelect,
+  currentUserId,
 }: NotesListProps) {
   const colors = useThemeColors();
 
@@ -87,8 +96,20 @@ export function NotesList({
         <NoteListItem
           note={item}
           isSelected={item.id === selectedNoteId}
-          onPress={() => onSelectNote(item)}
+          onPress={() => {
+            if (selectionMode && onToggleSelect) {
+              // Only allow selecting notes owned by the user
+              if (item.user_id === currentUserId) {
+                onToggleSelect(item.id);
+              }
+            } else {
+              onSelectNote(item);
+            }
+          }}
           searchQuery={searchQuery}
+          selectionMode={selectionMode}
+          isChecked={selectedIds.has(item.id)}
+          canSelect={item.user_id === currentUserId}
         />
       )}
       refreshControl={

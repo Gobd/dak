@@ -158,6 +158,11 @@ declare module 'lucide-react-native/dist/esm/icons/settings' {
   export default Settings;
 }
 
+declare module 'lucide-react-native/dist/esm/icons/square' {
+  const Square: LucideIcon;
+  export default Square;
+}
+
 declare module 'lucide-react-native/dist/esm/icons/square-check' {
   const SquareCheck: LucideIcon;
   export default SquareCheck;
