@@ -1,11 +1,23 @@
 /* Drive Time Widget - Floating Overlay */
 
+/* Let clicks pass through the container to elements behind */
+.panel[data-widget='drive-time'],
+.panel-content[data-widget='drive-time'] {
+  pointer-events: none;
+}
+
+.drive-time-overlay,
+.drive-time-settings-icon {
+  pointer-events: auto;
+}
+
 .drive-time-overlay {
   --dt-bg: rgba(255, 255, 255, 0.95);
   --dt-text: #1f2937;
   --dt-text-muted: #6b7280;
   --dt-border: #e5e7eb;
   --dt-shadow: rgba(0, 0, 0, 0.15);
+  --dt-accent: #3b82f6;
 
   position: absolute;
   top: 12px;
@@ -50,6 +62,26 @@
   opacity: 1;
 }
 
+/* Config button on overlay */
+.drive-time-config {
+  position: absolute;
+  top: 4px;
+  right: 32px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--dt-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.drive-time-config:hover {
+  opacity: 1;
+}
+
 .drive-time-content {
   display: flex;
   align-items: center;
@@ -64,6 +96,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-right: 50px;
 }
 
 .drive-time-duration {
@@ -126,25 +159,46 @@
   margin-top: 4px;
 }
 
-/* Setup UI */
+/* Setup UI / Route Manager / Route Form */
 .drive-time-overlay.setup {
-  top: 50%;
+  position: fixed;
+  top: 20px;
   left: 50%;
   right: auto;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   padding: 20px;
-  max-width: 400px;
+  max-width: 420px;
   width: 90%;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-color: var(--dt-border) transparent;
+}
+
+.drive-time-overlay.setup::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drive-time-overlay.setup::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drive-time-overlay.setup::-webkit-scrollbar-thumb {
+  background: var(--dt-border);
+  border-radius: 4px;
+}
+
+.drive-time-overlay.setup::-webkit-scrollbar-thumb:hover {
+  background: var(--dt-text-muted);
 }
 
 .drive-time-setup {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .drive-time-setup-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 4px;
 }
@@ -160,39 +214,44 @@
   color: var(--dt-text-muted);
 }
 
-.drive-time-setup input {
-  padding: 8px 10px;
+.drive-time-setup input[type='text'] {
+  padding: 12px 14px;
   border: 1px solid var(--dt-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--dt-bg);
   color: var(--dt-text);
-  font-size: 13px;
+  font-size: 14px;
   font-family: inherit;
 }
 
 .drive-time-setup input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--dt-accent);
 }
 
 .drive-time-setup-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 8px;
 }
 
+/* Buttons */
 .dt-btn {
-  padding: 8px 16px;
+  padding: 12px 20px;
   border: none;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+  touch-action: manipulation;
 }
 
 .dt-btn.dt-save {
-  background: #3b82f6;
+  background: var(--dt-accent);
   color: white;
 }
 
@@ -200,115 +259,204 @@
   background: #2563eb;
 }
 
-/* Section styling */
-.dt-section {
+.dt-btn.dt-cancel,
+.dt-btn.dt-back {
+  background: var(--dt-border);
+  color: var(--dt-text);
+}
+
+.dt-btn.dt-cancel:hover,
+.dt-btn.dt-back:hover {
+  opacity: 0.8;
+}
+
+.dt-btn.dt-add-route,
+.dt-btn.dt-manage-locations,
+.dt-btn.dt-show-now {
+  background: transparent;
+  border: 1px solid var(--dt-border);
+  color: var(--dt-text);
+}
+
+.dt-btn.dt-add-route:hover,
+.dt-btn.dt-manage-locations:hover,
+.dt-btn.dt-show-now:hover {
+  background: var(--dt-border);
+}
+
+.dt-btn.dt-confirm-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.dt-btn.dt-confirm-delete:hover {
+  background: #dc2626;
+}
+
+/* Confirm modal */
+.dt-confirm-modal {
+  z-index: 200;
+}
+
+/* Form sections */
+.dt-form-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .dt-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dt-text-muted);
+}
+
+.dt-field-hint {
   font-size: 11px;
   color: var(--dt-text-muted);
+  margin: 0;
+  opacity: 0.8;
 }
 
 /* Day selector */
 .dt-day-selector {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .dt-day-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid var(--dt-border);
   background: transparent;
   color: var(--dt-text-muted);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  touch-action: manipulation;
 }
 
 .dt-day-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--dt-accent);
+  color: var(--dt-accent);
 }
 
 .dt-day-btn.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--dt-accent);
+  border-color: var(--dt-accent);
   color: white;
 }
 
-/* Time pickers */
+/* Time pickers - native input for touch */
 .dt-time-pickers {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .dt-time-to {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--dt-text-muted);
 }
 
-.dt-time-picker {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--dt-border);
-  padding: 4px 8px;
+.dt-time-input {
+  padding: 12px 16px;
+  border: 1px solid var(--dt-border);
   border-radius: 8px;
-}
-
-.dt-time-sep {
-  font-size: 16px;
-  font-weight: 600;
+  background: var(--dt-bg);
   color: var(--dt-text);
-  padding: 0 2px;
-}
-
-.dt-time-roller {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 28px;
-}
-
-.dt-ampm-roller {
-  min-width: 32px;
-  margin-left: 4px;
-}
-
-.dt-roller-btn {
-  background: none;
-  border: none;
-  color: var(--dt-text-muted);
-  font-size: 10px;
-  cursor: pointer;
-  padding: 2px 4px;
-  opacity: 0.6;
-  transition: opacity 0.15s;
-}
-
-.dt-roller-btn:hover {
-  opacity: 1;
-}
-
-.dt-roller-value {
   font-size: 16px;
-  font-weight: 600;
-  color: var(--dt-text);
-  min-width: 24px;
+  font-family: inherit;
+  min-width: 120px;
   text-align: center;
 }
 
-.dt-ampm-roller .dt-roller-value {
-  font-size: 12px;
+.dt-time-input:focus {
+  outline: none;
+  border-color: var(--dt-accent);
+}
+
+/* Wheel picker for minute selection */
+.dt-wheel-picker {
+  position: relative;
+  height: 120px;
+  width: 100px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.dt-wheel-scroll {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 40px 0;
+}
+
+.dt-wheel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dt-wheel-item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--dt-text-muted);
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dt-wheel-item:hover {
+  color: var(--dt-text);
+}
+
+.dt-wheel-highlight {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  border-top: 2px solid var(--dt-accent);
+  border-bottom: 2px solid var(--dt-accent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dt-wheel-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--dt-bg) 0%,
+    transparent 30%,
+    transparent 70%,
+    var(--dt-bg) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dt-wheel-label {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--dt-text-muted);
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* Address input styling for Places Autocomplete */
@@ -334,7 +482,7 @@
 }
 
 .dt-autocomplete-item {
-  padding: 10px 12px;
+  padding: 12px 14px;
   cursor: pointer;
   font-size: 13px;
   color: var(--dt-text, #1f2937);
@@ -349,42 +497,312 @@
   background: var(--dt-border, #e5e7eb);
 }
 
+/* Location select dropdown */
+.dt-location-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dt-location-select {
+  padding: 12px 14px;
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  background: var(--dt-bg);
+  color: var(--dt-text);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.dt-location-select:focus {
+  outline: none;
+  border-color: var(--dt-accent);
+}
+
+.dt-new-location {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--dt-border);
+  border-radius: 8px;
+}
+
+.dt-new-location-name,
+.dt-new-location-address {
+  padding: 10px 12px;
+  border: 1px solid var(--dt-border);
+  border-radius: 6px;
+  background: var(--dt-bg);
+  color: var(--dt-text);
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dt-address-wrap {
+  position: relative;
+}
+
+/* Label input */
+.dt-label-input {
+  padding: 12px 14px;
+  border: 1px solid var(--dt-border);
+  border-radius: 8px;
+  background: var(--dt-bg);
+  color: var(--dt-text);
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dt-label-input:focus {
+  outline: none;
+  border-color: var(--dt-accent);
+}
+
+/* Route Manager */
+.dt-routes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dt-route-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--dt-border);
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.dt-route-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dt-route-item-path {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dt-text);
+}
+
+.dt-route-item-via {
+  font-size: 11px;
+  color: var(--dt-accent);
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.dt-route-item-schedule {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+  margin-top: 2px;
+}
+
+.dt-route-item-label {
+  font-size: 11px;
+  color: var(--dt-accent);
+  margin-top: 2px;
+}
+
+.dt-route-item-min {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+  font-style: italic;
+}
+
+.dt-route-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.dt-route-edit,
+.dt-route-delete {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: var(--dt-bg);
+  color: var(--dt-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  touch-action: manipulation;
+}
+
+.dt-route-edit:hover {
+  color: var(--dt-accent);
+}
+
+.dt-route-delete:hover {
+  color: #ef4444;
+}
+
+/* Manager actions */
+.dt-manager-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* Location Manager */
 .location-manager {
   max-width: 450px;
 }
 
 .dt-setup-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--dt-text-muted);
-  margin: 0 0 12px 0;
+  margin: 0;
+}
+
+.dt-no-locations {
+  font-size: 13px;
+  color: var(--dt-text-muted);
+  font-style: italic;
+  margin: 0;
 }
 
 .dt-locations-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 16px;
 }
 
 .dt-location-item label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.dt-location-key {
-  font-size: 12px;
+.dt-location-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dt-location-name-display {
+  flex: 1;
+  font-size: 14px;
   font-weight: 600;
   color: var(--dt-text);
   text-transform: capitalize;
 }
 
+.dt-location-name-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--dt-accent);
+  border-radius: 6px;
+  background: var(--dt-bg);
+  color: var(--dt-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.dt-location-name-input:focus {
+  outline: none;
+}
+
+.dt-location-edit-name,
+.dt-location-save-name {
+  background: none;
+  border: none;
+  color: var(--dt-text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+
+.dt-location-edit-name:hover {
+  opacity: 1;
+  color: var(--dt-accent);
+}
+
+.dt-location-save-name {
+  color: #4ade80;
+  opacity: 1;
+}
+
+.dt-location-save-name:hover {
+  color: #22c55e;
+}
+
+.dt-location-key {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dt-text);
+  text-transform: capitalize;
+}
+
+.dt-location-delete {
+  background: none;
+  border: none;
+  color: var(--dt-text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+
+.dt-location-delete:hover {
+  opacity: 1;
+  color: #ef4444;
+}
+
+/* Settings icon - shown when widget is hidden */
+.drive-time-settings-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+  background: rgba(200, 200, 200, 0.9);
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.drive-time-settings-icon:hover {
+  opacity: 1;
+}
+
+.drive-time-settings-icon.dark {
+  background: rgba(60, 60, 60, 0.9);
+  color: #ccc;
+}
+
+/* Legacy routes preview - for backwards compat if needed */
 .dt-routes-preview {
   background: var(--dt-border);
   border-radius: 8px;
   padding: 12px;
-  margin-bottom: 16px;
 }
 
 .dt-routes-preview .dt-section-label {
@@ -423,41 +841,62 @@
 
 .dt-route-label {
   font-size: 11px;
-  color: #3b82f6;
+  color: var(--dt-accent);
   font-weight: 500;
 }
 
-/* Click hint on overlay */
-.drive-time-content {
-  cursor: pointer;
+/* Multi-route combined overlay */
+.drive-time-overlay.multi-route .drive-time-info {
+  padding-right: 40px;
 }
 
-.drive-time-content:hover {
-  opacity: 0.9;
-}
-
-/* Settings icon - shown when widget is hidden due to threshold */
-.drive-time-settings-icon {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 28px;
-  height: 28px;
+.drive-time-multi {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  opacity: 0.3;
-  transition: opacity 0.2s;
-  border-radius: 50%;
-  background: rgba(128, 128, 128, 0.1);
+  flex-direction: column;
+  gap: 6px;
 }
 
-.drive-time-settings-icon:hover {
+.drive-time-route-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.drive-time-route-label {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+  flex-shrink: 0;
+}
+
+.drive-time-route-time {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.drive-time-route-delay {
+  font-size: 11px;
+  color: var(--dt-text-muted);
+}
+
+/* Route summary - shows which route Google used (e.g., "via Highland Dr") */
+.drive-time-summary {
+  font-size: 10px;
+  color: var(--dt-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.drive-time-route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.drive-time-route-summary {
+  font-size: 9px;
+  color: var(--dt-text-muted);
+  font-style: italic;
   opacity: 0.8;
-}
-
-.drive-time-settings-icon.dark {
-  background: rgba(255, 255, 255, 0.05);
 }

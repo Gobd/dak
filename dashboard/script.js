@@ -218,9 +218,17 @@ function createPanelElement(panel, screenIndex, panelIndex) {
   // Determine widget type
   const widgetType = panel.type || (panel.src ? 'iframe' : null);
 
+  // Add widget type to panel for CSS targeting
+  if (widgetType) {
+    panelEl.dataset.widget = widgetType;
+  }
+
   // Content container for widget
   const content = document.createElement('div');
   content.className = 'panel-content';
+  if (widgetType) {
+    content.dataset.widget = widgetType;
+  }
 
   // Get dark mode setting from config
   const isDark = config.dark !== false;
