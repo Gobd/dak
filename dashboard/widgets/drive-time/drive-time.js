@@ -674,7 +674,9 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
 
     // Get origin address
     if (originSelect.value === '__new__') {
-      originAddress = container.querySelector('.dt-new-origin .dt-new-location-address').value.trim();
+      originAddress = container
+        .querySelector('.dt-new-origin .dt-new-location-address')
+        .value.trim();
     } else if (originSelect.value) {
       originAddress = currentLocations[originSelect.value];
     }
@@ -687,7 +689,11 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     }
 
     if (!originAddress || !destAddress) {
-      showAlertModal(container, dark, 'Please select or enter both origin and destination to preview the route.');
+      showAlertModal(
+        container,
+        dark,
+        'Please select or enter both origin and destination to preview the route.'
+      );
       return;
     }
 
