@@ -1134,3 +1134,42 @@
   padding: 20px;
   font-style: italic;
 }
+
+/* Route blocked warning - when usual route may be closed */
+.drive-time-route-blocked {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f97316;
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: rgba(249, 115, 22, 0.15);
+  border-radius: 6px;
+  border-left: 3px solid #f97316;
+}
+
+.drive-time-route-row.route-blocked {
+  background: rgba(249, 115, 22, 0.1);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: -2px -4px;
+}
+
+.drive-time-route-blocked-hint {
+  font-size: 9px;
+  color: #f97316;
+  font-weight: 600;
+}
+
+/* Preview selected route button */
+.dt-btn.dt-preview-selected {
+  background: transparent;
+  border: 1px solid var(--dt-accent);
+  color: var(--dt-accent);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.dt-btn.dt-preview-selected:hover {
+  background: var(--dt-accent);
+  color: white;
+}

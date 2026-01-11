@@ -41,10 +41,19 @@ export async function onRequestPost(context) {
       traffic_model: 'best_guess',
     });
 
-    // Add waypoints to force route through specific roads
-    // via is an array of waypoint strings (e.g., ["Highland Dr", "I-215 E"])
+    // Add waypoints to force route through specific points
+    // via can be: strings (legacy), or objects with {lat, lng} coordinates
     if (via && via.length) {
-      const waypoints = via.map((v) => `via:${v.trim()}`).join('|');
+      const waypoints = via
+        .map((v) => {
+          if (typeof v === 'object' && v.lat !== undefined && v.lng !== undefined) {
+            // Coordinate object - format as lat,lng
+            return `via:${v.lat},${v.lng}`;
+          }
+          // Legacy string format
+          return `via:${String(v).trim()}`;
+        })
+        .join('|');
       params.set('waypoints', waypoints);
     }
 

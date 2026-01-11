@@ -43,8 +43,17 @@ export async function onRequestPost(context) {
     });
 
     // Add waypoints if provided (pipe-separated)
+    // via can be: strings (legacy), or objects with {lat, lng} coordinates
     if (via && via.length) {
-      params.set('waypoints', via.join('|'));
+      const waypoints = via
+        .map((v) => {
+          if (typeof v === 'object' && v.lat !== undefined && v.lng !== undefined) {
+            return `${v.lat},${v.lng}`;
+          }
+          return String(v);
+        })
+        .join('|');
+      params.set('waypoints', waypoints);
     }
 
     const embedUrl = `https://www.google.com/maps/embed/v1/directions?${params}`;
