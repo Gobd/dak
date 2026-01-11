@@ -175,6 +175,28 @@ async function fetchPlacesAutocomplete(input) {
   }
 }
 
+async function fetchRouteAlternatives(origin, destination) {
+  try {
+    const response = await fetch(`${API_BASE}/alternatives`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin, destination }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Route alternatives error:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.routes || [];
+  } catch (err) {
+    console.error('Route alternatives fetch error:', err);
+    return null;
+  }
+}
+
 async function fetchMapEmbedUrl(origin, destination, via = []) {
   try {
     const response = await fetch(`${API_BASE}/embed`, {
@@ -540,10 +562,13 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
         </div>
 
         <div class="dt-form-section">
-          <span class="dt-section-label">Via (optional)</span>
-          <p class="dt-field-hint">Force route through specific roads in order</p>
-          <div class="dt-via-list"></div>
-          <button type="button" class="dt-btn dt-add-via">+ Add via point</button>
+          <span class="dt-section-label">Preferred Route (optional)</span>
+          <p class="dt-field-hint">Skip this to use Google's fastest route, or pick your usual route to see its traffic</p>
+          <div class="dt-route-choice">
+            <span class="dt-selected-route">${route.via?.length ? `via ${route.via.join(' → ')}` : 'Using fastest route'}</span>
+            <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
+            ${route.via?.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
+          </div>
         </div>
 
         <div class="dt-form-section">
@@ -631,34 +656,72 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   setupLocationSelect('.dt-origin-select', '.dt-new-origin');
   setupLocationSelect('.dt-dest-select', '.dt-new-dest');
 
-  // Setup via inputs - supports multiple waypoints
-  const viaList = container.querySelector('.dt-via-list');
-  const addViaBtn = container.querySelector('.dt-add-via');
+  // Track selected via points
+  let selectedVia = route.via || [];
 
-  function createViaInput(value = '') {
-    const row = document.createElement('div');
-    row.className = 'dt-via-row';
-    row.innerHTML = `
-      <div class="dt-address-wrap">
-        <input type="text" class="dt-via-input dt-address-input" value="${value}" placeholder="Road or intersection...">
-      </div>
-      <button type="button" class="dt-via-remove" title="Remove">&times;</button>
+  // Update the route choice display
+  function updateRouteDisplay() {
+    const routeChoice = container.querySelector('.dt-route-choice');
+    routeChoice.innerHTML = `
+      <span class="dt-selected-route">${selectedVia.length ? `via ${selectedVia.join(' → ')}` : 'Using fastest route'}</span>
+      <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
+      ${selectedVia.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
     `;
-    viaList.appendChild(row);
 
-    const input = row.querySelector('.dt-via-input');
-    setupAddressAutocomplete(input);
+    // Re-attach event listeners
+    routeChoice.querySelector('.dt-choose-route').addEventListener('click', handleChooseRoute);
+    const clearBtn = routeChoice.querySelector('.dt-clear-route');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        selectedVia = [];
+        updateRouteDisplay();
+      });
+    }
+  }
 
-    row.querySelector('.dt-via-remove').addEventListener('click', () => {
-      row.remove();
+  // Handle choose route button
+  function handleChooseRoute() {
+    const originSelect = container.querySelector('.dt-origin-select');
+    const destSelect = container.querySelector('.dt-dest-select');
+    const currentLocations = getLocations();
+
+    let originAddress = '';
+    let destAddress = '';
+
+    if (originSelect.value === '__new__') {
+      originAddress = container
+        .querySelector('.dt-new-origin .dt-new-location-address')
+        .value.trim();
+    } else if (originSelect.value) {
+      originAddress = currentLocations[originSelect.value];
+    }
+
+    if (destSelect.value === '__new__') {
+      destAddress = container.querySelector('.dt-new-dest .dt-new-location-address').value.trim();
+    } else if (destSelect.value) {
+      destAddress = currentLocations[destSelect.value];
+    }
+
+    if (!originAddress || !destAddress) {
+      showAlertModal(container, dark, 'Please select origin and destination first.');
+      return;
+    }
+
+    showRoutePickerModal(container, dark, originAddress, destAddress, (viaPoints) => {
+      selectedVia = viaPoints;
+      updateRouteDisplay();
     });
   }
 
-  // Pre-populate existing via points
-  const existingVias = route.via || [];
-  existingVias.forEach((v) => createViaInput(v));
-
-  addViaBtn.addEventListener('click', () => createViaInput());
+  // Initial event listener for choose route button
+  container.querySelector('.dt-choose-route').addEventListener('click', handleChooseRoute);
+  const clearBtn = container.querySelector('.dt-clear-route');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      selectedVia = [];
+      updateRouteDisplay();
+    });
+  }
 
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
@@ -697,13 +760,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       return;
     }
 
-    // Get via points
-    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
-    const via = Array.from(viaInputs)
-      .map((input) => input.value.trim())
-      .filter(Boolean);
-
-    showMapPreviewModal(container, dark, originAddress, destAddress, via);
+    showMapPreviewModal(container, dark, originAddress, destAddress, selectedVia);
   });
 
   // Save button
@@ -763,15 +820,11 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     saveLocations(currentLocations);
 
     const label = container.querySelector('.dt-label-input').value.trim();
-    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
-    const via = Array.from(viaInputs)
-      .map((input) => input.value.trim())
-      .filter(Boolean);
 
     const newRoute = {
       origin,
       destination,
-      via,
+      via: selectedVia,
       days: Array.from(selectedDays),
       startTime,
       endTime,
@@ -828,6 +881,81 @@ function showMapPreviewModal(container, dark, origin, destination, via = []) {
   });
 
   modal.querySelector('.dt-save').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// Route picker modal - shows alternative routes and lets user select one to lock in
+function showRoutePickerModal(container, dark, origin, destination, onSelectRoute) {
+  const darkClass = dark ? 'dark' : '';
+  const modalId = 'dt-route-picker-modal';
+
+  const existing = container.querySelector(`#${modalId}`);
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = modalId;
+  modal.className = `drive-time-overlay ${darkClass} setup dt-route-picker-modal`;
+  modal.innerHTML = `
+    <div class="drive-time-setup dt-route-picker">
+      <div class="drive-time-setup-title">Choose Your Route</div>
+      <p class="dt-setup-desc">Select the route you normally take. This will lock in that specific route for traffic updates.</p>
+      <div class="dt-routes-loading">Loading route alternatives...</div>
+      <div class="dt-alternatives-list" style="display: none;"></div>
+      <div class="drive-time-setup-actions">
+        <button class="dt-btn dt-cancel">Cancel</button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(modal);
+
+  const loadingEl = modal.querySelector('.dt-routes-loading');
+  const listEl = modal.querySelector('.dt-alternatives-list');
+
+  // Fetch alternatives
+  fetchRouteAlternatives(origin, destination).then((routes) => {
+    loadingEl.style.display = 'none';
+
+    if (!routes || routes.length === 0) {
+      listEl.innerHTML =
+        '<div class="dt-no-routes">No alternative routes found for this trip.</div>';
+      listEl.style.display = 'block';
+      return;
+    }
+
+    listEl.innerHTML = routes
+      .map(
+        (route, i) => `
+        <div class="dt-alternative-item" data-index="${i}">
+          <div class="dt-alt-summary">
+            <span class="dt-alt-name">${route.summary}</span>
+            ${route.viaPoints.length ? `<span class="dt-alt-via-hint">via ${route.viaPoints.slice(0, 2).join(', ')}</span>` : ''}
+          </div>
+          <div class="dt-alt-details">
+            <span class="dt-alt-time">${route.durationInTraffic}</span>
+            <span class="dt-alt-distance">${route.distance}</span>
+          </div>
+          <button class="dt-btn dt-select-route" data-index="${i}">Use This Route</button>
+        </div>
+      `
+      )
+      .join('');
+    listEl.style.display = 'block';
+
+    // Handle route selection
+    listEl.querySelectorAll('.dt-select-route').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const index = parseInt(btn.dataset.index, 10);
+        const selectedRoute = routes[index];
+        modal.remove();
+        onSelectRoute(selectedRoute.viaPoints, selectedRoute.summary);
+      });
+    });
+  });
+
+  modal.querySelector('.dt-cancel').addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });

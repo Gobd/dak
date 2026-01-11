@@ -1000,3 +1000,137 @@
   background: var(--dt-accent);
   color: white;
 }
+
+/* Route choice section - simplified via selection */
+.dt-route-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dt-selected-route {
+  flex: 1;
+  font-size: 14px;
+  color: var(--dt-text);
+  min-width: 120px;
+}
+
+.dt-btn.dt-choose-route {
+  background: transparent;
+  border: 1px solid var(--dt-accent);
+  color: var(--dt-accent);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.dt-btn.dt-choose-route:hover {
+  background: var(--dt-accent);
+  color: white;
+}
+
+.dt-btn.dt-clear-route {
+  background: transparent;
+  border: 1px solid var(--dt-border);
+  color: var(--dt-text-muted);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.dt-btn.dt-clear-route:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Route picker modal */
+.dt-route-picker-modal {
+  z-index: 200;
+}
+
+.dt-route-picker {
+  width: 100%;
+}
+
+.dt-routes-loading {
+  font-size: 14px;
+  color: var(--dt-text-muted);
+  text-align: center;
+  padding: 20px;
+}
+
+.dt-alternatives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.dt-alternative-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--dt-border);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.dt-alternative-item:hover {
+  border-color: var(--dt-accent);
+}
+
+.dt-alt-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dt-alt-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dt-text);
+}
+
+.dt-alt-via-hint {
+  font-size: 12px;
+  color: var(--dt-text-muted);
+  font-style: italic;
+}
+
+.dt-alt-details {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.dt-alt-time {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dt-accent);
+}
+
+.dt-alt-distance {
+  font-size: 13px;
+  color: var(--dt-text-muted);
+}
+
+.dt-btn.dt-select-route {
+  align-self: flex-end;
+  background: var(--dt-accent);
+  color: white;
+  padding: 10px 20px;
+  font-size: 13px;
+}
+
+.dt-btn.dt-select-route:hover {
+  background: #2563eb;
+}
+
+.dt-no-routes {
+  font-size: 14px;
+  color: var(--dt-text-muted);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
