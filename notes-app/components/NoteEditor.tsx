@@ -367,45 +367,59 @@ export function NoteEditor({
 
         {/* Heading dropdown menu - outside ScrollView to avoid clipping */}
         {showHeadingDropdown && (
-          <View
-            style={{
-              position: 'absolute',
-              top: 44,
-              left: headingDropdownX,
-              backgroundColor: colors.bgSecondary,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: colors.border,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              zIndex: 100,
-            }}
-          >
-            {[1, 2, 3].map((level) => (
-              <Pressable
-                key={level}
-                onPress={() => {
-                  editorRef.current?.toggleHeading(level as 1 | 2 | 3);
-                  setShowHeadingDropdown(false);
-                }}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderBottomWidth: level < 3 ? 1 : 0,
-                  borderBottomColor: colors.border,
-                }}
-              >
-                <Text
+          <>
+            {/* Invisible overlay to close dropdown when clicking outside */}
+            <Pressable
+              onPress={() => setShowHeadingDropdown(false)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 99,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                top: 44,
+                left: headingDropdownX,
+                backgroundColor: colors.bgSecondary,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.border,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 100,
+              }}
+            >
+              {[1, 2, 3].map((level) => (
+                <Pressable
+                  key={level}
+                  onPress={() => {
+                    editorRef.current?.toggleHeading(level as 1 | 2 | 3);
+                    setShowHeadingDropdown(false);
+                  }}
                   style={{
-                    fontSize: 18 - level * 2,
-                    fontWeight: '600',
-                    color: colors.text,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderBottomWidth: level < 3 ? 1 : 0,
+                    borderBottomColor: colors.border,
                   }}
                 >
-                  Heading {level}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+                  <Text
+                    style={{
+                      fontSize: 18 - level * 2,
+                      fontWeight: '600',
+                      color: colors.text,
+                    }}
+                  >
+                    Heading {level}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
         )}
       </View>
 
