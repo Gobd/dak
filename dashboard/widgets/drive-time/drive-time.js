@@ -689,7 +689,9 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     let destAddress = '';
 
     if (originSelect.value === '__new__') {
-      originAddress = container.querySelector('.dt-new-origin .dt-new-location-address').value.trim();
+      originAddress = container
+        .querySelector('.dt-new-origin .dt-new-location-address')
+        .value.trim();
     } else if (originSelect.value) {
       originAddress = currentLocations[originSelect.value];
     }
@@ -917,7 +919,8 @@ function showRoutePickerModal(container, dark, origin, destination, onSelectRout
     loadingEl.style.display = 'none';
 
     if (!routes || routes.length === 0) {
-      listEl.innerHTML = '<div class="dt-no-routes">No alternative routes found for this trip.</div>';
+      listEl.innerHTML =
+        '<div class="dt-no-routes">No alternative routes found for this trip.</div>';
       listEl.style.display = 'block';
       return;
     }
