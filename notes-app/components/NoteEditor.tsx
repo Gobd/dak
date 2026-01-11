@@ -5,15 +5,15 @@ import { useUserStore } from '@/stores/user-store';
 import type { Note, NoteUpdate } from '@/types/note';
 import type { Tag } from '@/types/tag';
 import { setStringAsync } from 'expo-clipboard';
+import ChevronDown from 'lucide-react-native/dist/esm/icons/chevron-down';
 import ChevronLeft from 'lucide-react-native/dist/esm/icons/chevron-left';
 import Copy from 'lucide-react-native/dist/esm/icons/copy';
 import Hash from 'lucide-react-native/dist/esm/icons/hash';
 import Eye from 'lucide-react-native/dist/esm/icons/eye';
 import EyeOff from 'lucide-react-native/dist/esm/icons/eye-off';
-import Heading1 from 'lucide-react-native/dist/esm/icons/heading-1';
-import Heading2 from 'lucide-react-native/dist/esm/icons/heading-2';
-import Heading3 from 'lucide-react-native/dist/esm/icons/heading-3';
+import Heading from 'lucide-react-native/dist/esm/icons/heading';
 import List from 'lucide-react-native/dist/esm/icons/list';
+import ListX from 'lucide-react-native/dist/esm/icons/list-x';
 import Lock from 'lucide-react-native/dist/esm/icons/lock';
 import LockOpen from 'lucide-react-native/dist/esm/icons/lock-open';
 import Pin from 'lucide-react-native/dist/esm/icons/pin';
@@ -69,6 +69,8 @@ export function NoteEditor({
   const { isDark } = useTheme();
   const { planLimits } = useUserStore();
   const editorRef = useRef<RichNoteEditorRef>(null);
+  const toolbarRef = useRef<View>(null);
+  const headingButtonRef = useRef<View>(null);
   const { width } = useWindowDimensions();
   const isNarrow = width < 768;
 
@@ -76,6 +78,8 @@ export function NoteEditor({
   const [newTagName, setNewTagName] = useState('');
   const [copied, setCopied] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [showHeadingDropdown, setShowHeadingDropdown] = useState(false);
+  const [headingDropdownX, setHeadingDropdownX] = useState(0);
 
   const maxContentLength = planLimits.maxNoteLength;
 
@@ -99,6 +103,16 @@ export function NoteEditor({
     }
   };
 
+  const handleDeleteCheckedTasks = () => {
+    if (!note.content) return;
+    const lines = note.content.split('\n');
+    const filtered = lines.filter((line) => !line.match(/^(\s*[-*]?\s*)?\[x\]/i));
+    const newContent = filtered.join('\n');
+    if (newContent !== note.content) {
+      onUpdate({ content: newContent });
+    }
+  };
+
   const isTagNameOverLimit = newTagName.trim().length > MAX_TAG_NAME_LENGTH;
   const availableTags = tags.filter((t) => !noteTags.some((nt) => nt.id === t.id));
 
@@ -106,10 +120,15 @@ export function NoteEditor({
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Toolbar */}
       <View
+        ref={toolbarRef}
+        collapsable={false}
         style={{
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
           paddingVertical: 8,
+          position: 'relative',
+          overflow: 'visible',
+          zIndex: 10,
         }}
       >
         <ScrollView
@@ -248,7 +267,7 @@ export function NoteEditor({
 
           {/* Editor formatting buttons */}
           <Pressable
-            onPress={() => editorRef.current?.toggleHeading(1)}
+            onPress={() => editorRef.current?.toggleTaskList()}
             style={{
               padding: 6,
               borderRadius: 6,
@@ -256,10 +275,10 @@ export function NoteEditor({
               flexShrink: 0,
             }}
           >
-            <Heading1 size={16} color={colors.icon} />
+            <SquareCheck size={16} color={colors.icon} />
           </Pressable>
           <Pressable
-            onPress={() => editorRef.current?.toggleHeading(2)}
+            onPress={handleDeleteCheckedTasks}
             style={{
               padding: 6,
               borderRadius: 6,
@@ -267,18 +286,7 @@ export function NoteEditor({
               flexShrink: 0,
             }}
           >
-            <Heading2 size={16} color={colors.icon} />
-          </Pressable>
-          <Pressable
-            onPress={() => editorRef.current?.toggleHeading(3)}
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              backgroundColor: colors.bgTertiary,
-              flexShrink: 0,
-            }}
-          >
-            <Heading3 size={16} color={colors.icon} />
+            <ListX size={16} color={colors.icon} />
           </Pressable>
           <View
             style={{
@@ -289,6 +297,41 @@ export function NoteEditor({
               flexShrink: 0,
             }}
           />
+          {/* Heading dropdown trigger */}
+          <View ref={headingButtonRef} collapsable={false}>
+            <Pressable
+              onPress={() => {
+                if (showHeadingDropdown) {
+                  setShowHeadingDropdown(false);
+                  return;
+                }
+                if (headingButtonRef.current && toolbarRef.current) {
+                  headingButtonRef.current.measureLayout(
+                    toolbarRef.current,
+                    (x) => {
+                      setHeadingDropdownX(x);
+                      setShowHeadingDropdown(true);
+                    },
+                    () => setShowHeadingDropdown(true)
+                  );
+                } else {
+                  setShowHeadingDropdown(true);
+                }
+              }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 2,
+                padding: 6,
+                borderRadius: 6,
+                backgroundColor: showHeadingDropdown ? colors.primary + '20' : colors.bgTertiary,
+                flexShrink: 0,
+              }}
+            >
+              <Heading size={16} color={showHeadingDropdown ? colors.primary : colors.icon} />
+              <ChevronDown size={12} color={showHeadingDropdown ? colors.primary : colors.icon} />
+            </Pressable>
+          </View>
           <Pressable
             onPress={() => editorRef.current?.toggleBulletList()}
             style={{
@@ -299,17 +342,6 @@ export function NoteEditor({
             }}
           >
             <List size={16} color={colors.icon} />
-          </Pressable>
-          <Pressable
-            onPress={() => editorRef.current?.toggleTaskList()}
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              backgroundColor: colors.bgTertiary,
-              flexShrink: 0,
-            }}
-          >
-            <SquareCheck size={16} color={colors.icon} />
           </Pressable>
           <View
             style={{
@@ -332,6 +364,49 @@ export function NoteEditor({
             <Copy size={16} color={copied ? colors.success : colors.icon} />
           </Pressable>
         </ScrollView>
+
+        {/* Heading dropdown menu - outside ScrollView to avoid clipping */}
+        {showHeadingDropdown && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 44,
+              left: headingDropdownX,
+              backgroundColor: colors.bgSecondary,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.border,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              zIndex: 100,
+            }}
+          >
+            {[1, 2, 3].map((level) => (
+              <Pressable
+                key={level}
+                onPress={() => {
+                  editorRef.current?.toggleHeading(level as 1 | 2 | 3);
+                  setShowHeadingDropdown(false);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderBottomWidth: level < 3 ? 1 : 0,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18 - level * 2,
+                    fontWeight: '600',
+                    color: colors.text,
+                  }}
+                >
+                  Heading {level}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Rich Text Editor */}

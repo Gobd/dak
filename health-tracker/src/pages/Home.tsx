@@ -92,7 +92,7 @@ export function Home() {
     if (isPast(date) && !isToday(date)) return "Overdue!";
     if (isToday(date)) return "Today";
     if (isTomorrow(date)) return "Tomorrow";
-    return format(date, "MMM d");
+    return format(date, "EEE, MMM d");
   };
 
   const getDueDateClass = (dateStr: string) => {
