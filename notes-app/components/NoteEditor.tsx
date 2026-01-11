@@ -69,6 +69,8 @@ export function NoteEditor({
   const { isDark } = useTheme();
   const { planLimits } = useUserStore();
   const editorRef = useRef<RichNoteEditorRef>(null);
+  const toolbarRef = useRef<View>(null);
+  const headingButtonRef = useRef<View>(null);
   const { width } = useWindowDimensions();
   const isNarrow = width < 768;
 
@@ -77,6 +79,7 @@ export function NoteEditor({
   const [copied, setCopied] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [showHeadingDropdown, setShowHeadingDropdown] = useState(false);
+  const [headingDropdownX, setHeadingDropdownX] = useState(0);
 
   const maxContentLength = planLimits.maxNoteLength;
 
@@ -117,10 +120,15 @@ export function NoteEditor({
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Toolbar */}
       <View
+        ref={toolbarRef}
+        collapsable={false}
         style={{
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
           paddingVertical: 8,
+          position: 'relative',
+          overflow: 'visible',
+          zIndex: 10,
         }}
       >
         <ScrollView
@@ -289,10 +297,27 @@ export function NoteEditor({
               flexShrink: 0,
             }}
           />
-          {/* Heading dropdown */}
-          <View style={{ position: 'relative', flexShrink: 0 }}>
+          {/* Heading dropdown trigger */}
+          <View ref={headingButtonRef} collapsable={false}>
             <Pressable
-              onPress={() => setShowHeadingDropdown(!showHeadingDropdown)}
+              onPress={() => {
+                if (showHeadingDropdown) {
+                  setShowHeadingDropdown(false);
+                  return;
+                }
+                if (headingButtonRef.current && toolbarRef.current) {
+                  headingButtonRef.current.measureLayout(
+                    toolbarRef.current,
+                    (x) => {
+                      setHeadingDropdownX(x);
+                      setShowHeadingDropdown(true);
+                    },
+                    () => setShowHeadingDropdown(true)
+                  );
+                } else {
+                  setShowHeadingDropdown(true);
+                }
+              }}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -300,57 +325,12 @@ export function NoteEditor({
                 padding: 6,
                 borderRadius: 6,
                 backgroundColor: showHeadingDropdown ? colors.primary + '20' : colors.bgTertiary,
+                flexShrink: 0,
               }}
             >
               <Heading size={16} color={showHeadingDropdown ? colors.primary : colors.icon} />
               <ChevronDown size={12} color={showHeadingDropdown ? colors.primary : colors.icon} />
             </Pressable>
-            {showHeadingDropdown && (
-              <View
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: 4,
-                  backgroundColor: colors.bgSecondary,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
-                  zIndex: 100,
-                }}
-              >
-                {[1, 2, 3].map((level) => (
-                  <Pressable
-                    key={level}
-                    onPress={() => {
-                      editorRef.current?.toggleHeading(level as 1 | 2 | 3);
-                      setShowHeadingDropdown(false);
-                    }}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderBottomWidth: level < 3 ? 1 : 0,
-                      borderBottomColor: colors.border,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 18 - level * 2,
-                        fontWeight: '600',
-                        color: colors.text,
-                      }}
-                    >
-                      Heading {level}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
           </View>
           <Pressable
             onPress={() => editorRef.current?.toggleBulletList()}
@@ -384,6 +364,49 @@ export function NoteEditor({
             <Copy size={16} color={copied ? colors.success : colors.icon} />
           </Pressable>
         </ScrollView>
+
+        {/* Heading dropdown menu - outside ScrollView to avoid clipping */}
+        {showHeadingDropdown && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 44,
+              left: headingDropdownX,
+              backgroundColor: colors.bgSecondary,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.border,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              zIndex: 100,
+            }}
+          >
+            {[1, 2, 3].map((level) => (
+              <Pressable
+                key={level}
+                onPress={() => {
+                  editorRef.current?.toggleHeading(level as 1 | 2 | 3);
+                  setShowHeadingDropdown(false);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderBottomWidth: level < 3 ? 1 : 0,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18 - level * 2,
+                    fontWeight: '600',
+                    color: colors.text,
+                  }}
+                >
+                  Heading {level}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Rich Text Editor */}

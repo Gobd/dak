@@ -13,7 +13,7 @@ function formatTime(date) {
   return `${hours}:${minutes.toString().padStart(2, '0')}${ampm}`;
 }
 
-function formatShortDate(date) {
+function formatShortDate(date, includeDay = false) {
   const months = [
     'Jan',
     'Feb',
@@ -28,7 +28,9 @@ function formatShortDate(date) {
     'Nov',
     'Dec',
   ];
-  return `${months[date.getMonth()]} ${date.getDate()}`;
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dateStr = `${months[date.getMonth()]} ${date.getDate()}`;
+  return includeDay ? `${days[date.getDay()]} ${dateStr}` : dateStr;
 }
 
 function formatDayLength(minutes) {
@@ -169,7 +171,7 @@ function renderWidget(container, lat, lon, dark) {
         <div class="moon-phase-info">
           <span class="moon-icon">${phaseDisplay.icon}</span>
           <span class="moon-phase">${phaseDisplay.trend ? `${phaseDisplay.trend} ${phaseDisplay.name}` : phaseDisplay.name}</span>
-          <span class="moon-full">${daysToFull === 0 ? 'Full tonight' : `Full ${formatShortDate(moon.nextFullMoon)}`}</span>
+          <span class="moon-full">${daysToFull === 0 ? 'Full tonight' : `Full ${formatShortDate(moon.nextFullMoon, true)}`}</span>
         </div>
       </div>
     </div>
