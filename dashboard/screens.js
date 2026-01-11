@@ -43,6 +43,9 @@
  *                - Days of week and time window
  *                - Optional label and minimum time threshold
  *                Shows traffic warnings when commute is 1.4x-2.5x+ normal
+ *   sun-moon   - Sunrise/sunset times, day length change, moon phase
+ *                args: { lat, lon }
+ *                Shows: sunrise/sunset, day length (+/- from yesterday), moon phase (growing/shrinking), days to full moon
  *   iframe     - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
@@ -115,13 +118,15 @@ export default {
     },
 
     /*
-     * Screen 2: Weather + UV + AQI + Health Tracker
+     * Screen 2: Weather + UV + AQI + Sun/Moon + Health Tracker
      * ┌───────┬───────────────┐
      * │weather│               │
-     * ├───────┤    health     │
-     * │ UV    │               │
+     * ├───────┤               │
+     * │ UV    │    health     │
      * ├───────┤               │
      * │ AQI   │               │
+     * ├───────┤               │
+     * │sun/moo│               │
      * └───────┴───────────────┘
      */
     {
@@ -137,7 +142,7 @@ export default {
           x: '0%',
           y: '0%',
           w: '30%',
-          h: '80%',
+          h: '75%',
           refresh: '30m',
         },
         {
@@ -148,7 +153,7 @@ export default {
             safeThreshold: 4,
           },
           x: '0%',
-          y: '80%',
+          y: '75%',
           w: '30%',
           h: '10%',
           refresh: '30m',
@@ -160,10 +165,22 @@ export default {
             lon: '-111.8910',
           },
           x: '0%',
-          y: '90%',
+          y: '85%',
           w: '30%',
           h: '10%',
           refresh: '30m',
+        },
+        {
+          type: 'sun-moon',
+          args: {
+            lat: '40.7608',
+            lon: '-111.8910',
+          },
+          x: '0%',
+          y: '95%',
+          w: '30%',
+          h: '5%',
+          refresh: '1h',
         },
         {
           type: 'iframe',

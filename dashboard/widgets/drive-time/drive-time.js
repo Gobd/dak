@@ -582,7 +582,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
           <span class="dt-section-label">Preferred Route (optional)</span>
           <p class="dt-field-hint">Skip this to use Google's fastest route, or pick your usual route to see its traffic</p>
           <div class="dt-route-choice">
-            <span class="dt-selected-route">${route.viaLabel ? `via ${route.viaLabel}` : route.via?.length ? (typeof route.via[0] === 'string' ? `via ${route.via.join(' → ')}` : `${route.via.length} waypoints locked`) : 'Using fastest route'}</span>
+            <span class="dt-selected-route">${route.viaLabel ? `via ${route.viaLabel}` : route.via?.length ? `${route.via.length} waypoints locked` : 'Using fastest route'}</span>
             <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
             ${route.via?.length ? '<button type="button" class="dt-btn dt-preview-selected">Preview</button>' : ''}
             ${route.via?.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
@@ -682,9 +682,6 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   function getViaDisplayText() {
     if (selectedViaLabel) return `via ${selectedViaLabel}`;
     if (selectedVia.length === 0) return 'Using fastest route';
-    // Legacy: if via contains strings, join them
-    if (typeof selectedVia[0] === 'string') return `via ${selectedVia.join(' → ')}`;
-    // Coords: show count
     return `${selectedVia.length} waypoints locked`;
   }
 
@@ -1142,7 +1139,7 @@ function renderRouteManager(container, dark, onDone) {
                 <div class="dt-route-item" data-index="${i}">
                   <div class="dt-route-item-info">
                     <div class="dt-route-item-path">${r.origin} &rarr; ${r.destination}</div>
-                    ${r.viaLabel ? `<div class="dt-route-item-via">via ${r.viaLabel}</div>` : r.via?.length ? `<div class="dt-route-item-via">${typeof r.via[0] === 'string' ? `via ${r.via.join(' → ')}` : `${r.via.length} waypoints`}</div>` : ''}
+                    ${r.viaLabel ? `<div class="dt-route-item-via">via ${r.viaLabel}</div>` : r.via?.length ? `<div class="dt-route-item-via">${r.via.length} waypoints</div>` : ''}
                     <div class="dt-route-item-schedule">${r.days?.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
                     ${r.label ? `<div class="dt-route-item-label">${r.label}</div>` : ''}
                     ${r.minTimeToShow ? `<div class="dt-route-item-min">Show if &gt; ${r.minTimeToShow} min</div>` : ''}

@@ -18,8 +18,8 @@ function getCorsHeaders(request) {
   };
 }
 
-// Extract waypoint coordinates at 25%, 50%, and 75% along the route
-// Uses actual lat/lng for reliable route locking instead of fragile road name parsing
+// Extract waypoint coordinates along the route for reliable locking
+// Number of waypoints scales with route length to avoid clustering on short routes
 function extractWaypointCoords(route) {
   // Collect all step end locations with cumulative distance
   const points = [];
@@ -38,7 +38,23 @@ function extractWaypointCoords(route) {
   if (points.length === 0) return [];
 
   const totalDistance = cumulativeDistance;
-  const targetPercentages = [0.25, 0.5, 0.75];
+
+  // Scale waypoint count based on route length
+  // < 3 mi (5km): 1 waypoint
+  // 3-12 mi (5-20km): 2 waypoints
+  // 12-40 mi (20-65km): 3 waypoints
+  // > 40 mi (65km): 4 waypoints
+  let targetPercentages;
+  if (totalDistance < 5000) {
+    targetPercentages = [0.5];
+  } else if (totalDistance < 20000) {
+    targetPercentages = [0.33, 0.66];
+  } else if (totalDistance < 65000) {
+    targetPercentages = [0.25, 0.5, 0.75];
+  } else {
+    targetPercentages = [0.2, 0.4, 0.6, 0.8];
+  }
+
   const waypoints = [];
 
   for (const pct of targetPercentages) {
