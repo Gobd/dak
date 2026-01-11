@@ -222,3 +222,13 @@ declare module 'lucide-react-native/dist/esm/icons/eye-off' {
   const EyeOff: LucideIcon;
   export default EyeOff;
 }
+
+declare module 'lucide-react-native/dist/esm/icons/heading' {
+  const Heading: LucideIcon;
+  export default Heading;
+}
+
+declare module 'lucide-react-native/dist/esm/icons/list-x' {
+  const ListX: LucideIcon;
+  export default ListX;
+}
