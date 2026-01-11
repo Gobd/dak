@@ -175,6 +175,23 @@ async function fetchPlacesAutocomplete(input) {
   }
 }
 
+async function fetchMapEmbedUrl(origin, destination, via = []) {
+  try {
+    const response = await fetch(`${API_BASE}/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin, destination, via }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.embedUrl;
+  } catch {
+    return null;
+  }
+}
+
 function getTrafficColor(durationMinutes, normalMinutes) {
   const ratio = durationMinutes / normalMinutes;
   if (ratio <= 1.1) return '#4ade80';
@@ -557,6 +574,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
 
         <div class="drive-time-setup-actions">
           <button class="dt-btn dt-cancel">Cancel</button>
+          <button class="dt-btn dt-preview">Preview Route</button>
           <button class="dt-btn dt-save">Save</button>
         </div>
       </div>
@@ -645,6 +663,43 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
 
+  // Preview button - shows map with current route
+  container.querySelector('.dt-preview').addEventListener('click', () => {
+    const originSelect = container.querySelector('.dt-origin-select');
+    const destSelect = container.querySelector('.dt-dest-select');
+    const currentLocations = getLocations();
+
+    let originAddress = '';
+    let destAddress = '';
+
+    // Get origin address
+    if (originSelect.value === '__new__') {
+      originAddress = container.querySelector('.dt-new-origin .dt-new-location-address').value.trim();
+    } else if (originSelect.value) {
+      originAddress = currentLocations[originSelect.value];
+    }
+
+    // Get destination address
+    if (destSelect.value === '__new__') {
+      destAddress = container.querySelector('.dt-new-dest .dt-new-location-address').value.trim();
+    } else if (destSelect.value) {
+      destAddress = currentLocations[destSelect.value];
+    }
+
+    if (!originAddress || !destAddress) {
+      showAlertModal(container, dark, 'Please select or enter both origin and destination to preview the route.');
+      return;
+    }
+
+    // Get via points
+    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
+    const via = Array.from(viaInputs)
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+
+    showMapPreviewModal(container, dark, originAddress, destAddress, via);
+  });
+
   // Save button
   container.querySelector('.dt-save').addEventListener('click', () => {
     const originSelect = container.querySelector('.dt-origin-select');
@@ -719,6 +774,56 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     };
 
     onSave(newRoute);
+  });
+}
+
+// Map preview modal - shows embedded Google Maps for route verification
+function showMapPreviewModal(container, dark, origin, destination, via = []) {
+  const darkClass = dark ? 'dark' : '';
+  const modalId = 'dt-map-preview-modal';
+
+  const existing = container.querySelector(`#${modalId}`);
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = modalId;
+  modal.className = `drive-time-overlay ${darkClass} setup dt-map-modal`;
+  modal.innerHTML = `
+    <div class="drive-time-setup dt-map-preview">
+      <div class="drive-time-setup-title">Route Preview</div>
+      <div class="dt-map-container">
+        <div class="dt-map-loading">Loading map...</div>
+      </div>
+      <div class="drive-time-setup-actions">
+        <button class="dt-btn dt-save">Close</button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(modal);
+
+  const mapContainer = modal.querySelector('.dt-map-container');
+
+  // Fetch embed URL and load iframe
+  fetchMapEmbedUrl(origin, destination, via).then((embedUrl) => {
+    if (embedUrl) {
+      mapContainer.innerHTML = `
+        <iframe
+          class="dt-map-iframe"
+          src="${embedUrl}"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      `;
+    } else {
+      mapContainer.innerHTML = `<div class="dt-map-error">Failed to load map preview</div>`;
+    }
+  });
+
+  modal.querySelector('.dt-save').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
   });
 }
 
