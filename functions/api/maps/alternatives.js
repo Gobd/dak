@@ -18,52 +18,50 @@ function getCorsHeaders(request) {
   };
 }
 
-// Extract key waypoints from a route's steps
-// Picks major roads/highways to use as via points for locking in this route
-function extractKeyWaypoints(route) {
-  const waypoints = [];
-  const seenRoads = new Set();
+// Extract waypoint coordinates at 25%, 50%, and 75% along the route
+// Uses actual lat/lng for reliable route locking instead of fragile road name parsing
+function extractWaypointCoords(route) {
+  // Collect all step end locations with cumulative distance
+  const points = [];
+  let cumulativeDistance = 0;
 
   for (const leg of route.legs) {
     for (const step of leg.steps) {
-      // Look for highway/major road references in the instructions
-      const instruction = step.html_instructions || '';
-
-      // Extract road names from instructions like "Merge onto I-15 S" or "Take Highland Dr"
-      const roadPatterns = [
-        /(?:onto|on|via|Take)\s+([A-Z]+-\d+[A-Z]?\s*[NSEW]?)/gi, // Highways like I-15 S, US-101
-        /(?:onto|on|via|Take)\s+((?:State Route|SR|CA|US)\s*\d+)/gi, // State routes
-        /(?:onto|on|via|Take)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Dr|Rd|Ave|Blvd|Hwy|St|Fwy|Pkwy|Way))/gi, // Named roads
-      ];
-
-      for (const pattern of roadPatterns) {
-        const matches = instruction.matchAll(pattern);
-        for (const match of matches) {
-          const road = match[1].trim();
-          if (!seenRoads.has(road.toLowerCase())) {
-            seenRoads.add(road.toLowerCase());
-            // Use the step's end location as the waypoint
-            waypoints.push({
-              name: road,
-              location: step.end_location,
-            });
-          }
-        }
-      }
+      cumulativeDistance += step.distance.value;
+      points.push({
+        location: step.end_location,
+        distance: cumulativeDistance,
+      });
     }
   }
 
-  // Return up to 3 key waypoints to avoid over-constraining
-  // Prefer highways/interstates, then major roads
-  const prioritized = waypoints.sort((a, b) => {
-    const aIsHighway = /^[A-Z]+-\d+|^(?:I|US|SR|CA)-?\d+/i.test(a.name);
-    const bIsHighway = /^[A-Z]+-\d+|^(?:I|US|SR|CA)-?\d+/i.test(b.name);
-    if (aIsHighway && !bIsHighway) return -1;
-    if (!aIsHighway && bIsHighway) return 1;
-    return 0;
-  });
+  if (points.length === 0) return [];
 
-  return prioritized.slice(0, 3);
+  const totalDistance = cumulativeDistance;
+  const targetPercentages = [0.25, 0.5, 0.75];
+  const waypoints = [];
+
+  for (const pct of targetPercentages) {
+    const targetDistance = totalDistance * pct;
+    // Find the point closest to this percentage
+    let closest = points[0];
+    let closestDiff = Math.abs(points[0].distance - targetDistance);
+
+    for (const point of points) {
+      const diff = Math.abs(point.distance - targetDistance);
+      if (diff < closestDiff) {
+        closest = point;
+        closestDiff = diff;
+      }
+    }
+
+    waypoints.push({
+      lat: closest.location.lat,
+      lng: closest.location.lng,
+    });
+  }
+
+  return waypoints;
 }
 
 export async function onRequestPost(context) {
@@ -133,8 +131,8 @@ export async function onRequestPost(context) {
         totalDistance += leg.distance.value;
       }
 
-      // Extract waypoints that can be used to lock in this route
-      const keyWaypoints = extractKeyWaypoints(route);
+      // Extract lat/lng waypoints at 25%, 50%, 75% of route for reliable locking
+      const waypointCoords = extractWaypointCoords(route);
 
       return {
         index,
@@ -144,8 +142,10 @@ export async function onRequestPost(context) {
         durationInTraffic: formatDuration(totalDurationInTraffic),
         durationInTrafficValue: totalDurationInTraffic,
         distance: formatDistance(totalDistance),
-        // Waypoints to use as "via" to lock in this route
-        viaPoints: keyWaypoints.map((wp) => wp.name),
+        // Lat/lng coordinates to lock in this specific route
+        waypointCoords,
+        // Keep viaPoints empty for backwards compat, coords are the real data now
+        viaPoints: [],
       };
     });
 

@@ -222,6 +222,15 @@ function getTrafficColor(durationMinutes, normalMinutes) {
   return '#ef4444';
 }
 
+// Detect if Google returned a different route than expected (e.g., road closure)
+function detectRouteMismatch(route, driveData) {
+  if (!route.viaLabel || !driveData.summary) return false;
+  // Normalize and compare - if Google's summary doesn't contain our expected route, it's a mismatch
+  const expected = route.viaLabel.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const actual = driveData.summary.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return !actual.includes(expected) && !expected.includes(actual);
+}
+
 function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
   const darkClass = dark ? 'dark' : '';
   const durationMinutes = Math.round(driveData.durationInTrafficValue / 60);
@@ -245,6 +254,12 @@ function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
     warningText = `${multiplier.toFixed(1)}x normal - Moderate delays`;
   }
 
+  // Detect if Google used a different route than expected
+  const routeMismatch = detectRouteMismatch(route, driveData);
+  const mismatchWarning = routeMismatch
+    ? `Your usual route (${route.viaLabel}) may be blocked - using ${driveData.summary}`
+    : '';
+
   // Show route summary from Directions API (e.g., "via Highland Dr") to confirm via worked
   const routeSummary = driveData.summary ? `via ${driveData.summary}` : '';
 
@@ -257,8 +272,9 @@ function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
           <div class="drive-time-duration" style="color: ${trafficColor}">${driveData.durationInTraffic}</div>
           <div class="drive-time-detail">${delayText}</div>
           ${warningText ? `<div class="drive-time-${severityClass}-text">${warningText}</div>` : ''}
+          ${mismatchWarning ? `<div class="drive-time-route-blocked">${mismatchWarning}</div>` : ''}
           ${route.label ? `<div class="drive-time-label">${route.label}</div>` : ''}
-          ${routeSummary ? `<div class="drive-time-summary">${routeSummary}</div>` : ''}
+          ${routeSummary && !routeMismatch ? `<div class="drive-time-summary">${routeSummary}</div>` : ''}
         </div>
       </div>
     </div>
@@ -301,12 +317,13 @@ function renderMultiRouteOverlay(container, routeDataList, dark, onDismissAll, o
       const delayText = delayMinutes > 0 ? `+${delayMinutes}` : '';
       const label = route.label || `${route.origin} → ${route.destination}`;
       const routeSummary = driveData.summary || '';
+      const mismatch = detectRouteMismatch(route, driveData);
 
       return `
-        <div class="drive-time-route-row">
+        <div class="drive-time-route-row${mismatch ? ' route-blocked' : ''}">
           <div class="drive-time-route-info">
             <span class="drive-time-route-label">${label}</span>
-            ${routeSummary ? `<span class="drive-time-route-summary">via ${routeSummary}</span>` : ''}
+            ${mismatch ? `<span class="drive-time-route-blocked-hint">Route blocked - using ${routeSummary}</span>` : routeSummary ? `<span class="drive-time-route-summary">via ${routeSummary}</span>` : ''}
           </div>
           <span class="drive-time-route-time" style="color: ${trafficColor}">${driveData.durationInTraffic}</span>
           ${delayText ? `<span class="drive-time-route-delay">${delayText}</span>` : ''}
@@ -565,7 +582,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
           <span class="dt-section-label">Preferred Route (optional)</span>
           <p class="dt-field-hint">Skip this to use Google's fastest route, or pick your usual route to see its traffic</p>
           <div class="dt-route-choice">
-            <span class="dt-selected-route">${route.via?.length ? `via ${route.via.join(' → ')}` : 'Using fastest route'}</span>
+            <span class="dt-selected-route">${route.viaLabel ? `via ${route.viaLabel}` : route.via?.length ? (typeof route.via[0] === 'string' ? `via ${route.via.join(' → ')}` : `${route.via.length} waypoints locked`) : 'Using fastest route'}</span>
             <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
             ${route.via?.length ? '<button type="button" class="dt-btn dt-preview-selected">Preview</button>' : ''}
             ${route.via?.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
@@ -657,14 +674,25 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   setupLocationSelect('.dt-origin-select', '.dt-new-origin');
   setupLocationSelect('.dt-dest-select', '.dt-new-dest');
 
-  // Track selected via points
+  // Track selected via points (coords) and label (for display)
   let selectedVia = route.via || [];
+  let selectedViaLabel = route.viaLabel || '';
+
+  // Helper to get display text for via
+  function getViaDisplayText() {
+    if (selectedViaLabel) return `via ${selectedViaLabel}`;
+    if (selectedVia.length === 0) return 'Using fastest route';
+    // Legacy: if via contains strings, join them
+    if (typeof selectedVia[0] === 'string') return `via ${selectedVia.join(' → ')}`;
+    // Coords: show count
+    return `${selectedVia.length} waypoints locked`;
+  }
 
   // Update the route choice display
   function updateRouteDisplay() {
     const routeChoice = container.querySelector('.dt-route-choice');
     routeChoice.innerHTML = `
-      <span class="dt-selected-route">${selectedVia.length ? `via ${selectedVia.join(' → ')}` : 'Using fastest route'}</span>
+      <span class="dt-selected-route">${getViaDisplayText()}</span>
       <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
       ${selectedVia.length ? '<button type="button" class="dt-btn dt-preview-selected">Preview</button>' : ''}
       ${selectedVia.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
@@ -709,6 +737,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         selectedVia = [];
+        selectedViaLabel = '';
         updateRouteDisplay();
       });
     }
@@ -742,9 +771,10 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       return;
     }
 
-    showRoutePickerModal(container, dark, originAddress, destAddress, (viaPoints, summary) => {
-      // Use viaPoints if available, otherwise fall back to summary as a single via point
-      selectedVia = viaPoints.length > 0 ? viaPoints : summary ? [summary] : [];
+    showRoutePickerModal(container, dark, originAddress, destAddress, (waypointCoords, summary) => {
+      // Store coords for API routing, summary for display
+      selectedVia = waypointCoords;
+      selectedViaLabel = summary || '';
       updateRouteDisplay();
     });
   }
@@ -892,6 +922,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       origin,
       destination,
       via: selectedVia,
+      viaLabel: selectedViaLabel,
       days: Array.from(selectedDays),
       startTime,
       endTime,
@@ -998,7 +1029,7 @@ function showRoutePickerModal(container, dark, origin, destination, onSelectRout
         <div class="dt-alternative-item" data-index="${i}">
           <div class="dt-alt-summary">
             <span class="dt-alt-name">${route.summary}</span>
-            ${route.viaPoints.length ? `<span class="dt-alt-via-hint">via ${route.viaPoints.slice(0, 2).join(', ')}</span>` : ''}
+            ${route.waypointCoords?.length ? `<span class="dt-alt-via-hint">${route.waypointCoords.length} waypoints locked</span>` : ''}
           </div>
           <div class="dt-alt-details">
             <span class="dt-alt-time">${route.durationInTraffic}</span>
@@ -1011,13 +1042,14 @@ function showRoutePickerModal(container, dark, origin, destination, onSelectRout
       .join('');
     listEl.style.display = 'block';
 
-    // Handle route selection
+    // Handle route selection - pass coords for routing, summary for display
     listEl.querySelectorAll('.dt-select-route').forEach((btn) => {
       btn.addEventListener('click', () => {
         const index = parseInt(btn.dataset.index, 10);
         const selectedRoute = routes[index];
         modal.remove();
-        onSelectRoute(selectedRoute.viaPoints, selectedRoute.summary);
+        // Pass waypointCoords (for API) and summary (for display)
+        onSelectRoute(selectedRoute.waypointCoords || [], selectedRoute.summary);
       });
     });
   });
@@ -1110,7 +1142,7 @@ function renderRouteManager(container, dark, onDone) {
                 <div class="dt-route-item" data-index="${i}">
                   <div class="dt-route-item-info">
                     <div class="dt-route-item-path">${r.origin} &rarr; ${r.destination}</div>
-                    ${r.via?.length ? `<div class="dt-route-item-via">via ${r.via.join(' → ')}</div>` : ''}
+                    ${r.viaLabel ? `<div class="dt-route-item-via">via ${r.viaLabel}</div>` : r.via?.length ? `<div class="dt-route-item-via">${typeof r.via[0] === 'string' ? `via ${r.via.join(' → ')}` : `${r.via.length} waypoints`}</div>` : ''}
                     <div class="dt-route-item-schedule">${r.days?.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ') || 'daily'} ${formatTime12h(r.startTime || '6:00')}&ndash;${formatTime12h(r.endTime || '8:00')}</div>
                     ${r.label ? `<div class="dt-route-item-label">${r.label}</div>` : ''}
                     ${r.minTimeToShow ? `<div class="dt-route-item-min">Show if &gt; ${r.minTimeToShow} min</div>` : ''}
@@ -1536,8 +1568,11 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
       const routeDataResults = await Promise.all(routeDataPromises);
 
       // Filter out routes that failed to fetch or don't meet minTimeToShow
+      // Exception: always show if route mismatch detected (usual route may be blocked)
       const validRouteData = routeDataResults.filter(({ route, driveData }) => {
         if (!driveData) return false;
+        // Always show if there's a route mismatch (blocked road, etc.)
+        if (detectRouteMismatch(route, driveData)) return true;
         const minTimeMinutes = route.minTimeToShow || 0;
         const durationMinutes = Math.round(driveData.durationInTrafficValue / 60);
         return minTimeMinutes === 0 || durationMinutes >= minTimeMinutes;
