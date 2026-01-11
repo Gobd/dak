@@ -31,7 +31,7 @@ let weeksToShow = 4; // Configurable number of weeks
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday (default Monday)
 let isDarkMode = true; // Controlled by dashboard config
 let showTime = false; // Show clock in header
-let timeFormat = 24; // 12 or 24 hour format
+let timeFormat = 12; // Always 12-hour format with AM/PM
 let showSeconds = false; // Show seconds in clock
 let timeIntervalId = null; // Interval for updating clock
 
@@ -236,13 +236,13 @@ function formatTimeRange(startDateTime, endDateTime) {
   return `${startStr}-${endStr}`;
 }
 
-// Format current time for clock display
+// Format current time for clock display (12-hour with AM/PM)
 function formatCurrentTime() {
   const now = new Date();
   const opts = {
-    hour: timeFormat === 12 ? 'numeric' : '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: timeFormat === 12,
+    hour12: true,
   };
   if (showSeconds) {
     opts.second = '2-digit';
@@ -1459,14 +1459,9 @@ async function renderCalendarWidget(
     weeksToShow = 4; // Default 4 weeks
   }
 
-  // Time display options
+  // Time display options (always 12-hour format with AM/PM)
   showTime = panel.args?.showTime === true;
   showSeconds = panel.args?.showSeconds === true;
-  if (panel.args?.timeFormat === 12 || panel.args?.timeFormat === '12') {
-    timeFormat = 12;
-  } else {
-    timeFormat = 24; // Default to 24-hour
-  }
 
   // Clear any existing clock interval
   if (timeIntervalId) {
