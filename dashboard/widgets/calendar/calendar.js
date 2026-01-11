@@ -31,7 +31,6 @@ let weeksToShow = 4; // Configurable number of weeks
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday (default Monday)
 let isDarkMode = true; // Controlled by dashboard config
 let showTime = false; // Show clock in header
-let timeFormat = 12; // Always 12-hour format with AM/PM
 let showSeconds = false; // Show seconds in clock
 let timeIntervalId = null; // Interval for updating clock
 
