@@ -567,6 +567,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
           <div class="dt-route-choice">
             <span class="dt-selected-route">${route.via?.length ? `via ${route.via.join(' → ')}` : 'Using fastest route'}</span>
             <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
+            ${route.via?.length ? '<button type="button" class="dt-btn dt-preview-selected">Preview</button>' : ''}
             ${route.via?.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
           </div>
         </div>
@@ -665,11 +666,45 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     routeChoice.innerHTML = `
       <span class="dt-selected-route">${selectedVia.length ? `via ${selectedVia.join(' → ')}` : 'Using fastest route'}</span>
       <button type="button" class="dt-btn dt-choose-route">Choose Route</button>
+      ${selectedVia.length ? '<button type="button" class="dt-btn dt-preview-selected">Preview</button>' : ''}
       ${selectedVia.length ? '<button type="button" class="dt-btn dt-clear-route">Clear</button>' : ''}
     `;
 
     // Re-attach event listeners
     routeChoice.querySelector('.dt-choose-route').addEventListener('click', handleChooseRoute);
+
+    const previewBtn = routeChoice.querySelector('.dt-preview-selected');
+    if (previewBtn) {
+      previewBtn.addEventListener('click', () => {
+        const originSelect = container.querySelector('.dt-origin-select');
+        const destSelect = container.querySelector('.dt-dest-select');
+        const currentLocations = getLocations();
+
+        let originAddress = '';
+        let destAddress = '';
+
+        if (originSelect.value === '__new__') {
+          originAddress = container
+            .querySelector('.dt-new-origin .dt-new-location-address')
+            .value.trim();
+        } else if (originSelect.value) {
+          originAddress = currentLocations[originSelect.value];
+        }
+
+        if (destSelect.value === '__new__') {
+          destAddress = container
+            .querySelector('.dt-new-dest .dt-new-location-address')
+            .value.trim();
+        } else if (destSelect.value) {
+          destAddress = currentLocations[destSelect.value];
+        }
+
+        if (originAddress && destAddress) {
+          showMapPreviewModal(container, dark, originAddress, destAddress, selectedVia);
+        }
+      });
+    }
+
     const clearBtn = routeChoice.querySelector('.dt-clear-route');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
@@ -707,14 +742,46 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       return;
     }
 
-    showRoutePickerModal(container, dark, originAddress, destAddress, (viaPoints) => {
-      selectedVia = viaPoints;
+    showRoutePickerModal(container, dark, originAddress, destAddress, (viaPoints, summary) => {
+      // Use viaPoints if available, otherwise fall back to summary as a single via point
+      selectedVia = viaPoints.length > 0 ? viaPoints : summary ? [summary] : [];
       updateRouteDisplay();
     });
   }
 
-  // Initial event listener for choose route button
+  // Initial event listeners for route choice buttons
   container.querySelector('.dt-choose-route').addEventListener('click', handleChooseRoute);
+
+  const initialPreviewBtn = container.querySelector('.dt-preview-selected');
+  if (initialPreviewBtn) {
+    initialPreviewBtn.addEventListener('click', () => {
+      const originSelect = container.querySelector('.dt-origin-select');
+      const destSelect = container.querySelector('.dt-dest-select');
+      const currentLocations = getLocations();
+
+      let originAddress = '';
+      let destAddress = '';
+
+      if (originSelect.value === '__new__') {
+        originAddress = container
+          .querySelector('.dt-new-origin .dt-new-location-address')
+          .value.trim();
+      } else if (originSelect.value) {
+        originAddress = currentLocations[originSelect.value];
+      }
+
+      if (destSelect.value === '__new__') {
+        destAddress = container.querySelector('.dt-new-dest .dt-new-location-address').value.trim();
+      } else if (destSelect.value) {
+        destAddress = currentLocations[destSelect.value];
+      }
+
+      if (originAddress && destAddress) {
+        showMapPreviewModal(container, dark, originAddress, destAddress, selectedVia);
+      }
+    });
+  }
+
   const clearBtn = container.querySelector('.dt-clear-route');
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
