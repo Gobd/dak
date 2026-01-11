@@ -267,7 +267,7 @@ export function Shots() {
                     <div className="font-bold text-lg">
                       {format(
                         new Date(schedule.next_due + "T00:00:00"),
-                        "MMM d",
+                        "EEE, MMM d",
                       )}
                     </div>
                   </div>
