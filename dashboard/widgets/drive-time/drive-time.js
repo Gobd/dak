@@ -684,13 +684,17 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
         let destAddress = '';
 
         if (originSelect.value === '__new__') {
-          originAddress = container.querySelector('.dt-new-origin .dt-new-location-address').value.trim();
+          originAddress = container
+            .querySelector('.dt-new-origin .dt-new-location-address')
+            .value.trim();
         } else if (originSelect.value) {
           originAddress = currentLocations[originSelect.value];
         }
 
         if (destSelect.value === '__new__') {
-          destAddress = container.querySelector('.dt-new-dest .dt-new-location-address').value.trim();
+          destAddress = container
+            .querySelector('.dt-new-dest .dt-new-location-address')
+            .value.trim();
         } else if (destSelect.value) {
           destAddress = currentLocations[destSelect.value];
         }
@@ -759,7 +763,9 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
       let destAddress = '';
 
       if (originSelect.value === '__new__') {
-        originAddress = container.querySelector('.dt-new-origin .dt-new-location-address').value.trim();
+        originAddress = container
+          .querySelector('.dt-new-origin .dt-new-location-address')
+          .value.trim();
       } else if (originSelect.value) {
         originAddress = currentLocations[originSelect.value];
       }
