@@ -1,0 +1,138 @@
+/* Sun/Moon Widget */
+
+.sun-moon-widget {
+  --sm-bg: #ffffff;
+  --sm-surface: #f3f4f6;
+  --sm-border: #e5e7eb;
+  --sm-text: #1f2937;
+  --sm-text-muted: #6b7280;
+  --sm-growing: #4ade80;
+  --sm-shrinking: #f97316;
+
+  width: 100%;
+  height: 100%;
+  background: var(--sm-bg);
+  color: var(--sm-text);
+  font-family: 'Open Sans', system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.sun-moon-widget.dark {
+  --sm-bg: #000;
+  --sm-surface: #262626;
+  --sm-border: #374151;
+  --sm-text: #f9fafb;
+  --sm-text-muted: #d1d5db;
+}
+
+/* Sun section */
+.sun-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sun-times {
+  display: flex;
+  gap: 10px;
+}
+
+.sun-item {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sun-icon {
+  font-size: 10px;
+  color: #f59e0b;
+}
+
+.sun-icon.dawn-icon,
+.sun-icon.dusk-icon {
+  color: #8b5cf6;
+}
+
+.day-length {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.length-value {
+  color: var(--sm-text-muted);
+}
+
+.length-change {
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+}
+
+.length-change.growing {
+  color: var(--sm-growing);
+  background: color-mix(in srgb, var(--sm-growing) 15%, transparent);
+}
+
+.length-change.shrinking {
+  color: var(--sm-shrinking);
+  background: color-mix(in srgb, var(--sm-shrinking) 15%, transparent);
+}
+
+/* Moon section */
+.moon-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.moon-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.moon-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.moon-phase {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.moon-full {
+  font-size: 9px;
+  color: var(--sm-text-muted);
+}
+
+/* Loading/Error states */
+.sun-moon-loading,
+.sun-moon-error {
+  justify-content: center;
+}
+
+.sun-moon-widget .loading-message,
+.sun-moon-widget .error-message {
+  font-size: 11px;
+  color: var(--sm-text-muted);
+}
+
+.sun-moon-error {
+  background: color-mix(in srgb, #ef4444 10%, var(--sm-bg));
+}
+
+.sun-moon-widget.sun-moon-error .error-message {
+  color: #ef4444;
+}
