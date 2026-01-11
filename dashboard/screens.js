@@ -92,6 +92,9 @@ export default {
         },
         {
           type: 'calendar',
+          args: {
+            showTime: true,
+          },
           x: '30%',
           y: '0%',
           w: '70%',

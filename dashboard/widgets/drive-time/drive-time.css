@@ -272,7 +272,8 @@
 
 .dt-btn.dt-add-route,
 .dt-btn.dt-manage-locations,
-.dt-btn.dt-show-now {
+.dt-btn.dt-show-now,
+.dt-btn.dt-add-location {
   background: transparent;
   border: 1px solid var(--dt-border);
   color: var(--dt-text);
@@ -280,7 +281,8 @@
 
 .dt-btn.dt-add-route:hover,
 .dt-btn.dt-manage-locations:hover,
-.dt-btn.dt-show-now:hover {
+.dt-btn.dt-show-now:hover,
+.dt-btn.dt-add-location:hover {
   background: var(--dt-border);
 }
 
@@ -746,7 +748,6 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--dt-text);
-  text-transform: capitalize;
 }
 
 .dt-location-name-input {
@@ -797,7 +798,6 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--dt-text);
-  text-transform: capitalize;
 }
 
 .dt-location-delete {
@@ -949,4 +949,54 @@
   color: var(--dt-text-muted);
   font-style: italic;
   opacity: 0.8;
+}
+
+/* Map preview modal */
+.dt-map-modal {
+  z-index: 200;
+}
+
+.dt-map-preview {
+  width: 100%;
+}
+
+.dt-map-container {
+  width: 100%;
+  height: 400px;
+  background: var(--dt-border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-map-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.dt-map-loading {
+  font-size: 14px;
+  color: var(--dt-text-muted);
+}
+
+.dt-map-error {
+  font-size: 14px;
+  color: #ef4444;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Preview button styling */
+.dt-btn.dt-preview {
+  background: transparent;
+  border: 1px solid var(--dt-accent);
+  color: var(--dt-accent);
+}
+
+.dt-btn.dt-preview:hover {
+  background: var(--dt-accent);
+  color: white;
 }

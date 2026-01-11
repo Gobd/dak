@@ -97,6 +97,15 @@ span.cal-title {
   color: #fff;
 }
 
+/* Clock display in header */
+.calendar-clock {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cal-text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
 /* Calendar Legend */
 .calendar-legend {
   display: flex;

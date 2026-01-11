@@ -175,6 +175,23 @@ async function fetchPlacesAutocomplete(input) {
   }
 }
 
+async function fetchMapEmbedUrl(origin, destination, via = []) {
+  try {
+    const response = await fetch(`${API_BASE}/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin, destination, via }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.embedUrl;
+  } catch {
+    return null;
+  }
+}
+
 function getTrafficColor(durationMinutes, normalMinutes) {
   const ratio = durationMinutes / normalMinutes;
   if (ratio <= 1.1) return '#4ade80';
@@ -557,6 +574,7 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
 
         <div class="drive-time-setup-actions">
           <button class="dt-btn dt-cancel">Cancel</button>
+          <button class="dt-btn dt-preview">Preview Route</button>
           <button class="dt-btn dt-save">Save</button>
         </div>
       </div>
@@ -645,6 +663,49 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
   // Cancel button
   container.querySelector('.dt-cancel').addEventListener('click', onCancel);
 
+  // Preview button - shows map with current route
+  container.querySelector('.dt-preview').addEventListener('click', () => {
+    const originSelect = container.querySelector('.dt-origin-select');
+    const destSelect = container.querySelector('.dt-dest-select');
+    const currentLocations = getLocations();
+
+    let originAddress = '';
+    let destAddress = '';
+
+    // Get origin address
+    if (originSelect.value === '__new__') {
+      originAddress = container
+        .querySelector('.dt-new-origin .dt-new-location-address')
+        .value.trim();
+    } else if (originSelect.value) {
+      originAddress = currentLocations[originSelect.value];
+    }
+
+    // Get destination address
+    if (destSelect.value === '__new__') {
+      destAddress = container.querySelector('.dt-new-dest .dt-new-location-address').value.trim();
+    } else if (destSelect.value) {
+      destAddress = currentLocations[destSelect.value];
+    }
+
+    if (!originAddress || !destAddress) {
+      showAlertModal(
+        container,
+        dark,
+        'Please select or enter both origin and destination to preview the route.'
+      );
+      return;
+    }
+
+    // Get via points
+    const viaInputs = container.querySelectorAll('.dt-via-list .dt-via-input');
+    const via = Array.from(viaInputs)
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+
+    showMapPreviewModal(container, dark, originAddress, destAddress, via);
+  });
+
   // Save button
   container.querySelector('.dt-save').addEventListener('click', () => {
     const originSelect = container.querySelector('.dt-origin-select');
@@ -719,6 +780,56 @@ function renderRouteForm(container, dark, existingRoute, onSave, onCancel) {
     };
 
     onSave(newRoute);
+  });
+}
+
+// Map preview modal - shows embedded Google Maps for route verification
+function showMapPreviewModal(container, dark, origin, destination, via = []) {
+  const darkClass = dark ? 'dark' : '';
+  const modalId = 'dt-map-preview-modal';
+
+  const existing = container.querySelector(`#${modalId}`);
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = modalId;
+  modal.className = `drive-time-overlay ${darkClass} setup dt-map-modal`;
+  modal.innerHTML = `
+    <div class="drive-time-setup dt-map-preview">
+      <div class="drive-time-setup-title">Route Preview</div>
+      <div class="dt-map-container">
+        <div class="dt-map-loading">Loading map...</div>
+      </div>
+      <div class="drive-time-setup-actions">
+        <button class="dt-btn dt-save">Close</button>
+      </div>
+    </div>
+  `;
+
+  container.appendChild(modal);
+
+  const mapContainer = modal.querySelector('.dt-map-container');
+
+  // Fetch embed URL and load iframe
+  fetchMapEmbedUrl(origin, destination, via).then((embedUrl) => {
+    if (embedUrl) {
+      mapContainer.innerHTML = `
+        <iframe
+          class="dt-map-iframe"
+          src="${embedUrl}"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      `;
+    } else {
+      mapContainer.innerHTML = `<div class="dt-map-error">Failed to load map preview</div>`;
+    }
+  });
+
+  modal.querySelector('.dt-save').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
   });
 }
 
@@ -916,7 +1027,7 @@ function renderLocationEditor(container, dark, onBack) {
         <div class="dt-locations-list">
           ${
             locationKeys.length === 0
-              ? '<p class="dt-no-locations">No locations saved yet. Add locations when creating routes.</p>'
+              ? '<p class="dt-no-locations">No locations saved yet.</p>'
               : locationKeys
                   .map(
                     (key) => `
@@ -940,6 +1051,8 @@ function renderLocationEditor(container, dark, onBack) {
           }
         </div>
 
+        <button class="dt-btn dt-add-location">+ Add Location</button>
+
         <div class="drive-time-setup-actions">
           <button class="dt-btn dt-back">&larr; Back</button>
           <button class="dt-btn dt-save">Save</button>
@@ -947,6 +1060,103 @@ function renderLocationEditor(container, dark, onBack) {
       </div>
     </div>
   `;
+
+  const locationsList = container.querySelector('.dt-locations-list');
+
+  function addLocationItem(key = '', address = '') {
+    const item = document.createElement('div');
+    item.className = 'dt-location-item';
+    item.dataset.originalKey = key;
+    item.dataset.currentKey = key;
+    item.innerHTML = `
+      <div class="dt-location-header">
+        <span class="dt-location-name-display" style="${key ? '' : 'display: none;'}">${key}</span>
+        <input type="text" class="dt-location-name-input" value="${key}" style="${key ? 'display: none;' : ''}" placeholder="Location name (e.g. home)">
+        <button class="dt-location-edit-name" title="Rename" style="${key ? '' : 'display: none;'}">&#9998;</button>
+        <button class="dt-location-save-name" title="Save name" style="${key ? 'display: none;' : ''}">&#10003;</button>
+        <button class="dt-location-delete" title="Delete">&times;</button>
+      </div>
+      <div class="dt-address-wrap">
+        <input type="text" class="dt-address-input"
+               value="${address}"
+               placeholder="Start typing address...">
+      </div>
+    `;
+
+    // Remove the "no locations" message if present
+    const noLocationsMsg = locationsList.querySelector('.dt-no-locations');
+    if (noLocationsMsg) noLocationsMsg.remove();
+
+    locationsList.appendChild(item);
+
+    const addressInput = item.querySelector('.dt-address-input');
+    setupAddressAutocomplete(addressInput);
+
+    // Edit name button
+    const editBtn = item.querySelector('.dt-location-edit-name');
+    editBtn.addEventListener('click', () => {
+      item.querySelector('.dt-location-name-display').style.display = 'none';
+      item.querySelector('.dt-location-edit-name').style.display = 'none';
+      item.querySelector('.dt-location-name-input').style.display = 'block';
+      item.querySelector('.dt-location-save-name').style.display = 'block';
+      item.querySelector('.dt-location-name-input').focus();
+    });
+
+    // Save name button
+    const saveBtn = item.querySelector('.dt-location-save-name');
+    saveBtn.addEventListener('click', () => {
+      const input = item.querySelector('.dt-location-name-input');
+      const display = item.querySelector('.dt-location-name-display');
+      const newName = input.value.trim();
+
+      if (newName) {
+        display.textContent = newName;
+        item.dataset.currentKey = newName;
+      }
+
+      display.style.display = 'block';
+      item.querySelector('.dt-location-edit-name').style.display = 'block';
+      input.style.display = 'none';
+      saveBtn.style.display = 'none';
+    });
+
+    // Delete button
+    const deleteBtn = item.querySelector('.dt-location-delete');
+    deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentKey = item.dataset.currentKey;
+      if (!currentKey) {
+        // New unsaved location, just remove the element
+        item.remove();
+        return;
+      }
+      showConfirmModal(
+        container,
+        dark,
+        `Delete location "${currentKey}"? Routes using this location will need to be updated.`,
+        () => {
+          const originalKey = item.dataset.originalKey;
+          if (originalKey) {
+            delete locations[originalKey];
+            saveLocations(locations);
+          }
+          item.remove();
+        }
+      );
+    });
+
+    // Focus the name input if this is a new location
+    if (!key) {
+      item.querySelector('.dt-location-name-input').focus();
+    }
+
+    return item;
+  }
+
+  // Add Location button
+  container.querySelector('.dt-add-location').addEventListener('click', () => {
+    addLocationItem();
+  });
 
   // Setup autocomplete for each address input
   container.querySelectorAll('.dt-address-input').forEach((input) => {
@@ -1018,7 +1228,9 @@ function renderLocationEditor(container, dark, onBack) {
 
     container.querySelectorAll('.dt-location-item').forEach((item) => {
       const originalKey = item.dataset.originalKey;
-      const currentKey = item.dataset.currentKey;
+      // Use input value directly in case user didn't click the save name button
+      const nameInput = item.querySelector('.dt-location-name-input');
+      const currentKey = nameInput.value.trim() || item.dataset.currentKey;
       const address = item.querySelector('.dt-address-input').value.trim();
 
       if (currentKey && address) {

@@ -30,6 +30,9 @@ let gridStartDate = null; // Start date for grid view (most recent week start)
 let weeksToShow = 4; // Configurable number of weeks
 let weekStartsOn = 1; // 0 = Sunday, 1 = Monday (default Monday)
 let isDarkMode = true; // Controlled by dashboard config
+let showTime = false; // Show clock in header
+let showSeconds = false; // Show seconds in clock
+let timeIntervalId = null; // Interval for updating clock
 
 // Load hidden calendars from localStorage
 function loadHiddenCalendars() {
@@ -232,6 +235,28 @@ function formatTimeRange(startDateTime, endDateTime) {
   return `${startStr}-${endStr}`;
 }
 
+// Format current time for clock display (12-hour with AM/PM)
+function formatCurrentTime() {
+  const now = new Date();
+  const opts = {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  };
+  if (showSeconds) {
+    opts.second = '2-digit';
+  }
+  return now.toLocaleTimeString([], opts);
+}
+
+// Update the clock display
+function updateClockDisplay() {
+  const clockEl = currentContainer?.querySelector('.calendar-clock');
+  if (clockEl) {
+    clockEl.textContent = formatCurrentTime();
+  }
+}
+
 function isToday(date) {
   const today = new Date();
   return formatLocalDate(date) === formatLocalDate(today);
@@ -310,6 +335,7 @@ function renderMonthView(container) {
         <button class="cal-title" data-action="pick-date">${dateRange}</button>
         <button class="cal-nav-btn" data-action="next-week">›</button>
         <button class="cal-nav-btn cal-today-btn ${todayInView ? 'active' : ''}" data-action="today">Today</button>
+        ${showTime ? `<span class="calendar-clock">${formatCurrentTime()}</span>` : ''}
         <button class="cal-nav-btn" data-action="settings" title="Settings">⚙</button>
         <button class="cal-nav-btn" data-action="add">+</button>
       </div>
@@ -406,6 +432,7 @@ function renderListView(container) {
       <div class="calendar-header">
         <button class="cal-nav-btn cal-today-btn" data-action="today">Today</button>
         <span class="cal-title">Calendar</span>
+        ${showTime ? `<span class="calendar-clock">${formatCurrentTime()}</span>` : ''}
         <button class="cal-nav-btn" data-action="settings" title="Settings">⚙</button>
         <button class="cal-nav-btn" data-action="add">+</button>
       </div>
@@ -1429,6 +1456,24 @@ async function renderCalendarWidget(
     weeksToShow = panel.args.weeks;
   } else {
     weeksToShow = 4; // Default 4 weeks
+  }
+
+  // Time display options (always 12-hour format with AM/PM)
+  showTime = panel.args?.showTime === true;
+  showSeconds = panel.args?.showSeconds === true;
+
+  // Clear any existing clock interval
+  if (timeIntervalId) {
+    clearInterval(timeIntervalId);
+    timeIntervalId = null;
+  }
+
+  // Set up clock update interval if showing time
+  if (showTime) {
+    // Update every second if showing seconds, otherwise every minute
+    const updateInterval = showSeconds ? 1000 : 60000;
+    timeIntervalId = setInterval(updateClockDisplay, updateInterval);
+    refreshIntervals.push(timeIntervalId);
   }
 
   // Reset grid start date when widget is initialized
