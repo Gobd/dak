@@ -42,17 +42,9 @@ export async function onRequestPost(context) {
       mode: 'driving',
     });
 
-    // Add waypoints if provided (pipe-separated)
-    // via can be: strings (legacy), or objects with {lat, lng} coordinates
+    // Add waypoints if provided (pipe-separated coordinates)
     if (via && via.length) {
-      const waypoints = via
-        .map((v) => {
-          if (typeof v === 'object' && v.lat !== undefined && v.lng !== undefined) {
-            return `${v.lat},${v.lng}`;
-          }
-          return String(v);
-        })
-        .join('|');
+      const waypoints = via.map((v) => `${v.lat},${v.lng}`).join('|');
       params.set('waypoints', waypoints);
     }
 
