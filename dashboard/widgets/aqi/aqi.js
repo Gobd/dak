@@ -98,10 +98,13 @@ function renderAQIChart(container, aqiData, dark) {
     return;
   }
 
-  const currentAQI =
-    aqiData.current?.us_aqi || todayHours.find((h) => !h.isPast)?.aqi || tomorrowHours[0]?.aqi || 0;
-  const todayMax = todayHours.length ? Math.max(...todayHours.map((h) => h.aqi)) : 0;
-  const tomorrowMax = tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.aqi)) : 0;
+  const currentAQI = Math.round(
+    aqiData.current?.us_aqi || todayHours.find((h) => !h.isPast)?.aqi || tomorrowHours[0]?.aqi || 0
+  );
+  const todayMax = Math.round(todayHours.length ? Math.max(...todayHours.map((h) => h.aqi)) : 0);
+  const tomorrowMax = Math.round(
+    tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.aqi)) : 0
+  );
 
   const formatHour = (h) => {
     const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
