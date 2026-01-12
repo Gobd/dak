@@ -372,7 +372,7 @@ export function NoteEditor({
             <Pressable
               onPress={() => setShowHeadingDropdown(false)}
               style={{
-                position: 'fixed',
+                position: 'absolute',
                 top: 0,
                 left: 0,
                 right: 0,
