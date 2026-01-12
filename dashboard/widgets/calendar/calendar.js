@@ -1470,10 +1470,39 @@ async function renderCalendarWidget(
 
   // Set up clock update interval if showing time
   if (showTime) {
-    // Update every second if showing seconds, otherwise every minute
-    const updateInterval = showSeconds ? 1000 : 60000;
-    timeIntervalId = setInterval(updateClockDisplay, updateInterval);
-    refreshIntervals.push(timeIntervalId);
+    // Helper to sync clock to second boundary
+    const syncToSecond = () => {
+      const now = new Date();
+      const msUntilNextSecond = 1000 - now.getMilliseconds();
+      const syncTimeout = setTimeout(() => {
+        updateClockDisplay();
+        timeIntervalId = setInterval(updateClockDisplay, 1000);
+        refreshIntervals.push(timeIntervalId);
+      }, msUntilNextSecond);
+      refreshIntervals.push(syncTimeout);
+    };
+
+    // Helper to sync clock to minute boundary
+    const syncToMinute = () => {
+      const now = new Date();
+      const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+      const syncTimeout = setTimeout(() => {
+        updateClockDisplay();
+        timeIntervalId = setInterval(updateClockDisplay, 60000);
+        refreshIntervals.push(timeIntervalId);
+      }, msUntilNextMinute);
+      refreshIntervals.push(syncTimeout);
+    };
+
+    const syncFn = showSeconds ? syncToSecond : syncToMinute;
+    syncFn();
+
+    // Re-sync every hour to prevent drift
+    const resyncId = setInterval(() => {
+      clearInterval(timeIntervalId);
+      syncFn();
+    }, 3600000);
+    refreshIntervals.push(resyncId);
   }
 
   // Reset grid start date when widget is initialized
