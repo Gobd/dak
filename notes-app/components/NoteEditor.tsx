@@ -13,7 +13,6 @@ import Eye from 'lucide-react-native/dist/esm/icons/eye';
 import EyeOff from 'lucide-react-native/dist/esm/icons/eye-off';
 import Heading from 'lucide-react-native/dist/esm/icons/heading';
 import List from 'lucide-react-native/dist/esm/icons/list';
-import ListX from 'lucide-react-native/dist/esm/icons/list-x';
 import Lock from 'lucide-react-native/dist/esm/icons/lock';
 import LockOpen from 'lucide-react-native/dist/esm/icons/lock-open';
 import Pin from 'lucide-react-native/dist/esm/icons/pin';
@@ -71,6 +70,7 @@ export function NoteEditor({
   const editorRef = useRef<RichNoteEditorRef>(null);
   const toolbarRef = useRef<View>(null);
   const headingButtonRef = useRef<View>(null);
+  const checkboxButtonRef = useRef<View>(null);
   const { width } = useWindowDimensions();
   const isNarrow = width < 768;
 
@@ -80,6 +80,8 @@ export function NoteEditor({
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [showHeadingDropdown, setShowHeadingDropdown] = useState(false);
   const [headingDropdownX, setHeadingDropdownX] = useState(0);
+  const [showCheckboxDropdown, setShowCheckboxDropdown] = useState(false);
+  const [checkboxDropdownX, setCheckboxDropdownX] = useState(0);
 
   const maxContentLength = planLimits.maxNoteLength;
 
@@ -108,6 +110,14 @@ export function NoteEditor({
     const lines = note.content.split('\n');
     const filtered = lines.filter((line) => !line.match(/^(\s*[-*]?\s*)?\[x\]/i));
     const newContent = filtered.join('\n');
+    if (newContent !== note.content) {
+      onUpdate({ content: newContent });
+    }
+  };
+
+  const handleUncheckAll = () => {
+    if (!note.content) return;
+    const newContent = note.content.replace(/\[x\]/gi, '[ ]');
     if (newContent !== note.content) {
       onUpdate({ content: newContent });
     }
@@ -265,29 +275,41 @@ export function NoteEditor({
             }}
           />
 
-          {/* Editor formatting buttons */}
-          <Pressable
-            onPress={() => editorRef.current?.toggleTaskList()}
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              backgroundColor: colors.bgTertiary,
-              flexShrink: 0,
-            }}
-          >
-            <SquareCheck size={16} color={colors.icon} />
-          </Pressable>
-          <Pressable
-            onPress={handleDeleteCheckedTasks}
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              backgroundColor: colors.bgTertiary,
-              flexShrink: 0,
-            }}
-          >
-            <ListX size={16} color={colors.icon} />
-          </Pressable>
+          {/* Checkbox dropdown trigger */}
+          <View ref={checkboxButtonRef} collapsable={false}>
+            <Pressable
+              onPress={() => {
+                if (showCheckboxDropdown) {
+                  setShowCheckboxDropdown(false);
+                  return;
+                }
+                if (checkboxButtonRef.current && toolbarRef.current) {
+                  checkboxButtonRef.current.measureLayout(
+                    toolbarRef.current,
+                    (x) => {
+                      setCheckboxDropdownX(x);
+                      setShowCheckboxDropdown(true);
+                    },
+                    () => setShowCheckboxDropdown(true)
+                  );
+                } else {
+                  setShowCheckboxDropdown(true);
+                }
+              }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 2,
+                padding: 6,
+                borderRadius: 6,
+                backgroundColor: showCheckboxDropdown ? colors.primary + '20' : colors.bgTertiary,
+                flexShrink: 0,
+              }}
+            >
+              <SquareCheck size={16} color={showCheckboxDropdown ? colors.primary : colors.icon} />
+              <ChevronDown size={12} color={showCheckboxDropdown ? colors.primary : colors.icon} />
+            </Pressable>
+          </View>
           <View
             style={{
               width: 1,
@@ -365,6 +387,79 @@ export function NoteEditor({
           </Pressable>
         </ScrollView>
 
+        {/* Checkbox dropdown menu - outside ScrollView to avoid clipping */}
+        {showCheckboxDropdown && (
+          <>
+            {/* Invisible overlay to close dropdown when clicking outside */}
+            <Pressable
+              onPress={() => setShowCheckboxDropdown(false)}
+              style={{
+                position: 'absolute',
+                top: -100,
+                left: -100,
+                right: -100,
+                bottom: -1000,
+                zIndex: 99,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                top: 44,
+                left: checkboxDropdownX,
+                backgroundColor: colors.bgSecondary,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.border,
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                zIndex: 100,
+                minWidth: 160,
+              }}
+            >
+              <Pressable
+                onPress={() => {
+                  editorRef.current?.toggleTaskList();
+                  setShowCheckboxDropdown(false);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: colors.text }}>Insert checkbox</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  handleDeleteCheckedTasks();
+                  setShowCheckboxDropdown(false);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: colors.text }}>Delete checked lines</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  handleUncheckAll();
+                  setShowCheckboxDropdown(false);
+                }}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}
+              >
+                <Text style={{ fontSize: 14, color: colors.text }}>Uncheck all</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+
         {/* Heading dropdown menu - outside ScrollView to avoid clipping */}
         {showHeadingDropdown && (
           <>
@@ -373,10 +468,10 @@ export function NoteEditor({
               onPress={() => setShowHeadingDropdown(false)}
               style={{
                 position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
+                top: -100,
+                left: -100,
+                right: -100,
+                bottom: -1000,
                 zIndex: 99,
               }}
             />
