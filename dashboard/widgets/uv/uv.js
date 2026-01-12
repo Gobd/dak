@@ -96,9 +96,11 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
     return;
   }
 
-  const currentUV = todayHours.find((h) => !h.isPast)?.uv || tomorrowHours[0]?.uv || 0;
-  const todayMax = todayHours.length ? Math.max(...todayHours.map((h) => h.uv)) : 0;
-  const tomorrowMax = tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.uv)) : 0;
+  const currentUV = Math.round(todayHours.find((h) => !h.isPast)?.uv || tomorrowHours[0]?.uv || 0);
+  const todayMax = Math.round(todayHours.length ? Math.max(...todayHours.map((h) => h.uv)) : 0);
+  const tomorrowMax = Math.round(
+    tomorrowHours.length ? Math.max(...tomorrowHours.map((h) => h.uv)) : 0
+  );
 
   const formatHour = (h) => {
     const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
@@ -199,10 +201,10 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
         </div>
       </div>
       <div class="uv-header">
-        <span class="uv-now" style="color: ${getUVColor(currentUV)}">UV ${currentUV.toFixed(0)} ${getUVLabel(currentUV)}</span>
+        <span class="uv-now" style="color: ${getUVColor(currentUV)}">UV ${currentUV} ${getUVLabel(currentUV)}</span>
         ${crossingText}
-        ${todayHours.length ? `<span class="uv-day-label">Today <b style="color: ${getUVColor(todayMax)}">${todayMax.toFixed(0)}</b></span>` : ''}
-        ${tomorrowHours.length ? `<span class="uv-day-label">Tomorrow <b style="color: ${getUVColor(tomorrowMax)}">${tomorrowMax.toFixed(0)}</b></span>` : ''}
+        ${todayHours.length ? `<span class="uv-day-label">Today <b style="color: ${getUVColor(todayMax)}">${todayMax}</b></span>` : ''}
+        ${tomorrowHours.length ? `<span class="uv-day-label">Tomorrow <b style="color: ${getUVColor(tomorrowMax)}">${tomorrowMax}</b></span>` : ''}
       </div>
       <div class="uv-days">
         ${renderDayBars(todayHours)}
