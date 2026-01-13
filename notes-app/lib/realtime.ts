@@ -174,7 +174,7 @@ function setupChannels(userId: string) {
         await presenceChannel?.track({ user_id: userId });
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
         console.warn('[realtime] Presence channel disconnected:', status);
-        // Presence reconnect is handled by user channel reconnect
+        scheduleReconnect(userId);
       }
     });
 }
