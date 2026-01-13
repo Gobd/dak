@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { NoteSharing } from '@/components/NoteSharing';
 import { RichNoteEditor, type RichNoteEditorRef } from '@/components/RichNoteEditor';
 import { useTheme, useThemeColors } from '@/hooks/useThemeColors';
@@ -82,6 +83,8 @@ export function NoteEditor({
   const [headingDropdownX, setHeadingDropdownX] = useState(0);
   const [showCheckboxDropdown, setShowCheckboxDropdown] = useState(false);
   const [checkboxDropdownX, setCheckboxDropdownX] = useState(0);
+  const [showDeleteCheckedConfirm, setShowDeleteCheckedConfirm] = useState(false);
+  const [showUncheckAllConfirm, setShowUncheckAllConfirm] = useState(false);
 
   const maxContentLength = planLimits.maxNoteLength;
 
@@ -432,8 +435,8 @@ export function NoteEditor({
               </Pressable>
               <Pressable
                 onPress={() => {
-                  handleDeleteCheckedTasks();
                   setShowCheckboxDropdown(false);
+                  setShowDeleteCheckedConfirm(true);
                 }}
                 style={{
                   paddingHorizontal: 12,
@@ -446,8 +449,8 @@ export function NoteEditor({
               </Pressable>
               <Pressable
                 onPress={() => {
-                  handleUncheckAll();
                   setShowCheckboxDropdown(false);
+                  setShowUncheckAllConfirm(true);
                 }}
                 style={{
                   paddingHorizontal: 12,
@@ -672,6 +675,31 @@ export function NoteEditor({
           </Pressable>
         )}
       </View>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        visible={showDeleteCheckedConfirm}
+        title="Delete checked lines"
+        message="Are you sure you want to delete all checked lines? This cannot be undone."
+        confirmText="Delete"
+        destructive
+        onConfirm={() => {
+          handleDeleteCheckedTasks();
+          setShowDeleteCheckedConfirm(false);
+        }}
+        onCancel={() => setShowDeleteCheckedConfirm(false)}
+      />
+      <ConfirmDialog
+        visible={showUncheckAllConfirm}
+        title="Uncheck all"
+        message="Are you sure you want to uncheck all checkboxes in this note?"
+        confirmText="Uncheck all"
+        onConfirm={() => {
+          handleUncheckAll();
+          setShowUncheckAllConfirm(false);
+        }}
+        onCancel={() => setShowUncheckAllConfirm(false)}
+      />
     </View>
   );
 }

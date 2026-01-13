@@ -11,23 +11,99 @@ const handlers = new Set<SyncHandler>();
 
 let otherDevicesOnline = 0;
 
-/**
- * Subscribe to sync events for cross-device updates
- */
-export function subscribeToSync(userId: string, onEvent: SyncHandler) {
-  handlers.add(onEvent);
+// Reconnection state
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_BASE_DELAY_MS = 1000;
+const RECONNECT_MAX_DELAY_MS = 30000;
 
-  if (channel && currentUserId === userId) {
-    return () => {
-      handlers.delete(onEvent);
-    };
+// Heartbeat to detect silent disconnects (important for kiosk/long-running apps)
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+const HEARTBEAT_INTERVAL_MS = 30000; // Check every 30 seconds
+
+/**
+ * Start heartbeat to detect silent disconnects
+ */
+function startHeartbeat(userId: string) {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
   }
 
+  heartbeatInterval = setInterval(() => {
+    const channelState = channel?.state;
+
+    if (channelState !== "joined" && channelState !== "joining") {
+      console.warn(
+        `[realtime] Heartbeat detected unhealthy channel: ${channelState}`,
+      );
+      scheduleReconnect(userId);
+    }
+  }, HEARTBEAT_INTERVAL_MS);
+}
+
+/**
+ * Stop the heartbeat interval
+ */
+function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
+}
+
+/**
+ * Schedule a reconnection attempt with exponential backoff
+ */
+function scheduleReconnect(userId: string) {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+  }
+
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error("[realtime] Max reconnection attempts reached, giving up");
+    return;
+  }
+
+  // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+  const delay = Math.min(
+    RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
+    RECONNECT_MAX_DELAY_MS,
+  );
+  reconnectAttempts++;
+
+  console.log(
+    `[realtime] Scheduling reconnect attempt ${reconnectAttempts} in ${delay}ms`,
+  );
+
+  reconnectTimeout = setTimeout(() => {
+    reconnectTimeout = null;
+    reconnectChannel(userId);
+  }, delay);
+}
+
+/**
+ * Reconnect channel after a disconnect
+ */
+function reconnectChannel(userId: string) {
+  console.log("[realtime] Attempting to reconnect...");
+
+  // Clean up old channel
   if (channel) {
     supabase.removeChannel(channel);
+    channel = null;
   }
+  otherDevicesOnline = 0;
 
-  currentUserId = userId;
+  // Re-establish channel
+  setupChannel(userId);
+}
+
+/**
+ * Set up the broadcast/presence channel
+ */
+function setupChannel(userId: string) {
+  // Unique ID for this browser tab/device
   deviceId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   channel = supabase.channel(`sync:chores:${userId}`, {
@@ -48,20 +124,68 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
         (key) => key !== deviceId,
       ).length;
     })
-    .subscribe(async (status) => {
+    .subscribe(async (status, err) => {
       if (status === "SUBSCRIBED") {
+        console.log("[realtime] Channel connected");
+        reconnectAttempts = 0; // Reset on successful connection
+        startHeartbeat(userId);
         await channel?.track({ device_id: deviceId });
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.error("[realtime] Channel failed:", status, err);
+        stopHeartbeat();
+        scheduleReconnect(userId);
+      } else if (status === "CLOSED") {
+        console.warn("[realtime] Channel closed, reconnecting...");
+        stopHeartbeat();
+        scheduleReconnect(userId);
       }
     });
+}
+
+/**
+ * Subscribe to sync events for cross-device updates
+ */
+export function subscribeToSync(userId: string, onEvent: SyncHandler) {
+  handlers.add(onEvent);
+
+  if (channel && currentUserId === userId) {
+    return () => {
+      handlers.delete(onEvent);
+    };
+  }
+
+  // Clean up old channel if user changed
+  if (channel) {
+    supabase.removeChannel(channel);
+    channel = null;
+  }
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+
+  currentUserId = userId;
+  reconnectAttempts = 0;
+
+  // Set up the channel
+  setupChannel(userId);
 
   return () => {
     handlers.delete(onEvent);
-    if (handlers.size === 0 && channel) {
-      supabase.removeChannel(channel);
-      channel = null;
+    if (handlers.size === 0) {
+      stopHeartbeat();
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+      if (channel) {
+        supabase.removeChannel(channel);
+        channel = null;
+      }
       currentUserId = null;
       deviceId = null;
       otherDevicesOnline = 0;
+      reconnectAttempts = 0;
     }
   };
 }
@@ -83,6 +207,11 @@ export async function broadcastSync(event: SyncEvent) {
  * Cleanup on logout
  */
 export function unsubscribeFromSync() {
+  stopHeartbeat();
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
   if (channel) {
     supabase.removeChannel(channel);
     channel = null;
@@ -90,5 +219,6 @@ export function unsubscribeFromSync() {
   currentUserId = null;
   deviceId = null;
   otherDevicesOnline = 0;
+  reconnectAttempts = 0;
   handlers.clear();
 }
