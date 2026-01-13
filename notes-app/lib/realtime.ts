@@ -22,32 +22,105 @@ let presenceChannel: RealtimeChannel | null = null;
 // Cache of online user IDs (updated via presence sync)
 const onlineUsers = new Set<string>();
 
-/**
- * Subscribe to sync events for a user
- *
- * Syncs across a user's own devices. When another device (or a user
- * who shared a note with them) makes changes, they receive events here.
- */
-export function subscribeToSync(userId: string, onEvent: SyncHandler) {
-  handlers.add(onEvent);
+// Reconnection state
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_BASE_DELAY_MS = 1000;
+const RECONNECT_MAX_DELAY_MS = 30000;
 
-  // Only create channel once per user
-  if (userChannel && currentUserId === userId) {
-    return () => {
-      handlers.delete(onEvent);
-    };
+// Heartbeat to detect silent disconnects (important for kiosk/long-running apps)
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+const HEARTBEAT_INTERVAL_MS = 30000; // Check every 30 seconds
+
+/**
+ * Start heartbeat to detect silent disconnects
+ */
+function startHeartbeat(userId: string) {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
   }
 
-  // Clean up old channels if user changed
+  heartbeatInterval = setInterval(() => {
+    // Check if channels are in a healthy state
+    const userChannelState = userChannel?.state;
+    const presenceChannelState = presenceChannel?.state;
+
+    if (userChannelState !== 'joined' && userChannelState !== 'joining') {
+      console.warn(`[realtime] Heartbeat detected unhealthy user channel: ${userChannelState}`);
+      scheduleReconnect(userId);
+    } else if (presenceChannelState !== 'joined' && presenceChannelState !== 'joining') {
+      console.warn(
+        `[realtime] Heartbeat detected unhealthy presence channel: ${presenceChannelState}`
+      );
+      scheduleReconnect(userId);
+    }
+  }, HEARTBEAT_INTERVAL_MS);
+}
+
+/**
+ * Stop the heartbeat interval
+ */
+function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
+}
+
+/**
+ * Schedule a reconnection attempt with exponential backoff
+ */
+function scheduleReconnect(userId: string) {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+  }
+
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error('[realtime] Max reconnection attempts reached, giving up');
+    return;
+  }
+
+  // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+  const delay = Math.min(
+    RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
+    RECONNECT_MAX_DELAY_MS
+  );
+  reconnectAttempts++;
+
+  console.log(`[realtime] Scheduling reconnect attempt ${reconnectAttempts} in ${delay}ms`);
+
+  reconnectTimeout = setTimeout(() => {
+    reconnectTimeout = null;
+    reconnectChannels(userId);
+  }, delay);
+}
+
+/**
+ * Reconnect all channels after a disconnect
+ */
+function reconnectChannels(userId: string) {
+  console.log('[realtime] Attempting to reconnect...');
+
+  // Clean up old channels
   if (userChannel) {
     supabase.removeChannel(userChannel);
+    userChannel = null;
   }
   if (presenceChannel) {
     supabase.removeChannel(presenceChannel);
+    presenceChannel = null;
+    onlineUsers.clear();
   }
 
-  currentUserId = userId;
+  // Re-establish channels
+  setupChannels(userId);
+}
 
+/**
+ * Set up the broadcast and presence channels
+ */
+function setupChannels(userId: string) {
   // Create broadcast channel for this user's devices
   // self: false means we don't receive our own broadcasts
   userChannel = supabase.channel(`sync:user:${userId}`, {
@@ -62,8 +135,18 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
       handlers.forEach((handler) => handler(event));
     })
     .subscribe((status, err) => {
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('[realtime] Failed to subscribe:', status, err);
+      if (status === 'SUBSCRIBED') {
+        console.log('[realtime] User channel connected');
+        reconnectAttempts = 0; // Reset on successful connection
+        startHeartbeat(userId); // Start monitoring for silent disconnects
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('[realtime] User channel failed:', status, err);
+        stopHeartbeat();
+        scheduleReconnect(userId);
+      } else if (status === 'CLOSED') {
+        console.warn('[realtime] User channel closed, reconnecting...');
+        stopHeartbeat();
+        scheduleReconnect(userId);
       }
     });
 
@@ -86,14 +169,61 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
+        console.log('[realtime] Presence channel connected');
         // Track this user as online
         await presenceChannel?.track({ user_id: userId });
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        console.warn('[realtime] Presence channel disconnected:', status);
+        scheduleReconnect(userId);
       }
     });
+}
+
+/**
+ * Subscribe to sync events for a user
+ *
+ * Syncs across a user's own devices. When another device (or a user
+ * who shared a note with them) makes changes, they receive events here.
+ */
+export function subscribeToSync(userId: string, onEvent: SyncHandler) {
+  handlers.add(onEvent);
+
+  // Only create channel once per user
+  if (userChannel && currentUserId === userId) {
+    return () => {
+      handlers.delete(onEvent);
+    };
+  }
+
+  // Clean up old channels if user changed
+  if (userChannel) {
+    supabase.removeChannel(userChannel);
+    userChannel = null;
+  }
+  if (presenceChannel) {
+    supabase.removeChannel(presenceChannel);
+    presenceChannel = null;
+    onlineUsers.clear();
+  }
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+
+  currentUserId = userId;
+  reconnectAttempts = 0;
+
+  // Set up the channels
+  setupChannels(userId);
 
   return () => {
     handlers.delete(onEvent);
     if (handlers.size === 0) {
+      stopHeartbeat();
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
       if (userChannel) {
         supabase.removeChannel(userChannel);
         userChannel = null;
@@ -104,6 +234,7 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
         onlineUsers.clear();
       }
       currentUserId = null;
+      reconnectAttempts = 0;
     }
   };
 }
@@ -218,6 +349,11 @@ async function notifySharedUsers(noteId: string, event: SyncEvent) {
  * Unsubscribe from all sync events
  */
 export function unsubscribeFromSync() {
+  stopHeartbeat();
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
   if (userChannel) {
     supabase.removeChannel(userChannel);
     userChannel = null;
@@ -228,5 +364,6 @@ export function unsubscribeFromSync() {
     onlineUsers.clear();
   }
   currentUserId = null;
+  reconnectAttempts = 0;
   handlers.clear();
 }
