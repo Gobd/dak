@@ -32,7 +32,7 @@ function startHeartbeat(userId: string) {
     // Actually send something and check if it works
     const result = await presenceChannel.track({
       user_id: userId,
-      ts: Date.now()
+      ts: Date.now(),
     });
 
     if (result !== 'ok') {
@@ -53,6 +53,7 @@ function startHeartbeat(userId: string) {
 ## When to Add This
 
 Consider adding ping-pong if:
+
 - Realtime still stops working after deploying the current fixes
 - You see no console warnings when it stops (indicates silent disconnect)
 - Running on devices that sleep/wake frequently or have unstable networks
