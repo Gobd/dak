@@ -28,6 +28,61 @@ const RECONNECT_MAX_DELAY_MS = 30000;
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 const HEARTBEAT_INTERVAL_MS = 30000; // Check every 30 seconds
 
+// Track if browser event listeners are registered
+let listenersRegistered = false;
+
+/**
+ * Handle visibility change - reconnect when app comes back to foreground
+ * This is critical for mobile browsers that suspend JS when backgrounded
+ */
+function handleVisibilityChange() {
+  if (document.visibilityState === "visible" && currentUserId) {
+    const channelState = channel?.state;
+
+    // Only reconnect if channel is unhealthy
+    if (channelState !== "joined" && channelState !== "joining") {
+      console.log(
+        "[realtime] App became visible with unhealthy channel, reconnecting...",
+      );
+      reconnectAttempts = 0; // Reset so we don't stay in "given up" state
+      reconnectChannel(currentUserId);
+    }
+  }
+}
+
+/**
+ * Handle online event - reconnect when browser regains network
+ */
+function handleOnline() {
+  if (currentUserId) {
+    console.log("[realtime] Browser came online, reconnecting...");
+    reconnectAttempts = 0;
+    reconnectChannel(currentUserId);
+  }
+}
+
+/**
+ * Register browser event listeners for reconnection
+ */
+function registerBrowserListeners() {
+  if (listenersRegistered || typeof document === "undefined") return;
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("online", handleOnline);
+  listenersRegistered = true;
+}
+
+/**
+ * Unregister browser event listeners
+ */
+function unregisterBrowserListeners() {
+  if (!listenersRegistered || typeof document === "undefined") return;
+
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  window.removeEventListener("online", handleOnline);
+  listenersRegistered = false;
+}
+
 /**
  * Start heartbeat to detect silent disconnects
  */
@@ -175,6 +230,9 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
   currentUserId = userId;
   reconnectAttempts = 0;
 
+  // Register browser event listeners for reconnection on visibility/online changes
+  registerBrowserListeners();
+
   // Set up the channel
   setupChannel(userId);
 
@@ -182,6 +240,7 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
     handlers.delete(onEvent);
     if (handlers.size === 0) {
       stopHeartbeat();
+      unregisterBrowserListeners();
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
@@ -217,6 +276,7 @@ export async function broadcastSync(event: SyncEvent) {
  */
 export function unsubscribeFromSync() {
   stopHeartbeat();
+  unregisterBrowserListeners();
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
