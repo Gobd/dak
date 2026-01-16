@@ -11,7 +11,7 @@ echo "Opening Chromium in normal mode..."
 echo "Go to chrome://extensions to configure extensions"
 echo "When done, run: ~/scripts/restart-kiosk.sh"
 
-cage -- $CHROMIUM_BIN \
+cage -- "$CHROMIUM_BIN" \
   --no-first-run \
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \
   --ozone-platform=wayland \

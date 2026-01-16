@@ -51,6 +51,7 @@ if [[ -z "$REMOTE" ]]; then
   mv /tmp/smartkey-final "$DEST_DIR/smartkey"
 else
   echo "=== Installing on $REMOTE ==="
+  # shellcheck disable=SC2029  # DEST_DIR is intentionally expanded client-side
   ssh "$REMOTE" "mkdir -p $DEST_DIR && rm -rf $DEST_DIR/smartkey"
   scp -r /tmp/smartkey-final "$REMOTE:$DEST_DIR/smartkey"
   rm -rf /tmp/smartkey-final

@@ -64,23 +64,8 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 EOF
 
-echo "=== Creating kiosk startup script ==="
-cat > ~/.kiosk.sh << EOF
-#!/bin/bash
-export WLR_LIBINPUT_NO_DEVICES=1
-exec cage -- $CHROMIUM_BIN \\
-  --kiosk \\
-  --no-first-run \\
-  --disable-translate \\
-  --disable-infobars \\
-  --noerrdialogs \\
-  --disable-session-crashed-bubble \\
-  --disable-pinch \\
-  --overscroll-history-navigation=0 \\
-  --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \\
-  --ozone-platform=wayland \\
-  https://dak.bkemper.me/dashboard
-EOF
+echo "=== Installing kiosk startup script ==="
+cp ~/scripts/kiosk.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
 echo "=== Setting up auto-start on login ==="
