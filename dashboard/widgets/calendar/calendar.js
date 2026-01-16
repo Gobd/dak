@@ -151,6 +151,18 @@ function formatLocalDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Format date as YYYY-MM-DDTHH:MM:SS in local timezone (NOT UTC)
+// Used for Google Calendar API when specifying timeZone
+function formatLocalDateTime(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
 // Get local date string from event start/end (handles both dateTime and date formats)
 function getEventLocalDate(dateTimeOrDate) {
   if (dateTimeOrDate.includes('T')) {
@@ -782,19 +794,11 @@ async function showEventModal(event) {
     if (action === 'close' || e.target === modal) {
       modal.remove();
     } else if (action === 'delete') {
+      modal.remove();
       if (isRecurring) {
-        modal.remove();
         showRecurringDeleteModal(event);
       } else {
-        if (confirm('Delete this event?')) {
-          try {
-            await deleteEvent(accessToken, event.calendarId, event.id);
-            modal.remove();
-            await loadEvents();
-          } catch {
-            showErrorModal('Failed to delete event');
-          }
-        }
+        showDeleteConfirmModal(event);
       }
     } else if (action === 'edit') {
       modal.remove();
@@ -802,6 +806,38 @@ async function showEventModal(event) {
         showRecurringEditModal(event);
       } else {
         showEditEventModal(event);
+      }
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showDeleteConfirmModal(event) {
+  const modal = document.createElement('div');
+  modal.className = 'cal-modal open';
+  modal.innerHTML = `
+    <div class="cal-modal-content">
+      <h3>Delete event</h3>
+      <p>Delete "${event.summary || '(No title)'}"?</p>
+      <div class="cal-modal-actions">
+        <button class="cal-btn" data-action="cancel">Cancel</button>
+        <button class="cal-btn danger" data-action="confirm">Delete</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener('click', async (e) => {
+    const action = e.target.dataset.action;
+    if (action === 'cancel' || e.target === modal) {
+      modal.remove();
+    } else if (action === 'confirm') {
+      try {
+        await deleteEvent(accessToken, event.calendarId, event.id);
+        modal.remove();
+        await loadEvents();
+      } catch {
+        showErrorModal('Failed to delete event');
       }
     }
   });
@@ -1043,8 +1079,8 @@ function showAddEventModal(date) {
         event.end = { date: dateStr };
       } else {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const startStr = selectedStart.toISOString().slice(0, 19);
-        const endStr = selectedEnd.toISOString().slice(0, 19);
+        const startStr = formatLocalDateTime(selectedStart);
+        const endStr = formatLocalDateTime(selectedEnd);
         event.start = {
           dateTime: startStr,
           timeZone: tz,
@@ -1212,8 +1248,8 @@ function showEditEventModal(event, _editAll = false) {
         updatedEvent.end = { date: dateStr };
       } else {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const startStr = selectedStart.toISOString().slice(0, 19);
-        const endStr = selectedEnd.toISOString().slice(0, 19);
+        const startStr = formatLocalDateTime(selectedStart);
+        const endStr = formatLocalDateTime(selectedEnd);
         updatedEvent.start = {
           dateTime: startStr,
           timeZone: tz,
