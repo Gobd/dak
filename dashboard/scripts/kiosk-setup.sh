@@ -65,7 +65,7 @@ ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 EOF
 
 echo "=== Installing kiosk startup script ==="
-cp ~/dashboard/scripts/kiosk.sh ~/.kiosk.sh
+cp ~/scripts/kiosk.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
 echo "=== Setting up auto-start on login ==="
