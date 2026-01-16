@@ -10,7 +10,13 @@ if [ -z "$CHROMIUM_BIN" ]; then
   exit 1
 fi
 
-exec cage -- "$CHROMIUM_BIN" \
+# Hide cursor if no mouse is connected
+CAGE_OPTS=""
+if ! grep -q "mouse" /proc/bus/input/devices 2>/dev/null; then
+  CAGE_OPTS="-s"
+fi
+
+exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --kiosk \
   --no-first-run \
   --disable-translate \
