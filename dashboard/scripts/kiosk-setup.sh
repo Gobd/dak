@@ -9,8 +9,12 @@
 
 set -e
 
-echo "=== Installing packages ==="
+echo "=== Updating and upgrading system ==="
 sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get full-upgrade -y
+
+echo "=== Installing packages ==="
 sudo apt-get install -y --no-install-recommends \
   cage \
   ddcutil \
@@ -86,12 +90,15 @@ if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
 fi
 EOF
 
+echo "=== Setting nano as default editor ==="
+echo 'export EDITOR=nano' >> ~/.bashrc
+
 echo "=== Setting up auto brightness cron ==="
 chmod +x ~/scripts/brightness.sh
 # Run on boot and every 2 minutes for smooth gradual transitions
 (crontab -l 2>/dev/null | grep -v brightness.sh
- echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
- echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
+ echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
+ echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
 ) | crontab -
 
 echo "=== Setup complete! ==="
