@@ -53,6 +53,9 @@
  *                Requires home-relay service running on localhost:5111
  *   wol        - Wake on LAN (click to open modal, configure devices)
  *                Requires home-relay service running on localhost:5111
+ *   brightness - Auto-brightness settings (sunrise/sunset based dimming)
+ *                Configure location, day/night levels, transition time
+ *                Requires home-relay service running on localhost:5111
  *   iframe     - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
@@ -84,7 +87,7 @@ export default {
     /*
      * Screen 1: Calendar + Notes + Drive Time + Home Controls overlay
      * ┌───────┬───────────────┐
-     * │       │[kasa][wol]    │
+     * │       │[kasa][wol][☀] │
      * │ notes │   calendar    │
      * │       │  [drive-time] │
      * └───────┴───────────────┘
@@ -122,6 +125,13 @@ export default {
         {
           type: 'wol',
           x: '83%',
+          y: '1%',
+          w: '5%',
+          h: '4%',
+        },
+        {
+          type: 'brightness',
+          x: '88%',
           y: '1%',
           w: '5%',
           h: '4%',

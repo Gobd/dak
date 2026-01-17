@@ -1,6 +1,7 @@
 #!/bin/bash
 # Auto brightness control using ddcutil
 # Gradual transitions at sunrise/sunset
+# Configuration via ~/.config/home-relay/brightness.json
 #
 # Usage:
 #   ./brightness.sh auto    - Auto-adjust based on sun (run via cron)
@@ -9,24 +10,42 @@
 #   ./brightness.sh set 50  - Set to specific level (1-100)
 #   ./brightness.sh status  - Show current level and sun times
 
-# ╔════════════════════════════════════════════════════════════════╗
-# ║                      CONFIGURATION                             ║
-# ║  Edit these values for your location and preferences           ║
-# ╚════════════════════════════════════════════════════════════════╝
-
-# Your location (get from Google Maps)
-LAT="40.63"                # Latitude  (e.g., 40.7128 for NYC)
-LON="-111.90"              # Longitude (e.g., -74.0060 for NYC)
-
-# Brightness levels (1-100)
-DAY_BRIGHTNESS=100        # Daytime brightness
-NIGHT_BRIGHTNESS=1        # Nighttime brightness
-
-# Transition settings
-TRANSITION_MINS=60        # How long to fade (30-90 recommended)
-
-# Cache file for sun times (avoids API calls every run)
+# Config file (managed by home-relay API)
+CONFIG_FILE="$HOME/.config/home-relay/brightness.json"
 CACHE_FILE="/tmp/brightness_sun_cache"
+
+# === LOAD CONFIG ===
+
+load_config() {
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "No config file found at $CONFIG_FILE"
+    echo "Configure brightness via the dashboard UI"
+    exit 1
+  fi
+
+  # Parse JSON config (using grep/sed for minimal dependencies)
+  ENABLED=$(grep -o '"enabled"[[:space:]]*:[[:space:]]*[^,}]*' "$CONFIG_FILE" | grep -o 'true\|false')
+  LAT=$(grep -o '"lat"[[:space:]]*:[[:space:]]*[0-9.-]*' "$CONFIG_FILE" | grep -o '[0-9.-]*$')
+  LON=$(grep -o '"lon"[[:space:]]*:[[:space:]]*[0-9.-]*' "$CONFIG_FILE" | grep -o '\-*[0-9.]*$')
+  DAY_BRIGHTNESS=$(grep -o '"dayBrightness"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
+  NIGHT_BRIGHTNESS=$(grep -o '"nightBrightness"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
+  TRANSITION_MINS=$(grep -o '"transitionMins"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
+
+  # Defaults
+  DAY_BRIGHTNESS=${DAY_BRIGHTNESS:-100}
+  NIGHT_BRIGHTNESS=${NIGHT_BRIGHTNESS:-1}
+  TRANSITION_MINS=${TRANSITION_MINS:-60}
+
+  if [ "$ENABLED" != "true" ]; then
+    echo "Auto brightness disabled in config"
+    exit 0
+  fi
+
+  if [ -z "$LAT" ] || [ -z "$LON" ]; then
+    echo "Location not configured"
+    exit 1
+  fi
+}
 
 # === FUNCTIONS ===
 
@@ -116,15 +135,18 @@ get_current_brightness() {
 
 case "${1:-auto}" in
   day)
+    load_config
     set_brightness "$DAY_BRIGHTNESS"
     ;;
   night)
+    load_config
     set_brightness "$NIGHT_BRIGHTNESS"
     ;;
   set)
     set_brightness "${2:-50}"
     ;;
   auto)
+    load_config
     get_sun_times || exit 1
     TARGET=$(calculate_brightness)
     CURRENT=$(get_current_brightness)
@@ -138,14 +160,23 @@ case "${1:-auto}" in
     ;;
   status)
     echo "Current brightness: $(get_current_brightness)%"
-    get_sun_times && echo "Sunrise: $(date -d "@$SUNRISE_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNRISE_EPOCH" '+%H:%M')" && echo "Sunset: $(date -d "@$SUNSET_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNSET_EPOCH" '+%H:%M')"
+    if [ -f "$CONFIG_FILE" ]; then
+      load_config 2>/dev/null
+      get_sun_times 2>/dev/null && \
+        echo "Sunrise: $(date -d "@$SUNRISE_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNRISE_EPOCH" '+%H:%M')" && \
+        echo "Sunset: $(date -d "@$SUNSET_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNSET_EPOCH" '+%H:%M')"
+    else
+      echo "No config - configure via dashboard"
+    fi
     ;;
   *)
     echo "Usage: $0 [auto|day|night|set N|status]"
     echo "  auto   - Set brightness based on sun position (gradual)"
-    echo "  day    - Set to day brightness ($DAY_BRIGHTNESS%)"
-    echo "  night  - Set to night brightness ($NIGHT_BRIGHTNESS%)"
+    echo "  day    - Set to day brightness"
+    echo "  night  - Set to night brightness"
     echo "  set N  - Set brightness to N%"
     echo "  status - Show current brightness and sun times"
+    echo ""
+    echo "Configure via dashboard UI or edit: $CONFIG_FILE"
     ;;
 esac

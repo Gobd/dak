@@ -49,7 +49,9 @@ sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << 'EOF'
   "AutofillCreditCardEnabled": false,
   "PasswordManagerEnabled": false,
   "AudioCaptureAllowed": true,
-  "AudioCaptureAllowedUrls": ["https://dak.bkemper.me"]
+  "AudioCaptureAllowedUrls": ["https://dak.bkemper.me"],
+  "InsecurePrivateNetworkRequestsAllowed": true,
+  "InsecurePrivateNetworkRequestsAllowedForUrls": ["https://dak.bkemper.me"]
 }
 EOF
 
@@ -82,8 +84,8 @@ echo "=== Setting up auto brightness cron ==="
 chmod +x ~/dashboard/scripts/brightness.sh
 # Run on boot and every 2 minutes for smooth gradual transitions
 (crontab -l 2>/dev/null | grep -v brightness.sh
- echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
- echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
+ echo "@reboot sleep 30 && /home/kiosk/dashboard/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
+ echo "*/2 * * * * /home/kiosk/dashboard/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
 ) | crontab -
 
 echo "=== Setting up home-relay service (Kasa + WOL) ==="
@@ -109,7 +111,7 @@ fi
 
 echo "=== Setup complete! ==="
 echo "Helper scripts available in ~/dashboard/scripts/"
-echo "Edit ~/dashboard/scripts/brightness.sh to set LAT/LON for your location"
+echo "Configure auto-brightness via the dashboard UI (brightness widget)"
 echo "Rebooting in 5 seconds..."
 sleep 5
 sudo reboot

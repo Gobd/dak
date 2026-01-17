@@ -691,6 +691,7 @@ Promise.all([
   import('./widgets/sun-moon/sun-moon.js'),
   import('./widgets/kasa/kasa.js'),
   import('./widgets/wol/wol.js'),
+  import('./widgets/brightness/brightness.js'),
 ]).then(() => {
   init();
 });
