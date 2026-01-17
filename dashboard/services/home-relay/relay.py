@@ -16,8 +16,9 @@ from flask import Flask, Response, jsonify, request
 # Disable Flask/Werkzeug access logs
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-from routes import brightness_bp, kasa_bp, wol_bp
+from routes import brightness_bp, kasa_bp, notifications_bp, wol_bp
 from routes.brightness import init_app as init_brightness
+from routes.notifications import init_app as init_notifications
 
 app = Flask(__name__)
 
@@ -25,6 +26,7 @@ app = Flask(__name__)
 app.register_blueprint(kasa_bp)
 app.register_blueprint(wol_bp)
 app.register_blueprint(brightness_bp)
+app.register_blueprint(notifications_bp)
 
 # SSE subscribers
 _sse_subscribers = []
@@ -63,13 +65,18 @@ def _save_config(config):
         json.dump(config, f, indent=2)
 
 
-def _notify_config_updated():
-    """Notify all SSE subscribers that config has changed."""
-    message = json.dumps({"type": "config-updated"})
+def _broadcast_sse(data):
+    """Broadcast a message to all SSE subscribers."""
+    message = json.dumps(data) if isinstance(data, dict) else data
     with _sse_lock:
         for q in _sse_subscribers:
             with contextlib.suppress(queue.Full):
                 q.put_nowait(message)
+
+
+def _notify_config_updated():
+    """Notify all SSE subscribers that config has changed."""
+    _broadcast_sse({"type": "config-updated"})
 
 
 def _sse_stream():
@@ -90,8 +97,9 @@ def _sse_stream():
             _sse_subscribers.remove(q)
 
 
-# Initialize brightness routes with config loader
+# Initialize routes with dependencies
 init_brightness(_load_config)
+init_notifications(_broadcast_sse)
 
 
 # === Config Endpoints ===

@@ -13,7 +13,15 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.9.0"]
+dev = ["ruff>=0.9.0", "poethepoet>=0.32.0"]
+
+[tool.poe.tasks]
+lint = "ruff check ."
+format = "ruff format ."
+check = ["lint", { ref = "format:check" }]
+"format:check" = "ruff format --check ."
+fix = ["lint:fix", "format"]
+"lint:fix" = "ruff check --fix ."
 
 [tool.ruff]
 line-length = 100
