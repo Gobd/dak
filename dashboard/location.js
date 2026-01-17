@@ -1,7 +1,7 @@
 // Shared location utilities for weather widgets
 // Uses Google Places API for autocomplete, Nominatim for geocoding
 
-import { getDashboardConfig, updateConfigSection } from './script.js';
+import { getConfigSection, updateConfigSection } from './script.js';
 
 const LOCATION_CACHE_KEY = 'location-cache';
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days (coordinates don't change)
@@ -23,27 +23,17 @@ const DEFAULT_LOCATION = {
  * Falls back to default if not configured
  */
 export function getLocationConfig(widgetId = 'default') {
-  try {
-    const dashboardConfig = getDashboardConfig();
-    const locations = dashboardConfig?.locations || {};
-    return locations[widgetId] || locations.default || null;
-  } catch {
-    return null;
-  }
+  const locations = getConfigSection('locations', {});
+  return locations[widgetId] || locations.default || null;
 }
 
 /**
  * Save location config for a widget
  */
 export async function saveLocationConfig(widgetId, config) {
-  try {
-    const dashboardConfig = getDashboardConfig();
-    const locations = { ...(dashboardConfig?.locations || {}) };
-    locations[widgetId] = config;
-    await updateConfigSection('locations', locations);
-  } catch {
-    // Ignore storage errors
-  }
+  const locations = { ...getConfigSection('locations', {}) };
+  locations[widgetId] = config;
+  await updateConfigSection('locations', locations);
 }
 
 /**

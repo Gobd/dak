@@ -360,7 +360,16 @@ export function getDashboardConfig() {
   return dashboardConfig;
 }
 
-// Update a specific section of the config and save
+/**
+ * Get a specific section of the config
+ * @param {string} section - The config section name (e.g., 'calendar', 'locations')
+ * @param {*} defaultValue - Default value if section doesn't exist
+ */
+export function getConfigSection(section, defaultValue = null) {
+  return dashboardConfig?.[section] ?? defaultValue;
+}
+
+// Update a specific section of the config and save (to both API and localStorage)
 export async function updateConfigSection(section, data) {
   if (!dashboardConfig) {
     dashboardConfig = { global: {}, screens: [] };
@@ -927,6 +936,10 @@ function savePanelSettings() {
 }
 
 async function deletePanel() {
+  // Capture panel references before showing confirm (in case modal state changes)
+  const screenIdx = editingScreenIndex;
+  const panelIdx = editingPanelIndex;
+
   const confirmed = await showConfirm('Delete this panel?', {
     title: 'Delete Panel',
     confirmText: 'Delete',
@@ -934,7 +947,17 @@ async function deletePanel() {
   });
   if (!confirmed) return;
 
-  screens[editingScreenIndex].panels.splice(editingPanelIndex, 1);
+  // Validate indices before splicing
+  if (screenIdx == null || panelIdx == null) {
+    console.error('deletePanel: invalid indices', { screenIdx, panelIdx });
+    return;
+  }
+  if (!screens[screenIdx] || !screens[screenIdx].panels) {
+    console.error('deletePanel: screen not found', { screenIdx, screens });
+    return;
+  }
+
+  screens[screenIdx].panels.splice(panelIdx, 1);
   saveConfig();
   closeModal();
   renderScreens();
@@ -968,7 +991,13 @@ function addPanel() {
 // =====================
 
 function exportConfig() {
-  const data = { config, screens };
+  // Export full dashboard config including all widget settings
+  // dashboardConfig includes: global, screens, locations, driveTime, wolDevices, brightness, calendar, etc.
+  const data = {
+    ...dashboardConfig,
+    global: config,
+    screens,
+  };
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -984,19 +1013,24 @@ function importConfig(e) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = (event) => {
+  reader.onload = async (event) => {
     try {
       const data = JSON.parse(event.target.result);
-      if (data.screens && Array.isArray(data.screens)) {
-        config = data.config || {};
+      if (data.screens && Array.isArray(data.screens) && data.global) {
+        config = data.global;
         screens = data.screens;
-        saveConfig();
+        dashboardConfig = data;
+
+        await saveConfig();
         applyConfig();
         renderScreens();
         showScreen(0);
         showAlert('Configuration imported!', 'Import Complete');
       } else {
-        showAlert('Invalid configuration file', 'Import Failed');
+        showAlert(
+          'Invalid configuration file. Expected: { global, screens, ... }',
+          'Import Failed'
+        );
       }
     } catch {
       showAlert('Failed to parse configuration file', 'Import Failed');
