@@ -21,7 +21,8 @@ sudo apt-get install -y --no-install-recommends \
   curl \
   unzip \
   jq \
-  fonts-noto-color-emoji
+  fonts-noto-color-emoji \
+  fonts-noto-core
 
 # Install chromium (package name varies by distro)
 if apt-cache show chromium &>/dev/null; then
@@ -52,7 +53,8 @@ sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << 'EOF'
   "AudioCaptureAllowed": true,
   "AudioCaptureAllowedUrls": ["https://dak.bkemper.me"],
   "InsecurePrivateNetworkRequestsAllowed": true,
-  "InsecurePrivateNetworkRequestsAllowedForUrls": ["https://dak.bkemper.me"]
+  "InsecurePrivateNetworkRequestsAllowedForUrls": ["https://dak.bkemper.me"],
+  "LocalNetworkAccessAllowedForUrls": ["https://dak.bkemper.me"]
 }
 EOF
 

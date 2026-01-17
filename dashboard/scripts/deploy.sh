@@ -26,11 +26,9 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "=== Syncing to $REMOTE ==="
 rsync -avz --delete \
-  --exclude '.git' \
-  --exclude 'node_modules' \
-  --exclude '.venv' \
-  --exclude '__pycache__' \
-  --exclude '*.log' \
+  --include='scripts/***' \
+  --include='services/***' \
+  --exclude='*' \
   "$REPO_DIR/" "$REMOTE:~/dashboard/"
 
 if [[ "$SKIP_SETUP" == "true" ]]; then
