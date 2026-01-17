@@ -1,8 +1,71 @@
-import defaultData from './screens.js';
-
 const STORAGE_KEY = 'dashboard-config';
 const GRID_SNAP = 5; // 5% snap
 const MIN_SIZE = 10; // 10% minimum
+
+// API endpoint for home-relay config
+// Can be overridden with ?relay=host:port URL param for remote editing
+const DEFAULT_RELAY_URL = 'http://localhost:5111';
+let relayUrl = DEFAULT_RELAY_URL;
+
+// Get the relay URL (for widgets to use)
+export function getRelayUrl() {
+  return relayUrl;
+}
+
+// Initialize relay URL from URL params
+function initRelayUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const relayParam = params.get('relay');
+  if (relayParam) {
+    // Add http:// if not present
+    relayUrl = relayParam.startsWith('http') ? relayParam : `http://${relayParam}`;
+    console.log(`Using remote relay: ${relayUrl}`);
+  }
+}
+
+// SSE connection for live config updates
+let sseConnection = null;
+let sseRetryCount = 0;
+let sseRetryTimeout = null;
+
+function connectToConfigUpdates() {
+  if (sseConnection) {
+    sseConnection.close();
+  }
+  if (sseRetryTimeout) {
+    clearTimeout(sseRetryTimeout);
+    sseRetryTimeout = null;
+  }
+
+  try {
+    sseConnection = new EventSource(`${relayUrl}/config/subscribe`);
+
+    sseConnection.onopen = () => {
+      console.log('Connected to config update stream');
+      sseRetryCount = 0; // Reset backoff on successful connection
+    };
+
+    sseConnection.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'config-updated') {
+        console.log('Config updated remotely, reloading...');
+        window.location.reload();
+      }
+    };
+
+    sseConnection.onerror = () => {
+      // Close and use exponential backoff for reconnect
+      sseConnection.close();
+      sseRetryCount++;
+      // Backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+      const delay = Math.min(1000 * Math.pow(2, sseRetryCount - 1), 30000);
+      console.log(`Config stream disconnected, retrying in ${delay / 1000}s...`);
+      sseRetryTimeout = setTimeout(connectToConfigUpdates, delay);
+    };
+  } catch (err) {
+    console.warn('SSE not available:', err.message);
+  }
+}
 
 // Local dev URL mappings (used when ?local is in URL)
 // Maps relative paths to localhost ports for local development
@@ -10,6 +73,34 @@ const LOCAL_URL_MAP = {
   '/notes-app/': 'http://localhost:8081/',
   '/health-tracker/': 'http://localhost:5173/health-tracker/',
   '/family-chores/': 'http://localhost:5174/family-chores/',
+};
+
+// Default config structure (used when all sources fail)
+const DEFAULT_CONFIG = {
+  global: {
+    background: '#111',
+    dark: true,
+    navPosition: 'bottom-right',
+    navButtons: 'both',
+    navColor: 'rgba(255, 255, 255, 0.6)',
+    navBackground: 'rgba(255, 255, 255, 0.1)',
+  },
+  screens: [],
+  brightness: {
+    enabled: false,
+    lat: null,
+    lon: null,
+    location: null,
+    dayBrightness: 100,
+    nightBrightness: 1,
+    transitionMins: 60,
+  },
+  locations: {},
+  wolDevices: [],
+  driveTime: {
+    locations: {},
+    routes: [],
+  },
 };
 
 let screens = [];
@@ -71,41 +162,129 @@ function snapToGrid(value) {
   return Math.round(value / GRID_SNAP) * GRID_SNAP;
 }
 
-// Load config from localStorage, merged with defaults from screens.js
-function loadConfig() {
-  // Start with defaults
-  config = { ...defaultData.config };
-  screens = JSON.parse(JSON.stringify(defaultData.screens));
+// Full dashboard config object (includes all sections)
+let dashboardConfig = null;
 
-  // Override with stored values if present
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      // Merge config (stored overrides defaults)
-      config = { ...config, ...(parsed.config || {}) };
-      // Use stored screens if present
-      if (parsed.screens && parsed.screens.length > 0) {
-        screens = parsed.screens;
-      }
-    } catch {
-      console.warn('Failed to parse stored config, using defaults');
-    }
+// Fetch config from API
+async function fetchApiConfig() {
+  try {
+    const res = await fetch(`${relayUrl}/config`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
   }
 }
 
-// Save config to localStorage
-function saveConfig() {
-  const data = { config, screens };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+// Fetch default config template from repo
+async function fetchDefaultTemplate() {
+  try {
+    const res = await fetch('/config/dashboard.json');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
-function init() {
+// Get config from localStorage
+function getLocalStorageConfig() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
+// Load config: API → localStorage → default template
+async function loadConfig() {
+  // Try API first
+  let loadedConfig = await fetchApiConfig();
+  let source = 'api';
+
+  // Fall back to localStorage
+  if (!loadedConfig || !loadedConfig.screens || loadedConfig.screens.length === 0) {
+    loadedConfig = getLocalStorageConfig();
+    if (loadedConfig && loadedConfig.screens && loadedConfig.screens.length > 0) {
+      source = 'localStorage';
+    }
+  }
+
+  // Fall back to default template
+  if (!loadedConfig || !loadedConfig.screens || loadedConfig.screens.length === 0) {
+    loadedConfig = await fetchDefaultTemplate();
+    source = 'default';
+  }
+
+  // Ultimate fallback to hardcoded defaults
+  if (!loadedConfig) {
+    loadedConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    source = 'hardcoded';
+  }
+
+  console.log(`Config loaded from: ${source}`);
+
+  // Store full config
+  dashboardConfig = loadedConfig;
+
+  // Extract global config and screens for backward compatibility
+  config = loadedConfig.global || DEFAULT_CONFIG.global;
+  screens = loadedConfig.screens || [];
+}
+
+// Save config to API + localStorage
+async function saveConfig() {
+  // Update dashboardConfig with current values
+  if (!dashboardConfig) {
+    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  }
+  dashboardConfig.global = config;
+  dashboardConfig.screens = screens;
+
+  // Save to localStorage (always works)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dashboardConfig));
+
+  // Save to API (may fail if relay not running)
+  try {
+    await fetch(`${relayUrl}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dashboardConfig),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // Relay not running, localStorage-only is fine
+  }
+}
+
+// Get the full dashboard config (for widgets that need access to other sections)
+export function getDashboardConfig() {
+  return dashboardConfig;
+}
+
+// Update a specific section of the config and save
+export async function updateConfigSection(section, data) {
+  if (!dashboardConfig) {
+    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  }
+  dashboardConfig[section] = data;
+  await saveConfig();
+  return dashboardConfig;
+}
+
+async function init() {
+  // Initialize relay URL from ?relay param (for remote editing)
+  initRelayUrl();
+
   // Check URL for local mode: ?local
   const params = new URLSearchParams(window.location.search);
   localMode = params.has('local');
 
-  loadConfig();
+  await loadConfig();
   applyConfig();
   renderScreens();
 
@@ -116,6 +295,9 @@ function init() {
 
   setupNavigation();
   setupEditMode();
+
+  // Connect to SSE for live config updates (auto-refresh when config changes)
+  connectToConfigUpdates();
 }
 
 function applyConfig() {
@@ -692,12 +874,33 @@ function importConfig(e) {
   e.target.value = '';
 }
 
-function resetConfig() {
+async function resetConfig() {
   if (!confirm('Reset to default configuration? This will discard all changes.')) return;
 
-  localStorage.removeItem(STORAGE_KEY);
-  config = { ...defaultData.config };
-  screens = JSON.parse(JSON.stringify(defaultData.screens));
+  // Fetch default template
+  const defaultTemplate = await fetchDefaultTemplate();
+  if (defaultTemplate) {
+    dashboardConfig = defaultTemplate;
+    config = defaultTemplate.global || DEFAULT_CONFIG.global;
+    screens = defaultTemplate.screens || [];
+  } else {
+    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    config = DEFAULT_CONFIG.global;
+    screens = [];
+  }
+
+  // Clear API config too
+  try {
+    await fetch(`${relayUrl}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dashboardConfig),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // API not available
+  }
+
   applyConfig();
   renderScreens();
   showScreen(0);
@@ -716,6 +919,6 @@ Promise.all([
   import('./widgets/kasa/kasa.js'),
   import('./widgets/wol/wol.js'),
   import('./widgets/brightness/brightness.js'),
-]).then(() => {
-  init();
+]).then(async () => {
+  await init();
 });

@@ -20,6 +20,7 @@ sudo apt-get install -y --no-install-recommends \
   ddcutil \
   curl \
   unzip \
+  jq \
   fonts-noto-color-emoji
 
 # Install chromium (package name varies by distro)

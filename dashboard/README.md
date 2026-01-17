@@ -22,11 +22,12 @@ A simple kiosk dashboard with multiple screens. Configure layouts via JSON, navi
 
 ### Saving & Config Persistence
 
-Your configuration is stored in the browser's localStorage. This means:
+Your configuration is stored on disk via the home-relay API (`~/.config/home-relay/dashboard.json`), with localStorage as a fallback:
 
 - **Survives restarts:** Config persists across browser restarts, system reboots, and power cycles
-- **Per-browser:** Each browser/device has its own config
+- **Editable via SSH:** Edit the JSON file directly at `~/.config/home-relay/dashboard.json`
 - **Auto-saves:** Changes save automatically when you drag, resize, or edit panels
+- **Fallback:** If the API is unavailable, config is saved to localStorage
 
 ### Exporting & Importing
 
@@ -70,9 +71,21 @@ chromium https://dak.bkemper.me/dashboard/?edit
 
 Reboot when done to return to kiosk mode.
 
+**Option 3: Remote editing from your laptop**
+
+Edit the kiosk layout from any device on your network:
+
+```
+https://dak.bkemper.me/dashboard/?edit&relay=kiosk.local:5111
+```
+
+Replace `kiosk.local` with your kiosk's IP if hostname doesn't resolve. The `relay` parameter tells the dashboard to save config to the kiosk's home-relay API instead of localhost.
+
+When you save changes, the kiosk automatically reloads via SSE (Server-Sent Events).
+
 ### Resetting to Defaults
 
-Click "Reset" in edit mode to restore the default layout defined in `screens.js`. This clears your localStorage config.
+Click "Reset" in edit mode to restore the default layout from `config/dashboard.json`. This clears both the API config and localStorage.
 
 ## Widgets
 
@@ -107,10 +120,7 @@ Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as environment variables in yo
 
 ### Weather
 
-Displays weather from the National Weather Service API. Configure your location via panel arguments:
-
-- `lat`: Latitude (e.g., `40.7128`)
-- `lon`: Longitude (e.g., `-74.0060`)
+Displays weather from the National Weather Service API. Click the gear icon to configure your location via city name, state, or ZIP code.
 
 ### Custom iframes
 
@@ -163,7 +173,7 @@ In Cloudflare DNS for bkemper.me:
 
 ### Local Development
 
-To update default layouts, edit `screens.js` and push. Users can reset to get the new defaults.
+To update default layouts, edit `config/dashboard.json` and push. Users can reset to get the new defaults.
 
 ## Kiosk Setup (Raspberry Pi 5)
 
@@ -213,29 +223,62 @@ After setup, these are available in `~/scripts/`:
 - `Ctrl+Alt+F2` - Switch to terminal (login as kiosk)
 - `Ctrl+Alt+F1` - Back to kiosk
 
+### Troubleshooting & Logs
+
+**Home-relay service (Kasa, WoL, config API):**
+
+```bash
+# View logs
+journalctl -u home-relay -f
+
+# Check status
+sudo systemctl status home-relay
+
+# Restart service
+sudo systemctl restart home-relay
+```
+
+**Brightness cron job:**
+
+```bash
+# View cron logs
+grep CRON /var/log/syslog | tail -20
+
+# Test manually
+~/scripts/brightness.sh status
+~/scripts/brightness.sh auto
+```
+
+**Check config file:**
+
+```bash
+cat ~/.config/home-relay/dashboard.json | jq .
+```
+
 ## Configuration
 
-Edit `screens.js` to configure screens and layouts. The file is self-documenting with comments and ASCII diagrams. Changes deploy automatically via GitHub Pages.
+Edit `config/dashboard.json` to configure default screens and layouts. See `config/README.md` for field documentation. Changes deploy automatically via GitHub Pages.
+
+On the kiosk, config is stored at `~/.config/home-relay/dashboard.json` and can be edited via SSH.
 
 ## Custom Widgets
 
-Add widgets under `widgets/`. Reference them in `screens.js`:
+Add widgets under `widgets/`. Reference them in `config/dashboard.json`:
 
-```javascript
-{ src: '/widgets/weather/index.html', x: '50%', y: '50%', w: '50%', h: '50%' }
+```json
+{ "type": "iframe", "src": "/widgets/weather/index.html", "x": "50%", "y": "50%", "w": "50%", "h": "50%" }
 ```
 
 ## Automatic Brightness
 
-The setup script installs automatic brightness control using `ddcutil`. It adjusts monitor brightness based on sunrise/sunset.
+The setup script installs automatic brightness control using `ddcutil`. It adjusts monitor brightness based on sunrise/sunset with smooth transitions.
 
-**Configure your location** (edit after setup):
+**Configure via dashboard UI:**
 
-```bash
-nano ~/scripts/brightness.sh
-# Set LAT and LON to your coordinates
-# Set DAY_BRIGHTNESS and NIGHT_BRIGHTNESS (1-100)
-```
+1. Click the brightness widget settings (sun icon)
+2. Enable auto-brightness
+3. Search and select your location
+4. Adjust day/night brightness levels and transition time
 
 **Manual control:**
 
@@ -246,7 +289,7 @@ nano ~/scripts/brightness.sh
 ~/scripts/brightness.sh status   # Show current level
 ```
 
-> **Note:** Requires a monitor that supports DDC/CI. Most modern monitors do.
+> **Note:** Requires a monitor that supports DDC/CI. Most modern monitors do. The script exits gracefully if not configured.
 
 ## Development
 

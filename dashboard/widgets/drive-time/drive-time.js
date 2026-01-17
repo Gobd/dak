@@ -1,13 +1,11 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getDashboardConfig, updateConfigSection } from '../../script.js';
 
 // Drive Time Widget - Floating overlay showing commute time
 // Uses Cloudflare Functions to proxy Google Distance Matrix & Places APIs
-// Routes and addresses stored in localStorage, configured via UI
+// Routes and addresses stored in dashboard config, configured via UI
 
 const CACHE_KEY = 'drive-time-cache';
 const DISMISSED_KEY = 'drive-time-dismissed';
-const LOCATIONS_KEY = 'drive-time-locations';
-const ROUTES_KEY = 'drive-time-routes';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // API endpoints (Cloudflare Functions)
@@ -21,30 +19,38 @@ const DAY_MAP = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
 const DAY_NAMES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-// Location address book stored in localStorage
+// Location address book stored in dashboard config
 function getLocations() {
   try {
-    return JSON.parse(localStorage.getItem(LOCATIONS_KEY)) || {};
+    const dashboardConfig = getDashboardConfig();
+    return dashboardConfig?.driveTime?.locations || {};
   } catch {
     return {};
   }
 }
 
-function saveLocations(locations) {
-  localStorage.setItem(LOCATIONS_KEY, JSON.stringify(locations));
+async function saveLocations(locations) {
+  const dashboardConfig = getDashboardConfig();
+  const driveTime = { ...(dashboardConfig?.driveTime || { locations: {}, routes: [] }) };
+  driveTime.locations = locations;
+  await updateConfigSection('driveTime', driveTime);
 }
 
-// Routes stored in localStorage
+// Routes stored in dashboard config
 function getStoredRoutes() {
   try {
-    return JSON.parse(localStorage.getItem(ROUTES_KEY)) || [];
+    const dashboardConfig = getDashboardConfig();
+    return dashboardConfig?.driveTime?.routes || [];
   } catch {
     return [];
   }
 }
 
-function saveRoutes(routes) {
-  localStorage.setItem(ROUTES_KEY, JSON.stringify(routes));
+async function saveRoutes(routes) {
+  const dashboardConfig = getDashboardConfig();
+  const driveTime = { ...(dashboardConfig?.driveTime || { locations: {}, routes: [] }) };
+  driveTime.routes = routes;
+  await updateConfigSection('driveTime', driveTime);
 }
 
 function parseTime(timeStr) {

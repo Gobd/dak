@@ -8,12 +8,18 @@ import asyncio
 import json
 import os
 import subprocess
+import queue
+import threading
 from pathlib import Path
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from kasa import Discover
 from wakeonlan import send_magic_packet
 
 app = Flask(__name__)
+
+# SSE subscribers - list of queues for connected clients
+_sse_subscribers = []
+_sse_lock = threading.Lock()
 
 
 @app.after_request
@@ -27,17 +33,34 @@ def add_cors_headers(response):
 
 # Config file paths
 CONFIG_DIR = Path.home() / '.config' / 'home-relay'
-BRIGHTNESS_CONFIG = CONFIG_DIR / 'brightness.json'
+DASHBOARD_CONFIG = CONFIG_DIR / 'dashboard.json'
 
-# Default brightness config
-DEFAULT_BRIGHTNESS_CONFIG = {
-    'enabled': False,
-    'lat': None,
-    'lon': None,
-    'location': None,  # Display name
-    'dayBrightness': 100,
-    'nightBrightness': 1,
-    'transitionMins': 60,
+# Default dashboard config
+DEFAULT_DASHBOARD_CONFIG = {
+    'global': {
+        'background': '#111',
+        'dark': True,
+        'navPosition': 'bottom-right',
+        'navButtons': 'both',
+        'navColor': 'rgba(255, 255, 255, 0.6)',
+        'navBackground': 'rgba(255, 255, 255, 0.1)',
+    },
+    'screens': [],
+    'brightness': {
+        'enabled': False,
+        'lat': None,
+        'lon': None,
+        'location': None,
+        'dayBrightness': 100,
+        'nightBrightness': 1,
+        'transitionMins': 60,
+    },
+    'locations': {},
+    'wolDevices': [],
+    'driveTime': {
+        'locations': {},
+        'routes': [],
+    },
 }
 
 # Cache for discovered devices (refreshed on each discover call)
@@ -211,46 +234,103 @@ def wol_ping():
         return jsonify({'ip': ip, 'online': False})
 
 
-# === Brightness Control ===
+# === Dashboard Configuration ===
 
-def _load_brightness_config():
-    """Load brightness config from file"""
-    if BRIGHTNESS_CONFIG.exists():
+def _load_config():
+    """Load full dashboard config from file"""
+    if DASHBOARD_CONFIG.exists():
         try:
-            with open(BRIGHTNESS_CONFIG) as f:
+            with open(DASHBOARD_CONFIG) as f:
                 config = json.load(f)
-                return {**DEFAULT_BRIGHTNESS_CONFIG, **config}
+                # Deep merge with defaults
+                result = json.loads(json.dumps(DEFAULT_DASHBOARD_CONFIG))
+                for key, value in config.items():
+                    if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                        result[key] = {**result[key], **value}
+                    else:
+                        result[key] = value
+                return result
         except Exception:
             pass
-    return DEFAULT_BRIGHTNESS_CONFIG.copy()
+    return json.loads(json.dumps(DEFAULT_DASHBOARD_CONFIG))
 
 
-def _save_brightness_config(config):
-    """Save brightness config to file"""
+def _save_config(config):
+    """Save full dashboard config to file"""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    with open(BRIGHTNESS_CONFIG, 'w') as f:
+    with open(DASHBOARD_CONFIG, 'w') as f:
         json.dump(config, f, indent=2)
 
 
-@app.route('/brightness/config', methods=['GET'])
-def brightness_get_config():
-    """Get brightness configuration"""
-    return jsonify(_load_brightness_config())
+def _notify_config_updated():
+    """Notify all SSE subscribers that config has changed"""
+    message = json.dumps({'type': 'config-updated'})
+    with _sse_lock:
+        for q in _sse_subscribers:
+            try:
+                q.put_nowait(message)
+            except queue.Full:
+                pass  # Skip slow clients
 
 
-@app.route('/brightness/config', methods=['POST'])
-def brightness_set_config():
-    """Set brightness configuration"""
+def _sse_stream():
+    """Generator for SSE stream"""
+    q = queue.Queue(maxsize=10)
+    with _sse_lock:
+        _sse_subscribers.append(q)
+    try:
+        # Send initial connection message
+        yield f"data: {json.dumps({'type': 'connected'})}\n\n"
+        while True:
+            try:
+                message = q.get(timeout=30)
+                yield f"data: {message}\n\n"
+            except queue.Empty:
+                # Send keepalive ping every 30s
+                yield f": keepalive\n\n"
+    finally:
+        with _sse_lock:
+            _sse_subscribers.remove(q)
+
+
+@app.route('/config/subscribe', methods=['GET'])
+def config_subscribe():
+    """SSE endpoint for live config updates"""
+    return Response(
+        _sse_stream(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+        }
+    )
+
+
+@app.route('/config', methods=['GET'])
+def get_config():
+    """Get full dashboard configuration"""
+    return jsonify(_load_config())
+
+
+@app.route('/config', methods=['POST'])
+def set_config():
+    """Save full dashboard configuration"""
     data = request.get_json() or {}
-    config = _load_brightness_config()
+    _save_config(data)
+    # Notify all connected clients to refresh
+    _notify_config_updated()
+    return jsonify(data)
 
-    # Update only provided fields
-    for key in DEFAULT_BRIGHTNESS_CONFIG:
-        if key in data:
-            config[key] = data[key]
 
-    _save_brightness_config(config)
-    return jsonify(config)
+@app.route('/config/brightness', methods=['GET'])
+def get_brightness_config():
+    """Get just the brightness section (for shell script)"""
+    config = _load_config()
+    return jsonify(config.get('brightness', DEFAULT_DASHBOARD_CONFIG['brightness']))
+
+
+# === Brightness Control ===
 
 
 @app.route('/brightness/set', methods=['POST'])
@@ -282,8 +362,9 @@ def brightness_set():
 @app.route('/brightness/status', methods=['GET'])
 def brightness_status():
     """Get current brightness and sun times"""
-    config = _load_brightness_config()
-    result = {'config': config, 'current': None, 'sun': None}
+    full_config = _load_config()
+    brightness_config = full_config.get('brightness', DEFAULT_DASHBOARD_CONFIG['brightness'])
+    result = {'config': brightness_config, 'current': None, 'sun': None}
 
     # Get current brightness
     try:

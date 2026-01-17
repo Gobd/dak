@@ -1,26 +1,24 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getDashboardConfig, updateConfigSection, getRelayUrl } from '../../script.js';
 
 // Wake on LAN Widget
 // Click to open modal, see device status, wake them
 
-const RELAY_URL = 'http://localhost:5111';
-const CONFIG_KEY = 'wol-devices';
-
 function getDevices() {
   try {
-    return JSON.parse(localStorage.getItem(CONFIG_KEY) || '[]');
+    const dashboardConfig = getDashboardConfig();
+    return dashboardConfig?.wolDevices || [];
   } catch {
     return [];
   }
 }
 
-function saveDevices(devices) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(devices));
+async function saveDevices(devices) {
+  await updateConfigSection('wolDevices', devices);
 }
 
 async function pingDevice(ip) {
   try {
-    const res = await fetch(`${RELAY_URL}/wol/ping?ip=${encodeURIComponent(ip)}`, {
+    const res = await fetch(`${getRelayUrl()}/wol/ping?ip=${encodeURIComponent(ip)}`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return false;
@@ -33,7 +31,7 @@ async function pingDevice(ip) {
 
 async function wakeDevice(mac) {
   try {
-    const res = await fetch(`${RELAY_URL}/wol/wake`, {
+    const res = await fetch(`${getRelayUrl()}/wol/wake`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mac }),

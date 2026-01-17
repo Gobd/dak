@@ -1,19 +1,23 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getDashboardConfig, updateConfigSection, getRelayUrl } from '../../script.js';
 import { setupLocationAutocomplete, formatLocation } from '../../location.js';
 
 // Auto Brightness Widget
 // Configures sunrise/sunset brightness control via home-relay API
 
-const RELAY_URL = 'http://localhost:5111';
-
 async function getConfig() {
   try {
-    const res = await fetch(`${RELAY_URL}/brightness/config`, {
+    // First try the API endpoint for brightness
+    const res = await fetch(`${getRelayUrl()}/config/brightness`, {
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) throw new Error('Failed to get config');
     return await res.json();
   } catch (err) {
+    // Fall back to in-memory dashboard config
+    const dashboardConfig = getDashboardConfig();
+    if (dashboardConfig?.brightness) {
+      return dashboardConfig.brightness;
+    }
     console.warn('Brightness config fetch failed:', err.message);
     return null;
   }
@@ -21,14 +25,9 @@ async function getConfig() {
 
 async function saveConfig(config) {
   try {
-    const res = await fetch(`${RELAY_URL}/brightness/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config),
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) throw new Error('Failed to save config');
-    return await res.json();
+    // Update the brightness section of the full config
+    await updateConfigSection('brightness', config);
+    return config;
   } catch (err) {
     console.error('Brightness config save error:', err);
     return null;
@@ -37,7 +36,7 @@ async function saveConfig(config) {
 
 async function getStatus() {
   try {
-    const res = await fetch(`${RELAY_URL}/brightness/status`, {
+    const res = await fetch(`${getRelayUrl()}/brightness/status`, {
       signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) throw new Error('Failed to get status');
@@ -78,7 +77,6 @@ function showModal(dark, onClose) {
       return;
     }
 
-    const locationDisplay = config.location || (config.lat && config.lon ? `${config.lat}, ${config.lon}` : 'Not set');
     const currentLevel = status?.current ?? '?';
 
     bodyEl.innerHTML = `

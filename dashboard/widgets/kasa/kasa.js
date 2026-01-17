@@ -1,13 +1,11 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getRelayUrl } from '../../script.js';
 
 // Kasa Smart Device Widget
 // Click button to open modal, see devices, toggle on/off
 
-const RELAY_URL = 'http://localhost:5111';
-
 async function discoverDevices() {
   try {
-    const res = await fetch(`${RELAY_URL}/kasa/discover`, {
+    const res = await fetch(`${getRelayUrl()}/kasa/discover`, {
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) throw new Error('Discovery failed');
@@ -20,7 +18,7 @@ async function discoverDevices() {
 
 async function toggleDevice(ip) {
   try {
-    const res = await fetch(`${RELAY_URL}/kasa/toggle`, {
+    const res = await fetch(`${getRelayUrl()}/kasa/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip }),

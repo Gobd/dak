@@ -1,7 +1,7 @@
 #!/bin/bash
 # Auto brightness control using ddcutil
 # Gradual transitions at sunrise/sunset
-# Configuration via ~/.config/home-relay/brightness.json
+# Configuration via home-relay API
 #
 # Usage:
 #   ./brightness.sh auto    - Auto-adjust based on sun (run via cron)
@@ -10,38 +10,36 @@
 #   ./brightness.sh set 50  - Set to specific level (1-100)
 #   ./brightness.sh status  - Show current level and sun times
 
-# Config file (managed by home-relay API)
-CONFIG_FILE="$HOME/.config/home-relay/brightness.json"
+# API endpoint
+API_URL="http://localhost:5111/config/brightness"
 CACHE_FILE="/tmp/brightness_sun_cache"
 
 # === LOAD CONFIG ===
 
 load_config() {
-  if [ ! -f "$CONFIG_FILE" ]; then
-    echo "No config file found at $CONFIG_FILE"
-    echo "Configure brightness via the dashboard UI"
+  # Fetch config from API using jq
+  CONFIG=$(curl -s "$API_URL" 2>/dev/null)
+
+  if [ -z "$CONFIG" ] || [ "$CONFIG" = "null" ]; then
+    echo "Could not connect to home-relay API at $API_URL"
+    echo "Make sure home-relay service is running"
     exit 1
   fi
 
-  # Parse JSON config (using grep/sed for minimal dependencies)
-  ENABLED=$(grep -o '"enabled"[[:space:]]*:[[:space:]]*[^,}]*' "$CONFIG_FILE" | grep -o 'true\|false')
-  LAT=$(grep -o '"lat"[[:space:]]*:[[:space:]]*[0-9.-]*' "$CONFIG_FILE" | grep -o '[0-9.-]*$')
-  LON=$(grep -o '"lon"[[:space:]]*:[[:space:]]*[0-9.-]*' "$CONFIG_FILE" | grep -o '\-*[0-9.]*$')
-  DAY_BRIGHTNESS=$(grep -o '"dayBrightness"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
-  NIGHT_BRIGHTNESS=$(grep -o '"nightBrightness"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
-  TRANSITION_MINS=$(grep -o '"transitionMins"[[:space:]]*:[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$')
-
-  # Defaults
-  DAY_BRIGHTNESS=${DAY_BRIGHTNESS:-100}
-  NIGHT_BRIGHTNESS=${NIGHT_BRIGHTNESS:-1}
-  TRANSITION_MINS=${TRANSITION_MINS:-60}
+  # Parse JSON config using jq
+  ENABLED=$(echo "$CONFIG" | jq -r '.enabled // false')
+  LAT=$(echo "$CONFIG" | jq -r '.lat // empty')
+  LON=$(echo "$CONFIG" | jq -r '.lon // empty')
+  DAY_BRIGHTNESS=$(echo "$CONFIG" | jq -r '.dayBrightness // 100')
+  NIGHT_BRIGHTNESS=$(echo "$CONFIG" | jq -r '.nightBrightness // 1')
+  TRANSITION_MINS=$(echo "$CONFIG" | jq -r '.transitionMins // 60')
 
   if [ "$ENABLED" != "true" ]; then
     echo "Auto brightness disabled in config"
     exit 0
   fi
 
-  if [ -z "$LAT" ] || [ -z "$LON" ]; then
+  if [ -z "$LAT" ] || [ -z "$LON" ] || [ "$LAT" = "null" ] || [ "$LON" = "null" ]; then
     echo "Location not configured"
     exit 1
   fi
@@ -68,9 +66,9 @@ get_sun_times() {
   local DATA
   DATA=$(curl -s "https://api.sunrise-sunset.org/json?lat=$LAT&lng=$LON&formatted=0" 2>/dev/null)
 
-  # Extract times (UTC)
-  SUNRISE_UTC=$(echo "$DATA" | grep -o '"sunrise":"[^"]*"' | cut -d'"' -f4)
-  SUNSET_UTC=$(echo "$DATA" | grep -o '"sunset":"[^"]*"' | cut -d'"' -f4)
+  # Extract times (UTC) using jq
+  SUNRISE_UTC=$(echo "$DATA" | jq -r '.results.sunrise // empty')
+  SUNSET_UTC=$(echo "$DATA" | jq -r '.results.sunset // empty')
 
   if [ -z "$SUNRISE_UTC" ] || [ -z "$SUNSET_UTC" ]; then
     echo "ERROR: Could not fetch sun times"
@@ -160,13 +158,20 @@ case "${1:-auto}" in
     ;;
   status)
     echo "Current brightness: $(get_current_brightness)%"
-    if [ -f "$CONFIG_FILE" ]; then
-      load_config 2>/dev/null
-      get_sun_times 2>/dev/null && \
-        echo "Sunrise: $(date -d "@$SUNRISE_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNRISE_EPOCH" '+%H:%M')" && \
-        echo "Sunset: $(date -d "@$SUNSET_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNSET_EPOCH" '+%H:%M')"
+    CONFIG=$(curl -s "$API_URL" 2>/dev/null)
+    if [ -n "$CONFIG" ] && [ "$CONFIG" != "null" ]; then
+      ENABLED=$(echo "$CONFIG" | jq -r '.enabled // false')
+      LAT=$(echo "$CONFIG" | jq -r '.lat // empty')
+      LON=$(echo "$CONFIG" | jq -r '.lon // empty')
+      if [ "$ENABLED" = "true" ] && [ -n "$LAT" ] && [ -n "$LON" ]; then
+        get_sun_times 2>/dev/null && \
+          echo "Sunrise: $(date -d "@$SUNRISE_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNRISE_EPOCH" '+%H:%M')" && \
+          echo "Sunset: $(date -d "@$SUNSET_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNSET_EPOCH" '+%H:%M')"
+      else
+        echo "Auto brightness disabled or location not configured"
+      fi
     else
-      echo "No config - configure via dashboard"
+      echo "Could not connect to home-relay API"
     fi
     ;;
   *)
@@ -177,6 +182,6 @@ case "${1:-auto}" in
     echo "  set N  - Set brightness to N%"
     echo "  status - Show current brightness and sun times"
     echo ""
-    echo "Configure via dashboard UI or edit: $CONFIG_FILE"
+    echo "Configure via dashboard UI"
     ;;
 esac
