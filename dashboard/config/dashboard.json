@@ -1,0 +1,142 @@
+{
+  "global": {
+    "background": "#111",
+    "dark": true,
+    "navPosition": "bottom-right",
+    "navButtons": "both",
+    "navColor": "rgba(255, 255, 255, 0.6)",
+    "navBackground": "rgba(255, 255, 255, 0.1)"
+  },
+  "screens": [
+    {
+      "id": "calendar-notes",
+      "panels": [
+        {
+          "type": "iframe",
+          "src": "/notes-app/",
+          "x": "0%",
+          "y": "0%",
+          "w": "30%",
+          "h": "100%"
+        },
+        {
+          "type": "calendar",
+          "args": {
+            "showTime": true
+          },
+          "x": "30%",
+          "y": "0%",
+          "w": "70%",
+          "h": "100%",
+          "refresh": "5m"
+        },
+        {
+          "type": "kasa",
+          "x": "78%",
+          "y": "1%",
+          "w": "5%",
+          "h": "4%"
+        },
+        {
+          "type": "wol",
+          "x": "83%",
+          "y": "1%",
+          "w": "5%",
+          "h": "4%"
+        },
+        {
+          "type": "brightness",
+          "x": "88%",
+          "y": "1%",
+          "w": "5%",
+          "h": "4%"
+        },
+        {
+          "type": "drive-time",
+          "args": {
+            "dark": true
+          },
+          "x": "30%",
+          "y": "37%",
+          "w": "70%",
+          "h": "63%"
+        }
+      ]
+    },
+    {
+      "id": "weather-health",
+      "panels": [
+        {
+          "type": "weather",
+          "args": {
+            "layout": "vertical"
+          },
+          "x": "0%",
+          "y": "0%",
+          "w": "30%",
+          "h": "68%",
+          "refresh": "30m"
+        },
+        {
+          "type": "uv",
+          "args": {
+            "safeThreshold": 4
+          },
+          "x": "0%",
+          "y": "68%",
+          "w": "30%",
+          "h": "10%",
+          "refresh": "30m"
+        },
+        {
+          "type": "aqi",
+          "args": {},
+          "x": "0%",
+          "y": "78%",
+          "w": "30%",
+          "h": "10%",
+          "refresh": "30m"
+        },
+        {
+          "type": "sun-moon",
+          "args": {},
+          "x": "0%",
+          "y": "88%",
+          "w": "30%",
+          "h": "12%",
+          "refresh": "1h"
+        },
+        {
+          "type": "iframe",
+          "src": "/health-tracker/",
+          "x": "30%",
+          "y": "0%",
+          "w": "70%",
+          "h": "100%"
+        }
+      ]
+    }
+  ],
+  "brightness": {
+    "enabled": false,
+    "lat": null,
+    "lon": null,
+    "location": null,
+    "dayBrightness": 100,
+    "nightBrightness": 1,
+    "transitionMins": 60
+  },
+  "locations": {
+    "weather": {
+      "lat": "37.7749",
+      "lon": "-122.4194",
+      "city": "San Francisco",
+      "state": "CA"
+    }
+  },
+  "wolDevices": [],
+  "driveTime": {
+    "locations": {},
+    "routes": []
+  }
+}

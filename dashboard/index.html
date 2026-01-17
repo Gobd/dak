@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="./widgets/sun-moon/sun-moon.css" />
     <link rel="stylesheet" href="./widgets/kasa/kasa.css" />
     <link rel="stylesheet" href="./widgets/wol/wol.css" />
+    <link rel="stylesheet" href="./widgets/brightness/brightness.css" />
   </head>
   <body>
     <div id="screens"></div>
@@ -45,6 +46,12 @@
       <div class="modal-content">
         <h3>Panel Settings</h3>
         <label>
+          Type
+          <select id="panel-type">
+            <option value="">URL (iframe)</option>
+          </select>
+        </label>
+        <label id="panel-src-label">
           URL
           <input type="text" id="panel-src" placeholder="https://..." />
         </label>

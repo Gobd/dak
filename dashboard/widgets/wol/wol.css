@@ -188,6 +188,36 @@
   border-color: #ef4444;
 }
 
+.wol-mac-row {
+  display: flex;
+  gap: 8px;
+}
+
+.wol-mac-row .wol-mac-input {
+  flex: 1;
+}
+
+.wol-detect-btn {
+  padding: 10px 12px;
+  background: #333;
+  color: #888;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.wol-detect-btn:hover {
+  background: #444;
+  color: #ccc;
+}
+
+.wol-detect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .wol-add-btn {
   padding: 10px;
   background: #60a5fa;

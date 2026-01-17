@@ -1,14 +1,12 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getRelayUrl } from '../../script.js';
 
 // Kasa Smart Device Widget
 // Click button to open modal, see devices, toggle on/off
 
-const RELAY_URL = 'http://localhost:5111';
-
 async function discoverDevices() {
   try {
-    const res = await fetch(`${RELAY_URL}/kasa/discover`, {
-      signal: AbortSignal.timeout(5000),
+    const res = await fetch(`${getRelayUrl()}/kasa/discover`, {
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) throw new Error('Discovery failed');
     return await res.json();
@@ -20,7 +18,7 @@ async function discoverDevices() {
 
 async function toggleDevice(ip) {
   try {
-    const res = await fetch(`${RELAY_URL}/kasa/toggle`, {
+    const res = await fetch(`${getRelayUrl()}/kasa/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip }),
@@ -115,7 +113,7 @@ function renderWidget(container, dark, onOpen) {
 
   container.innerHTML = `
     <div class="kasa-widget ${darkClass}">
-      <button class="kasa-open-btn" title="Smart Devices">🔌</button>
+      <button class="kasa-open-btn" title="Smart Devices">💡</button>
     </div>
   `;
 

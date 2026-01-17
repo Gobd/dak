@@ -1,8 +1,9 @@
 // Shared location utilities for weather widgets
 // Uses Google Places API for autocomplete, Nominatim for geocoding
 
+import { getDashboardConfig, updateConfigSection } from './script.js';
+
 const LOCATION_CACHE_KEY = 'location-cache';
-const LOCATION_CONFIG_KEY = 'location-config';
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days (coordinates don't change)
 // API endpoints - use production URL when running locally since CF Functions aren't available
 const isLocalDev =
@@ -23,8 +24,9 @@ const DEFAULT_LOCATION = {
  */
 export function getLocationConfig(widgetId = 'default') {
   try {
-    const config = JSON.parse(localStorage.getItem(LOCATION_CONFIG_KEY) || '{}');
-    return config[widgetId] || config.default || null;
+    const dashboardConfig = getDashboardConfig();
+    const locations = dashboardConfig?.locations || {};
+    return locations[widgetId] || locations.default || null;
   } catch {
     return null;
   }
@@ -33,11 +35,12 @@ export function getLocationConfig(widgetId = 'default') {
 /**
  * Save location config for a widget
  */
-export function saveLocationConfig(widgetId, config) {
+export async function saveLocationConfig(widgetId, config) {
   try {
-    const all = JSON.parse(localStorage.getItem(LOCATION_CONFIG_KEY) || '{}');
-    all[widgetId] = config;
-    localStorage.setItem(LOCATION_CONFIG_KEY, JSON.stringify(all));
+    const dashboardConfig = getDashboardConfig();
+    const locations = { ...(dashboardConfig?.locations || {}) };
+    locations[widgetId] = config;
+    await updateConfigSection('locations', locations);
   } catch {
     // Ignore storage errors
   }
@@ -274,7 +277,7 @@ export async function getWidgetLocation(widgetId, argsLat, argsLon) {
     }
   }
 
-  // Fall back to args (from screens.js)
+  // Fall back to args (from panel config)
   if (argsLat && argsLon) {
     let display = { city: '', state: '' };
     const geo = await reverseGeocode(argsLat, argsLon);

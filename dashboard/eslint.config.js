@@ -2,7 +2,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist/'] },
+  { ignores: ['dist/', 'services/home-relay/.venv/'] },
   js.configs.recommended,
   {
     languageOptions: {

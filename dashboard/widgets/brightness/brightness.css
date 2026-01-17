@@ -1,0 +1,291 @@
+/* Auto Brightness Widget */
+
+.brightness-widget,
+.brightness-modal {
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+.brightness-widget {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.brightness-open-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #333;
+  color: #888;
+  transition: all 0.15s ease;
+}
+
+.brightness-widget.dark .brightness-open-btn {
+  background: #333;
+  color: #888;
+}
+
+.brightness-open-btn:hover {
+  background: #444;
+  color: #ccc;
+}
+
+.brightness-open-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Modal */
+.brightness-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.brightness-modal.open {
+  opacity: 1;
+}
+
+.brightness-modal-content {
+  background: #1f1f1f;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.brightness-modal.dark .brightness-modal-content {
+  background: #1f1f1f;
+  color: #e5e5e5;
+}
+
+.brightness-modal-header {
+  padding: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.brightness-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.brightness-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.brightness-loading,
+.brightness-error {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  padding: 12px;
+}
+
+.brightness-error {
+  color: #f87171;
+}
+
+.brightness-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brightness-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brightness-row label {
+  font-size: 13px;
+  color: #aaa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brightness-row label span {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Toggle switch */
+.brightness-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.brightness-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.brightness-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #444;
+  border-radius: 24px;
+  transition: 0.2s;
+}
+
+.brightness-toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #888;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.brightness-toggle input:checked + .brightness-toggle-slider {
+  background-color: #4ade80;
+}
+
+.brightness-toggle input:checked + .brightness-toggle-slider:before {
+  transform: translateX(20px);
+  background-color: #fff;
+}
+
+/* Location input */
+.brightness-location-input {
+  position: relative;
+}
+
+.brightness-location-input input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #e5e5e5;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.brightness-location-input input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.brightness-location-coords {
+  font-size: 11px;
+  color: #666;
+  margin-top: -8px;
+}
+
+/* Sliders */
+.brightness-row input[type='range'] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #444;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.brightness-row input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4ade80;
+  cursor: pointer;
+}
+
+.brightness-row input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4ade80;
+  cursor: pointer;
+  border: none;
+}
+
+/* Status */
+.brightness-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.brightness-active {
+  color: #4ade80;
+  font-weight: 500;
+}
+
+.brightness-inactive {
+  color: #666;
+}
+
+/* Save button */
+.brightness-save-btn {
+  width: 100%;
+  padding: 12px;
+  background: #4ade80;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.brightness-save-btn:hover {
+  background: #22c55e;
+}
+
+.brightness-save-btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Modal actions */
+.brightness-modal-actions {
+  padding: 12px 16px;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.brightness-modal-close {
+  padding: 8px 16px;
+  background: #333;
+  color: #e5e5e5;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.brightness-modal-close:hover {
+  background: #444;
+}

@@ -1,8 +1,86 @@
-import defaultData from './screens.js';
-
 const STORAGE_KEY = 'dashboard-config';
 const GRID_SNAP = 5; // 5% snap
 const MIN_SIZE = 10; // 10% minimum
+
+// API endpoint for home-relay config
+// Can be overridden with ?relay=host:port URL param for remote editing
+const DEFAULT_RELAY_URL = 'http://localhost:5111';
+let relayUrl = DEFAULT_RELAY_URL;
+
+// Get the relay URL (for widgets to use)
+export function getRelayUrl() {
+  return relayUrl;
+}
+
+// Initialize relay URL from URL params
+function initRelayUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const relayParam = params.get('relay');
+  if (relayParam) {
+    // Add http:// if not present
+    relayUrl = relayParam.startsWith('http') ? relayParam : `http://${relayParam}`;
+    console.log(`Using remote relay: ${relayUrl}`);
+  }
+}
+
+// SSE connection for live config updates
+let sseConnection = null;
+let sseRetryCount = 0;
+let sseRetryTimeout = null;
+
+function connectToConfigUpdates() {
+  if (sseConnection) {
+    sseConnection.close();
+  }
+  if (sseRetryTimeout) {
+    clearTimeout(sseRetryTimeout);
+    sseRetryTimeout = null;
+  }
+
+  try {
+    sseConnection = new EventSource(`${relayUrl}/config/subscribe`);
+
+    sseConnection.onopen = () => {
+      console.log('Connected to config update stream');
+      sseRetryCount = 0; // Reset backoff on successful connection
+    };
+
+    sseConnection.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'config-updated') {
+        console.log('Config updated remotely, reloading...');
+        window.location.reload();
+      }
+    };
+
+    sseConnection.onerror = () => {
+      // Close and use exponential backoff for reconnect
+      sseConnection.close();
+      sseRetryCount++;
+      // Backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+      const delay = Math.min(1000 * Math.pow(2, sseRetryCount - 1), 30000);
+      console.log(`Config stream disconnected, retrying in ${delay / 1000}s...`);
+      sseRetryTimeout = setTimeout(connectToConfigUpdates, delay);
+    };
+  } catch (err) {
+    console.warn('SSE not available:', err.message);
+  }
+}
+
+// Cleanup SSE connection on page unload to prevent server-side resource leaks
+function cleanupSSE() {
+  if (sseRetryTimeout) {
+    clearTimeout(sseRetryTimeout);
+    sseRetryTimeout = null;
+  }
+  if (sseConnection) {
+    sseConnection.close();
+    sseConnection = null;
+  }
+}
+
+window.addEventListener('beforeunload', cleanupSSE);
+window.addEventListener('pagehide', cleanupSSE);
 
 // Local dev URL mappings (used when ?local is in URL)
 // Maps relative paths to localhost ports for local development
@@ -42,6 +120,80 @@ export function getWidgetTypes() {
   return Object.keys(widgets);
 }
 
+// =====================
+// Alert & Confirm Modals
+// =====================
+
+function showAlert(message, title = null) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'dialog-modal';
+    modal.innerHTML = `
+      <div class="dialog-modal-content">
+        ${title ? `<div class="dialog-modal-header"><h3>${title}</h3></div>` : ''}
+        <div class="dialog-modal-body">
+          <p>${message}</p>
+        </div>
+        <div class="dialog-modal-actions">
+          <button class="dialog-ok">OK</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('open'));
+
+    const cleanup = () => {
+      modal.classList.remove('open');
+      setTimeout(() => modal.remove(), 150);
+      resolve();
+    };
+
+    modal.querySelector('.dialog-ok').addEventListener('click', cleanup);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cleanup();
+    });
+  });
+}
+
+function showConfirm(
+  message,
+  { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = {}
+) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'dialog-modal';
+    const confirmClass = danger ? 'dialog-danger' : 'dialog-confirm';
+    modal.innerHTML = `
+      <div class="dialog-modal-content">
+        <div class="dialog-modal-header"><h3>${title}</h3></div>
+        <div class="dialog-modal-body">
+          <p>${message}</p>
+        </div>
+        <div class="dialog-modal-actions">
+          <button class="dialog-cancel">${cancelText}</button>
+          <button class="${confirmClass}">${confirmText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('open'));
+
+    const cleanup = (result) => {
+      modal.classList.remove('open');
+      setTimeout(() => modal.remove(), 150);
+      resolve(result);
+    };
+
+    modal.querySelector('.dialog-cancel').addEventListener('click', () => cleanup(false));
+    modal.querySelector(`.${confirmClass}`).addEventListener('click', () => cleanup(true));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cleanup(false);
+    });
+  });
+}
+
 // Currently editing panel
 let editingPanel = null;
 let editingScreenIndex = null;
@@ -71,41 +223,144 @@ function snapToGrid(value) {
   return Math.round(value / GRID_SNAP) * GRID_SNAP;
 }
 
-// Load config from localStorage, merged with defaults from screens.js
-function loadConfig() {
-  // Start with defaults
-  config = { ...defaultData.config };
-  screens = JSON.parse(JSON.stringify(defaultData.screens));
+// Full dashboard config object (includes all sections)
+let dashboardConfig = null;
 
-  // Override with stored values if present
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      // Merge config (stored overrides defaults)
-      config = { ...config, ...(parsed.config || {}) };
-      // Use stored screens if present
-      if (parsed.screens && parsed.screens.length > 0) {
-        screens = parsed.screens;
-      }
-    } catch {
-      console.warn('Failed to parse stored config, using defaults');
-    }
+// Fetch config from API
+async function fetchApiConfig() {
+  try {
+    const res = await fetch(`${relayUrl}/config`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
   }
 }
 
-// Save config to localStorage
-function saveConfig() {
-  const data = { config, screens };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+// Fetch default config template from repo
+async function fetchDefaultTemplate() {
+  try {
+    const res = await fetch('/config/dashboard.json');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
-function init() {
+// Get config from localStorage
+function getLocalStorageConfig() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
+// Load config: API → localStorage → default template
+async function loadConfig() {
+  // Try API first
+  let loadedConfig = await fetchApiConfig();
+  let source = 'api';
+
+  // Fall back to localStorage
+  if (!loadedConfig || !loadedConfig.screens || loadedConfig.screens.length === 0) {
+    loadedConfig = getLocalStorageConfig();
+    if (loadedConfig && loadedConfig.screens && loadedConfig.screens.length > 0) {
+      source = 'localStorage';
+    }
+  }
+
+  // Fall back to default template from repo
+  if (!loadedConfig || !loadedConfig.screens || loadedConfig.screens.length === 0) {
+    loadedConfig = await fetchDefaultTemplate();
+    source = 'default';
+  }
+
+  if (!loadedConfig) {
+    console.error('Failed to load config from any source');
+    loadedConfig = { global: {}, screens: [] };
+    source = 'empty';
+  }
+
+  console.log(`Config loaded from: ${source}`);
+
+  // Store full config
+  dashboardConfig = loadedConfig;
+
+  // Extract global config and screens
+  config = loadedConfig.global || {};
+  screens = loadedConfig.screens || [];
+}
+
+// Debounce timer for drag/resize saves
+let saveDebounceTimer = null;
+const SAVE_DEBOUNCE_MS = 500;
+
+// Save config to API + localStorage (debounced version for drag operations)
+function saveConfigDebounced() {
+  if (saveDebounceTimer) {
+    clearTimeout(saveDebounceTimer);
+  }
+  saveDebounceTimer = setTimeout(() => {
+    saveConfig();
+    saveDebounceTimer = null;
+  }, SAVE_DEBOUNCE_MS);
+}
+
+// Save config to API + localStorage
+async function saveConfig() {
+  // Update dashboardConfig with current values
+  if (!dashboardConfig) {
+    dashboardConfig = { global: {}, screens: [] };
+  }
+  dashboardConfig.global = config;
+  dashboardConfig.screens = screens;
+
+  // Save to localStorage (always works)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dashboardConfig));
+
+  // Save to API (may fail if relay not running)
+  try {
+    await fetch(`${relayUrl}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dashboardConfig),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // Relay not running, localStorage-only is fine
+  }
+}
+
+// Get the full dashboard config (for widgets that need access to other sections)
+export function getDashboardConfig() {
+  return dashboardConfig;
+}
+
+// Update a specific section of the config and save
+export async function updateConfigSection(section, data) {
+  if (!dashboardConfig) {
+    dashboardConfig = { global: {}, screens: [] };
+  }
+  dashboardConfig[section] = data;
+  await saveConfig();
+  return dashboardConfig;
+}
+
+async function init() {
+  // Initialize relay URL from ?relay param (for remote editing)
+  initRelayUrl();
+
   // Check URL for local mode: ?local
   const params = new URLSearchParams(window.location.search);
   localMode = params.has('local');
 
-  loadConfig();
+  await loadConfig();
   applyConfig();
   renderScreens();
 
@@ -116,6 +371,9 @@ function init() {
 
   setupNavigation();
   setupEditMode();
+
+  // Connect to SSE for live config updates (auto-refresh when config changes)
+  connectToConfigUpdates();
 }
 
 function applyConfig() {
@@ -346,9 +604,9 @@ function setupEditMode() {
 
   // Toolbar buttons
   document.getElementById('exit-edit-btn').addEventListener('click', toggleEditMode);
-  document.getElementById('save-btn').addEventListener('click', () => {
-    saveConfig();
-    alert('Configuration saved!');
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    await saveConfig();
+    showAlert('Configuration saved!', 'Saved');
   });
   document.getElementById('add-panel-btn').addEventListener('click', addPanel);
   document.getElementById('export-btn').addEventListener('click', exportConfig);
@@ -363,6 +621,12 @@ function setupEditMode() {
   document.getElementById('save-panel-btn').addEventListener('click', savePanelSettings);
   document.getElementById('delete-panel-btn').addEventListener('click', deletePanel);
   document.getElementById('add-arg-btn').addEventListener('click', () => addArgRow('', ''));
+
+  // Toggle URL field visibility based on type selection
+  document.getElementById('panel-type').addEventListener('change', (e) => {
+    const srcLabel = document.getElementById('panel-src-label');
+    srcLabel.style.display = e.target.value ? 'none' : '';
+  });
 
   // Close modal on backdrop click
   document.getElementById('settings-modal').addEventListener('click', (e) => {
@@ -495,7 +759,7 @@ function setupPanelDrag(panelEl, screenIndex, panelIndex) {
       panel.y = panelEl.style.top;
       panel.w = panelEl.style.width;
       panel.h = panelEl.style.height;
-      saveConfig();
+      saveConfigDebounced(); // Debounced to avoid excessive saves during rapid edits
     }
 
     isDragging = false;
@@ -522,6 +786,24 @@ function openPanelSettings(screenIndex, panelIndex) {
   editingScreenIndex = screenIndex;
   editingPanelIndex = panelIndex;
   editingPanel = screens[screenIndex].panels[panelIndex];
+
+  // Populate type dropdown with available widgets
+  const typeSelect = document.getElementById('panel-type');
+  const currentType = editingPanel.type || '';
+  typeSelect.innerHTML = '<option value="">URL (iframe)</option>';
+  getWidgetTypes()
+    .filter((t) => t !== 'iframe')
+    .forEach((type) => {
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = type;
+      opt.selected = type === currentType;
+      typeSelect.appendChild(opt);
+    });
+
+  // Show/hide URL field based on type
+  const srcLabel = document.getElementById('panel-src-label');
+  srcLabel.style.display = currentType && currentType !== 'iframe' ? 'none' : '';
 
   document.getElementById('panel-src').value = editingPanel.src || '';
   document.getElementById('panel-refresh').value = editingPanel.refresh || '';
@@ -567,7 +849,9 @@ function addArgRow(key = '', value = '') {
 function savePanelSettings() {
   if (!editingPanel) return;
 
-  editingPanel.src = document.getElementById('panel-src').value;
+  const selectedType = document.getElementById('panel-type').value;
+  editingPanel.type = selectedType || undefined;
+  editingPanel.src = selectedType ? undefined : document.getElementById('panel-src').value;
   editingPanel.refresh = document.getElementById('panel-refresh').value || undefined;
 
   // Save position/size
@@ -593,8 +877,13 @@ function savePanelSettings() {
   showScreen(currentIndex);
 }
 
-function deletePanel() {
-  if (!confirm('Delete this panel?')) return;
+async function deletePanel() {
+  const confirmed = await showConfirm('Delete this panel?', {
+    title: 'Delete Panel',
+    confirmText: 'Delete',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   screens[editingScreenIndex].panels.splice(editingPanelIndex, 1);
   saveConfig();
@@ -656,28 +945,56 @@ function importConfig(e) {
         applyConfig();
         renderScreens();
         showScreen(0);
-        alert('Configuration imported!');
+        showAlert('Configuration imported!', 'Import Complete');
       } else {
-        alert('Invalid configuration file');
+        showAlert('Invalid configuration file', 'Import Failed');
       }
     } catch {
-      alert('Failed to parse configuration file');
+      showAlert('Failed to parse configuration file', 'Import Failed');
     }
   };
   reader.readAsText(file);
   e.target.value = '';
 }
 
-function resetConfig() {
-  if (!confirm('Reset to default configuration? This will discard all changes.')) return;
+async function resetConfig() {
+  const confirmed = await showConfirm(
+    'Reset to default configuration? This will discard all changes.',
+    {
+      title: 'Reset Configuration',
+      confirmText: 'Reset',
+      danger: true,
+    }
+  );
+  if (!confirmed) return;
 
-  localStorage.removeItem(STORAGE_KEY);
-  config = { ...defaultData.config };
-  screens = JSON.parse(JSON.stringify(defaultData.screens));
+  // Fetch default template
+  const defaultTemplate = await fetchDefaultTemplate();
+  if (!defaultTemplate) {
+    showAlert('Failed to fetch default template. Reset cancelled.', 'Reset Failed');
+    return;
+  }
+
+  dashboardConfig = defaultTemplate;
+  config = defaultTemplate.global || {};
+  screens = defaultTemplate.screens || [];
+
+  // Clear API config too
+  try {
+    await fetch(`${relayUrl}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dashboardConfig),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // API not available
+  }
+
   applyConfig();
   renderScreens();
   showScreen(0);
-  alert('Configuration reset to defaults!');
+  showAlert('Configuration reset to defaults!', 'Reset Complete');
 }
 
 // Load widgets dynamically then initialize
@@ -691,6 +1008,7 @@ Promise.all([
   import('./widgets/sun-moon/sun-moon.js'),
   import('./widgets/kasa/kasa.js'),
   import('./widgets/wol/wol.js'),
-]).then(() => {
-  init();
+  import('./widgets/brightness/brightness.js'),
+]).then(async () => {
+  await init();
 });
