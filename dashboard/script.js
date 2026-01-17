@@ -166,7 +166,7 @@ function showAlert(message, title = null) {
   });
 }
 
-function showConfirm(
+export function showConfirm(
   message,
   { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = {}
 ) {

@@ -147,19 +147,26 @@ function showConfigModal(dark, onSave) {
   });
 
   // Check status for each device
-  modal.querySelectorAll('.wol-device-row').forEach(async (row) => {
-    const ip = row.dataset.ip;
-    const statusEl = row.querySelector('.wol-device-status');
-    if (ip) {
-      const online = await pingDevice(ip);
-      statusEl.textContent = online ? '●' : '○';
-      statusEl.classList.add(online ? 'online' : 'offline');
-      statusEl.title = online ? 'Online' : 'Offline';
-    } else {
-      statusEl.textContent = '?';
-      statusEl.title = 'No IP configured';
-    }
-  });
+  async function pollDeviceStatuses() {
+    modal.querySelectorAll('.wol-device-row').forEach(async (row) => {
+      const ip = row.dataset.ip;
+      const statusEl = row.querySelector('.wol-device-status');
+      if (ip) {
+        const online = await pingDevice(ip);
+        statusEl.textContent = online ? '●' : '○';
+        statusEl.classList.remove('online', 'offline');
+        statusEl.classList.add(online ? 'online' : 'offline');
+        statusEl.title = online ? 'Online' : 'Offline';
+      } else {
+        statusEl.textContent = '?';
+        statusEl.title = 'No IP configured';
+      }
+    });
+  }
+
+  // Initial status check and poll every 2s
+  pollDeviceStatuses();
+  const pollInterval = setInterval(pollDeviceStatuses, 2000);
 
   // Wake buttons
   modal.querySelectorAll('.wol-wake-btn').forEach((btn) => {
@@ -189,6 +196,7 @@ function showConfigModal(dark, onSave) {
       if (!confirmed) return;
       devices.splice(idx, 1);
       saveDevices(devices);
+      clearInterval(pollInterval);
       modal.remove();
       showConfigModal(dark, onSave);
     });
@@ -209,6 +217,7 @@ function showConfigModal(dark, onSave) {
     const devices = getDevices();
     devices.push({ name, ip, mac });
     saveDevices(devices);
+    clearInterval(pollInterval);
     modal.remove();
     showConfigModal(dark, onSave);
     onSave();
@@ -217,6 +226,7 @@ function showConfigModal(dark, onSave) {
   // Close
   modal.addEventListener('click', (e) => {
     if (e.target === modal || e.target.classList.contains('wol-modal-close')) {
+      clearInterval(pollInterval);
       modal.remove();
       onSave();
     }

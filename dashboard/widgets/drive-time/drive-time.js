@@ -1518,24 +1518,10 @@ function renderLocationEditor(container, dark, onBack) {
 function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true }) {
   const panelDark = panel.args?.dark ?? dark;
 
-  // Get routes from localStorage
-  const routes = getStoredRoutes();
-
   function showRouteManager() {
     renderRouteManager(container, panelDark, () => {
       startWidget();
     });
-  }
-
-  function checkLocationsConfigured() {
-    const locations = getLocations();
-    const currentRoutes = getStoredRoutes();
-    for (const route of currentRoutes) {
-      if (!locations[route.origin] || !locations[route.destination]) {
-        return false;
-      }
-    }
-    return true;
   }
 
   function startWidget() {
@@ -1649,12 +1635,6 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
       }
     }, 60 * 1000);
     refreshIntervals.push(windowCheckId);
-  }
-
-  // If no routes or locations not configured, show route manager
-  if (routes.length === 0 || !checkLocationsConfigured()) {
-    showRouteManager();
-    return;
   }
 
   startWidget();
