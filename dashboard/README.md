@@ -184,10 +184,10 @@ Uses Wayland + Cage (minimal kiosk compositor) for a lightweight, modern setup.
 
 ```bash
 # From dashboard folder on your Mac:
-scp -r scripts kiosk@kiosk.local:~
-ssh kiosk@kiosk.local
-chmod +x ~/scripts/*.sh
-./scripts/kiosk-setup.sh
+./scripts/deploy.sh kiosk@kiosk.local
+
+# Or just sync files without running setup:
+./scripts/deploy.sh kiosk@kiosk.local --no-setup
 ```
 
 > **Note:** Replace `kiosk.local` with the Pi's IP address if hostname doesn't resolve.

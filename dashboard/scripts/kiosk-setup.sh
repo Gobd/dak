@@ -5,7 +5,7 @@
 # Copy scripts folder to Pi and run:
 #   scp -r scripts kiosk@kiosk.local:~
 #   ssh kiosk@kiosk.local
-#   bash ~/scripts/kiosk-setup.sh
+#   bash ~/dashboard/scripts/kiosk-setup.sh
 
 set -e
 
@@ -39,7 +39,7 @@ echo "Using: $CHROMIUM_BIN"
 echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
 
-bash ~/scripts/install-keyboard.sh
+bash ~/dashboard/scripts/install-keyboard.sh
 
 echo "=== Configuring Chromium policies ==="
 sudo mkdir -p /etc/chromium/policies/managed
@@ -65,7 +65,7 @@ ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 EOF
 
 echo "=== Installing kiosk startup script ==="
-cp ~/scripts/kiosk.sh ~/.kiosk.sh
+cp ~/dashboard/scripts/kiosk.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
 echo "=== Setting up auto-start on login ==="
@@ -79,7 +79,7 @@ echo "=== Setting nano as default editor ==="
 echo 'export EDITOR=nano' >> ~/.bashrc
 
 echo "=== Setting up auto brightness cron ==="
-chmod +x ~/scripts/brightness.sh
+chmod +x ~/dashboard/scripts/brightness.sh
 # Run on boot and every 2 minutes for smooth gradual transitions
 (crontab -l 2>/dev/null | grep -v brightness.sh
  echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
@@ -108,8 +108,8 @@ else
 fi
 
 echo "=== Setup complete! ==="
-echo "Helper scripts available in ~/scripts/"
-echo "Edit ~/scripts/brightness.sh to set LAT/LON for your location"
+echo "Helper scripts available in ~/dashboard/scripts/"
+echo "Edit ~/dashboard/scripts/brightness.sh to set LAT/LON for your location"
 echo "Rebooting in 5 seconds..."
 sleep 5
 sudo reboot
