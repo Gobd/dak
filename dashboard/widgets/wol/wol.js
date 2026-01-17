@@ -3,6 +3,7 @@ import {
   getDashboardConfig,
   updateConfigSection,
   getRelayUrl,
+  showConfirm,
 } from '../../script.js';
 
 // Wake on LAN Widget
@@ -176,9 +177,16 @@ function showConfigModal(dark, onSave) {
 
   // Delete buttons
   modal.querySelectorAll('.wol-delete-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const idx = parseInt(btn.dataset.index, 10);
       const devices = getDevices();
+      const device = devices[idx];
+      const confirmed = await showConfirm(`Remove "${device.name}" from Wake on LAN?`, {
+        title: 'Remove Device',
+        confirmText: 'Remove',
+        danger: true,
+      });
+      if (!confirmed) return;
       devices.splice(idx, 1);
       saveDevices(devices);
       modal.remove();
