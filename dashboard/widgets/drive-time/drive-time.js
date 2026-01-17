@@ -280,6 +280,11 @@ function renderOverlay(container, driveData, route, dark, onDismiss, onEdit) {
     </div>
   `;
 
+  // Prevent clicks on overlay from propagating to widgets behind (e.g., calendar)
+  container.querySelector('.drive-time-overlay').addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
   container.querySelector('.drive-time-close').addEventListener('click', (e) => {
     e.stopPropagation();
     onDismiss();
@@ -343,6 +348,11 @@ function renderMultiRouteOverlay(container, routeDataList, dark, onDismissAll, o
       </div>
     </div>
   `;
+
+  // Prevent clicks on overlay from propagating to widgets behind (e.g., calendar)
+  container.querySelector('.drive-time-overlay').addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
 
   container.querySelector('.drive-time-close').addEventListener('click', (e) => {
     e.stopPropagation();

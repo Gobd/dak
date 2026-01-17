@@ -28,6 +28,7 @@ exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --disable-session-crashed-bubble \
   --disable-pinch \
   --overscroll-history-navigation=0 \
+  --disable-features=PrivateNetworkAccessSendPreflights,BlockInsecurePrivateNetworkRequests \
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \
   --ozone-platform=wayland \
   https://dak.bkemper.me/dashboard
