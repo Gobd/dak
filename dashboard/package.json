@@ -10,7 +10,7 @@
     "typecheck": "echo 'No typecheck configured'",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "build": "rm -rf dist && mkdir -p dist && cp *.html *.css *.js _headers dist/ && cp -r widgets dist/",
+    "build": "rm -rf dist && mkdir -p dist && cp *.html *.css dist/ && cp script.js location.js dist/ && cp -r widgets config dist/",
     "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm typecheck && pnpm build"
   },
   "devDependencies": {
