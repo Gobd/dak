@@ -10,9 +10,11 @@ if [ -z "$CHROMIUM_BIN" ]; then
   exit 1
 fi
 
-# Hide cursor if no mouse is connected
-CAGE_OPTS=""
-if ! grep -q "mouse" /proc/bus/input/devices 2>/dev/null; then
+# Hide cursor unless a real mouse is connected
+# (real mice have "Mouse" in their name, touchscreens don't)
+if grep -qi 'Name=.*mouse' /proc/bus/input/devices 2>/dev/null; then
+  CAGE_OPTS=""
+else
   CAGE_OPTS="-s"
 fi
 
