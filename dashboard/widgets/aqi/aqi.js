@@ -1,4 +1,11 @@
 import { registerWidget } from '../../script.js';
+import {
+  getWidgetLocation,
+  saveLocationConfig,
+  formatLocation,
+  geocodeAddress,
+  setupLocationAutocomplete,
+} from '../../location.js';
 
 // AQI Widget using Open-Meteo Air Quality API (free, no API key)
 
@@ -62,13 +69,14 @@ function getAQILabel(aqi) {
   return 'Hazardous';
 }
 
-function renderAQIChart(container, aqiData, dark) {
+function renderAQIChart(container, aqiData, dark, location = null, onSettings = null) {
   if (!aqiData || !aqiData.hourly) {
     renderError(container, 'No AQI data', dark);
     return;
   }
 
   const darkClass = dark ? 'dark' : '';
+  const locationDisplay = location ? formatLocation(location.city, location.state) : '';
   const now = new Date();
   const times = aqiData.hourly.time;
   const aqiValues = aqiData.hourly.us_aqi;
@@ -135,36 +143,13 @@ function renderAQIChart(container, aqiData, dark) {
     `;
   };
 
-  const modalContent = `
-    <div class="aqi-modal-content">
-      <h3>Air Quality Index Widget</h3>
-      <p><strong>Current AQI:</strong> The current US AQI value with color and label.</p>
-      <p><strong>Today/Tomorrow:</strong> Peak AQI values for each day.</p>
-      <p><strong>Bar Chart:</strong> AQI readings every 2 hours for 24 hours. Time shown above the peak hour. Faded bars are past hours.</p>
-      <h4>AQI Scale (US EPA)</h4>
-      <ul>
-        <li><span style="color: #4ade80">0-50 Good</span> - Air quality is satisfactory</li>
-        <li><span style="color: #facc15">51-100 Moderate</span> - Acceptable; sensitive groups may be affected</li>
-        <li><span style="color: #f97316">101-150 Sensitive</span> - Unhealthy for sensitive groups</li>
-        <li><span style="color: #ef4444">151-200 Unhealthy</span> - Everyone may experience effects</li>
-        <li><span style="color: #a855f7">201-300 Very Unhealthy</span> - Health alert; everyone affected</li>
-        <li><span style="color: #991b1b">301+ Hazardous</span> - Emergency conditions</li>
-      </ul>
-      <p><strong>Data source:</strong> Open-Meteo Air Quality API</p>
-    </div>
-  `;
-
   container.innerHTML = `
     <div class="aqi-widget ${darkClass}">
-      <button class="widget-info-btn" aria-label="Widget info">i</button>
-      <div class="widget-modal" style="display: none;">
-        <div class="widget-modal-backdrop"></div>
-        <div class="widget-modal-dialog">
-          ${modalContent}
-          <button class="widget-modal-close">Close</button>
-        </div>
-      </div>
       <div class="aqi-header">
+        <div class="aqi-location-row">
+          <span class="aqi-location">${locationDisplay || 'Set Location'}</span>
+          <button class="widget-settings-btn" aria-label="Settings">&#9881;</button>
+        </div>
         <span class="aqi-now" style="color: ${getAQIColor(currentAQI)}">AQI ${currentAQI} ${getAQILabel(currentAQI)}</span>
         ${todayHours.length ? `<span class="aqi-day-label">Today <b style="color: ${getAQIColor(todayMax)}">${todayMax}</b></span>` : ''}
         ${tomorrowHours.length ? `<span class="aqi-day-label">Tomorrow <b style="color: ${getAQIColor(tomorrowMax)}">${tomorrowMax}</b></span>` : ''}
@@ -176,19 +161,13 @@ function renderAQIChart(container, aqiData, dark) {
     </div>
   `;
 
-  // Set up modal interactions
+  // Settings button opens the settings modal
   const widget = container.querySelector('.aqi-widget');
-  const infoBtn = widget.querySelector('.widget-info-btn');
-  const modal = widget.querySelector('.widget-modal');
-  const backdrop = widget.querySelector('.widget-modal-backdrop');
-  const closeBtn = widget.querySelector('.widget-modal-close');
+  const settingsBtn = widget.querySelector('.widget-settings-btn');
 
-  const openModal = () => (modal.style.display = 'flex');
-  const closeModal = () => (modal.style.display = 'none');
-
-  infoBtn.addEventListener('click', openModal);
-  backdrop.addEventListener('click', closeModal);
-  closeBtn.addEventListener('click', closeModal);
+  if (onSettings && settingsBtn) {
+    settingsBtn.addEventListener('click', onSettings);
+  }
 }
 
 function renderError(container, message, dark) {
@@ -200,28 +179,157 @@ function renderError(container, message, dark) {
   `;
 }
 
-function renderLoading(container, dark) {
+function renderLoading(container, dark, message = 'Loading AQI...') {
   const darkClass = dark ? 'dark' : '';
   container.innerHTML = `
     <div class="aqi-widget aqi-loading ${darkClass}">
-      <div class="loading-message">Loading AQI...</div>
+      <div class="loading-message">${message}</div>
     </div>
   `;
 }
 
+// Settings modal with location and info
+function showSettingsModal(dark, currentLocation, onSave) {
+  const darkClass = dark ? 'dark' : '';
+  const currentQuery = currentLocation?.query || '';
+  const currentDisplay = currentLocation
+    ? formatLocation(currentLocation.city, currentLocation.state)
+    : '';
+
+  const modal = document.createElement('div');
+  modal.className = `widget-location-modal open ${darkClass}`;
+  modal.innerHTML = `
+    <div class="widget-location-modal-content">
+      <div class="widget-location-modal-header">
+        <h3>Air Quality</h3>
+      </div>
+      <div class="widget-location-modal-body">
+        <div class="settings-section">
+          <p class="location-help">Location:</p>
+          <div class="location-input-wrapper">
+            <input type="text" class="location-input" placeholder="e.g., San Francisco, CA" value="${currentQuery}">
+          </div>
+          ${currentDisplay ? `<p class="location-current">Current: ${currentDisplay}</p>` : ''}
+        </div>
+
+        <details class="info-section">
+          <summary>About AQI</summary>
+          <div class="info-content">
+            <p><b>Scale (US EPA):</b>
+              <span style="color:#4ade80">0-50 Good</span> ·
+              <span style="color:#facc15">51-100 Mod</span> ·
+              <span style="color:#f97316">101-150 Sens.</span> ·
+              <span style="color:#ef4444">151-200 Unhealthy</span> ·
+              <span style="color:#a855f7">201+ V.Unhealthy</span>
+            </p>
+          </div>
+        </details>
+
+        <p class="location-status"></p>
+      </div>
+      <div class="widget-location-modal-actions">
+        <button class="modal-cancel">Cancel</button>
+        <button class="modal-save">Save</button>
+      </div>
+    </div>
+  `;
+
+  const input = modal.querySelector('.location-input');
+  const statusEl = modal.querySelector('.location-status');
+  const saveBtn = modal.querySelector('.modal-save');
+
+  // Store place details when autocomplete is selected
+  let selectedPlace = null;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.classList.contains('modal-cancel')) {
+      modal.remove();
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const query = input.value.trim();
+    if (!query) {
+      statusEl.textContent = 'Please enter a location';
+      statusEl.className = 'location-status error';
+      return;
+    }
+
+    // Use place details if available (from autocomplete), otherwise geocode
+    if (selectedPlace && selectedPlace.lat && selectedPlace.lon) {
+      onSave({
+        lat: selectedPlace.lat,
+        lon: selectedPlace.lon,
+        city: selectedPlace.city,
+        state: selectedPlace.state,
+        query,
+      });
+      modal.remove();
+      return;
+    }
+
+    statusEl.textContent = 'Looking up location...';
+    statusEl.className = 'location-status';
+    saveBtn.disabled = true;
+
+    const geo = await geocodeAddress(query);
+    if (geo) {
+      onSave({ lat: geo.lat, lon: geo.lon, city: geo.city, state: geo.state, query });
+      modal.remove();
+    } else {
+      statusEl.textContent = 'Could not find that location.';
+      statusEl.className = 'location-status error';
+      saveBtn.disabled = false;
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveBtn.click();
+  });
+
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
+
+  // Setup Google Places autocomplete
+  setupLocationAutocomplete(input, ({ city, state, lat, lon }) => {
+    if (city && state) {
+      input.value = `${city}, ${state}`;
+      selectedPlace = { city, state, lat, lon };
+    }
+  });
+}
+
 function renderAQIWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
-  const lat = panel.args?.lat || '40.7608';
-  const lon = panel.args?.lon || '-111.8910';
+  const argsLat = panel.args?.lat;
+  const argsLon = panel.args?.lon;
+  const widgetId = panel.id || 'aqi';
 
   renderLoading(container, dark);
 
+  let currentLocation = null;
+
   async function loadAQI() {
-    const aqiData = await fetchAQI(lat, lon);
-    if (aqiData) {
-      renderAQIChart(container, aqiData, dark);
-    } else {
+    try {
+      currentLocation = await getWidgetLocation(widgetId, argsLat, argsLon);
+      const aqiData = await fetchAQI(currentLocation.lat, currentLocation.lon);
+      if (aqiData) {
+        renderAQIChart(container, aqiData, dark, currentLocation, showSettings);
+      } else {
+        renderError(container, 'Failed to load AQI', dark);
+      }
+    } catch (err) {
+      console.error('AQI load error:', err);
       renderError(container, 'Failed to load AQI', dark);
     }
+  }
+
+  function showSettings() {
+    showSettingsModal(dark, currentLocation, async (config) => {
+      saveLocationConfig(widgetId, config);
+      renderLoading(container, dark, 'Updating...');
+      await loadAQI();
+    });
   }
 
   loadAQI();

@@ -1,4 +1,11 @@
 import { registerWidget } from '../../script.js';
+import {
+  getWidgetLocation,
+  saveLocationConfig,
+  formatLocation,
+  geocodeAddress,
+  setupLocationAutocomplete,
+} from '../../location.js';
 
 // UV Index Widget using Open-Meteo (free, no API key)
 
@@ -60,25 +67,34 @@ function getUVLabel(uv) {
   return 'Extreme';
 }
 
-function renderUVChart(container, uvData, dark, safeThreshold = 4) {
+function renderUVChart(
+  container,
+  uvData,
+  dark,
+  safeThreshold = 4,
+  location = null,
+  onSettings = null
+) {
   if (!uvData || !uvData.hourly) {
     renderError(container, 'No UV data', dark);
     return;
   }
 
   const darkClass = dark ? 'dark' : '';
+  const locationDisplay = location ? formatLocation(location.city, location.state) : '';
   const now = new Date();
   const times = uvData.hourly.time;
   const uvValues = uvData.hourly.uv_index;
 
-  // Filter to peak UV hours (8am - 8pm) for today and tomorrow
+  // Filter to peak UV hours (6am - 8pm, every 2 hours) for today and tomorrow
   const todayHours = [];
   const tomorrowHours = [];
 
   for (let i = 0; i < times.length; i++) {
     const time = new Date(times[i]);
     const hour = time.getHours();
-    if (hour >= 8 && hour <= 20) {
+    // Every 2 hours during daylight (6, 8, 10, 12, 14, 16, 18, 20)
+    if (hour >= 6 && hour <= 20 && hour % 2 === 0) {
       const isToday = time.toDateString() === now.toDateString();
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -171,36 +187,13 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
     crossingText = `<span class="uv-crossing">☀️ ${formatHour(todayCrossings.riseTime)}+</span>`;
   }
 
-  const modalContent = `
-    <div class="uv-modal-content">
-      <h3>UV Index Widget</h3>
-      <p><strong>Current UV:</strong> The current UV index with color and label (Low, Moderate, High, Very High, Extreme).</p>
-      <p><strong>Today/Tomorrow:</strong> Peak UV values for each day.</p>
-      <p><strong>☀️ Times:</strong> When UV rises above and falls below your safe threshold (${safeThreshold}). Shows the window when sun protection is needed.</p>
-      <p><strong>Bar Chart:</strong> Hourly UV from 8am-8pm. Time shown above the peak hour. Faded bars are past hours.</p>
-      <h4>UV Scale</h4>
-      <ul>
-        <li><span style="color: #4ade80">0-2 Low</span> - Safe for most people</li>
-        <li><span style="color: #facc15">3-5 Moderate</span> - Seek shade midday</li>
-        <li><span style="color: #f97316">6-7 High</span> - Protection needed</li>
-        <li><span style="color: #ef4444">8-10 Very High</span> - Extra protection</li>
-        <li><span style="color: #a855f7">11+ Extreme</span> - Avoid sun exposure</li>
-      </ul>
-      <p><strong>Safe threshold:</strong> ${safeThreshold} (your configured limit)</p>
-    </div>
-  `;
-
   container.innerHTML = `
     <div class="uv-widget ${darkClass}">
-      <button class="widget-info-btn" aria-label="Widget info">i</button>
-      <div class="widget-modal" style="display: none;">
-        <div class="widget-modal-backdrop"></div>
-        <div class="widget-modal-dialog">
-          ${modalContent}
-          <button class="widget-modal-close">Close</button>
-        </div>
-      </div>
       <div class="uv-header">
+        <div class="uv-location-row">
+          <span class="uv-location">${locationDisplay || 'Set Location'}</span>
+          <button class="widget-settings-btn" aria-label="Settings">&#9881;</button>
+        </div>
         <span class="uv-now" style="color: ${getUVColor(currentUV)}">UV ${currentUV} ${getUVLabel(currentUV)}</span>
         ${crossingText}
         ${todayHours.length ? `<span class="uv-day-label">Today <b style="color: ${getUVColor(todayMax)}">${todayMax}</b></span>` : ''}
@@ -213,19 +206,13 @@ function renderUVChart(container, uvData, dark, safeThreshold = 4) {
     </div>
   `;
 
-  // Set up modal interactions
+  // Settings button opens the settings modal
   const widget = container.querySelector('.uv-widget');
-  const infoBtn = widget.querySelector('.widget-info-btn');
-  const modal = widget.querySelector('.widget-modal');
-  const backdrop = widget.querySelector('.widget-modal-backdrop');
-  const closeBtn = widget.querySelector('.widget-modal-close');
+  const settingsBtn = widget.querySelector('.widget-settings-btn');
 
-  const openModal = () => (modal.style.display = 'flex');
-  const closeModal = () => (modal.style.display = 'none');
-
-  infoBtn.addEventListener('click', openModal);
-  backdrop.addEventListener('click', closeModal);
-  closeBtn.addEventListener('click', closeModal);
+  if (onSettings && settingsBtn) {
+    settingsBtn.addEventListener('click', onSettings);
+  }
 }
 
 function renderError(container, message, dark) {
@@ -237,29 +224,190 @@ function renderError(container, message, dark) {
   `;
 }
 
-function renderLoading(container, dark) {
+function renderLoading(container, dark, message = 'Loading UV...') {
   const darkClass = dark ? 'dark' : '';
   container.innerHTML = `
     <div class="uv-widget uv-loading ${darkClass}">
-      <div class="loading-message">Loading UV...</div>
+      <div class="loading-message">${message}</div>
     </div>
   `;
 }
 
+// Settings modal with location, threshold, and info
+function showSettingsModal(dark, currentLocation, currentThreshold, onSave) {
+  const darkClass = dark ? 'dark' : '';
+  const currentQuery = currentLocation?.query || '';
+  const currentDisplay = currentLocation
+    ? formatLocation(currentLocation.city, currentLocation.state)
+    : '';
+
+  const modal = document.createElement('div');
+  modal.className = `widget-location-modal open ${darkClass}`;
+  modal.innerHTML = `
+    <div class="widget-location-modal-content uv-settings-modal">
+      <div class="widget-location-modal-header">
+        <h3>UV Index</h3>
+      </div>
+      <div class="widget-location-modal-body">
+        <div class="settings-section">
+          <p class="location-help">Location:</p>
+          <div class="location-input-wrapper">
+            <input type="text" class="location-input" placeholder="e.g., San Francisco, CA" value="${currentQuery}">
+          </div>
+          ${currentDisplay ? `<p class="location-current">Current: ${currentDisplay}</p>` : ''}
+        </div>
+
+        <div class="settings-section">
+          <p class="location-help">Safe UV threshold:</p>
+          <div class="threshold-input-wrapper">
+            <input type="range" class="threshold-slider" min="1" max="10" value="${currentThreshold}">
+            <span class="threshold-value">${currentThreshold}</span>
+          </div>
+          <p class="threshold-hint">Times above UV ${currentThreshold} highlighted</p>
+        </div>
+
+        <details class="info-section">
+          <summary>About UV Index</summary>
+          <div class="info-content">
+            <p><b>☀️ Times:</b> When UV exceeds your threshold</p>
+            <p><b>Scale:</b>
+              <span style="color:#4ade80">0-2 Low</span> ·
+              <span style="color:#facc15">3-5 Mod</span> ·
+              <span style="color:#f97316">6-7 High</span> ·
+              <span style="color:#ef4444">8-10 V.High</span> ·
+              <span style="color:#a855f7">11+ Extreme</span>
+            </p>
+          </div>
+        </details>
+
+        <p class="location-status"></p>
+      </div>
+      <div class="widget-location-modal-actions">
+        <button class="modal-cancel">Cancel</button>
+        <button class="modal-save">Save</button>
+      </div>
+    </div>
+  `;
+
+  const input = modal.querySelector('.location-input');
+  const slider = modal.querySelector('.threshold-slider');
+  const thresholdValueEl = modal.querySelector('.threshold-value');
+  const thresholdHintEl = modal.querySelector('.threshold-hint');
+  const statusEl = modal.querySelector('.location-status');
+  const saveBtn = modal.querySelector('.modal-save');
+
+  // Store place details when autocomplete is selected
+  let selectedPlace = null;
+
+  // Update threshold display as slider moves
+  slider.addEventListener('input', () => {
+    thresholdValueEl.textContent = slider.value;
+    thresholdHintEl.textContent = `UV ${slider.value}+ shown as warning window`;
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.classList.contains('modal-cancel')) {
+      modal.remove();
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const query = input.value.trim();
+    const threshold = parseInt(slider.value, 10);
+
+    if (!query) {
+      statusEl.textContent = 'Please enter a location';
+      statusEl.className = 'location-status error';
+      return;
+    }
+
+    // Use place details if available (from autocomplete), otherwise geocode
+    if (selectedPlace && selectedPlace.lat && selectedPlace.lon) {
+      onSave({
+        lat: selectedPlace.lat,
+        lon: selectedPlace.lon,
+        city: selectedPlace.city,
+        state: selectedPlace.state,
+        query,
+        safeThreshold: threshold,
+      });
+      modal.remove();
+      return;
+    }
+
+    statusEl.textContent = 'Looking up location...';
+    statusEl.className = 'location-status';
+    saveBtn.disabled = true;
+
+    const geo = await geocodeAddress(query);
+    if (geo) {
+      onSave({
+        lat: geo.lat,
+        lon: geo.lon,
+        city: geo.city,
+        state: geo.state,
+        query,
+        safeThreshold: threshold,
+      });
+      modal.remove();
+    } else {
+      statusEl.textContent = 'Could not find that location.';
+      statusEl.className = 'location-status error';
+      saveBtn.disabled = false;
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveBtn.click();
+  });
+
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
+
+  // Setup Google Places autocomplete
+  setupLocationAutocomplete(input, ({ city, state, lat, lon }) => {
+    if (city && state) {
+      input.value = `${city}, ${state}`;
+      selectedPlace = { city, state, lat, lon };
+    }
+  });
+}
+
 function renderUVWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
-  const lat = panel.args?.lat || '40.7608';
-  const lon = panel.args?.lon || '-111.8910';
-  const safeThreshold = panel.args?.safeThreshold ?? 4;
+  const argsLat = panel.args?.lat;
+  const argsLon = panel.args?.lon;
+  const defaultThreshold = panel.args?.safeThreshold ?? 4;
+  const widgetId = panel.id || 'uv';
 
   renderLoading(container, dark);
 
+  let currentLocation = null;
+  let currentThreshold = defaultThreshold;
+
   async function loadUV() {
-    const uvData = await fetchUVIndex(lat, lon);
-    if (uvData) {
-      renderUVChart(container, uvData, dark, safeThreshold);
-    } else {
+    try {
+      currentLocation = await getWidgetLocation(widgetId, argsLat, argsLon);
+      // Get threshold from stored config, fallback to default
+      currentThreshold = currentLocation.safeThreshold ?? defaultThreshold;
+      const uvData = await fetchUVIndex(currentLocation.lat, currentLocation.lon);
+      if (uvData) {
+        renderUVChart(container, uvData, dark, currentThreshold, currentLocation, openSettings);
+      } else {
+        renderError(container, 'Failed to load UV', dark);
+      }
+    } catch (err) {
+      console.error('UV load error:', err);
       renderError(container, 'Failed to load UV', dark);
     }
+  }
+
+  function openSettings() {
+    showSettingsModal(dark, currentLocation, currentThreshold, async (config) => {
+      saveLocationConfig(widgetId, config);
+      renderLoading(container, dark, 'Updating...');
+      await loadUV();
+    });
   }
 
   loadUV();

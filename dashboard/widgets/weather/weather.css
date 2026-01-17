@@ -512,3 +512,143 @@ body.dark .weather-modal {
     min-width: 70px;
   }
 }
+
+/* Location header */
+.weather-location-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px 4px;
+  border-bottom: 1px solid var(--weather-border);
+  margin-bottom: 8px;
+}
+
+.weather-location-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--weather-text);
+}
+
+.weather-settings-btn {
+  background: none;
+  border: none;
+  color: var(--weather-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.weather-settings-btn:hover {
+  opacity: 1;
+  background: var(--weather-surface);
+}
+
+/* Location settings modal */
+.weather-location-modal .weather-modal-body {
+  min-width: 280px;
+  overflow: visible;
+}
+
+.location-help {
+  font-size: 14px;
+  color: var(--weather-text-muted);
+  margin-bottom: 12px !important;
+}
+
+.location-input-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.location-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1px solid var(--weather-border);
+  border-radius: 8px;
+  background: var(--weather-surface);
+  color: var(--weather-text);
+  box-sizing: border-box;
+}
+
+.location-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.location-current {
+  font-size: 13px;
+  color: var(--weather-text-muted);
+}
+
+.location-status {
+  font-size: 13px;
+  color: var(--weather-text-muted);
+  min-height: 20px;
+}
+
+.location-status.error {
+  color: #ef4444;
+}
+
+.weather-modal-actions {
+  gap: 8px;
+}
+
+.weather-modal-cancel,
+.weather-modal-save {
+  background: var(--weather-surface);
+  border: 1px solid var(--weather-border);
+  color: var(--weather-text);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.weather-modal-cancel:hover,
+.weather-modal-save:hover {
+  background: var(--weather-border);
+}
+
+.weather-modal-save {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.weather-modal-save:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.weather-modal-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Autocomplete dropdown for weather modal */
+.weather-modal .location-autocomplete-dropdown {
+  background: var(--weather-surface);
+  border-color: var(--weather-border);
+  z-index: 10000;
+}
+
+.weather-modal .location-autocomplete-item:hover {
+  background: var(--weather-border);
+}
+
+.weather-modal .location-autocomplete-item .loc-main {
+  color: var(--weather-text);
+}
+
+.weather-modal .location-autocomplete-item .loc-secondary {
+  color: var(--weather-text-muted);
+}
