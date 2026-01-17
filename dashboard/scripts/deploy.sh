@@ -30,6 +30,9 @@ REPO_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "=== Syncing to $REMOTE ==="
 rsync -avz --delete \
+  --exclude='.venv' \
+  --exclude='node_modules' \
+  --exclude='__pycache__' \
   --include='scripts/***' \
   --include='services/***' \
   --exclude='*' \
