@@ -17,6 +17,14 @@ from wakeonlan import send_magic_packet
 app = Flask(__name__)
 CORS(app)
 
+
+@app.after_request
+def add_private_network_header(response):
+    """Add Private Network Access header for Chrome's security checks"""
+    # Required for HTTPS sites to access localhost services
+    response.headers['Access-Control-Allow-Private-Network'] = 'true'
+    return response
+
 # Config file paths
 CONFIG_DIR = Path.home() / '.config' / 'home-relay'
 BRIGHTNESS_CONFIG = CONFIG_DIR / 'brightness.json'

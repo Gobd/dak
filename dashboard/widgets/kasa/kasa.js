@@ -8,7 +8,7 @@ const RELAY_URL = 'http://localhost:5111';
 async function discoverDevices() {
   try {
     const res = await fetch(`${RELAY_URL}/kasa/discover`, {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) throw new Error('Discovery failed');
     return await res.json();

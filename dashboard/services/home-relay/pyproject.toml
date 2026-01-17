@@ -2,7 +2,7 @@
 name = "home-relay"
 version = "1.0.0"
 description = "Home relay service for Kasa and WOL"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "flask>=3.1.0",
     "flask-cors>=5.0.0",
