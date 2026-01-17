@@ -1,4 +1,4 @@
-import { registerWidget } from '../../script.js';
+import { registerWidget, getConfigSection, updateConfigSection } from '../../script.js';
 import {
   getStoredAuth,
   getAuthUrl,
@@ -15,10 +15,6 @@ import { createHybridDateTimePicker, setWeekStart } from './wheel-picker.js';
 
 // Calendar Widget - Month grid and list views
 
-const HIDDEN_CALENDARS_KEY = 'calendar-hidden';
-const CALENDAR_NAMES_KEY = 'calendar-names';
-const CALENDAR_VIEW_KEY = 'calendar-view';
-
 let calendars = [];
 let events = [];
 let hiddenCalendars = new Set(); // Calendar IDs to hide
@@ -34,60 +30,34 @@ let showTime = false; // Show clock in header
 let showSeconds = false; // Show seconds in clock
 let timeIntervalId = null; // Interval for updating clock
 
-// Load hidden calendars from localStorage
-function loadHiddenCalendars() {
-  try {
-    const stored = localStorage.getItem(HIDDEN_CALENDARS_KEY);
-    if (stored) {
-      hiddenCalendars = new Set(JSON.parse(stored));
-    }
-  } catch {
-    hiddenCalendars = new Set();
+// Load all calendar settings from dashboardConfig
+function loadCalendarSettings() {
+  const calendarConfig = getConfigSection('calendar', {});
+
+  // Hidden calendars
+  hiddenCalendars = new Set(calendarConfig.hidden || []);
+
+  // Custom names
+  calendarNames = calendarConfig.names || {};
+
+  // View preference
+  if (calendarConfig.view === 'month' || calendarConfig.view === 'list') {
+    currentView = calendarConfig.view;
   }
 }
 
-// Save hidden calendars to localStorage
-function saveHiddenCalendars() {
-  localStorage.setItem(HIDDEN_CALENDARS_KEY, JSON.stringify([...hiddenCalendars]));
-}
-
-// Load custom calendar names from localStorage
-function loadCalendarNames() {
-  try {
-    const stored = localStorage.getItem(CALENDAR_NAMES_KEY);
-    if (stored) {
-      calendarNames = JSON.parse(stored);
-    }
-  } catch {
-    calendarNames = {};
-  }
-}
-
-// Save custom calendar names to localStorage
-function saveCalendarNames() {
-  localStorage.setItem(CALENDAR_NAMES_KEY, JSON.stringify(calendarNames));
+// Save all calendar settings to dashboardConfig
+async function saveCalendarSettings() {
+  await updateConfigSection('calendar', {
+    names: calendarNames,
+    hidden: [...hiddenCalendars],
+    view: currentView,
+  });
 }
 
 // Get display name for a calendar (custom name or original)
 function getCalendarDisplayName(calendarId, originalName) {
   return calendarNames[calendarId] || originalName;
-}
-
-// Load view preference from localStorage
-function loadViewPreference() {
-  try {
-    const stored = localStorage.getItem(CALENDAR_VIEW_KEY);
-    if (stored && (stored === 'month' || stored === 'list')) {
-      currentView = stored;
-    }
-  } catch {
-    // Keep default
-  }
-}
-
-// Save view preference to localStorage
-function saveViewPreference() {
-  localStorage.setItem(CALENDAR_VIEW_KEY, currentView);
 }
 
 // Parse RRULE to human-readable frequency
@@ -1369,7 +1339,6 @@ function showSettingsModal() {
       const activeViewBtn = modal.querySelector('[data-view].active');
       if (activeViewBtn) {
         currentView = activeViewBtn.dataset.view;
-        saveViewPreference();
       }
 
       // Update hidden calendars based on checkboxes
@@ -1379,7 +1348,6 @@ function showSettingsModal() {
           hiddenCalendars.add(checkbox.dataset.calendarId);
         }
       });
-      saveHiddenCalendars();
 
       // Update custom calendar names
       modal.querySelectorAll('.calendar-name-input').forEach((input) => {
@@ -1391,7 +1359,9 @@ function showSettingsModal() {
           delete calendarNames[calId];
         }
       });
-      saveCalendarNames();
+
+      // Save all settings at once
+      saveCalendarSettings();
 
       modal.remove();
       refreshCalendar();
@@ -1468,10 +1438,8 @@ async function renderCalendarWidget(
   currentContainer = container;
   isDarkMode = dark;
 
-  // Load preferences from storage
-  loadHiddenCalendars();
-  loadCalendarNames();
-  loadViewPreference();
+  // Load preferences from dashboardConfig
+  loadCalendarSettings();
 
   // Apply config options (only if explicitly set, otherwise use stored preference)
   if (panel.args?.view === 'list') {
