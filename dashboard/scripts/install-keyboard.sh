@@ -4,11 +4,11 @@
 #   version: semver like v3.0.1 or 3.0.1 - downloads from GitHub releases
 #   branch:  branch name like main - downloads nightly build from GitHub Actions
 #   user@host: optional remote host to install on via SSH
-#   default: v3.0.2
+#   default: v3.0.3
 
 set -e
 
-INPUT="${1:-v3.0.2}"
+INPUT="${1:-v3.0.3}"
 REMOTE="$2"
 DEST_DIR=~/.config/chromium-extensions
 
@@ -51,6 +51,7 @@ if [[ -z "$REMOTE" ]]; then
   mv /tmp/smartkey-final "$DEST_DIR/smartkey"
 else
   echo "=== Installing on $REMOTE ==="
+  # shellcheck disable=SC2029  # DEST_DIR is intentionally expanded client-side
   ssh "$REMOTE" "mkdir -p $DEST_DIR && rm -rf $DEST_DIR/smartkey"
   scp -r /tmp/smartkey-final "$REMOTE:$DEST_DIR/smartkey"
   rm -rf /tmp/smartkey-final

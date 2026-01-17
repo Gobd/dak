@@ -1,5 +1,12 @@
 import { registerWidget } from '../../script.js';
 import { getSunTimes, getMoonTimes, getMoonIllumination } from './suncalc3-2.0.5.js';
+import {
+  getWidgetLocation,
+  saveLocationConfig,
+  formatLocation,
+  geocodeAddress,
+  setupLocationAutocomplete,
+} from '../../location.js';
 
 // Sun/Moon Widget - All calculations done locally via suncalc3
 // No external API needed!
@@ -111,8 +118,9 @@ function getPhaseDisplay(phase, phaseValue) {
   return { icon, name, trend };
 }
 
-function renderWidget(container, lat, lon, dark) {
+function renderWidget(container, lat, lon, dark, location = null, onSettings = null) {
   const darkClass = dark ? 'dark' : '';
+  const locationDisplay = location ? formatLocation(location.city, location.state) : '';
 
   let data;
   try {
@@ -132,6 +140,10 @@ function renderWidget(container, lat, lon, dark) {
 
   container.innerHTML = `
     <div class="sun-moon-widget ${darkClass}">
+      <div class="sun-moon-header">
+        <span class="sun-moon-location">${locationDisplay || 'Set Location'}</span>
+        <button class="widget-settings-btn" title="Change location">&#9881;</button>
+      </div>
       <div class="times-section">
         <div class="times-column sun-column">
           <div class="times-row">
@@ -176,6 +188,11 @@ function renderWidget(container, lat, lon, dark) {
       </div>
     </div>
   `;
+
+  // Add settings button handler
+  if (onSettings) {
+    container.querySelector('.widget-settings-btn')?.addEventListener('click', onSettings);
+  }
 }
 
 function renderError(container, message, dark) {
@@ -187,19 +204,150 @@ function renderError(container, message, dark) {
   `;
 }
 
-function renderSunMoonWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
-  const lat = panel.args?.lat || '40.7608';
-  const lon = panel.args?.lon || '-111.8910';
+function renderLoading(container, dark, message = 'Loading...') {
+  const darkClass = dark ? 'dark' : '';
+  container.innerHTML = `
+    <div class="sun-moon-widget sun-moon-loading ${darkClass}">
+      <div class="loading-message">${message}</div>
+    </div>
+  `;
+}
 
-  // Initial render - no loading needed since it's all local calculation
-  renderWidget(container, lat, lon, dark);
+// Location settings modal
+function showLocationSettingsModal(dark, currentLocation, onSave) {
+  const darkClass = dark ? 'dark' : '';
+  const currentQuery = currentLocation?.query || '';
+  const currentDisplay = currentLocation
+    ? formatLocation(currentLocation.city, currentLocation.state)
+    : '';
+
+  const modal = document.createElement('div');
+  modal.className = `widget-location-modal open ${darkClass}`;
+  modal.innerHTML = `
+    <div class="widget-location-modal-content">
+      <div class="widget-location-modal-header">
+        <h3>Set Location</h3>
+      </div>
+      <div class="widget-location-modal-body">
+        <p class="location-help">Enter a city, state, or ZIP code:</p>
+        <div class="location-input-wrapper">
+          <input type="text" class="location-input" placeholder="e.g., San Francisco, CA" value="${currentQuery}">
+        </div>
+        ${currentDisplay ? `<p class="location-current">Current: ${currentDisplay}</p>` : ''}
+        <p class="location-status"></p>
+      </div>
+      <div class="widget-location-modal-actions">
+        <button class="modal-cancel">Cancel</button>
+        <button class="modal-save">Save</button>
+      </div>
+    </div>
+  `;
+
+  const input = modal.querySelector('.location-input');
+  const statusEl = modal.querySelector('.location-status');
+  const saveBtn = modal.querySelector('.modal-save');
+
+  // Store place details when autocomplete is selected
+  let selectedPlace = null;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.classList.contains('modal-cancel')) {
+      modal.remove();
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const query = input.value.trim();
+    if (!query) {
+      statusEl.textContent = 'Please enter a location';
+      statusEl.className = 'location-status error';
+      return;
+    }
+
+    // Use place details if available (from autocomplete), otherwise geocode
+    if (selectedPlace && selectedPlace.lat && selectedPlace.lon) {
+      onSave({
+        lat: selectedPlace.lat,
+        lon: selectedPlace.lon,
+        city: selectedPlace.city,
+        state: selectedPlace.state,
+        query,
+      });
+      modal.remove();
+      return;
+    }
+
+    statusEl.textContent = 'Looking up location...';
+    statusEl.className = 'location-status';
+    saveBtn.disabled = true;
+
+    const geo = await geocodeAddress(query);
+    if (geo) {
+      onSave({ lat: geo.lat, lon: geo.lon, city: geo.city, state: geo.state, query });
+      modal.remove();
+    } else {
+      statusEl.textContent = 'Could not find that location.';
+      statusEl.className = 'location-status error';
+      saveBtn.disabled = false;
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveBtn.click();
+  });
+
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
+
+  // Setup Google Places autocomplete
+  setupLocationAutocomplete(input, ({ city, state, lat, lon }) => {
+    if (city && state) {
+      input.value = `${city}, ${state}`;
+      selectedPlace = { city, state, lat, lon };
+    }
+  });
+}
+
+function renderSunMoonWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
+  const argsLat = panel.args?.lat;
+  const argsLon = panel.args?.lon;
+  const widgetId = panel.id || 'sun-moon';
+
+  let currentLocation = null;
+
+  async function loadWidget() {
+    try {
+      currentLocation = await getWidgetLocation(widgetId, argsLat, argsLon);
+      renderWidget(
+        container,
+        currentLocation.lat,
+        currentLocation.lon,
+        dark,
+        currentLocation,
+        showSettings
+      );
+    } catch (err) {
+      console.error('Sun/moon load error:', err);
+      renderError(container, 'Failed to load', dark);
+    }
+  }
+
+  function showSettings() {
+    showLocationSettingsModal(dark, currentLocation, async (config) => {
+      saveLocationConfig(widgetId, config);
+      renderLoading(container, dark, 'Updating location...');
+      await loadWidget();
+    });
+  }
+
+  // Initial render
+  loadWidget();
 
   // Refresh periodically (recalculates, no network needed)
   const refreshMs = parseDuration(panel.refresh);
   if (refreshMs) {
-    const intervalId = setInterval(() => {
-      renderWidget(container, lat, lon, dark);
-    }, refreshMs);
+    const intervalId = setInterval(loadWidget, refreshMs);
     refreshIntervals.push(intervalId);
   }
 }

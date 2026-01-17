@@ -439,3 +439,271 @@ body.edit-mode .panel.resizing .position-tooltip {
   background: #444;
   color: #fff;
 }
+
+/* =====================
+   Shared Location Modal
+   ===================== */
+
+.widget-location-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.widget-location-modal.open {
+  opacity: 1;
+}
+
+.widget-location-modal-content {
+  --modal-bg: #ffffff;
+  --modal-surface: #f3f4f6;
+  --modal-border: #e5e7eb;
+  --modal-text: #1f2937;
+  --modal-text-muted: #6b7280;
+
+  background: var(--modal-bg);
+  border-radius: 12px;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: var(--modal-text);
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+.widget-location-modal.dark .widget-location-modal-content {
+  --modal-bg: #1f1f1f;
+  --modal-surface: #2a2a2a;
+  --modal-border: #374151;
+  --modal-text: #f9fafb;
+  --modal-text-muted: #9ca3af;
+}
+
+.widget-location-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--modal-border);
+}
+
+.widget-location-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--modal-text);
+}
+
+.widget-location-modal-body {
+  padding: 20px;
+}
+
+.widget-location-modal-body .location-help {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--modal-text-muted);
+}
+
+.widget-location-modal-body .location-input-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.widget-location-modal-body .location-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1px solid var(--modal-border);
+  border-radius: 8px;
+  background: var(--modal-surface);
+  color: var(--modal-text);
+  box-sizing: border-box;
+}
+
+.widget-location-modal-body .location-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.widget-location-modal-body .location-current {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--modal-text-muted);
+}
+
+.widget-location-modal-body .location-status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--modal-text-muted);
+  min-height: 20px;
+}
+
+.widget-location-modal-body .location-status.error {
+  color: #ef4444;
+}
+
+.widget-location-modal-actions {
+  padding: 16px 20px;
+  border-top: 1px solid var(--modal-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.widget-location-modal-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+
+.widget-location-modal-actions .modal-cancel {
+  background: var(--modal-surface);
+  border: 1px solid var(--modal-border);
+  color: var(--modal-text);
+}
+
+.widget-location-modal-actions .modal-cancel:hover {
+  background: var(--modal-border);
+}
+
+.widget-location-modal-actions .modal-save {
+  background: #3b82f6;
+  border: 1px solid #3b82f6;
+  color: white;
+}
+
+.widget-location-modal-actions .modal-save:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.widget-location-modal-actions .modal-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Settings sections */
+.widget-location-modal-body .settings-section {
+  margin-bottom: 16px;
+}
+
+/* Threshold slider */
+.widget-location-modal-body .threshold-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.widget-location-modal-body .threshold-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--modal-border);
+  border-radius: 3px;
+  outline: none;
+}
+
+.widget-location-modal-body .threshold-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
+
+.widget-location-modal-body .threshold-value {
+  font-size: 18px;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  color: var(--modal-text);
+}
+
+.widget-location-modal-body .threshold-hint {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: var(--modal-text-muted);
+}
+
+/* Info section (collapsible) */
+.widget-location-modal-body .info-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--modal-border);
+}
+
+.widget-location-modal-body .info-section summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--modal-text-muted);
+  user-select: none;
+}
+
+.widget-location-modal-body .info-section summary:hover {
+  color: var(--modal-text);
+}
+
+.widget-location-modal-body .info-content {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--modal-text-muted);
+}
+
+.widget-location-modal-body .info-content p {
+  margin: 0 0 8px 0;
+}
+
+.widget-location-modal-body .info-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Location Autocomplete Dropdown */
+.location-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: var(--modal-bg, #1f1f1f);
+  border: 1px solid var(--modal-border, #374151);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  display: none;
+}
+
+.location-autocomplete-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background 0.1s;
+}
+
+.location-autocomplete-item:hover {
+  background: var(--modal-surface);
+}
+
+.location-autocomplete-item .loc-main {
+  font-size: 14px;
+  color: var(--modal-text);
+}
+
+.location-autocomplete-item .loc-secondary {
+  font-size: 12px;
+  color: var(--modal-text-muted);
+}

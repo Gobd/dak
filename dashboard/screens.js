@@ -29,23 +29,30 @@
  * WIDGET TYPES:
  *   calendar   - Google Calendar (OAuth login, shows your calendars)
  *   weather    - NWS Weather forecast
- *                args: { lat, lon, layout: 'horizontal'|'vertical' }
+ *                args: { layout: 'horizontal'|'vertical' }
+ *                Location configured via settings button (defaults to San Francisco)
  *   uv         - UV Index chart (Open-Meteo, free)
- *                args: { lat, lon }
+ *                args: { safeThreshold: number }
+ *                Location configured via settings button (defaults to San Francisco)
  *   aqi        - Air Quality Index chart (Open-Meteo, free)
- *                args: { lat, lon }
+ *                Location configured via settings button (defaults to San Francisco)
  *   drive-time - Floating commute time overlay (via Cloudflare Functions → Google Distance Matrix)
  *                API key is server-side in Cloudflare env var GOOGLE_MAPS_API_KEY
  *                args: { dark }
  *                Routes are configured via UI and stored in localStorage
- *                Click the gear icon to add/edit routes with:
+ *                Click the car icon to add/edit routes with:
  *                - Origin/destination locations with Google Places autocomplete
  *                - Days of week and time window
  *                - Optional label and minimum time threshold
  *                Shows traffic warnings when commute is 1.4x-2.5x+ normal
+ *                Shows route count (active/total) on the icon
  *   sun-moon   - Sunrise/sunset times, day length change, moon phase
- *                args: { lat, lon }
+ *                Location configured via settings button (defaults to San Francisco)
  *                Shows: sunrise/sunset, day length (+/- from yesterday), moon phase (growing/shrinking), days to full moon
+ *   kasa       - Kasa smart device toggles (auto-discovers devices on LAN)
+ *                Requires home-relay service running on localhost:5111
+ *   wol        - Wake on LAN (click to open modal, configure devices)
+ *                Requires home-relay service running on localhost:5111
  *   iframe     - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
@@ -75,11 +82,11 @@ export default {
 
   screens: [
     /*
-     * Screen 1: Calendar + Notes + Drive Time overlay
+     * Screen 1: Calendar + Notes + Drive Time + Home Controls overlay
      * ┌───────┬───────────────┐
-     * │       │  [drive-time] │
+     * │       │[kasa][wol]    │
      * │ notes │   calendar    │
-     * │       │               │
+     * │       │  [drive-time] │
      * └───────┴───────────────┘
      */
     {
@@ -103,6 +110,21 @@ export default {
           w: '70%',
           h: '100%',
           refresh: '5m',
+        },
+        // Home control overlays - float at top of calendar (left of time)
+        {
+          type: 'kasa',
+          x: '78%',
+          y: '1%',
+          w: '5%',
+          h: '4%',
+        },
+        {
+          type: 'wol',
+          x: '83%',
+          y: '1%',
+          w: '5%',
+          h: '4%',
         },
         // Drive time overlay - floats on top of calendar
         // Routes configured via UI, stored in localStorage
@@ -128,6 +150,10 @@ export default {
      * ├───────┤               │
      * │sun/moo│               │
      * └───────┴───────────────┘
+     *
+     * Location is configured via the settings button on each widget.
+     * Click the gear icon to set your city/state or ZIP code.
+     * Location defaults to San Francisco if not configured.
      */
     {
       id: 'weather-health',
@@ -135,8 +161,6 @@ export default {
         {
           type: 'weather',
           args: {
-            lat: '40.7608', // Salt Lake City, UT - update for your location
-            lon: '-111.8910',
             layout: 'vertical',
           },
           x: '0%',
@@ -148,8 +172,6 @@ export default {
         {
           type: 'uv',
           args: {
-            lat: '40.7608',
-            lon: '-111.8910',
             safeThreshold: 4,
           },
           x: '0%',
@@ -160,10 +182,7 @@ export default {
         },
         {
           type: 'aqi',
-          args: {
-            lat: '40.7608',
-            lon: '-111.8910',
-          },
+          args: {},
           x: '0%',
           y: '78%',
           w: '30%',
@@ -172,10 +191,7 @@ export default {
         },
         {
           type: 'sun-moon',
-          args: {
-            lat: '40.7608',
-            lon: '-111.8910',
-          },
+          args: {},
           x: '0%',
           y: '88%',
           w: '30%',

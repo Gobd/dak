@@ -368,11 +368,25 @@ function renderLoading(container, dark) {
   `;
 }
 
-function renderSettingsIcon(container, dark, onEdit) {
+function renderSettingsIcon(container, dark, onEdit, routeInfo = null) {
   const darkClass = dark ? 'dark' : '';
+  const routes = routeInfo || {
+    total: getStoredRoutes().length,
+    active: getActiveRoutes(getStoredRoutes()).length,
+  };
+  const hasActive = routes.active > 0;
+  const countClass = hasActive ? 'has-active' : '';
+  const countDisplay =
+    routes.total > 0
+      ? `<span class="route-count ${countClass}">${routes.active}/${routes.total}</span>`
+      : '';
+  const tooltip =
+    routes.total > 0
+      ? `${routes.active} active of ${routes.total} route${routes.total !== 1 ? 's' : ''} configured`
+      : 'Configure drive time routes';
   container.innerHTML = `
-    <div class="drive-time-settings-icon ${darkClass}" title="Configure drive time routes">
-      &#9881;
+    <div class="drive-time-settings-icon ${darkClass}" title="${tooltip}">
+      &#128663;${countDisplay}
     </div>
   `;
   container.querySelector('.drive-time-settings-icon').addEventListener('click', onEdit);
@@ -1520,10 +1534,11 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
     async function checkAndRender() {
       const latestRoutes = getStoredRoutes();
       const activeRoutes = getActiveRoutes(latestRoutes);
+      const routeInfo = { total: latestRoutes.length, active: activeRoutes.length };
 
       if (activeRoutes.length === 0) {
         // Show settings icon even outside time window so user can reconfigure
-        renderSettingsIcon(container, panelDark, () => showRouteManager());
+        renderSettingsIcon(container, panelDark, () => showRouteManager(), routeInfo);
         return;
       }
 
@@ -1534,7 +1549,7 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
 
       if (nonDismissedRoutes.length === 0) {
         // All routes dismissed for today
-        renderSettingsIcon(container, panelDark, () => showRouteManager());
+        renderSettingsIcon(container, panelDark, () => showRouteManager(), routeInfo);
         return;
       }
 
@@ -1576,7 +1591,7 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
       });
 
       if (validRouteData.length === 0) {
-        renderSettingsIcon(container, panelDark, () => showRouteManager());
+        renderSettingsIcon(container, panelDark, () => showRouteManager(), routeInfo);
         return;
       }
 
@@ -1585,7 +1600,7 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
         validRouteData.forEach(({ route }) => {
           dismissForToday(getRouteId(route));
         });
-        renderSettingsIcon(container, panelDark, () => showRouteManager());
+        renderSettingsIcon(container, panelDark, () => showRouteManager(), routeInfo);
       };
 
       if (validRouteData.length === 1) {
@@ -1608,9 +1623,10 @@ function renderDriveTimeWidget(container, panel, { refreshIntervals, dark = true
     const windowCheckId = setInterval(() => {
       const latestRoutes = getStoredRoutes();
       const activeRoutes = getActiveRoutes(latestRoutes);
+      const routeInfo = { total: latestRoutes.length, active: activeRoutes.length };
       if (activeRoutes.length === 0 && !container.querySelector('.drive-time-settings-icon')) {
         // Show settings icon even outside time window
-        renderSettingsIcon(container, panelDark, () => showRouteManager());
+        renderSettingsIcon(container, panelDark, () => showRouteManager(), routeInfo);
       } else if (activeRoutes.length > 0 && container.innerHTML === '') {
         // Re-render when entering time window
         checkAndRender();

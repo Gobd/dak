@@ -5,12 +5,16 @@
 # Copy scripts folder to Pi and run:
 #   scp -r scripts kiosk@kiosk.local:~
 #   ssh kiosk@kiosk.local
-#   bash ~/scripts/kiosk-setup.sh
+#   bash ~/dashboard/scripts/kiosk-setup.sh
 
 set -e
 
-echo "=== Installing packages ==="
+echo "=== Updating and upgrading system ==="
 sudo apt-get update
+sudo apt-get upgrade -y
+sudo apt-get full-upgrade -y
+
+echo "=== Installing packages ==="
 sudo apt-get install -y --no-install-recommends \
   cage \
   ddcutil \
@@ -35,7 +39,7 @@ echo "Using: $CHROMIUM_BIN"
 echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
 
-bash ~/scripts/install-keyboard.sh
+bash ~/dashboard/scripts/install-keyboard.sh
 
 echo "=== Configuring Chromium policies ==="
 sudo mkdir -p /etc/chromium/policies/managed
@@ -60,23 +64,8 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 EOF
 
-echo "=== Creating kiosk startup script ==="
-cat > ~/.kiosk.sh << EOF
-#!/bin/bash
-export WLR_LIBINPUT_NO_DEVICES=1
-exec cage -- $CHROMIUM_BIN \\
-  --kiosk \\
-  --no-first-run \\
-  --disable-translate \\
-  --disable-infobars \\
-  --noerrdialogs \\
-  --disable-session-crashed-bubble \\
-  --disable-pinch \\
-  --overscroll-history-navigation=0 \\
-  --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \\
-  --ozone-platform=wayland \\
-  https://dak.bkemper.me/dashboard
-EOF
+echo "=== Installing kiosk startup script ==="
+cp ~/dashboard/scripts/kiosk.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
 echo "=== Setting up auto-start on login ==="
@@ -86,17 +75,41 @@ if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
 fi
 EOF
 
+echo "=== Setting nano as default editor ==="
+echo 'export EDITOR=nano' >> ~/.bashrc
+
 echo "=== Setting up auto brightness cron ==="
-chmod +x ~/scripts/brightness.sh
+chmod +x ~/dashboard/scripts/brightness.sh
 # Run on boot and every 2 minutes for smooth gradual transitions
 (crontab -l 2>/dev/null | grep -v brightness.sh
- echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
- echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto >> /home/kiosk/brightness.log 2>&1"
+ echo "@reboot sleep 30 && /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
+ echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
 ) | crontab -
 
+echo "=== Setting up home-relay service (Kasa + WOL) ==="
+if [ -d ~/dashboard/services/home-relay ]; then
+  # Install uv if not present
+  if ! command -v uv &>/dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+
+  cd ~/dashboard/services/home-relay
+  uv sync
+
+  # Install and enable systemd service
+  sudo cp home-relay.service /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable home-relay
+  sudo systemctl start home-relay
+  echo "Home relay service installed and started"
+else
+  echo "Skipping home-relay (services/home-relay not found)"
+fi
+
 echo "=== Setup complete! ==="
-echo "Helper scripts available in ~/scripts/"
-echo "Edit ~/scripts/brightness.sh to set LAT/LON for your location"
+echo "Helper scripts available in ~/dashboard/scripts/"
+echo "Edit ~/dashboard/scripts/brightness.sh to set LAT/LON for your location"
 echo "Rebooting in 5 seconds..."
 sleep 5
 sudo reboot

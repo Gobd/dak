@@ -1,4 +1,11 @@
 import { registerWidget } from '../../script.js';
+import {
+  getWidgetLocation,
+  saveLocationConfig,
+  formatLocation,
+  geocodeAddress,
+  setupLocationAutocomplete,
+} from '../../location.js';
 
 // NWS API Weather Widget
 // Uses api.weather.gov - free, no auth, CORS-enabled
@@ -186,7 +193,14 @@ function showPeriodModal(period) {
 // MAIN RENDER
 // =====================
 
-function renderForecast(container, data, layout = 'horizontal', dark = true) {
+function renderForecast(
+  container,
+  data,
+  layout = 'horizontal',
+  dark = true,
+  location = null,
+  onSettings = null
+) {
   const { forecast, alerts } = data;
   currentAlerts = alerts;
   const periods = forecast.properties.periods.slice(0, 10); // 5 days
@@ -218,9 +232,17 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
       : '';
 
   const layoutClass = layout === 'vertical' ? 'vertical' : '';
+  const locationDisplay = location ? formatLocation(location.city, location.state) : '';
+  const locationHtml = `
+    <div class="weather-location-header">
+      <span class="weather-location-name">${locationDisplay || 'Set Location'}</span>
+      <button class="weather-settings-btn" title="Change location">&#9881;</button>
+    </div>
+  `;
 
   container.innerHTML = `
     <div class="weather-widget ${layoutClass} ${darkClass}">
+      ${locationHtml}
       ${alertsHtml}
       <div class="weather-periods">
         ${periods
@@ -260,6 +282,11 @@ function renderForecast(container, data, layout = 'horizontal', dark = true) {
       if (currentPeriods[index]) showPeriodModal(currentPeriods[index]);
     });
   });
+
+  // Add click handler for settings button
+  if (onSettings) {
+    container.querySelector('.weather-settings-btn')?.addEventListener('click', onSettings);
+  }
 }
 
 function renderError(container, message, dark = true) {
@@ -271,31 +298,153 @@ function renderError(container, message, dark = true) {
   `;
 }
 
-function renderLoading(container, dark = true) {
+function renderLoading(container, dark = true, message = 'Loading forecast...') {
   const darkClass = dark ? 'dark' : '';
   container.innerHTML = `
     <div class="weather-widget weather-loading ${darkClass}">
-      <div class="loading-message">Loading forecast...</div>
+      <div class="loading-message">${message}</div>
     </div>
   `;
+}
+
+// Location settings modal
+function showLocationSettingsModal(dark, currentLocation, onSave) {
+  const darkClass = dark ? 'dark' : '';
+  const currentQuery = currentLocation?.query || '';
+  const currentDisplay = currentLocation
+    ? formatLocation(currentLocation.city, currentLocation.state)
+    : '';
+
+  const modal = document.createElement('div');
+  modal.className = `weather-modal open ${darkClass}`;
+  modal.innerHTML = `
+    <div class="weather-modal-content weather-location-modal">
+      <div class="weather-modal-header">
+        <h3>Set Location</h3>
+      </div>
+      <div class="weather-modal-body">
+        <p class="location-help">Enter a city, state, or ZIP code:</p>
+        <div class="location-input-wrapper">
+          <input type="text" class="location-input" placeholder="e.g., San Francisco, CA" value="${currentQuery}">
+        </div>
+        ${currentDisplay ? `<p class="location-current">Current: ${currentDisplay}</p>` : ''}
+        <p class="location-status"></p>
+      </div>
+      <div class="weather-modal-actions">
+        <button class="weather-modal-cancel">Cancel</button>
+        <button class="weather-modal-save">Save</button>
+      </div>
+    </div>
+  `;
+
+  const input = modal.querySelector('.location-input');
+  const statusEl = modal.querySelector('.location-status');
+  const saveBtn = modal.querySelector('.weather-modal-save');
+
+  // Store place details when autocomplete is selected
+  let selectedPlace = null;
+
+  // Close handlers
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.classList.contains('weather-modal-cancel')) {
+      modal.remove();
+    }
+  });
+
+  // Save handler
+  saveBtn.addEventListener('click', async () => {
+    const query = input.value.trim();
+    if (!query) {
+      statusEl.textContent = 'Please enter a location';
+      statusEl.className = 'location-status error';
+      return;
+    }
+
+    // Use place details if available (from autocomplete), otherwise geocode
+    if (selectedPlace && selectedPlace.lat && selectedPlace.lon) {
+      onSave({
+        lat: selectedPlace.lat,
+        lon: selectedPlace.lon,
+        city: selectedPlace.city,
+        state: selectedPlace.state,
+        query,
+      });
+      modal.remove();
+      return;
+    }
+
+    statusEl.textContent = 'Looking up location...';
+    statusEl.className = 'location-status';
+    saveBtn.disabled = true;
+
+    const geo = await geocodeAddress(query);
+    if (geo) {
+      const config = {
+        lat: geo.lat,
+        lon: geo.lon,
+        city: geo.city,
+        state: geo.state,
+        query: query,
+      };
+      onSave(config);
+      modal.remove();
+    } else {
+      statusEl.textContent = 'Could not find that location. Try a different format.';
+      statusEl.className = 'location-status error';
+      saveBtn.disabled = false;
+    }
+  });
+
+  // Enter key submits
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      saveBtn.click();
+    }
+  });
+
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
+
+  // Setup Google Places autocomplete
+  setupLocationAutocomplete(input, ({ city, state, lat, lon }) => {
+    if (city && state) {
+      input.value = `${city}, ${state}`;
+      selectedPlace = { city, state, lat, lon };
+    }
+  });
 }
 
 // Widget render function
 // Options: args.lat, args.lon, args.layout ('horizontal' or 'vertical')
 function renderWeatherWidget(container, panel, { refreshIntervals, parseDuration, dark = true }) {
-  const lat = panel.args?.lat || '40.7608';
-  const lon = panel.args?.lon || '-111.8910';
+  const argsLat = panel.args?.lat;
+  const argsLon = panel.args?.lon;
   const layout = panel.args?.layout || 'horizontal';
+  const widgetId = panel.id || 'weather';
 
   renderLoading(container, dark);
 
+  let currentLocation = null;
+
   async function loadForecast() {
     try {
-      const data = await fetchForecast(lat, lon);
-      renderForecast(container, data, layout, dark);
-    } catch {
+      // Get location from config or args
+      currentLocation = await getWidgetLocation(widgetId, argsLat, argsLon);
+      const data = await fetchForecast(currentLocation.lat, currentLocation.lon);
+      renderForecast(container, data, layout, dark, currentLocation, showSettings);
+    } catch (err) {
+      console.error('Weather load error:', err);
       renderError(container, 'Failed to load forecast', dark);
     }
+  }
+
+  function showSettings() {
+    showLocationSettingsModal(dark, currentLocation, async (config) => {
+      saveLocationConfig(widgetId, config);
+      renderLoading(container, dark, 'Updating location...');
+      await loadForecast();
+    });
   }
 
   loadForecast();

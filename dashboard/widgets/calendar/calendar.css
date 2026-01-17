@@ -215,9 +215,7 @@ span.cal-title {
   border-right: none;
 }
 
-.month-day:hover {
-  background: var(--cal-surface);
-}
+/* Hover effect removed for touch kiosk */
 
 .month-day.today {
   background: color-mix(in srgb, var(--cal-primary) 15%, var(--cal-bg));
@@ -298,9 +296,7 @@ span.cal-title {
   transition: background 0.1s;
 }
 
-.calendar-date:hover {
-  background: var(--cal-surface);
-}
+/* Hover effect removed for touch kiosk */
 
 .calendar-date.today {
   background: color-mix(in srgb, var(--cal-primary) 8%, var(--cal-bg));

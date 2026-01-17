@@ -1,0 +1,16 @@
+[Unit]
+Description=Home Relay Service (Kasa + WOL)
+After=network.target
+
+[Service]
+Type=simple
+User=kiosk
+WorkingDirectory=/home/kiosk/dashboard/services/home-relay
+ExecStart=/home/kiosk/dashboard/services/home-relay/.venv/bin/python relay.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

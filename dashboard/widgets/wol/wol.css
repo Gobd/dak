@@ -1,0 +1,223 @@
+/* Wake on LAN Widget */
+
+.wol-widget,
+.wol-modal {
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+.wol-widget {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.wol-open-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #333;
+  color: #888;
+  transition: all 0.15s ease;
+}
+
+.wol-widget.dark .wol-open-btn {
+  background: #333;
+  color: #888;
+}
+
+.wol-open-btn:hover {
+  background: #444;
+  color: #ccc;
+}
+
+.wol-icon {
+  font-size: 14px;
+}
+
+.wol-count {
+  font-size: 11px;
+  background: #555;
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+
+/* Modal */
+.wol-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.wol-modal.open {
+  opacity: 1;
+}
+
+.wol-modal-content {
+  background: #1f1f1f;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wol-modal.dark .wol-modal-content {
+  background: #1f1f1f;
+  color: #e5e5e5;
+}
+
+.wol-modal-header {
+  padding: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.wol-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.wol-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.wol-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wol-device-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+
+.wol-device-status {
+  font-size: 16px;
+  color: #555;
+}
+
+.wol-device-status.online {
+  color: #4ade80;
+}
+
+.wol-device-status.offline {
+  color: #555;
+}
+
+.wol-device-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.wol-device-mac {
+  font-size: 11px;
+  color: #888;
+  font-family: monospace;
+}
+
+.wol-wake-btn,
+.wol-delete-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.wol-wake-btn:hover {
+  background: #60a5fa;
+  color: #000;
+}
+
+.wol-delete-btn:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.wol-empty {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  padding: 12px;
+}
+
+.wol-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wol-input {
+  padding: 10px 12px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #e5e5e5;
+  font-size: 14px;
+}
+
+.wol-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.wol-input.error {
+  border-color: #ef4444;
+}
+
+.wol-add-btn {
+  padding: 10px;
+  background: #60a5fa;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.wol-add-btn:hover {
+  background: #3b82f6;
+}
+
+.wol-modal-actions {
+  padding: 12px 16px;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.wol-modal-close {
+  padding: 8px 16px;
+  background: #333;
+  color: #e5e5e5;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wol-modal-close:hover {
+  background: #444;
+}
