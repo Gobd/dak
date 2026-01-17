@@ -41,7 +41,7 @@ echo "Using: $CHROMIUM_BIN"
 echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
 
-bash ~/dashboard/scripts/install-keyboard.sh
+bash ~/dashboard/scripts/install-keyboard.sh || echo "Warning: install-keyboard.sh failed (continuing)"
 
 echo "=== Configuring Chromium policies ==="
 sudo mkdir -p /etc/chromium/policies/managed
@@ -81,12 +81,12 @@ fi
 EOF
 
 echo "=== Setting nano as default editor ==="
-echo 'export EDITOR=nano' >> ~/.bashrc
+grep -q 'EDITOR=nano' ~/.bashrc || echo 'export EDITOR=nano' >> ~/.bashrc
 
 echo "=== Setting up auto brightness cron ==="
 chmod +x ~/dashboard/scripts/brightness.sh
 # Run every 2 minutes via API (home-relay handles the logic)
-(crontab -l 2>/dev/null | grep -v brightness
+(crontab -l 2>/dev/null | grep -v brightness || true
  echo "@reboot sleep 30 && curl -s http://localhost:5111/brightness/auto > /dev/null"
  echo "*/2 * * * * curl -s http://localhost:5111/brightness/auto > /dev/null"
 ) | crontab -
