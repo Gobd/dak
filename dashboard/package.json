@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "serve -l 8080",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite build --mode development && vite preview --port 8080",
     "lint": "eslint .",
     "lint:sh": "shellcheck scripts/*.sh",
     "typecheck": "echo 'No typecheck configured'",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "build": "rm -rf dist && mkdir -p dist && cp *.html *.css dist/ && cp script.js location.js dist/ && cp -r widgets config dist/",
     "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm typecheck && pnpm build"
   },
   "devDependencies": {
@@ -18,7 +19,7 @@
     "eslint": "catalog:",
     "globals": "catalog:",
     "prettier": "catalog:",
-    "serve": "^14.2.4",
-    "shellcheck": "^4.1.0"
+    "shellcheck": "^4.1.0",
+    "vite": "catalog:vite"
   }
 }

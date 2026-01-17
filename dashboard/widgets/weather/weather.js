@@ -1,4 +1,5 @@
-import { registerWidget } from '../../script.js';
+import './weather.css';
+import { registerWidget } from '../../widget-registry.js';
 import {
   getWidgetLocation,
   saveLocationConfig,

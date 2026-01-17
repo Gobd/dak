@@ -1,5 +1,6 @@
+import './wol.css';
+import { registerWidget } from '../../widget-registry.js';
 import {
-  registerWidget,
   getDashboardConfig,
   updateConfigSection,
   getRelayUrl,

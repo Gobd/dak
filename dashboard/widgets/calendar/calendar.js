@@ -1,4 +1,6 @@
-import { registerWidget, getConfigSection, updateConfigSection } from '../../script.js';
+import './calendar.css';
+import { registerWidget } from '../../widget-registry.js';
+import { getConfigSection, updateConfigSection } from '../../script.js';
 import {
   getStoredAuth,
   getAuthUrl,

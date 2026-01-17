@@ -1,4 +1,6 @@
-import { registerWidget, getRelayUrl } from '../../script.js';
+import './kasa.css';
+import { registerWidget } from '../../widget-registry.js';
+import { getRelayUrl } from '../../script.js';
 
 // Kasa Smart Device Widget
 // Click button to open modal, see devices, toggle on/off

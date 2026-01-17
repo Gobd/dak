@@ -1,3 +1,6 @@
+import './style.css';
+import { getWidgetRenderer, getWidgetTypes } from './widget-registry.js';
+
 const STORAGE_KEY = 'dashboard-config';
 const GRID_SNAP = 5; // 5% snap
 const MIN_SIZE = 10; // 10% minimum
@@ -95,6 +98,11 @@ const LOCAL_URL_MAP = {
   '/family-chores/': 'http://localhost:5174/family-chores/',
 };
 
+// Check if running on localhost (for iframe URL handling)
+const isLocalDev =
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const PROD_ORIGIN = 'https://dak.bkemper.me';
+
 let screens = [];
 let config = {};
 let currentIndex = 0;
@@ -107,28 +115,32 @@ const refreshIntervals = [];
 let ignoreSseReload = false;
 let ignoreSseTimeout = null;
 
-// Widget registry - widgets register themselves here
-const widgets = {};
-
-// Convert production URLs to local dev URLs when in local mode
+// Convert URLs for iframe panels based on environment
+// - In localMode (?local): map to local dev servers
+// - In isLocalDev (localhost without ?local): map relative URLs to production
 function toLocalUrl(url) {
-  if (!localMode || !url) return url;
-  for (const [prod, local] of Object.entries(LOCAL_URL_MAP)) {
-    if (url.startsWith(prod)) {
-      return url.replace(prod, local);
+  if (!url) return url;
+
+  // In local mode, map to local dev servers
+  if (localMode) {
+    for (const [prod, local] of Object.entries(LOCAL_URL_MAP)) {
+      if (url.startsWith(prod)) {
+        return url.replace(prod, local);
+      }
     }
+    return url;
   }
+
+  // On localhost (not in local mode), map relative URLs to production
+  if (isLocalDev && url.startsWith('/') && !url.startsWith('//')) {
+    return PROD_ORIGIN + url;
+  }
+
   return url;
 }
 
-export function registerWidget(type, renderFn) {
-  widgets[type] = renderFn;
-}
-
-// Get available widget types for UI
-export function getWidgetTypes() {
-  return Object.keys(widgets);
-}
+// Re-export for backwards compatibility (widgets that import from script.js)
+export { getWidgetTypes };
 
 // =====================
 // Alert & Confirm Modals
@@ -518,9 +530,10 @@ function createPanelElement(panel, screenIndex, panelIndex) {
   // Get dark mode setting from config
   const isDark = config.dark !== false;
 
-  if (widgetType && widgets[widgetType]) {
+  const widgetRenderer = widgetType && getWidgetRenderer(widgetType);
+  if (widgetRenderer) {
     // Use registered widget - pass dark mode in options
-    widgets[widgetType](content, panel, { refreshIntervals, parseDuration, dark: isDark });
+    widgetRenderer(content, panel, { refreshIntervals, parseDuration, dark: isDark });
   } else if (panel.src) {
     // Fallback: iframe for legacy configs with just src
     const iframe = document.createElement('iframe');
