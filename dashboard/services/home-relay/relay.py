@@ -29,10 +29,9 @@ app.register_blueprint(brightness_bp)
 _sse_subscribers = []
 _sse_lock = threading.Lock()
 
-# Config paths
+# Config path (saved user config only, frontend handles defaults)
 CONFIG_DIR = Path.home() / ".config" / "home-relay"
 DASHBOARD_CONFIG = CONFIG_DIR / "dashboard.json"
-DEFAULT_TEMPLATE = Path.home() / "dashboard" / "config" / "dashboard.json"
 
 
 @app.after_request
@@ -48,29 +47,15 @@ def add_cors_headers(response):
 # === Config Management ===
 
 
-def _get_default_config():
-    """Load default config from template file."""
-    with open(DEFAULT_TEMPLATE) as f:
-        return json.load(f)
-
-
 def _load_config():
-    """Load full dashboard config from file."""
-    defaults = _get_default_config()
+    """Load saved config from file, or return empty dict if none exists."""
     if DASHBOARD_CONFIG.exists():
         try:
             with open(DASHBOARD_CONFIG) as f:
-                config = json.load(f)
-                result = json.loads(json.dumps(defaults))
-                for key, value in config.items():
-                    if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                        result[key] = {**result[key], **value}
-                    else:
-                        result[key] = value
-                return result
+                return json.load(f)
         except Exception:
             pass
-    return defaults
+    return {}
 
 
 def _save_config(config):

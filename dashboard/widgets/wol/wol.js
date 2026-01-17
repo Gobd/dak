@@ -45,6 +45,19 @@ async function wakeDevice(mac) {
   }
 }
 
+async function lookupMac(ip) {
+  try {
+    const res = await fetch(`${getRelayUrl()}/wol/mac?ip=${encodeURIComponent(ip)}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.mac || null;
+  } catch {
+    return null;
+  }
+}
+
 function showConfigModal(dark, onSave) {
   const darkClass = dark ? 'dark' : '';
   const devices = getDevices();
@@ -75,7 +88,10 @@ function showConfigModal(dark, onSave) {
         <div class="wol-add-form">
           <input type="text" class="wol-input wol-name-input" placeholder="Name (e.g., Office PC)">
           <input type="text" class="wol-input wol-ip-input" placeholder="IP (e.g., 192.168.1.100)">
-          <input type="text" class="wol-input wol-mac-input" placeholder="MAC (e.g., AA:BB:CC:DD:EE:FF)">
+          <div class="wol-mac-row">
+            <input type="text" class="wol-input wol-mac-input" placeholder="MAC (e.g., AA:BB:CC:DD:EE:FF)">
+            <button class="wol-detect-btn" title="Auto-detect MAC from IP">Detect</button>
+          </div>
           <button class="wol-add-btn">Add</button>
         </div>
       </div>
@@ -88,6 +104,30 @@ function showConfigModal(dark, onSave) {
   const nameInput = modal.querySelector('.wol-name-input');
   const ipInput = modal.querySelector('.wol-ip-input');
   const macInput = modal.querySelector('.wol-mac-input');
+  const detectBtn = modal.querySelector('.wol-detect-btn');
+
+  // Detect MAC button
+  detectBtn.addEventListener('click', async () => {
+    const ip = ipInput.value.trim();
+    if (!ip) {
+      ipInput.classList.add('error');
+      setTimeout(() => ipInput.classList.remove('error'), 1500);
+      return;
+    }
+    detectBtn.disabled = true;
+    detectBtn.textContent = '...';
+    const mac = await lookupMac(ip);
+    if (mac) {
+      macInput.value = mac;
+      detectBtn.textContent = '✓';
+    } else {
+      detectBtn.textContent = '✗';
+    }
+    setTimeout(() => {
+      detectBtn.textContent = 'Detect';
+      detectBtn.disabled = false;
+    }, 1500);
+  });
 
   // Check status for each device
   modal.querySelectorAll('.wol-device-row').forEach(async (row) => {
