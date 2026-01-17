@@ -5,7 +5,8 @@ type SyncEvent =
   | { type: "shots" }
   | { type: "medicine" }
   | { type: "prn" }
-  | { type: "people" };
+  | { type: "people" }
+  | { type: "sharing" };
 
 type SyncHandler = (event: SyncEvent) => void;
 
