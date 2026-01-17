@@ -1,6 +1,7 @@
 """Kasa smart device endpoints."""
 
 import asyncio
+import contextlib
 
 from flask import Blueprint, jsonify, request
 from kasa import Discover
@@ -28,10 +29,8 @@ async def _discover_devices():
 
     result = []
     for ip, dev in devices.items():
-        try:
+        with contextlib.suppress(Exception):
             await dev.update()
-        except Exception:
-            pass  # Some devices have timezone issues
 
         name = getattr(dev, "alias", None) or ip
         if name.startswith("TP-LINK_"):
@@ -85,20 +84,16 @@ async def _toggle_device(ip):
         dev = await Discover.discover_single(ip)
         _device_cache[ip] = dev
 
-    try:
+    with contextlib.suppress(Exception):
         await dev.update()
-    except Exception:
-        pass
 
     if dev.is_on:
         await dev.turn_off()
     else:
         await dev.turn_on()
 
-    try:
+    with contextlib.suppress(Exception):
         await dev.update()
-    except Exception:
-        pass
     return {"ip": ip, "on": dev.is_on, "name": getattr(dev, "alias", ip)}
 
 
@@ -127,8 +122,6 @@ async def _get_status(ip):
         dev = await Discover.discover_single(ip)
         _device_cache[ip] = dev
 
-    try:
+    with contextlib.suppress(Exception):
         await dev.update()
-    except Exception:
-        pass
     return {"ip": ip, "on": dev.is_on, "name": getattr(dev, "alias", ip)}

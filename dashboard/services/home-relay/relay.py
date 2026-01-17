@@ -4,6 +4,7 @@ Home Relay Service
 Provides HTTP endpoints for Kasa smart devices, Wake-on-LAN, and brightness control
 """
 
+import contextlib
 import json
 import logging
 import queue
@@ -50,18 +51,15 @@ def add_cors_headers(response):
 def _load_config():
     """Load saved config from file, or return empty dict if none exists."""
     if DASHBOARD_CONFIG.exists():
-        try:
-            with open(DASHBOARD_CONFIG) as f:
-                return json.load(f)
-        except Exception:
-            pass
+        with contextlib.suppress(Exception), DASHBOARD_CONFIG.open() as f:
+            return json.load(f)
     return {}
 
 
 def _save_config(config):
     """Save full dashboard config to file."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    with open(DASHBOARD_CONFIG, "w") as f:
+    with DASHBOARD_CONFIG.open("w") as f:
         json.dump(config, f, indent=2)
 
 
@@ -70,14 +68,12 @@ def _notify_config_updated():
     message = json.dumps({"type": "config-updated"})
     with _sse_lock:
         for q in _sse_subscribers:
-            try:
+            with contextlib.suppress(queue.Full):
                 q.put_nowait(message)
-            except queue.Full:
-                pass
 
 
 def _sse_stream():
-    """Generator for SSE stream."""
+    """Generate SSE stream."""
     q = queue.Queue(maxsize=10)
     with _sse_lock:
         _sse_subscribers.append(q)

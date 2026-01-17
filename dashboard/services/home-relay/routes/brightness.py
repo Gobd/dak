@@ -73,22 +73,21 @@ def _calculate_target(
     if now < sunrise_start:
         # Before sunrise transition - full night
         return night_brightness
-    elif now < sunrise_end:
+    if now < sunrise_end:
         # During sunrise transition - gradually brighten
         progress = (now - sunrise_start) * 100 // trans_secs
         brightness_range = day_brightness - night_brightness
         return night_brightness + brightness_range * progress // 100
-    elif now < sunset_start:
+    if now < sunset_start:
         # Daytime - full day
         return day_brightness
-    elif now < sunset_end:
+    if now < sunset_end:
         # During sunset transition - gradually dim
         progress = (now - sunset_start) * 100 // trans_secs
         brightness_range = day_brightness - night_brightness
         return day_brightness - brightness_range * progress // 100
-    else:
-        # After sunset transition - full night
-        return night_brightness
+    # After sunset transition - full night
+    return night_brightness
 
 
 def _fetch_sun_times():

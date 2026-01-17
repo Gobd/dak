@@ -19,3 +19,25 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["ALL"]
+ignore = [
+    "D1",      # Missing docstrings
+    "D203",    # Conflicts with D211
+    "D212",    # Conflicts with D213
+    "D400",    # First line period
+    "D205",    # Blank line after summary
+    "D415",    # First line punctuation
+    "EXE001",  # Shebang without executable
+    "ANN",     # Type annotations (too strict for this project)
+    "E402",    # Module level import order (needed for logging setup)
+    "S",       # Security warnings (trusted local service)
+    "BLE001",  # Blind exception catching
+    "PLW1510", # subprocess.run without check
+    "TRY",     # Try-except rules
+    "EM",      # Exception message rules
+    "PLR0913", # Too many arguments
+    "PLW0602", # Global statement without assignment
+    "PLW0603", # Global statement to update
+    "COM812",  # Trailing comma (conflicts with formatter)
+    "DTZ",     # Timezone-naive datetime
+    "FURB162", # Timezone replacement pattern
+]

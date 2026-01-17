@@ -151,7 +151,7 @@
 
 .brightness-toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 18px;
   width: 18px;
   left: 3px;
@@ -198,7 +198,7 @@
 }
 
 /* Sliders */
-.brightness-row input[type="range"] {
+.brightness-row input[type='range'] {
   width: 100%;
   height: 6px;
   border-radius: 3px;
@@ -207,7 +207,7 @@
   -webkit-appearance: none;
 }
 
-.brightness-row input[type="range"]::-webkit-slider-thumb {
+.brightness-row input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
@@ -216,7 +216,7 @@
   cursor: pointer;
 }
 
-.brightness-row input[type="range"]::-moz-range-thumb {
+.brightness-row input[type='range']::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;

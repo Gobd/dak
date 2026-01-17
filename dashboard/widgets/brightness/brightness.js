@@ -1,4 +1,9 @@
-import { registerWidget, getDashboardConfig, updateConfigSection, getRelayUrl } from '../../script.js';
+import {
+  registerWidget,
+  getDashboardConfig,
+  updateConfigSection,
+  getRelayUrl,
+} from '../../script.js';
 import { setupLocationAutocomplete, formatLocation } from '../../location.js';
 
 // Auto Brightness Widget

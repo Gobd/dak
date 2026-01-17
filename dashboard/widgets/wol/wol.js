@@ -1,4 +1,9 @@
-import { registerWidget, getDashboardConfig, updateConfigSection, getRelayUrl } from '../../script.js';
+import {
+  registerWidget,
+  getDashboardConfig,
+  updateConfigSection,
+  getRelayUrl,
+} from '../../script.js';
 
 // Wake on LAN Widget
 // Click to open modal, see device status, wake them

@@ -156,7 +156,10 @@ function showAlert(message, title = null) {
   });
 }
 
-function showConfirm(message, { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = {}) {
+function showConfirm(
+  message,
+  { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = {}
+) {
   return new Promise((resolve) => {
     const modal = document.createElement('div');
     modal.className = 'dialog-modal';
@@ -788,13 +791,15 @@ function openPanelSettings(screenIndex, panelIndex) {
   const typeSelect = document.getElementById('panel-type');
   const currentType = editingPanel.type || '';
   typeSelect.innerHTML = '<option value="">URL (iframe)</option>';
-  getWidgetTypes().filter(t => t !== 'iframe').forEach(type => {
-    const opt = document.createElement('option');
-    opt.value = type;
-    opt.textContent = type;
-    opt.selected = type === currentType;
-    typeSelect.appendChild(opt);
-  });
+  getWidgetTypes()
+    .filter((t) => t !== 'iframe')
+    .forEach((type) => {
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = type;
+      opt.selected = type === currentType;
+      typeSelect.appendChild(opt);
+    });
 
   // Show/hide URL field based on type
   const srcLabel = document.getElementById('panel-src-label');
@@ -873,7 +878,11 @@ function savePanelSettings() {
 }
 
 async function deletePanel() {
-  const confirmed = await showConfirm('Delete this panel?', { title: 'Delete Panel', confirmText: 'Delete', danger: true });
+  const confirmed = await showConfirm('Delete this panel?', {
+    title: 'Delete Panel',
+    confirmText: 'Delete',
+    danger: true,
+  });
   if (!confirmed) return;
 
   screens[editingScreenIndex].panels.splice(editingPanelIndex, 1);
@@ -949,11 +958,14 @@ function importConfig(e) {
 }
 
 async function resetConfig() {
-  const confirmed = await showConfirm('Reset to default configuration? This will discard all changes.', {
-    title: 'Reset Configuration',
-    confirmText: 'Reset',
-    danger: true,
-  });
+  const confirmed = await showConfirm(
+    'Reset to default configuration? This will discard all changes.',
+    {
+      title: 'Reset Configuration',
+      confirmText: 'Reset',
+      danger: true,
+    }
+  );
   if (!confirmed) return;
 
   // Fetch default template

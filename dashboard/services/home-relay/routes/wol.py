@@ -90,8 +90,7 @@ def get_mac():
             parts = mac.split(":")
             mac = ":".join(p.zfill(2) for p in parts)
             return jsonify({"ip": ip, "mac": mac})
-        else:
-            return jsonify({"ip": ip, "mac": None, "error": "MAC not found in ARP table"}), 404
+        return jsonify({"ip": ip, "mac": None, "error": "MAC not found in ARP table"}), 404
 
     except subprocess.TimeoutExpired:
         return jsonify({"ip": ip, "mac": None, "error": "Timeout"}), 504

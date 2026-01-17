@@ -266,7 +266,14 @@ On the kiosk, config is stored at `~/.config/home-relay/dashboard.json` and can 
 Add widgets under `widgets/`. Reference them in `config/dashboard.json`:
 
 ```json
-{ "type": "iframe", "src": "/widgets/weather/index.html", "x": "50%", "y": "50%", "w": "50%", "h": "50%" }
+{
+  "type": "iframe",
+  "src": "/widgets/weather/index.html",
+  "x": "50%",
+  "y": "50%",
+  "w": "50%",
+  "h": "50%"
+}
 ```
 
 ## Automatic Brightness
@@ -310,6 +317,7 @@ The home-relay service is designed for **trusted home networks only**:
 - **Config stored in plaintext**: `~/.config/home-relay/dashboard.json` is readable by any local process.
 
 **This is acceptable because:**
+
 - The kiosk is on a private home network behind a firewall
 - Only trusted devices are on the LAN
 - The controlled devices (Kasa plugs, WoL targets) are low-risk home automation
