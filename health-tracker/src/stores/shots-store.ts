@@ -4,6 +4,33 @@ import { broadcastSync } from "../lib/realtime";
 import type { ShotSchedule, ShotLog } from "../types";
 import { addDays, format } from "date-fns";
 
+// Notify parent dashboard of schedule changes (for reminders)
+function notifyDashboard(schedule: ShotSchedule) {
+  try {
+    const notify = (
+      window.parent as Window & { notify?: (data: unknown) => void }
+    )?.notify;
+    if (notify) {
+      notify({
+        type: "shot",
+        name: schedule.name,
+        due: schedule.next_due,
+        data: {
+          person: schedule.person?.name,
+          dose: schedule.current_dose,
+        },
+      });
+    }
+  } catch {
+    // Ignore errors (e.g., cross-origin restrictions when not in iframe)
+  }
+}
+
+// Sync all schedules to dashboard on initial load
+function syncAllSchedulesToDashboard(schedules: ShotSchedule[]) {
+  schedules.forEach(notifyDashboard);
+}
+
 interface ShotsState {
   schedules: ShotSchedule[];
   logs: Record<string, ShotLog[]>;
@@ -43,6 +70,8 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
 
     if (!error && data) {
       set({ schedules: data });
+      // Sync all schedules to parent dashboard for notifications
+      syncAllSchedulesToDashboard(data);
     }
     set({ loading: false });
   },

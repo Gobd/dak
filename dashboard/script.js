@@ -28,6 +28,27 @@ let sseConnection = null;
 let sseRetryCount = 0;
 let sseRetryTimeout = null;
 
+// Notification modal state
+let activeNotifications = [];
+
+// Expose notify function for iframes to call
+window.notify = async function (data) {
+  if (!data.type || !data.due) {
+    console.warn('notify: type and due are required');
+    return;
+  }
+  try {
+    await fetch(`${relayUrl}/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    console.log('Notification registered:', data);
+  } catch (err) {
+    console.warn('Failed to register notification:', err);
+  }
+};
+
 function connectToConfigUpdates() {
   if (sseConnection) {
     sseConnection.close();
@@ -55,6 +76,9 @@ function connectToConfigUpdates() {
         }
         console.log('Config updated remotely, reloading...');
         window.location.reload();
+      } else if (data.type === 'notifications') {
+        // Show notification modal for due notifications
+        handleNotifications(data.notifications);
       }
     };
 
@@ -200,6 +224,334 @@ export function showConfirm(
     modal.querySelector(`.${confirmClass}`).addEventListener('click', () => cleanup(true));
     modal.addEventListener('click', (e) => {
       if (e.target === modal) cleanup(false);
+    });
+  });
+}
+
+// =====================
+// Notification Modal
+// =====================
+
+function handleNotifications(notifications) {
+  if (!notifications || notifications.length === 0) return;
+
+  // Don't show duplicates that are already displayed
+  const newNotifications = notifications.filter(
+    (n) => !activeNotifications.some((a) => a.id === n.id)
+  );
+  if (newNotifications.length === 0) return;
+
+  activeNotifications.push(...newNotifications);
+  showNotificationModal();
+}
+
+function showNotificationModal() {
+  // Remove existing modal if any
+  const existing = document.querySelector('.notification-modal');
+  if (existing) existing.remove();
+
+  if (activeNotifications.length === 0) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'notification-modal';
+
+  const notificationsList = activeNotifications
+    .map((n) => {
+      const status = n.is_overdue ? '⚠️ Overdue' : n.is_today ? '📅 Due Today' : '🔔 Due Tomorrow';
+      return `
+        <div class="notification-item" data-id="${n.id}">
+          <div class="notification-header">
+            <span class="notification-status">${status}</span>
+            <span class="notification-type">${n.type}</span>
+          </div>
+          <div class="notification-name">${n.name}</div>
+          <div class="notification-due">Due: ${n.due_date}</div>
+          <div class="notification-actions">
+            <button class="notification-dismiss" data-id="${n.id}" data-hours="4">Snooze 4h</button>
+            <button class="notification-dismiss" data-id="${n.id}" data-hours="24">Snooze 24h</button>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  modal.innerHTML = `
+    <div class="notification-modal-content">
+      <div class="notification-modal-header">
+        <h3>Reminders</h3>
+        <button class="notification-close">×</button>
+      </div>
+      <div class="notification-modal-body">
+        ${notificationsList}
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('open'));
+
+  // Close button
+  modal.querySelector('.notification-close').addEventListener('click', () => {
+    closeNotificationModal();
+  });
+
+  // Dismiss/snooze buttons
+  modal.querySelectorAll('.notification-dismiss').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const id = parseInt(e.target.dataset.id);
+      const hours = parseInt(e.target.dataset.hours);
+      await dismissNotification(id, hours);
+    });
+  });
+
+  // Click outside to minimize (not close)
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeNotificationModal();
+    }
+  });
+}
+
+function closeNotificationModal() {
+  const modal = document.querySelector('.notification-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 150);
+  }
+}
+
+async function dismissNotification(id, hours) {
+  try {
+    await fetch(`${relayUrl}/notifications/${id}/dismiss`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hours }),
+    });
+
+    // Remove from active list
+    activeNotifications = activeNotifications.filter((n) => n.id !== id);
+
+    // Update or close modal
+    if (activeNotifications.length === 0) {
+      closeNotificationModal();
+    } else {
+      showNotificationModal();
+    }
+  } catch (err) {
+    console.warn('Failed to dismiss notification:', err);
+  }
+}
+
+// =====================
+// Notification Settings Modal
+// =====================
+
+let notifSettingsTab = 'prefs'; // 'prefs' or 'events'
+
+async function openNotifSettings() {
+  const existing = document.querySelector('.notif-settings-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.className = 'notif-settings-modal';
+
+  modal.innerHTML = `
+    <div class="notif-settings-content">
+      <div class="notif-settings-header">
+        <h3>Notification Settings</h3>
+        <button class="notif-settings-close">×</button>
+      </div>
+      <div class="notif-settings-tabs">
+        <button class="notif-settings-tab ${notifSettingsTab === 'prefs' ? 'active' : ''}" data-tab="prefs">Preferences</button>
+        <button class="notif-settings-tab ${notifSettingsTab === 'events' ? 'active' : ''}" data-tab="events">Events</button>
+      </div>
+      <div class="notif-settings-body">
+        <div class="notif-loading">Loading...</div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => modal.classList.add('open'));
+
+  // Close button
+  modal.querySelector('.notif-settings-close').addEventListener('click', () => {
+    closeNotifSettings();
+  });
+
+  // Tab buttons
+  modal.querySelectorAll('.notif-settings-tab').forEach((tab) => {
+    tab.addEventListener('click', (e) => {
+      notifSettingsTab = e.target.dataset.tab;
+      modal.querySelectorAll('.notif-settings-tab').forEach((t) => t.classList.remove('active'));
+      e.target.classList.add('active');
+      loadNotifSettingsContent(modal);
+    });
+  });
+
+  // Click outside to close
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeNotifSettings();
+  });
+
+  // Load content
+  await loadNotifSettingsContent(modal);
+}
+
+function closeNotifSettings() {
+  const modal = document.querySelector('.notif-settings-modal');
+  if (modal) {
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 150);
+  }
+}
+
+async function loadNotifSettingsContent(modal) {
+  const body = modal.querySelector('.notif-settings-body');
+  body.innerHTML = '<div class="notif-loading">Loading...</div>';
+
+  try {
+    if (notifSettingsTab === 'prefs') {
+      await loadPrefsTab(body);
+    } else {
+      await loadEventsTab(body);
+    }
+  } catch (err) {
+    body.innerHTML = `<div class="notif-empty">Failed to load: ${err.message}</div>`;
+  }
+}
+
+async function loadPrefsTab(body) {
+  // Fetch current prefs and events (to get unique types)
+  const [prefsRes, eventsRes] = await Promise.all([
+    fetch(`${relayUrl}/notifications/prefs`),
+    fetch(`${relayUrl}/notifications`),
+  ]);
+
+  const prefs = await prefsRes.json();
+  const events = await eventsRes.json();
+
+  // Get unique types from events
+  const types = [...new Set(events.map((e) => e.type))];
+
+  if (types.length === 0) {
+    body.innerHTML =
+      '<div class="notif-empty">No notification types registered yet. Events will appear here once apps send notifications.</div>';
+    return;
+  }
+
+  body.innerHTML = types
+    .map((type) => {
+      const pref = prefs[type] || {
+        remind_day_before: true,
+        remind_day_of: true,
+        time_before_start: '17:00',
+        time_before_end: '21:00',
+        time_day_of_start: '05:00',
+        time_day_of_end: '08:00',
+      };
+
+      return `
+        <div class="notif-pref-item" data-type="${type}">
+          <div class="notif-pref-header">
+            <span class="notif-pref-type">${type}</span>
+          </div>
+          <div class="notif-pref-row">
+            <label>
+              <input type="checkbox" class="pref-day-before" ${pref.remind_day_before ? 'checked' : ''} />
+              Day before
+            </label>
+            <div class="time-range">
+              <input type="time" class="pref-before-start" value="${pref.time_before_start}" />
+              to
+              <input type="time" class="pref-before-end" value="${pref.time_before_end}" />
+            </div>
+          </div>
+          <div class="notif-pref-row">
+            <label>
+              <input type="checkbox" class="pref-day-of" ${pref.remind_day_of ? 'checked' : ''} />
+              Day of
+            </label>
+            <div class="time-range">
+              <input type="time" class="pref-day-of-start" value="${pref.time_day_of_start}" />
+              to
+              <input type="time" class="pref-day-of-end" value="${pref.time_day_of_end}" />
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  // Add change handlers
+  body.querySelectorAll('.notif-pref-item').forEach((item) => {
+    const type = item.dataset.type;
+    const inputs = item.querySelectorAll('input');
+    inputs.forEach((input) => {
+      input.addEventListener('change', () => savePref(type, item));
+    });
+  });
+}
+
+async function savePref(type, item) {
+  const data = {
+    remind_day_before: item.querySelector('.pref-day-before').checked,
+    remind_day_of: item.querySelector('.pref-day-of').checked,
+    time_before_start: item.querySelector('.pref-before-start').value,
+    time_before_end: item.querySelector('.pref-before-end').value,
+    time_day_of_start: item.querySelector('.pref-day-of-start').value,
+    time_day_of_end: item.querySelector('.pref-day-of-end').value,
+  };
+
+  try {
+    await fetch(`${relayUrl}/notifications/prefs/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch (err) {
+    console.warn('Failed to save pref:', err);
+  }
+}
+
+async function loadEventsTab(body) {
+  const res = await fetch(`${relayUrl}/notifications`);
+  const events = await res.json();
+
+  if (events.length === 0) {
+    body.innerHTML =
+      '<div class="notif-empty">No events registered. Events will appear here when apps send notifications.</div>';
+    return;
+  }
+
+  body.innerHTML = events
+    .map(
+      (event) => `
+      <div class="notif-event-item" data-id="${event.id}">
+        <div class="notif-event-info">
+          <div class="notif-event-name">${event.name}</div>
+          <div class="notif-event-meta">${event.type} · Due: ${event.due_date}</div>
+        </div>
+        <button class="notif-event-delete" title="Delete">×</button>
+      </div>
+    `
+    )
+    .join('');
+
+  // Delete handlers
+  body.querySelectorAll('.notif-event-delete').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const item = e.target.closest('.notif-event-item');
+      const id = item.dataset.id;
+      try {
+        await fetch(`${relayUrl}/notifications/${id}`, { method: 'DELETE' });
+        item.remove();
+        if (body.querySelectorAll('.notif-event-item').length === 0) {
+          body.innerHTML = '<div class="notif-empty">No events registered.</div>';
+        }
+      } catch (err) {
+        console.warn('Failed to delete event:', err);
+      }
     });
   });
 }
@@ -628,6 +980,7 @@ function setupEditMode() {
     showAlert('Configuration saved!', 'Saved');
   });
   document.getElementById('add-panel-btn').addEventListener('click', addPanel);
+  document.getElementById('notif-settings-btn').addEventListener('click', openNotifSettings);
   document.getElementById('export-btn').addEventListener('click', exportConfig);
   document.getElementById('import-btn').addEventListener('click', () => {
     document.getElementById('import-file').click();
