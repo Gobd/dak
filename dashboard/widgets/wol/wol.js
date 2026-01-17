@@ -90,7 +90,8 @@ function showConfigModal(dark, onSave) {
             )
             .join('')}
         </div>
-        <div class="wol-add-form">
+        <button class="wol-show-add-btn" title="Add device">+</button>
+        <div class="wol-add-form" style="display: none;">
           <input type="text" class="wol-input wol-name-input" placeholder="Name (e.g., Office PC)">
           <input type="text" class="wol-input wol-ip-input" placeholder="IP (e.g., 192.168.1.100)">
           <div class="wol-mac-row">
@@ -110,6 +111,16 @@ function showConfigModal(dark, onSave) {
   const ipInput = modal.querySelector('.wol-ip-input');
   const macInput = modal.querySelector('.wol-mac-input');
   const detectBtn = modal.querySelector('.wol-detect-btn');
+  const addForm = modal.querySelector('.wol-add-form');
+  const showAddBtn = modal.querySelector('.wol-show-add-btn');
+
+  // Toggle add form visibility
+  showAddBtn.addEventListener('click', () => {
+    const isHidden = addForm.style.display === 'none';
+    addForm.style.display = isHidden ? 'flex' : 'none';
+    showAddBtn.textContent = isHidden ? '−' : '+';
+    if (isHidden) nameInput.focus();
+  });
 
   // Detect MAC button
   detectBtn.addEventListener('click', async () => {
@@ -204,7 +215,6 @@ function showConfigModal(dark, onSave) {
   });
 
   document.body.appendChild(modal);
-  nameInput.focus();
 }
 
 function renderWidget(container, dark, onOpen) {
