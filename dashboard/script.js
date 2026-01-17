@@ -364,6 +364,12 @@ function setupEditMode() {
   document.getElementById('delete-panel-btn').addEventListener('click', deletePanel);
   document.getElementById('add-arg-btn').addEventListener('click', () => addArgRow('', ''));
 
+  // Toggle URL field visibility based on type selection
+  document.getElementById('panel-type').addEventListener('change', (e) => {
+    const srcLabel = document.getElementById('panel-src-label');
+    srcLabel.style.display = e.target.value ? 'none' : '';
+  });
+
   // Close modal on backdrop click
   document.getElementById('settings-modal').addEventListener('click', (e) => {
     if (e.target.id === 'settings-modal') {
@@ -523,6 +529,22 @@ function openPanelSettings(screenIndex, panelIndex) {
   editingPanelIndex = panelIndex;
   editingPanel = screens[screenIndex].panels[panelIndex];
 
+  // Populate type dropdown with available widgets
+  const typeSelect = document.getElementById('panel-type');
+  const currentType = editingPanel.type || '';
+  typeSelect.innerHTML = '<option value="">URL (iframe)</option>';
+  getWidgetTypes().filter(t => t !== 'iframe').forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = type;
+    opt.selected = type === currentType;
+    typeSelect.appendChild(opt);
+  });
+
+  // Show/hide URL field based on type
+  const srcLabel = document.getElementById('panel-src-label');
+  srcLabel.style.display = currentType && currentType !== 'iframe' ? 'none' : '';
+
   document.getElementById('panel-src').value = editingPanel.src || '';
   document.getElementById('panel-refresh').value = editingPanel.refresh || '';
 
@@ -567,7 +589,9 @@ function addArgRow(key = '', value = '') {
 function savePanelSettings() {
   if (!editingPanel) return;
 
-  editingPanel.src = document.getElementById('panel-src').value;
+  const selectedType = document.getElementById('panel-type').value;
+  editingPanel.type = selectedType || undefined;
+  editingPanel.src = selectedType ? undefined : document.getElementById('panel-src').value;
   editingPanel.refresh = document.getElementById('panel-refresh').value || undefined;
 
   // Save position/size

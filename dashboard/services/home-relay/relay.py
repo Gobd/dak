@@ -10,18 +10,18 @@ import os
 import subprocess
 from pathlib import Path
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 from kasa import Discover
 from wakeonlan import send_magic_packet
 
 app = Flask(__name__)
-CORS(app)
 
 
 @app.after_request
-def add_private_network_header(response):
-    """Add Private Network Access header for Chrome's security checks"""
-    # Required for HTTPS sites to access localhost services
+def add_cors_headers(response):
+    """Add CORS and Private Network Access headers"""
+    response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     response.headers['Access-Control-Allow-Private-Network'] = 'true'
     return response
 
@@ -57,18 +57,25 @@ def kasa_discover():
 async def _discover_devices():
     """Async device discovery"""
     global _device_cache
-    devices = await Discover.discover()
+    # Use shorter timeout (default is 5s which is too slow for browser)
+    devices = await Discover.discover(discovery_timeout=1)
+
     result = []
 
     for ip, dev in devices.items():
         try:
             await dev.update()
         except Exception:
-            # Some devices have timezone issues (e.g., MST7MDT) - skip update
-            pass
+            pass  # Some devices have timezone issues (e.g., MST7MDT)
+
+        name = getattr(dev, 'alias', None) or ip
+        # Skip unrenamed devices (likely not in use)
+        if name.startswith('TP-LINK_'):
+            continue
+
         _device_cache[ip] = dev
         result.append({
-            'name': getattr(dev, 'alias', None) or ip,
+            'name': name,
             'ip': ip,
             'on': getattr(dev, 'is_on', None),
             'model': getattr(dev, 'model', 'unknown'),
@@ -80,15 +87,12 @@ async def _discover_devices():
 
 def _get_device_type(dev):
     """Get device type string"""
-    if dev.is_plug:
-        return 'plug'
-    elif dev.is_bulb:
-        return 'bulb'
-    elif dev.is_strip:
-        return 'strip'
-    elif dev.is_dimmer:
-        return 'dimmer'
-    return 'unknown'
+    # Use device_type property instead of deprecated is_plug/is_bulb/etc
+    device_type = getattr(dev, 'device_type', None)
+    if device_type is None:
+        return 'unknown'
+    # device_type is a Device.Type enum, convert to lowercase string
+    return device_type.name.lower() if hasattr(device_type, 'name') else str(device_type).lower()
 
 
 @app.route('/kasa/toggle', methods=['POST'])
