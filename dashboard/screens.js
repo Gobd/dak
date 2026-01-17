@@ -49,6 +49,10 @@
  *   sun-moon   - Sunrise/sunset times, day length change, moon phase
  *                Location configured via settings button (defaults to San Francisco)
  *                Shows: sunrise/sunset, day length (+/- from yesterday), moon phase (growing/shrinking), days to full moon
+ *   kasa       - Kasa smart device toggles (auto-discovers devices on LAN)
+ *                Requires home-relay service running on localhost:5111
+ *   wol        - Wake on LAN (click to open modal, configure devices)
+ *                Requires home-relay service running on localhost:5111
  *   iframe     - Any URL (default if type not specified but src is)
  *
  * URL PARAMS:
@@ -78,11 +82,11 @@ export default {
 
   screens: [
     /*
-     * Screen 1: Calendar + Notes + Drive Time overlay
+     * Screen 1: Calendar + Notes + Drive Time + Home Controls overlay
      * ┌───────┬───────────────┐
-     * │       │  [drive-time] │
+     * │       │[kasa][wol]    │
      * │ notes │   calendar    │
-     * │       │               │
+     * │       │  [drive-time] │
      * └───────┴───────────────┘
      */
     {
@@ -106,6 +110,21 @@ export default {
           w: '70%',
           h: '100%',
           refresh: '5m',
+        },
+        // Home control overlays - float at top of calendar (left of time)
+        {
+          type: 'kasa',
+          x: '78%',
+          y: '1%',
+          w: '5%',
+          h: '4%',
+        },
+        {
+          type: 'wol',
+          x: '83%',
+          y: '1%',
+          w: '5%',
+          h: '4%',
         },
         // Drive time overlay - floats on top of calendar
         // Routes configured via UI, stored in localStorage

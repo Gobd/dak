@@ -1,0 +1,11 @@
+[project]
+name = "home-relay"
+version = "1.0.0"
+description = "Home relay service for Kasa and WOL"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.0",
+    "flask-cors>=5.0.0",
+    "python-kasa>=0.9.0",
+    "wakeonlan>=3.1.0",
+]

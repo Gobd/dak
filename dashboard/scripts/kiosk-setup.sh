@@ -86,6 +86,27 @@ chmod +x ~/scripts/brightness.sh
  echo "*/2 * * * * /home/kiosk/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
 ) | crontab -
 
+echo "=== Setting up home-relay service (Kasa + WOL) ==="
+if [ -d ~/dashboard/services/home-relay ]; then
+  # Install uv if not present
+  if ! command -v uv &>/dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+
+  cd ~/dashboard/services/home-relay
+  uv sync
+
+  # Install and enable systemd service
+  sudo cp home-relay.service /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable home-relay
+  sudo systemctl start home-relay
+  echo "Home relay service installed and started"
+else
+  echo "Skipping home-relay (services/home-relay not found)"
+fi
+
 echo "=== Setup complete! ==="
 echo "Helper scripts available in ~/scripts/"
 echo "Edit ~/scripts/brightness.sh to set LAT/LON for your location"
