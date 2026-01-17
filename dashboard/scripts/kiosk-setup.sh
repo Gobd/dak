@@ -83,10 +83,10 @@ echo 'export EDITOR=nano' >> ~/.bashrc
 
 echo "=== Setting up auto brightness cron ==="
 chmod +x ~/dashboard/scripts/brightness.sh
-# Run on boot and every 2 minutes for smooth gradual transitions
-(crontab -l 2>/dev/null | grep -v brightness.sh
- echo "@reboot sleep 30 && /home/kiosk/dashboard/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
- echo "*/2 * * * * /home/kiosk/dashboard/scripts/brightness.sh auto > /dev/null 2>> /home/kiosk/brightness.log"
+# Run every 2 minutes via API (home-relay handles the logic)
+(crontab -l 2>/dev/null | grep -v brightness
+ echo "@reboot sleep 30 && curl -s http://localhost:5111/brightness/auto > /dev/null"
+ echo "*/2 * * * * curl -s http://localhost:5111/brightness/auto > /dev/null"
 ) | crontab -
 
 echo "=== Setting up home-relay service (Kasa + WOL) ==="

@@ -1,187 +1,46 @@
 #!/bin/bash
-# Auto brightness control using ddcutil
-# Gradual transitions at sunrise/sunset
-# Configuration via home-relay API
+# Brightness CLI - thin wrapper over home-relay API
+# For convenient use via SSH
 #
 # Usage:
-#   ./brightness.sh auto    - Auto-adjust based on sun (run via cron)
+#   ./brightness.sh auto    - Auto-adjust based on sun (or use cron)
 #   ./brightness.sh day     - Set day brightness
 #   ./brightness.sh night   - Set night brightness
 #   ./brightness.sh set 50  - Set to specific level (1-100)
 #   ./brightness.sh status  - Show current level and sun times
+#
+# Cron example (every 2 mins):
+#   */2 * * * * curl -s http://localhost:5111/brightness/auto
 
-# API endpoint
-API_URL="http://localhost:5111/config/brightness"
-CACHE_FILE="/tmp/brightness_sun_cache"
+API="http://localhost:5111"
 
-# === LOAD CONFIG ===
-
-load_config() {
-  # Fetch config from API using jq
-  CONFIG=$(curl -s "$API_URL" 2>/dev/null)
-
-  if [ -z "$CONFIG" ] || [ "$CONFIG" = "null" ]; then
-    echo "Could not connect to home-relay API at $API_URL"
-    echo "Make sure home-relay service is running"
-    exit 1
-  fi
-
-  # Parse JSON config using jq
-  ENABLED=$(echo "$CONFIG" | jq -r '.enabled // false')
-  LAT=$(echo "$CONFIG" | jq -r '.lat // empty')
-  LON=$(echo "$CONFIG" | jq -r '.lon // empty')
-  DAY_BRIGHTNESS=$(echo "$CONFIG" | jq -r '.dayBrightness // 100')
-  NIGHT_BRIGHTNESS=$(echo "$CONFIG" | jq -r '.nightBrightness // 1')
-  TRANSITION_MINS=$(echo "$CONFIG" | jq -r '.transitionMins // 60')
-
-  if [ "$ENABLED" != "true" ]; then
-    echo "Auto brightness disabled in config"
-    exit 0
-  fi
-
-  if [ -z "$LAT" ] || [ -z "$LON" ] || [ "$LAT" = "null" ] || [ "$LON" = "null" ]; then
-    echo "Location not configured"
-    exit 1
-  fi
-}
-
-# === FUNCTIONS ===
-
-get_sun_times() {
-  local TODAY
-  TODAY=$(date +%Y-%m-%d)
-
-  # Check if we have valid cached data from today
-  if [ -f "$CACHE_FILE" ]; then
-    local CACHED_DATE
-    CACHED_DATE=$(head -1 "$CACHE_FILE")
-    if [ "$CACHED_DATE" = "$TODAY" ]; then
-      SUNRISE_EPOCH=$(sed -n '2p' "$CACHE_FILE")
-      SUNSET_EPOCH=$(sed -n '3p' "$CACHE_FILE")
-      return 0
-    fi
-  fi
-
-  # Fetch fresh data from API
-  local DATA
-  DATA=$(curl -s "https://api.sunrise-sunset.org/json?lat=$LAT&lng=$LON&formatted=0" 2>/dev/null)
-
-  # Extract times (UTC) using jq
-  SUNRISE_UTC=$(echo "$DATA" | jq -r '.results.sunrise // empty')
-  SUNSET_UTC=$(echo "$DATA" | jq -r '.results.sunset // empty')
-
-  if [ -z "$SUNRISE_UTC" ] || [ -z "$SUNSET_UTC" ]; then
-    echo "ERROR: Could not fetch sun times"
-    return 1
-  fi
-
-  # Convert to local epoch seconds
-  SUNRISE_EPOCH=$(date -d "$SUNRISE_UTC" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${SUNRISE_UTC%+*}" +%s 2>/dev/null)
-  SUNSET_EPOCH=$(date -d "$SUNSET_UTC" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%S" "${SUNSET_UTC%+*}" +%s 2>/dev/null)
-
-  # Cache the results
-  echo -e "$TODAY\n$SUNRISE_EPOCH\n$SUNSET_EPOCH" > "$CACHE_FILE"
-}
-
-calculate_brightness() {
-  local NOW_EPOCH
-  NOW_EPOCH=$(date +%s)
-  local TRANS_SECS=$((TRANSITION_MINS * 60))
-
-  # Define transition windows
-  local SUNRISE_START=$((SUNRISE_EPOCH - TRANS_SECS / 2))
-  local SUNRISE_END=$((SUNRISE_EPOCH + TRANS_SECS / 2))
-  local SUNSET_START=$((SUNSET_EPOCH - TRANS_SECS / 2))
-  local SUNSET_END=$((SUNSET_EPOCH + TRANS_SECS / 2))
-
-  if [ "$NOW_EPOCH" -lt "$SUNRISE_START" ]; then
-    # Before sunrise transition - full night
-    echo "$NIGHT_BRIGHTNESS"
-  elif [ "$NOW_EPOCH" -lt "$SUNRISE_END" ]; then
-    # During sunrise transition - gradually brighten
-    local PROGRESS=$(( (NOW_EPOCH - SUNRISE_START) * 100 / TRANS_SECS ))
-    local RANGE=$((DAY_BRIGHTNESS - NIGHT_BRIGHTNESS))
-    echo $((NIGHT_BRIGHTNESS + RANGE * PROGRESS / 100))
-  elif [ "$NOW_EPOCH" -lt "$SUNSET_START" ]; then
-    # Daytime - full day
-    echo "$DAY_BRIGHTNESS"
-  elif [ "$NOW_EPOCH" -lt "$SUNSET_END" ]; then
-    # During sunset transition - gradually dim
-    local PROGRESS=$(( (NOW_EPOCH - SUNSET_START) * 100 / TRANS_SECS ))
-    local RANGE=$((DAY_BRIGHTNESS - NIGHT_BRIGHTNESS))
-    echo $((DAY_BRIGHTNESS - RANGE * PROGRESS / 100))
-  else
-    # After sunset transition - full night
-    echo "$NIGHT_BRIGHTNESS"
-  fi
-}
-
-set_brightness() {
-  local level=$1
-  # Clamp to valid range
-  [ "$level" -lt 1 ] && level=1
-  [ "$level" -gt 100 ] && level=100
-  ddcutil setvcp 10 "$level" --noverify
-  echo "$(date '+%H:%M'): Brightness set to $level%"
-}
-
-get_current_brightness() {
-  ddcutil getvcp 10 | grep -o 'current value = *[0-9]*' | grep -o '[0-9]*'
-}
-
-# === MAIN ===
-
-case "${1:-auto}" in
+case "${1:-status}" in
+  auto)
+    curl -s "$API/brightness/auto" | jq .
+    ;;
   day)
-    load_config
-    set_brightness "$DAY_BRIGHTNESS"
+    # Get day brightness from config and set it
+    LEVEL=$(curl -s "$API/config/brightness" | jq -r '.dayBrightness // 100')
+    curl -s -X POST "$API/brightness/set" -H "Content-Type: application/json" -d "{\"level\":$LEVEL}" | jq .
     ;;
   night)
-    load_config
-    set_brightness "$NIGHT_BRIGHTNESS"
+    # Get night brightness from config and set it
+    LEVEL=$(curl -s "$API/config/brightness" | jq -r '.nightBrightness // 1')
+    curl -s -X POST "$API/brightness/set" -H "Content-Type: application/json" -d "{\"level\":$LEVEL}" | jq .
     ;;
   set)
-    set_brightness "${2:-50}"
-    ;;
-  auto)
-    load_config
-    get_sun_times || exit 1
-    TARGET=$(calculate_brightness)
-    CURRENT=$(get_current_brightness)
-
-    # Only change if different (reduces DDC traffic)
-    if [ "$CURRENT" != "$TARGET" ]; then
-      set_brightness "$TARGET"
-    else
-      echo "$(date '+%H:%M'): Brightness already at $TARGET%"
-    fi
+    LEVEL="${2:-50}"
+    curl -s -X POST "$API/brightness/set" -H "Content-Type: application/json" -d "{\"level\":$LEVEL}" | jq .
     ;;
   status)
-    echo "Current brightness: $(get_current_brightness)%"
-    CONFIG=$(curl -s "$API_URL" 2>/dev/null)
-    if [ -n "$CONFIG" ] && [ "$CONFIG" != "null" ]; then
-      ENABLED=$(echo "$CONFIG" | jq -r '.enabled // false')
-      LAT=$(echo "$CONFIG" | jq -r '.lat // empty')
-      LON=$(echo "$CONFIG" | jq -r '.lon // empty')
-      if [ "$ENABLED" = "true" ] && [ -n "$LAT" ] && [ -n "$LON" ]; then
-        get_sun_times 2>/dev/null && \
-          echo "Sunrise: $(date -d "@$SUNRISE_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNRISE_EPOCH" '+%H:%M')" && \
-          echo "Sunset: $(date -d "@$SUNSET_EPOCH" '+%H:%M' 2>/dev/null || date -r "$SUNSET_EPOCH" '+%H:%M')"
-      else
-        echo "Auto brightness disabled or location not configured"
-      fi
-    else
-      echo "Could not connect to home-relay API"
-    fi
+    curl -s "$API/brightness/status" | jq .
     ;;
   *)
     echo "Usage: $0 [auto|day|night|set N|status]"
-    echo "  auto   - Set brightness based on sun position (gradual)"
+    echo "  auto   - Auto-adjust based on sun position"
     echo "  day    - Set to day brightness"
     echo "  night  - Set to night brightness"
     echo "  set N  - Set brightness to N%"
-    echo "  status - Show current brightness and sun times"
-    echo ""
-    echo "Configure via dashboard UI"
+    echo "  status - Show current brightness and config"
     ;;
 esac
