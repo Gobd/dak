@@ -1,4 +1,6 @@
-import { registerWidget, getDashboardConfig, updateConfigSection } from '../../script.js';
+import './drive-time.css';
+import { registerWidget } from '../../widget-registry.js';
+import { getDashboardConfig, updateConfigSection } from '../../script.js';
 
 // Drive Time Widget - Floating overlay showing commute time
 // Uses Cloudflare Functions to proxy Google Distance Matrix & Places APIs

@@ -1,4 +1,5 @@
-import { registerWidget } from '../../script.js';
+import './sun-moon.css';
+import { registerWidget } from '../../widget-registry.js';
 import { getSunTimes, getMoonTimes, getMoonIllumination } from './suncalc3-2.0.5.js';
 import {
   getWidgetLocation,
