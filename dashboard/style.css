@@ -186,6 +186,36 @@ body.edit-mode #screens {
   background: rgba(200, 50, 50, 0.5);
 }
 
+/* Layout toggle button */
+#toggle-layout-btn {
+  background: rgba(100, 200, 100, 0.3);
+}
+
+#toggle-layout-btn:hover {
+  background: rgba(100, 200, 100, 0.5);
+}
+
+#toggle-layout-btn.unlocked {
+  background: rgba(255, 200, 50, 0.3);
+}
+
+#toggle-layout-btn.unlocked:hover {
+  background: rgba(255, 200, 50, 0.5);
+}
+
+/* When layout is unlocked, allow widget interaction */
+body.edit-mode.layout-unlocked .panel-content {
+  pointer-events: auto;
+}
+
+body.edit-mode.layout-unlocked .panel {
+  cursor: default;
+}
+
+body.edit-mode.layout-unlocked .resize-handle {
+  display: none;
+}
+
 /* Edit mode panel styles */
 body.edit-mode .panel {
   border: 2px dashed rgba(100, 150, 255, 0.5);

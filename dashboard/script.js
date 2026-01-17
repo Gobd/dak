@@ -48,6 +48,11 @@ function connectToConfigUpdates() {
     sseConnection.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'config-updated') {
+        // Skip reload if we just saved (this is our own change)
+        if (ignoreSseReload) {
+          console.log('Ignoring SSE reload for our own save');
+          return;
+        }
         console.log('Config updated remotely, reloading...');
         window.location.reload();
       }
@@ -94,8 +99,13 @@ let screens = [];
 let config = {};
 let currentIndex = 0;
 let editMode = false;
+let layoutLocked = true; // In edit mode: locked = layout editing, unlocked = widget interaction
 let localMode = false;
 const refreshIntervals = [];
+
+// Flag to ignore SSE reload when we just saved
+let ignoreSseReload = false;
+let ignoreSseTimeout = null;
 
 // Widget registry - widgets register themselves here
 const widgets = {};
@@ -324,6 +334,14 @@ async function saveConfig() {
   // Save to localStorage (always works)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(dashboardConfig));
 
+  // Set flag to ignore our own SSE reload
+  ignoreSseReload = true;
+  if (ignoreSseTimeout) clearTimeout(ignoreSseTimeout);
+  ignoreSseTimeout = setTimeout(() => {
+    ignoreSseReload = false;
+    ignoreSseTimeout = null;
+  }, 5000); // Reset after 5 seconds (generous for slow networks)
+
   // Save to API (may fail if relay not running)
   try {
     await fetch(`${relayUrl}/config`, {
@@ -535,9 +553,9 @@ function createPanelElement(panel, screenIndex, panelIndex) {
   // Drag handlers
   setupPanelDrag(panelEl, screenIndex, panelIndex);
 
-  // Double-click to edit
+  // Double-click to edit (only when layout is locked)
   panelEl.addEventListener('dblclick', (e) => {
-    if (editMode && !e.target.classList.contains('resize-handle')) {
+    if (editMode && layoutLocked && !e.target.classList.contains('resize-handle')) {
       openPanelSettings(screenIndex, panelIndex);
     }
   });
@@ -604,6 +622,7 @@ function setupEditMode() {
 
   // Toolbar buttons
   document.getElementById('exit-edit-btn').addEventListener('click', toggleEditMode);
+  document.getElementById('toggle-layout-btn').addEventListener('click', toggleLayoutLock);
   document.getElementById('save-btn').addEventListener('click', async () => {
     await saveConfig();
     showAlert('Configuration saved!', 'Saved');
@@ -646,6 +665,22 @@ function toggleEditMode() {
   }
 }
 
+function toggleLayoutLock() {
+  layoutLocked = !layoutLocked;
+  const btn = document.getElementById('toggle-layout-btn');
+  if (layoutLocked) {
+    document.body.classList.remove('layout-unlocked');
+    btn.classList.remove('unlocked');
+    btn.textContent = '🔒 Layout';
+    btn.title = 'Layout editing enabled - click to allow widget interaction';
+  } else {
+    document.body.classList.add('layout-unlocked');
+    btn.classList.add('unlocked');
+    btn.textContent = '🔓 Widgets';
+    btn.title = 'Widget interaction enabled - click to edit layout';
+  }
+}
+
 function setupPanelDrag(panelEl, screenIndex, panelIndex) {
   let isDragging = false;
   let isResizing = false;
@@ -655,7 +690,7 @@ function setupPanelDrag(panelEl, screenIndex, panelIndex) {
   const container = document.getElementById('screens');
 
   panelEl.addEventListener('mousedown', (e) => {
-    if (!editMode) return;
+    if (!editMode || !layoutLocked) return;
 
     const handle = e.target.closest('.resize-handle');
     if (handle) {
@@ -753,13 +788,27 @@ function setupPanelDrag(panelEl, screenIndex, panelIndex) {
 
   function onMouseUp() {
     if (isDragging || isResizing) {
-      // Update the data
-      const panel = screens[screenIndex].panels[panelIndex];
-      panel.x = panelEl.style.left;
-      panel.y = panelEl.style.top;
-      panel.w = panelEl.style.width;
-      panel.h = panelEl.style.height;
-      saveConfigDebounced(); // Debounced to avoid excessive saves during rapid edits
+      // Check if position/size actually changed before saving
+      const newLeft = parseFloat(panelEl.style.left);
+      const newTop = parseFloat(panelEl.style.top);
+      const newWidth = parseFloat(panelEl.style.width);
+      const newHeight = parseFloat(panelEl.style.height);
+
+      const positionChanged =
+        newLeft !== startLeft ||
+        newTop !== startTop ||
+        newWidth !== startWidth ||
+        newHeight !== startHeight;
+
+      if (positionChanged) {
+        // Update the data
+        const panel = screens[screenIndex].panels[panelIndex];
+        panel.x = panelEl.style.left;
+        panel.y = panelEl.style.top;
+        panel.w = panelEl.style.width;
+        panel.h = panelEl.style.height;
+        saveConfigDebounced(); // Debounced to avoid excessive saves during rapid edits
+      }
     }
 
     isDragging = false;
@@ -979,17 +1028,8 @@ async function resetConfig() {
   config = defaultTemplate.global || {};
   screens = defaultTemplate.screens || [];
 
-  // Clear API config too
-  try {
-    await fetch(`${relayUrl}/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dashboardConfig),
-      signal: AbortSignal.timeout(3000),
-    });
-  } catch {
-    // API not available
-  }
+  // Save to API (uses saveConfig to properly set SSE ignore flag)
+  await saveConfig();
 
   applyConfig();
   renderScreens();

@@ -198,6 +198,9 @@ Uses Wayland + Cage (minimal kiosk compositor) for a lightweight, modern setup.
 
 # Or just sync files without running setup:
 ./scripts/deploy.sh kiosk@kiosk.local --no-setup
+
+# Sync files and restart home-relay service:
+./scripts/deploy.sh kiosk@kiosk.local --no-setup --restart
 ```
 
 > **Note:** Replace `kiosk.local` with the Pi's IP address if hostname doesn't resolve.

@@ -1,14 +1,12 @@
 """Wake-on-LAN endpoints."""
 
-import re
 import subprocess
 
 from flask import Blueprint, jsonify, request
+from getmac import get_mac_address
 from wakeonlan import send_magic_packet
 
 bp = Blueprint("wol", __name__, url_prefix="/wol")
-
-MAC_PATTERN = re.compile(r"([0-9a-fA-F]{1,2}[:\-]){5}[0-9a-fA-F]{1,2}")
 
 
 @bp.route("/wake", methods=["POST"])
@@ -49,7 +47,7 @@ def ping():
 
 
 @bp.route("/mac", methods=["GET"])
-def get_mac():
+def lookup_mac():
     """Get MAC address for an IP via ARP table (device must be on same network)."""
     ip = request.args.get("ip")
 
@@ -64,31 +62,11 @@ def get_mac():
             timeout=3,
         )
 
-        # Try 'ip neigh' first (Linux), fall back to 'arp' (macOS/BSD)
-        result = subprocess.run(
-            ["ip", "neigh", "show", ip],
-            capture_output=True,
-            text=True,
-            timeout=3,
-        )
+        # Use getmac library (cross-platform)
+        mac = get_mac_address(ip=ip)
 
-        if result.returncode != 0:
-            # Fall back to arp command
-            result = subprocess.run(
-                ["arp", "-n", ip],
-                capture_output=True,
-                text=True,
-                timeout=3,
-            )
-
-        output = result.stdout
-        match = MAC_PATTERN.search(output)
-
-        if match:
-            mac = match.group(0).upper().replace("-", ":")
-            # Normalize to XX:XX:XX:XX:XX:XX format
-            parts = mac.split(":")
-            mac = ":".join(p.zfill(2) for p in parts)
+        if mac and mac != "00:00:00:00:00:00":
+            mac = mac.upper()
             return jsonify({"ip": ip, "mac": mac})
         return jsonify({"ip": ip, "mac": None, "error": "MAC not found in ARP table"}), 404
 

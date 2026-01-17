@@ -52,6 +52,22 @@ async function getStatus() {
   }
 }
 
+async function setBrightness(level) {
+  try {
+    const res = await fetch(`${getRelayUrl()}/brightness/set`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error('Failed to set brightness');
+    return await res.json();
+  } catch (err) {
+    console.error('Brightness set failed:', err.message);
+    return null;
+  }
+}
+
 function showModal(dark, onClose) {
   const darkClass = dark ? 'dark' : '';
 
@@ -124,6 +140,14 @@ function showModal(dark, onClose) {
           ${config.enabled ? '<span class="brightness-active">Active</span>' : '<span class="brightness-inactive">Disabled</span>'}
         </div>
 
+        <div class="brightness-set-now">
+          <div class="brightness-row">
+            <label>Set Now: <span id="set-now-value">${currentLevel !== '?' ? currentLevel : 50}%</span></label>
+            <input type="range" id="brightness-set-now" min="1" max="100" value="${currentLevel !== '?' ? currentLevel : 50}">
+          </div>
+          <button class="brightness-set-now-btn">Apply</button>
+        </div>
+
         <button class="brightness-save-btn">Save</button>
       </div>
     `;
@@ -159,6 +183,34 @@ function showModal(dark, onClose) {
     });
     transSlider.addEventListener('input', () => {
       transValue.textContent = `${transSlider.value} min`;
+    });
+
+    // Set Now slider and button
+    const setNowSlider = bodyEl.querySelector('#brightness-set-now');
+    const setNowValue = bodyEl.querySelector('#set-now-value');
+    const setNowBtn = bodyEl.querySelector('.brightness-set-now-btn');
+
+    setNowSlider.addEventListener('input', () => {
+      setNowValue.textContent = `${setNowSlider.value}%`;
+    });
+
+    setNowBtn.addEventListener('click', async () => {
+      const level = parseInt(setNowSlider.value);
+      setNowBtn.textContent = 'Setting...';
+      setNowBtn.disabled = true;
+
+      const result = await setBrightness(level);
+      if (result && result.success) {
+        setNowBtn.textContent = 'Done!';
+        // Update the current display
+        bodyEl.querySelector('.brightness-status span').textContent = `Current: ${level}%`;
+      } else {
+        setNowBtn.textContent = 'Error';
+      }
+      setTimeout(() => {
+        setNowBtn.textContent = 'Apply';
+        setNowBtn.disabled = false;
+      }, 1500);
     });
 
     // Save button

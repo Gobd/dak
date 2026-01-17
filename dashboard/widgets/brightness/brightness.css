@@ -245,6 +245,42 @@
   color: #666;
 }
 
+/* Set Now section */
+.brightness-set-now {
+  padding: 12px;
+  background: #252525;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.brightness-set-now .brightness-row {
+  gap: 8px;
+}
+
+.brightness-set-now-btn {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.brightness-set-now-btn:hover {
+  background: #2563eb;
+}
+
+.brightness-set-now-btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
 /* Save button */
 .brightness-save-btn {
   width: 100%;
