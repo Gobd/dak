@@ -232,6 +232,15 @@ export function showConfirm(
 // Notification Modal
 // =====================
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function handleNotifications(notifications) {
   if (!notifications || notifications.length === 0) return;
 
@@ -262,9 +271,9 @@ function showNotificationModal() {
         <div class="notification-item" data-id="${n.id}">
           <div class="notification-header">
             <span class="notification-status">${status}</span>
-            <span class="notification-type">${n.type}</span>
+            <span class="notification-type">${escapeHtml(n.type)}</span>
           </div>
-          <div class="notification-name">${n.name}</div>
+          <div class="notification-name">${escapeHtml(n.name)}</div>
           <div class="notification-due">Due: ${n.due_date}</div>
           <div class="notification-actions">
             <button class="notification-dismiss" data-id="${n.id}" data-hours="4">Snooze 4h</button>
@@ -452,9 +461,9 @@ async function loadPrefsTab(body) {
       };
 
       return `
-        <div class="notif-pref-item" data-type="${type}">
+        <div class="notif-pref-item" data-type="${escapeHtml(type)}">
           <div class="notif-pref-header">
-            <span class="notif-pref-type">${type}</span>
+            <span class="notif-pref-type">${escapeHtml(type)}</span>
           </div>
           <div class="notif-pref-row">
             <label>
@@ -529,8 +538,8 @@ async function loadEventsTab(body) {
       (event) => `
       <div class="notif-event-item" data-id="${event.id}">
         <div class="notif-event-info">
-          <div class="notif-event-name">${event.name}</div>
-          <div class="notif-event-meta">${event.type} · Due: ${event.due_date}</div>
+          <div class="notif-event-name">${escapeHtml(event.name)}</div>
+          <div class="notif-event-meta">${escapeHtml(event.type)} · Due: ${event.due_date}</div>
         </div>
         <button class="notif-event-delete" title="Delete">×</button>
       </div>
