@@ -113,7 +113,7 @@ function renderWidget(container, dark, onOpen) {
 
   container.innerHTML = `
     <div class="kasa-widget ${darkClass}">
-      <button class="kasa-open-btn" title="Smart Devices">🔌</button>
+      <button class="kasa-open-btn" title="Smart Devices">💡</button>
     </div>
   `;
 

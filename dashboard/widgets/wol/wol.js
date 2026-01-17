@@ -210,7 +210,7 @@ function renderWidget(container, dark, onOpen) {
   container.innerHTML = `
     <div class="wol-widget ${darkClass}">
       <button class="wol-open-btn" title="Wake on LAN">
-        <span class="wol-icon">⏻</span>
+        <span class="wol-icon">⚡</span>
         ${count > 0 ? `<span class="wol-count">${count}</span>` : ''}
       </button>
     </div>
