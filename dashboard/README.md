@@ -300,3 +300,18 @@ cd dashboard
 python3 -m http.server 8080
 # Open http://localhost:8080
 ```
+
+## Security Considerations
+
+The home-relay service is designed for **trusted home networks only**:
+
+- **No authentication**: The API endpoints (`/config`, `/kasa/*`, `/wol/*`, `/brightness/*`) have no auth. Anyone on your LAN can read/write config and control devices.
+- **CORS allows any origin**: Required for the dashboard to work from different hosts (GitHub Pages, local dev, remote editing).
+- **Config stored in plaintext**: `~/.config/home-relay/dashboard.json` is readable by any local process.
+
+**This is acceptable because:**
+- The kiosk is on a private home network behind a firewall
+- Only trusted devices are on the LAN
+- The controlled devices (Kasa plugs, WoL targets) are low-risk home automation
+
+**Do not expose the home-relay port (5111) to the internet.** If you need remote access, use a VPN or SSH tunnel.

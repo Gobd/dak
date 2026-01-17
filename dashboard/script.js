@@ -67,40 +67,27 @@ function connectToConfigUpdates() {
   }
 }
 
+// Cleanup SSE connection on page unload to prevent server-side resource leaks
+function cleanupSSE() {
+  if (sseRetryTimeout) {
+    clearTimeout(sseRetryTimeout);
+    sseRetryTimeout = null;
+  }
+  if (sseConnection) {
+    sseConnection.close();
+    sseConnection = null;
+  }
+}
+
+window.addEventListener('beforeunload', cleanupSSE);
+window.addEventListener('pagehide', cleanupSSE);
+
 // Local dev URL mappings (used when ?local is in URL)
 // Maps relative paths to localhost ports for local development
 const LOCAL_URL_MAP = {
   '/notes-app/': 'http://localhost:8081/',
   '/health-tracker/': 'http://localhost:5173/health-tracker/',
   '/family-chores/': 'http://localhost:5174/family-chores/',
-};
-
-// Default config structure (used when all sources fail)
-const DEFAULT_CONFIG = {
-  global: {
-    background: '#111',
-    dark: true,
-    navPosition: 'bottom-right',
-    navButtons: 'both',
-    navColor: 'rgba(255, 255, 255, 0.6)',
-    navBackground: 'rgba(255, 255, 255, 0.1)',
-  },
-  screens: [],
-  brightness: {
-    enabled: false,
-    lat: null,
-    lon: null,
-    location: null,
-    dayBrightness: 100,
-    nightBrightness: 1,
-    transitionMins: 60,
-  },
-  locations: {},
-  wolDevices: [],
-  driveTime: {
-    locations: {},
-    routes: [],
-  },
 };
 
 let screens = [];
@@ -131,6 +118,77 @@ export function registerWidget(type, renderFn) {
 // Get available widget types for UI
 export function getWidgetTypes() {
   return Object.keys(widgets);
+}
+
+// =====================
+// Alert & Confirm Modals
+// =====================
+
+function showAlert(message, title = null) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'dialog-modal';
+    modal.innerHTML = `
+      <div class="dialog-modal-content">
+        ${title ? `<div class="dialog-modal-header"><h3>${title}</h3></div>` : ''}
+        <div class="dialog-modal-body">
+          <p>${message}</p>
+        </div>
+        <div class="dialog-modal-actions">
+          <button class="dialog-ok">OK</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('open'));
+
+    const cleanup = () => {
+      modal.classList.remove('open');
+      setTimeout(() => modal.remove(), 150);
+      resolve();
+    };
+
+    modal.querySelector('.dialog-ok').addEventListener('click', cleanup);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cleanup();
+    });
+  });
+}
+
+function showConfirm(message, { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', danger = false } = {}) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'dialog-modal';
+    const confirmClass = danger ? 'dialog-danger' : 'dialog-confirm';
+    modal.innerHTML = `
+      <div class="dialog-modal-content">
+        <div class="dialog-modal-header"><h3>${title}</h3></div>
+        <div class="dialog-modal-body">
+          <p>${message}</p>
+        </div>
+        <div class="dialog-modal-actions">
+          <button class="dialog-cancel">${cancelText}</button>
+          <button class="${confirmClass}">${confirmText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('open'));
+
+    const cleanup = (result) => {
+      modal.classList.remove('open');
+      setTimeout(() => modal.remove(), 150);
+      resolve(result);
+    };
+
+    modal.querySelector('.dialog-cancel').addEventListener('click', () => cleanup(false));
+    modal.querySelector(`.${confirmClass}`).addEventListener('click', () => cleanup(true));
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cleanup(false);
+    });
+  });
 }
 
 // Currently editing panel
@@ -214,16 +272,16 @@ async function loadConfig() {
     }
   }
 
-  // Fall back to default template
+  // Fall back to default template from repo
   if (!loadedConfig || !loadedConfig.screens || loadedConfig.screens.length === 0) {
     loadedConfig = await fetchDefaultTemplate();
     source = 'default';
   }
 
-  // Ultimate fallback to hardcoded defaults
   if (!loadedConfig) {
-    loadedConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-    source = 'hardcoded';
+    console.error('Failed to load config from any source');
+    loadedConfig = { global: {}, screens: [] };
+    source = 'empty';
   }
 
   console.log(`Config loaded from: ${source}`);
@@ -231,16 +289,31 @@ async function loadConfig() {
   // Store full config
   dashboardConfig = loadedConfig;
 
-  // Extract global config and screens for backward compatibility
-  config = loadedConfig.global || DEFAULT_CONFIG.global;
+  // Extract global config and screens
+  config = loadedConfig.global || {};
   screens = loadedConfig.screens || [];
+}
+
+// Debounce timer for drag/resize saves
+let saveDebounceTimer = null;
+const SAVE_DEBOUNCE_MS = 500;
+
+// Save config to API + localStorage (debounced version for drag operations)
+function saveConfigDebounced() {
+  if (saveDebounceTimer) {
+    clearTimeout(saveDebounceTimer);
+  }
+  saveDebounceTimer = setTimeout(() => {
+    saveConfig();
+    saveDebounceTimer = null;
+  }, SAVE_DEBOUNCE_MS);
 }
 
 // Save config to API + localStorage
 async function saveConfig() {
   // Update dashboardConfig with current values
   if (!dashboardConfig) {
-    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    dashboardConfig = { global: {}, screens: [] };
   }
   dashboardConfig.global = config;
   dashboardConfig.screens = screens;
@@ -269,7 +342,7 @@ export function getDashboardConfig() {
 // Update a specific section of the config and save
 export async function updateConfigSection(section, data) {
   if (!dashboardConfig) {
-    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    dashboardConfig = { global: {}, screens: [] };
   }
   dashboardConfig[section] = data;
   await saveConfig();
@@ -528,9 +601,9 @@ function setupEditMode() {
 
   // Toolbar buttons
   document.getElementById('exit-edit-btn').addEventListener('click', toggleEditMode);
-  document.getElementById('save-btn').addEventListener('click', () => {
-    saveConfig();
-    alert('Configuration saved!');
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    await saveConfig();
+    showAlert('Configuration saved!', 'Saved');
   });
   document.getElementById('add-panel-btn').addEventListener('click', addPanel);
   document.getElementById('export-btn').addEventListener('click', exportConfig);
@@ -683,7 +756,7 @@ function setupPanelDrag(panelEl, screenIndex, panelIndex) {
       panel.y = panelEl.style.top;
       panel.w = panelEl.style.width;
       panel.h = panelEl.style.height;
-      saveConfig();
+      saveConfigDebounced(); // Debounced to avoid excessive saves during rapid edits
     }
 
     isDragging = false;
@@ -799,8 +872,9 @@ function savePanelSettings() {
   showScreen(currentIndex);
 }
 
-function deletePanel() {
-  if (!confirm('Delete this panel?')) return;
+async function deletePanel() {
+  const confirmed = await showConfirm('Delete this panel?', { title: 'Delete Panel', confirmText: 'Delete', danger: true });
+  if (!confirmed) return;
 
   screens[editingScreenIndex].panels.splice(editingPanelIndex, 1);
   saveConfig();
@@ -862,12 +936,12 @@ function importConfig(e) {
         applyConfig();
         renderScreens();
         showScreen(0);
-        alert('Configuration imported!');
+        showAlert('Configuration imported!', 'Import Complete');
       } else {
-        alert('Invalid configuration file');
+        showAlert('Invalid configuration file', 'Import Failed');
       }
     } catch {
-      alert('Failed to parse configuration file');
+      showAlert('Failed to parse configuration file', 'Import Failed');
     }
   };
   reader.readAsText(file);
@@ -875,19 +949,23 @@ function importConfig(e) {
 }
 
 async function resetConfig() {
-  if (!confirm('Reset to default configuration? This will discard all changes.')) return;
+  const confirmed = await showConfirm('Reset to default configuration? This will discard all changes.', {
+    title: 'Reset Configuration',
+    confirmText: 'Reset',
+    danger: true,
+  });
+  if (!confirmed) return;
 
   // Fetch default template
   const defaultTemplate = await fetchDefaultTemplate();
-  if (defaultTemplate) {
-    dashboardConfig = defaultTemplate;
-    config = defaultTemplate.global || DEFAULT_CONFIG.global;
-    screens = defaultTemplate.screens || [];
-  } else {
-    dashboardConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-    config = DEFAULT_CONFIG.global;
-    screens = [];
+  if (!defaultTemplate) {
+    showAlert('Failed to fetch default template. Reset cancelled.', 'Reset Failed');
+    return;
   }
+
+  dashboardConfig = defaultTemplate;
+  config = defaultTemplate.global || {};
+  screens = defaultTemplate.screens || [];
 
   // Clear API config too
   try {
@@ -904,7 +982,7 @@ async function resetConfig() {
   applyConfig();
   renderScreens();
   showScreen(0);
-  alert('Configuration reset to defaults!');
+  showAlert('Configuration reset to defaults!', 'Reset Complete');
 }
 
 // Load widgets dynamically then initialize

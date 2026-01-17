@@ -157,3 +157,14 @@ The dashboard loads configuration in this order:
 3. **Default template** - Fetch `config/dashboard.json` from repo
 
 This ensures the dashboard works even if the home-relay service is down.
+
+## Developer Notes
+
+### Default Configuration
+
+`config/dashboard.json` is the single source of truth for default configuration.
+
+- **Browser**: Fetches `/config/dashboard.json` from GitHub Pages
+- **Server**: Reads `~/dashboard/config/dashboard.json` (deployed by setup script)
+
+**When adding new config fields:** Just update `config/dashboard.json`.

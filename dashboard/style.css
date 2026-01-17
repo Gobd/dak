@@ -707,3 +707,114 @@ body.edit-mode .panel.resizing .position-tooltip {
   font-size: 12px;
   color: var(--modal-text-muted);
 }
+
+/* =====================
+   Alert & Confirm Modals
+   ===================== */
+
+.dialog-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.15s;
+  backdrop-filter: blur(4px);
+}
+
+.dialog-modal.open {
+  opacity: 1;
+}
+
+.dialog-modal-content {
+  background: #1f1f1f;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  color: #f9fafb;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  animation: dialog-appear 0.15s ease-out;
+}
+
+@keyframes dialog-appear {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.dialog-modal-header {
+  padding: 16px 20px 0;
+}
+
+.dialog-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.dialog-modal-body {
+  padding: 16px 20px;
+}
+
+.dialog-modal-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #d1d5db;
+}
+
+.dialog-modal-actions {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dialog-modal-actions button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+  border: none;
+}
+
+.dialog-modal-actions .dialog-cancel {
+  background: #374151;
+  color: #f9fafb;
+}
+
+.dialog-modal-actions .dialog-cancel:hover {
+  background: #4b5563;
+}
+
+.dialog-modal-actions .dialog-ok,
+.dialog-modal-actions .dialog-confirm {
+  background: #3b82f6;
+  color: white;
+}
+
+.dialog-modal-actions .dialog-ok:hover,
+.dialog-modal-actions .dialog-confirm:hover {
+  background: #2563eb;
+}
+
+.dialog-modal-actions .dialog-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.dialog-modal-actions .dialog-danger:hover {
+  background: #b91c1c;
+}

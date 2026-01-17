@@ -35,33 +35,14 @@ def add_cors_headers(response):
 CONFIG_DIR = Path.home() / '.config' / 'home-relay'
 DASHBOARD_CONFIG = CONFIG_DIR / 'dashboard.json'
 
-# Default dashboard config
-DEFAULT_DASHBOARD_CONFIG = {
-    'global': {
-        'background': '#111',
-        'dark': True,
-        'navPosition': 'bottom-right',
-        'navButtons': 'both',
-        'navColor': 'rgba(255, 255, 255, 0.6)',
-        'navBackground': 'rgba(255, 255, 255, 0.1)',
-    },
-    'screens': [],
-    'brightness': {
-        'enabled': False,
-        'lat': None,
-        'lon': None,
-        'location': None,
-        'dayBrightness': 100,
-        'nightBrightness': 1,
-        'transitionMins': 60,
-    },
-    'locations': {},
-    'wolDevices': [],
-    'driveTime': {
-        'locations': {},
-        'routes': [],
-    },
-}
+# Default template location (from repo, deployed to ~/dashboard/)
+DEFAULT_TEMPLATE = Path.home() / 'dashboard' / 'config' / 'dashboard.json'
+
+
+def _get_default_config():
+    """Load default config from template file."""
+    with open(DEFAULT_TEMPLATE) as f:
+        return json.load(f)
 
 # Cache for discovered devices (refreshed on each discover call)
 _device_cache = {}
@@ -238,12 +219,13 @@ def wol_ping():
 
 def _load_config():
     """Load full dashboard config from file"""
+    defaults = _get_default_config()
     if DASHBOARD_CONFIG.exists():
         try:
             with open(DASHBOARD_CONFIG) as f:
                 config = json.load(f)
                 # Deep merge with defaults
-                result = json.loads(json.dumps(DEFAULT_DASHBOARD_CONFIG))
+                result = json.loads(json.dumps(defaults))
                 for key, value in config.items():
                     if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                         result[key] = {**result[key], **value}
@@ -252,7 +234,7 @@ def _load_config():
                 return result
         except Exception:
             pass
-    return json.loads(json.dumps(DEFAULT_DASHBOARD_CONFIG))
+    return defaults
 
 
 def _save_config(config):
@@ -327,7 +309,7 @@ def set_config():
 def get_brightness_config():
     """Get just the brightness section (for shell script)"""
     config = _load_config()
-    return jsonify(config.get('brightness', DEFAULT_DASHBOARD_CONFIG['brightness']))
+    return jsonify(config.get('brightness', {}))
 
 
 # === Brightness Control ===
@@ -363,7 +345,7 @@ def brightness_set():
 def brightness_status():
     """Get current brightness and sun times"""
     full_config = _load_config()
-    brightness_config = full_config.get('brightness', DEFAULT_DASHBOARD_CONFIG['brightness'])
+    brightness_config = full_config.get('brightness', {})
     result = {'config': brightness_config, 'current': None, 'sun': None}
 
     # Get current brightness
