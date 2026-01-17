@@ -1,11 +1,6 @@
 import './wol.css';
 import { registerWidget } from '../../widget-registry.js';
-import {
-  getDashboardConfig,
-  updateConfigSection,
-  getRelayUrl,
-  showConfirm,
-} from '../../script.js';
+import { getDashboardConfig, updateConfigSection, getRelayUrl, showConfirm } from '../../script.js';
 
 // Wake on LAN Widget
 // Click to open modal, see device status, wake them

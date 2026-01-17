@@ -1,10 +1,6 @@
 import './brightness.css';
 import { registerWidget } from '../../widget-registry.js';
-import {
-  getDashboardConfig,
-  updateConfigSection,
-  getRelayUrl,
-} from '../../script.js';
+import { getDashboardConfig, updateConfigSection, getRelayUrl } from '../../script.js';
 import { setupLocationAutocomplete, formatLocation } from '../../location.js';
 
 // Auto Brightness Widget
