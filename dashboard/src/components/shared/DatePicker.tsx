@@ -21,12 +21,17 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate();
   const firstDayOfWeek = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1).getDay();
 
+  // Always render 6 rows (42 cells) to prevent layout jumping
   const days: (number | null)[] = [];
   for (let i = 0; i < firstDayOfWeek; i++) {
     days.push(null);
   }
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(i);
+  }
+  // Pad to 42 cells (6 rows)
+  while (days.length < 42) {
+    days.push(null);
   }
 
   const selectedStr = formatLocalDate(value);
@@ -53,7 +58,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
   }
 
   return (
-    <div className="bg-neutral-800 rounded-lg p-3">
+    <div className="bg-neutral-800 rounded-lg p-3 w-[280px]">
       {/* Navigation */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1">
@@ -74,7 +79,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
             <ChevronLeft size={16} />
           </button>
         </div>
-        <span className="text-sm font-medium w-32 text-center">
+        <span className="text-sm font-medium text-center flex-1">
           {viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </span>
         <div className="flex items-center gap-1">
@@ -106,11 +111,11 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
         ))}
       </div>
 
-      {/* Days grid */}
+      {/* Days grid - always 6 rows */}
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, i) => {
           if (day === null) {
-            return <div key={`empty-${i}`} />;
+            return <div key={`empty-${i}`} className="w-8 h-8" />;
           }
 
           const dateStr = formatLocalDate(
@@ -160,7 +165,7 @@ export function DatePickerCompact({ value, onChange }: DatePickerProps) {
 
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-neutral-900 rounded-xl p-4 shadow-2xl">
+          <div className="bg-black rounded-xl p-4 shadow-2xl">
             <DatePicker
               value={value}
               onChange={(d) => {

@@ -931,8 +931,10 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 Local dev mode (implicit auth flow - no refresh token)
               </div>
             )}
-            <div className="flex gap-2">
-              <Button onClick={() => window.location.reload()}>Reload Widget</Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={() => loadEvents()}>
+                <RefreshCw size={14} className="mr-1" /> Refresh
+              </Button>
               <Button onClick={signOut} variant="danger">
                 <LogOut size={14} className="mr-1" /> Sign Out
               </Button>
@@ -1266,7 +1268,12 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       </Modal>
 
       {/* Jump to Date Modal */}
-      <Modal open={showJumpToDate} onClose={() => setShowJumpToDate(false)} title="Jump to Date">
+      <Modal
+        open={showJumpToDate}
+        onClose={() => setShowJumpToDate(false)}
+        title="Jump to Date"
+        fit
+      >
         <DatePicker value={gridStartDate} onChange={handleJumpToDate} />
       </Modal>
     </div>

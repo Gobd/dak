@@ -8,13 +8,14 @@ interface ModalProps {
   children: ReactNode;
   actions?: ReactNode;
   wide?: boolean;
+  fit?: boolean; // If true, modal fits content instead of stretching to max-width
 }
 
 /**
  * Reusable modal component - replaces 9+ modal implementations
  * Uses React Portal to render at document.body level (escapes overflow-hidden parents)
  */
-export function Modal({ open, onClose, title, children, actions, wide }: ModalProps) {
+export function Modal({ open, onClose, title, children, actions, wide, fit }: ModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Handle escape key
@@ -60,9 +61,9 @@ export function Modal({ open, onClose, title, children, actions, wide }: ModalPr
     >
       <div
         ref={contentRef}
-        className={`bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-2xl animate-slide-up ${
-          wide ? 'max-w-2xl' : 'max-w-md'
-        } w-full max-h-[90vh] overflow-y-auto custom-scrollbar`}
+        className={`bg-white dark:bg-black rounded-xl p-6 shadow-2xl animate-slide-up ${
+          fit ? '' : wide ? 'max-w-2xl w-full' : 'max-w-md w-full'
+        } max-h-[90vh] overflow-y-auto custom-scrollbar`}
       >
         {title && (
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">{title}</h3>
