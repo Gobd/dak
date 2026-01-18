@@ -2,6 +2,7 @@ packages:
   - dashboard
   - family-chores
   - health-tracker
+  - kasa-controller
   - notes-app
 
 catalog:

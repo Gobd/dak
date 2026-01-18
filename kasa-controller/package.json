@@ -1,0 +1,40 @@
+{
+  "name": "kasa-controller",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "preview": "vite preview",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "lucide-react": "catalog:vite",
+    "react": "catalog:vite",
+    "react-dom": "catalog:vite",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@tailwindcss/vite": "catalog:vite",
+    "@types/react": "catalog:vite",
+    "@types/react-dom": "catalog:vite",
+    "@vitejs/plugin-react": "catalog:vite",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:vite",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:vite",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:vite",
+    "vite": "catalog:vite",
+    "vite-plugin-pwa": "catalog:vite"
+  }
+}

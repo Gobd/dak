@@ -1,0 +1,43 @@
+name: Python
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python (Ruff)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard/services/home-relay
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check for Python changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            python:
+              - 'dashboard/services/home-relay/**'
+
+      - name: Install uv
+        if: steps.changes.outputs.python == 'true'
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        if: steps.changes.outputs.python == 'true'
+        run: uv python install
+
+      - name: Install dependencies
+        if: steps.changes.outputs.python == 'true'
+        run: uv sync --group dev
+
+      - name: Lint
+        if: steps.changes.outputs.python == 'true'
+        run: uv run ruff check .
+
+      - name: Format
+        if: steps.changes.outputs.python == 'true'
+        run: uv run ruff format --check .
