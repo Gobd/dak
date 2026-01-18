@@ -22,7 +22,6 @@ interface BrightnessStatus {
   sun: SunTimes;
 }
 
-
 async function checkRelayHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${getRelayUrl()}/health`, {
@@ -60,8 +59,10 @@ async function setBrightness(level: number): Promise<boolean> {
   }
 }
 
-
-async function fetchBrightnessData(): Promise<{ status: BrightnessStatus | null; error: string | null }> {
+async function fetchBrightnessData(): Promise<{
+  status: BrightnessStatus | null;
+  error: string | null;
+}> {
   const relayUp = await checkRelayHealth();
   if (!relayUp) {
     return { status: null, error: 'Relay offline' };
@@ -253,7 +254,8 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
                     />
                     {config.lat && config.lon && (
                       <div className="mt-2 text-xs text-green-400">
-                        {config.locationName || `${config.lat.toFixed(4)}, ${config.lon.toFixed(4)}`}
+                        {config.locationName ||
+                          `${config.lat.toFixed(4)}, ${config.lon.toFixed(4)}`}
                       </div>
                     )}
                   </div>

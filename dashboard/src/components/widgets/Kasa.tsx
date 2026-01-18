@@ -90,9 +90,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
         if (!old) return old;
         return {
           ...old,
-          devices: old.devices.map((d) =>
-            d.ip === device.ip ? { ...d, on: !d.on } : d
-          ),
+          devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: !d.on } : d)),
         };
       }
     );
@@ -106,9 +104,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
           if (!old) return old;
           return {
             ...old,
-            devices: old.devices.map((d) =>
-              d.ip === device.ip ? { ...d, on: device.on } : d
-            ),
+            devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: device.on } : d)),
           };
         }
       );
