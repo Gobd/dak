@@ -145,6 +145,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     error: authError,
     signIn,
     signOut,
+    isImplicitFlow,
   } = useGoogleAuth();
 
   const [view, setView] = useState<'month' | 'list'>(viewPreference);
@@ -924,11 +925,18 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
             </div>
           )}
 
-          <div className="flex gap-2 pt-2 border-t border-neutral-700">
-            <Button onClick={() => window.location.reload()}>Reload Widget</Button>
-            <Button onClick={signOut} variant="danger">
-              <LogOut size={14} className="mr-1" /> Sign Out
-            </Button>
+          <div className="pt-2 border-t border-neutral-700 space-y-2">
+            {isImplicitFlow && (
+              <div className="text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">
+                Local dev mode (implicit auth flow - no refresh token)
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button onClick={() => window.location.reload()}>Reload Widget</Button>
+              <Button onClick={signOut} variant="danger">
+                <LogOut size={14} className="mr-1" /> Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>

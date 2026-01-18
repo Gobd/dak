@@ -65,6 +65,16 @@ export interface LocationConfig {
   query?: string;
 }
 
+// Brightness configuration (for auto-brightness on kiosk)
+export interface BrightnessConfig {
+  enabled?: boolean;
+  lat?: number;
+  lon?: number;
+  dayBrightness?: number;
+  nightBrightness?: number;
+  transitionMins?: number;
+}
+
 // Dashboard configuration
 export interface DashboardConfig {
   screens: ScreenConfig[];
@@ -74,6 +84,7 @@ export interface DashboardConfig {
   calendar?: CalendarConfig;
   locations?: Record<string, LocationConfig>;
   defaultLocation?: LocationConfig;
+  brightness?: BrightnessConfig;
 }
 
 // Default dashboard configuration

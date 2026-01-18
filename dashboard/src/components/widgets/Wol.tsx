@@ -25,7 +25,7 @@ async function pingDevice(ip: string): Promise<boolean> {
     });
     if (!res.ok) return false;
     const data = await res.json();
-    return data.alive === true;
+    return data.online === true;
   } catch {
     return false;
   }
@@ -114,6 +114,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
   const [deleteDevice, setDeleteDevice] = useState<WolDevice | null>(null);
   const [addForm, setAddForm] = useState({ name: '', ip: '', mac: '' });
   const [addError, setAddError] = useState<string | null>(null);
+  const [detectingMac, setDetectingMac] = useState(false);
 
   // Use different refresh intervals based on modal state
   const normalInterval = parseDuration(panel.refresh) ?? undefined;
@@ -175,6 +176,22 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
     saveDevices(devices.filter((d) => d.mac !== deleteDevice.mac));
     setDeleteDevice(null);
     queryClient.invalidateQueries({ queryKey: ['wol-statuses'] });
+  }
+
+  async function handleDetectMac() {
+    if (!addForm.ip.trim()) {
+      setAddError('Enter an IP address first');
+      return;
+    }
+    setDetectingMac(true);
+    setAddError(null);
+    const mac = await getMacFromIp(addForm.ip);
+    setDetectingMac(false);
+    if (mac) {
+      setAddForm((p) => ({ ...p, mac }));
+    } else {
+      setAddError('Could not detect MAC. Is the device online?');
+    }
   }
 
   // Status indicator: green if any online, red if error
@@ -327,16 +344,24 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
             />
           </div>
           <div>
-            <label className="block text-sm text-neutral-500 mb-1">
-              MAC Address <span className="text-neutral-600">(auto-detected if online)</span>
-            </label>
-            <input
-              type="text"
-              value={addForm.mac}
-              onChange={(e) => setAddForm((p) => ({ ...p, mac: e.target.value }))}
-              placeholder="Leave empty to auto-detect"
-              className="w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
-            />
+            <label className="block text-sm text-neutral-500 mb-1">MAC Address</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={addForm.mac}
+                onChange={(e) => setAddForm((p) => ({ ...p, mac: e.target.value }))}
+                placeholder="e.g., AA:BB:CC:DD:EE:FF"
+                className="flex-1 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
+              />
+              <button
+                type="button"
+                onClick={handleDetectMac}
+                disabled={detectingMac || !addForm.ip.trim()}
+                className="px-3 py-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white disabled:opacity-50 text-sm"
+              >
+                {detectingMac ? 'Detecting...' : 'Detect'}
+              </button>
+            </div>
           </div>
           {addError && (
             <p

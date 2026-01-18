@@ -7,6 +7,7 @@ import type {
   DriveTimeConfig,
   CalendarConfig,
   LocationConfig,
+  BrightnessConfig,
 } from '../types';
 import { DEFAULT_CONFIG, generateId } from '../types';
 
@@ -44,10 +45,16 @@ let sseRetryTimeout: ReturnType<typeof setTimeout> | null = null;
 let ignoreSseReload = false;
 let ignoreSseTimeout: ReturnType<typeof setTimeout> | null = null;
 
+// Check URL params for edit mode and remote relay
+const urlParams =
+  typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+
 // Check if we're editing remotely (via relay param) - if so, don't subscribe to SSE
 // Only the kiosk/display device should auto-refresh on config changes
-const isRemoteEditing =
-  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('relay');
+const isRemoteEditing = urlParams?.has('relay') ?? false;
+
+// Check if edit mode should be enabled via URL param
+const initialEditMode = urlParams?.has('edit') ?? false;
 
 interface ConfigState extends DashboardConfig {
   // Edit mode
@@ -70,6 +77,7 @@ interface ConfigState extends DashboardConfig {
   // Config sections
   updateDriveTime: (config: DriveTimeConfig) => void;
   updateCalendar: (config: CalendarConfig) => void;
+  updateBrightness: (config: BrightnessConfig) => void;
   updateLocation: (widgetId: string, location: LocationConfig) => void;
   getLocation: (widgetId: string) => LocationConfig | undefined;
 
@@ -92,7 +100,7 @@ export const useConfigStore = create<ConfigState>()(
     persist(
       (set, get) => ({
         ...DEFAULT_CONFIG,
-        isEditMode: false,
+        isEditMode: initialEditMode,
 
         setEditMode: (editing) => set({ isEditMode: editing }),
 
@@ -193,6 +201,11 @@ export const useConfigStore = create<ConfigState>()(
             calendar: { ...state.calendar, ...config },
           })),
 
+        updateBrightness: (config) =>
+          set((state) => ({
+            brightness: { ...state.brightness, ...config },
+          })),
+
         updateLocation: (widgetId, location) =>
           set((state) => ({
             locations: {
@@ -257,6 +270,7 @@ export const useConfigStore = create<ConfigState>()(
             driveTime: state.driveTime,
             calendar: state.calendar,
             locations: state.locations,
+            brightness: state.brightness,
           };
 
           // Set flag to ignore our own SSE reload
@@ -295,6 +309,7 @@ export const useConfigStore = create<ConfigState>()(
                 driveTime: config.driveTime,
                 calendar: config.calendar,
                 locations: config.locations,
+                brightness: config.brightness,
               });
               return true;
             }

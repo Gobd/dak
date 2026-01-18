@@ -35,9 +35,17 @@ CONFIG_DIR = Path.home() / ".config" / "home-relay"
 DASHBOARD_CONFIG = CONFIG_DIR / "dashboard.json"
 
 
+@app.before_request
+def handle_preflight():
+    """Return 200 for OPTIONS preflight (CORS headers added by after_request)."""
+    if request.method == "OPTIONS":
+        return "", 200
+    return None
+
+
 @app.after_request
 def add_cors_headers(response):
-    """Add CORS and Private Network Access headers."""
+    """Add CORS and Private Network Access headers to all responses."""
     response.headers["Access-Control-Allow-Origin"] = request.headers.get("Origin", "*")
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
@@ -119,7 +127,7 @@ def get_config():
 
 @app.route("/config", methods=["POST"])
 def set_config():
-    """Save full dashboard configuration."""
+    """Save dashboard configuration."""
     data = request.get_json() or {}
     _save_config(data)
     _notify_config_updated()

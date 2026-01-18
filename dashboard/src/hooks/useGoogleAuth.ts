@@ -27,6 +27,7 @@ interface UseGoogleAuthResult {
   error: string | null;
   signIn: () => void;
   signOut: () => void;
+  isImplicitFlow: boolean;
 }
 
 const STORAGE_KEY = 'calendar-auth';
@@ -262,6 +263,7 @@ export function useGoogleAuth(): UseGoogleAuthResult {
     error,
     signIn,
     signOut,
+    isImplicitFlow: isLocalDev,
   };
 }
 
