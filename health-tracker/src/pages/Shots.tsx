@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
-import { ConfirmModal } from '@dak/ui';
-import { TimePicker } from '../components/TimePicker';
+import { ConfirmModal, DateTimePicker } from '@dak/ui';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -371,7 +370,9 @@ export function Shots() {
                           {useCustomTime ? 'Custom time' : 'Now'}
                         </button>
                       </div>
-                      {useCustomTime && <TimePicker value={logTime} onChange={handleTimeChange} />}
+                      {useCustomTime && (
+                        <DateTimePicker value={logTime} onChange={handleTimeChange} />
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 dark:text-neutral-300">

@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal } from '@dak/ui';
-import { TimePicker } from '../components/TimePicker';
+import { ConfirmModal, DateTimePicker } from '@dak/ui';
 import {
   Plus,
   Clock,
@@ -351,7 +350,10 @@ export function AsNeeded() {
                           </div>
                           {showTimeInput === med.id && (
                             <div className="mt-3">
-                              <TimePicker value={customTime} onChange={handleCustomTimeChange} />
+                              <DateTimePicker
+                                value={customTime}
+                                onChange={handleCustomTimeChange}
+                              />
                             </div>
                           )}
                         </div>
