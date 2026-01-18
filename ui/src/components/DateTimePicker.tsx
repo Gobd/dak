@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { DatePicker } from './DatePicker';
 import { Roller } from './Roller';
 
@@ -7,10 +7,18 @@ interface DateTimePickerProps {
   onChange: (date: Date) => void;
   showDatePicker?: boolean;
   allowFuture?: boolean;
+  minuteStep?: number; // Default 5, can be 1 for precise selection
 }
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+function generateMinutes(step: number): number[] {
+  const minutes: number[] = [];
+  for (let i = 0; i < 60; i += step) {
+    minutes.push(i);
+  }
+  return minutes;
+}
 
 function formatDisplayDate(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -21,7 +29,10 @@ export function DateTimePicker({
   onChange,
   showDatePicker = true,
   allowFuture = false,
+  minuteStep = 5,
 }: DateTimePickerProps) {
+  const minutes = useMemo(() => generateMinutes(minuteStep), [minuteStep]);
+
   const now = new Date();
   const baseDate = value || now;
 
@@ -31,9 +42,9 @@ export function DateTimePicker({
     return h === 0 ? 12 : h > 12 ? h - 12 : h;
   });
   const [minute, setMinute] = useState(() => {
-    // Find closest 5-minute increment
+    // Find closest minute increment
     const m = baseDate.getMinutes();
-    return MINUTES.reduce((prev, curr) => (Math.abs(curr - m) < Math.abs(prev - m) ? curr : prev));
+    return minutes.reduce((prev, curr) => (Math.abs(curr - m) < Math.abs(prev - m) ? curr : prev));
   });
   const [isPM, setIsPM] = useState(() => baseDate.getHours() >= 12);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -82,7 +93,7 @@ export function DateTimePicker({
           <div className="text-xl font-bold text-gray-400 dark:text-neutral-500">:</div>
           <div className="w-10">
             <Roller
-              items={MINUTES}
+              items={minutes}
               value={minute}
               onChange={setMinute}
               format={(v) => String(v).padStart(2, '0')}

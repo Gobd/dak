@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Roller } from './Roller';
 
 interface TimePickerProps {
   value: string; // "HH:MM" 24-hour format
   onChange: (value: string) => void;
+  minuteStep?: number; // Default 5, can be 1 for precise selection
 }
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+function generateMinutes(step: number): number[] {
+  const minutes: number[] = [];
+  for (let i = 0; i < 60; i += step) {
+    minutes.push(i);
+  }
+  return minutes;
+}
 
 function parseTime(value: string): { hour: number; minute: number; isPM: boolean } {
   const [h, m] = value.split(':').map(Number);
@@ -54,12 +62,14 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
   );
 }
 
-export function TimePicker({ value, onChange }: TimePickerProps) {
+export function TimePicker({ value, onChange, minuteStep = 5 }: TimePickerProps) {
+  const minutes = useMemo(() => generateMinutes(minuteStep), [minuteStep]);
+
   // Fully controlled - derive state from props
   const { hour, minute, isPM } = parseTime(value);
 
   // Find closest minute in our options
-  const closestMinute = MINUTES.reduce((prev, curr) =>
+  const closestMinute = minutes.reduce((prev, curr) =>
     Math.abs(curr - minute) < Math.abs(prev - minute) ? curr : prev
   );
 
@@ -85,7 +95,7 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
 
       <div className="w-16">
         <Roller
-          items={MINUTES}
+          items={minutes}
           value={closestMinute}
           onChange={handleMinuteChange}
           format={(v) => String(v).padStart(2, '0')}
@@ -100,7 +110,7 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
 }
 
 // Compact version for inline use
-export function TimePickerCompact({ value, onChange }: TimePickerProps) {
+export function TimePickerCompact({ value, onChange, minuteStep = 5 }: TimePickerProps) {
   const [showPicker, setShowPicker] = useState(false);
   const parsed = parseTime(value);
 
@@ -119,7 +129,7 @@ export function TimePickerCompact({ value, onChange }: TimePickerProps) {
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 shadow-2xl">
-            <TimePicker value={value} onChange={onChange} />
+            <TimePicker value={value} onChange={onChange} minuteStep={minuteStep} />
             <button
               onClick={() => setShowPicker(false)}
               type="button"
