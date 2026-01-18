@@ -1,23 +1,20 @@
 {
-  "name": "health-tracker",
+  "name": "@dak/ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "preview": "vite preview",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
-    "analyze": "ANALYZE=true pnpm build"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck"
   },
   "dependencies": {
-    "@dak/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
-    "date-fns": "catalog:vite",
     "lucide-react": "catalog:vite",
     "react": "catalog:vite",
     "react-dom": "catalog:vite",
@@ -26,21 +23,13 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@tailwindcss/vite": "catalog:vite",
-    "@types/node": "catalog:",
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",
-    "@vitejs/plugin-react": "catalog:vite",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:vite",
     "globals": "catalog:",
     "prettier": "catalog:",
-    "rollup-plugin-visualizer": "catalog:vite",
-    "tailwindcss": "catalog:vite",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:vite",
-    "vite": "catalog:vite",
-    "vite-plugin-pwa": "catalog:vite"
+    "typescript-eslint": "catalog:vite"
   }
 }

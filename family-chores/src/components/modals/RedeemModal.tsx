@@ -3,7 +3,7 @@ import { X, Minus, Plus } from 'lucide-react';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '../shared/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 
 interface RedeemModalProps {
   onClose: () => void;
@@ -203,18 +203,17 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
       </div>
 
       {/* Confirmation modal */}
-      {showConfirm && selectedMember && (
-        <ConfirmModal
-          message={`Redeem ${amount} points from ${selectedMember.name} for "${notes}"? They will have ${balance - amount} points remaining.`}
-          confirmText="Redeem"
-          confirmClassName="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-          onConfirm={() => {
-            setShowConfirm(false);
-            handleRedeem();
-          }}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
+      <ConfirmModal
+        open={showConfirm && !!selectedMember}
+        message={`Redeem ${amount} points from ${selectedMember?.name ?? ''} for "${notes}"? They will have ${balance - amount} points remaining.`}
+        confirmText="Redeem"
+        variant="primary"
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleRedeem();
+        }}
+        onClose={() => setShowConfirm(false)}
+      />
     </div>
   );
 }

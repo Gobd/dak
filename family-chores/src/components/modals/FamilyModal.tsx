@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Edit2, Trash2, Check } from 'lucide-react';
 import { useMembersStore } from '../../stores/members-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '../shared/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 
 interface FamilyModalProps {
   onClose: () => void;
@@ -249,13 +249,12 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
       </div>
 
       {/* Delete confirmation */}
-      {deleteConfirm && (
-        <ConfirmModal
-          message="Delete this family member? Their points and history will be removed."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!deleteConfirm}
+        message="Delete this family member? Their points and history will be removed."
+        onConfirm={handleDelete}
+        onClose={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

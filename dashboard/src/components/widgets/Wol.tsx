@@ -2,8 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
-import { ConfirmModal } from '../shared/ConfirmModal';
+import { Modal, Button, ConfirmModal } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 import { parseDuration } from '../../types';
 

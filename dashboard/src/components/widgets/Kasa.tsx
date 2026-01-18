@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Power, RefreshCw, AlertCircle } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 import { parseDuration } from '../../types';
 

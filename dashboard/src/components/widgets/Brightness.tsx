@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sun, Moon, RefreshCw, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { NumberPickerCompact } from '../shared/NumberPicker';
 import type { WidgetComponentProps } from './index';

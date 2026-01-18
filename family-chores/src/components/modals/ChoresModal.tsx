@@ -3,7 +3,7 @@ import { X, Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
 import { useChoresStore } from '../../stores/chores-store';
 import { useInstancesStore } from '../../stores/instances-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '../shared/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 import { ChoreEditModal } from './ChoreEditModal';
 import type { ChoreWithAssignments } from '../../types';
 
@@ -278,13 +278,12 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
       )}
 
       {/* Delete confirmation */}
-      {deleteConfirm && (
-        <ConfirmModal
-          message="Delete this chore? Task history will be preserved."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!deleteConfirm}
+        message="Delete this chore? Task history will be preserved."
+        onConfirm={handleDelete}
+        onClose={() => setDeleteConfirm(null)}
+      />
     </>
   );
 }

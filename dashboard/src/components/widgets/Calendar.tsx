@@ -3,9 +3,8 @@ import { ChevronLeft, ChevronRight, Plus, Settings, RefreshCw, LogOut } from 'lu
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval, useSyncedClock } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button, DatePicker, DatePickerCompact } from '@dak/ui';
 import { TimePickerCompact } from '../shared/TimePicker';
-import { DatePicker, DatePickerCompact } from '../shared/DatePicker';
 import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync

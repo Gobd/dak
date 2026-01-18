@@ -16,6 +16,7 @@
     "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'"
   },
   "dependencies": {
+    "@dak/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:vite",
     "react": "catalog:vite",

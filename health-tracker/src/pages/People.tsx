@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePeopleStore } from '../stores/people-store';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 export function People() {
@@ -41,13 +41,12 @@ export function People() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">People</h1>
 
-      {confirmDelete && (
-        <ConfirmModal
-          message="Delete this person? Their shots and medicine data will also be deleted."
-          onConfirm={() => handleDelete(confirmDelete)}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmDelete}
+        message="Delete this person? Their shots and medicine data will also be deleted."
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete)}
+        onClose={() => setConfirmDelete(null)}
+      />
 
       <form onSubmit={handleAdd} className="flex gap-2">
         <input

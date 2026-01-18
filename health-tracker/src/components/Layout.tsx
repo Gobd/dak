@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, Syringe, Pill, Clock, Users, LogOut, Moon, Sun, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
-import { ConfirmModal } from './ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 
 const navItems = [
   { to: '/shots', icon: Syringe, label: 'Shots' },
@@ -79,15 +79,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
       <main className="max-w-4xl mx-auto p-4">{children}</main>
-      {showSignOutModal && (
-        <ConfirmModal
-          message="Are you sure you want to sign out?"
-          confirmText="Sign Out"
-          confirmClassName="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          onConfirm={signOut}
-          onCancel={() => setShowSignOutModal(false)}
-        />
-      )}
+      <ConfirmModal
+        open={showSignOutModal}
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
+        variant="primary"
+        onConfirm={signOut}
+        onClose={() => setShowSignOutModal(false)}
+      />
     </div>
   );
 }
