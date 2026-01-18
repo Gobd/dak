@@ -16,6 +16,7 @@ catalog:
   # Shared runtime deps
   "@supabase/supabase-js": ^2.89.0
   zustand: ^5.0.9
+  "@tanstack/react-query": ^5.64.0
   "@types/node": ^24.10.1
 
 catalogs:

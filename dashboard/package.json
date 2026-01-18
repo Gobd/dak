@@ -5,21 +5,40 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite build --mode development && vite preview --port 8080",
     "lint": "eslint .",
     "lint:sh": "shellcheck scripts/*.sh",
-    "typecheck": "echo 'No typecheck configured'",
+    "typecheck": "tsc --noEmit",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm typecheck && pnpm build"
+    "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm typecheck && pnpm build",
+    "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "lucide-react": "catalog:vite",
+    "react": "catalog:vite",
+    "react-dom": "catalog:vite",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@tailwindcss/vite": "catalog:vite",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:vite",
+    "@types/react-dom": "catalog:vite",
+    "@vitejs/plugin-react": "catalog:vite",
     "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:vite",
     "globals": "catalog:",
     "prettier": "catalog:",
+    "rollup-plugin-visualizer": "^5.14.0",
     "shellcheck": "^4.1.0",
+    "tailwindcss": "catalog:vite",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:vite",
     "vite": "catalog:vite"
   }
 }
