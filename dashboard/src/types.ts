@@ -23,6 +23,20 @@ export interface PanelConfig {
   args?: Record<string, unknown>;
 }
 
+// Default settings per widget type (used when adding new widgets)
+export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
+  weather: { width: 20, height: 25, refresh: '30m' },
+  calendar: { width: 30, height: 40, refresh: '5m' },
+  'drive-time': { width: 25, height: 20, refresh: '5m' },
+  kasa: { width: 10, height: 10, refresh: '5m' },
+  wol: { width: 10, height: 10, refresh: '5m' },
+  brightness: { width: 10, height: 10, refresh: '1m' },
+  'sun-moon': { width: 15, height: 15, refresh: '1h' },
+  aqi: { width: 15, height: 15, refresh: '30m' },
+  uv: { width: 15, height: 15, refresh: '30m' },
+  iframe: { width: 40, height: 40 },
+};
+
 // Screen configuration
 export interface ScreenConfig {
   id: string;
@@ -65,6 +79,17 @@ export interface LocationConfig {
   query?: string;
 }
 
+// Brightness configuration (for auto-brightness on kiosk)
+export interface BrightnessConfig {
+  enabled?: boolean;
+  lat?: number;
+  lon?: number;
+  locationName?: string;
+  dayBrightness?: number;
+  nightBrightness?: number;
+  transitionMins?: number;
+}
+
 // Dashboard configuration
 export interface DashboardConfig {
   screens: ScreenConfig[];
@@ -74,6 +99,10 @@ export interface DashboardConfig {
   calendar?: CalendarConfig;
   locations?: Record<string, LocationConfig>;
   defaultLocation?: LocationConfig;
+  brightness?: BrightnessConfig;
+  // Generic storage for any widget - third-party widgets can persist config here
+  // Usage: widgetData['my-widget-id'] = { ...any config... }
+  widgetData?: Record<string, unknown>;
 }
 
 // Default dashboard configuration

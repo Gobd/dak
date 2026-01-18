@@ -7,10 +7,11 @@ import type { WidgetComponentProps } from './index';
 import { parseDuration } from '../../types';
 
 interface KasaDevice {
-  alias: string;
-  deviceId: string;
-  state: boolean;
-  host: string;
+  ip: string;
+  name: string;
+  on: boolean;
+  model: string;
+  type: string;
 }
 
 async function discoverDevices(): Promise<KasaDevice[]> {
@@ -25,12 +26,12 @@ async function discoverDevices(): Promise<KasaDevice[]> {
   }
 }
 
-async function toggleDevice(host: string, state: boolean): Promise<boolean> {
+async function toggleDevice(ip: string): Promise<boolean> {
   try {
     const res = await fetch(`${getRelayUrl()}/kasa/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ host, state: !state }),
+      body: JSON.stringify({ ip }),
     });
     return res.ok;
   } catch {
@@ -89,14 +90,12 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
         if (!old) return old;
         return {
           ...old,
-          devices: old.devices.map((d) =>
-            d.deviceId === device.deviceId ? { ...d, state: !d.state } : d
-          ),
+          devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: !d.on } : d)),
         };
       }
     );
 
-    const success = await toggleDevice(device.host, device.state);
+    const success = await toggleDevice(device.ip);
     if (!success) {
       // Revert on failure
       queryClient.setQueryData(
@@ -105,9 +104,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
           if (!old) return old;
           return {
             ...old,
-            devices: old.devices.map((d) =>
-              d.deviceId === device.deviceId ? { ...d, state: device.state } : d
-            ),
+            devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: device.on } : d)),
           };
         }
       );
@@ -119,7 +116,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
   }
 
   // Status indicator
-  const anyOn = devices.some((d) => d.state);
+  const anyOn = devices.some((d) => d.on);
   const hasError = !!error;
 
   return (
@@ -178,21 +175,21 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
             <div className="space-y-2">
               {devices.map((device) => (
                 <button
-                  key={device.deviceId}
+                  key={device.ip}
                   onClick={() => handleToggle(device)}
                   className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors
-                             ${device.state ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-neutral-700/30 hover:bg-neutral-700/50'}`}
+                             ${device.on ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-neutral-700/30 hover:bg-neutral-700/50'}`}
                 >
-                  <span className="font-medium truncate">{device.alias}</span>
+                  <span className="font-medium truncate">{device.name}</span>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded ${device.state ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
+                      className={`text-xs px-2 py-0.5 rounded ${device.on ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
                     >
-                      {device.state ? 'On' : 'Off'}
+                      {device.on ? 'On' : 'Off'}
                     </span>
                     <Power
                       size={18}
-                      className={device.state ? 'text-green-400' : 'text-neutral-500'}
+                      className={device.on ? 'text-green-400' : 'text-neutral-500'}
                     />
                   </div>
                 </button>

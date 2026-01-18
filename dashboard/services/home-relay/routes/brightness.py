@@ -3,9 +3,10 @@
 import re
 import subprocess
 import time
-from datetime import date, datetime
+from datetime import date
 
-import httpx
+from astral import LocationInfo
+from astral.sun import sun as calc_sun
 from flask import Blueprint, jsonify, request
 
 bp = Blueprint("brightness", __name__, url_prefix="/brightness")
@@ -91,7 +92,7 @@ def _calculate_target(
 
 
 def _fetch_sun_times():
-    """Fetch and cache sun times for today."""
+    """Calculate sun times for today using astral (no API needed)."""
     global _sun_cache
     today = date.today().isoformat()
 
@@ -107,27 +108,13 @@ def _fetch_sun_times():
         return {"error": "Location not configured", "date": None, "sunrise": None, "sunset": None}
 
     try:
-        resp = httpx.get(
-            "https://api.sunrise-sunset.org/json",
-            params={"lat": lat, "lng": lon, "formatted": 0},
-            timeout=10,
-        )
-        data = resp.json()
-        results = data.get("results", {})
-
-        sunrise_utc = results.get("sunrise")
-        sunset_utc = results.get("sunset")
-
-        if not sunrise_utc or not sunset_utc:
-            return {"error": "Invalid API response", "date": None, "sunrise": None, "sunset": None}
-
-        sunrise_dt = datetime.fromisoformat(sunrise_utc.replace("Z", "+00:00"))
-        sunset_dt = datetime.fromisoformat(sunset_utc.replace("Z", "+00:00"))
+        location = LocationInfo(latitude=lat, longitude=lon)
+        s = calc_sun(location.observer, date=date.today())
 
         _sun_cache = {
             "date": today,
-            "sunrise": int(sunrise_dt.timestamp()),
-            "sunset": int(sunset_dt.timestamp()),
+            "sunrise": int(s["sunrise"].timestamp()),
+            "sunset": int(s["sunset"].timestamp()),
         }
         return _sun_cache
     except Exception as e:

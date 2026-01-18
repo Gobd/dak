@@ -12,7 +12,7 @@ bp = Blueprint("kasa", __name__, url_prefix="/kasa")
 _device_cache = {}
 
 
-@bp.route("/discover", methods=["GET"])
+@bp.route("/discover", methods=["GET", "POST"])
 def discover():
     """Discover Kasa devices on the network."""
     try:

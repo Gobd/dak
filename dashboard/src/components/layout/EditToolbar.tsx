@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Plus, Download, Upload, Moon, Sun, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { Modal, Button } from '../shared/Modal';
-import type { WidgetType } from '../../types';
+import { WIDGET_DEFAULTS, type WidgetType } from '../../types';
 
 const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[] = [
   { type: 'calendar', label: 'Calendar', description: 'Google Calendar integration' },
@@ -40,14 +40,14 @@ export function EditToolbar() {
   const importRef = useRef<HTMLTextAreaElement>(null);
 
   function handleAddWidget(type: WidgetType) {
-    // Add widget at a default position with default size (percentages)
+    const defaults = WIDGET_DEFAULTS[type] ?? {};
     addPanel({
       widget: type,
       x: 5,
       y: 5,
-      width: 25,
-      height: 20,
-      refresh: '5m',
+      width: defaults.width ?? 25,
+      height: defaults.height ?? 20,
+      refresh: defaults.refresh,
     });
     setShowAddWidget(false);
   }
