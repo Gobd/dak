@@ -843,7 +843,16 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       </div>
 
       {/* Settings Modal */}
-      <Modal open={showSettings} onClose={() => setShowSettings(false)} title="Calendar Settings">
+      <Modal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Calendar Settings"
+        actions={
+          <Button onClick={() => setShowSettings(false)} variant="primary">
+            Close
+          </Button>
+        }
+      >
         <div className="space-y-4">
           {/* View toggle */}
           <div>
