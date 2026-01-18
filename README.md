@@ -7,6 +7,7 @@
 | Dashboard | https://dak.bkemper.me/dashboard/ | Vanilla JS |
 | Family Chores | https://dak.bkemper.me/family-chores/ | Vite + React + Tailwind |
 | Health Tracker | https://dak.bkemper.me/health-tracker/ | Vite + React + Tailwind |
+| Kasa Controller | https://dak.bkemper.me/kasa-controller/ | Vite + React + Tailwind |
 | Notes App | https://dak.bkemper.me/notes-app/ | Expo + React Native Web |
 
 All apps use TypeScript, Zustand for state, and Supabase for backend.
@@ -33,6 +34,7 @@ pnpm lint          # ESLint
 pnpm typecheck     # TypeScript
 pnpm format:check  # Prettier
 pnpm format        # Auto-fix formatting
+pnpm analyze       # Bundle size analysis
 ```
 
 ## Deployment
