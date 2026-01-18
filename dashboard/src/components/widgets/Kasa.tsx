@@ -26,12 +26,12 @@ async function discoverDevices(): Promise<KasaDevice[]> {
   }
 }
 
-async function toggleDevice(ip: string, on: boolean): Promise<boolean> {
+async function toggleDevice(ip: string): Promise<boolean> {
   try {
     const res = await fetch(`${getRelayUrl()}/kasa/toggle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ host: ip, state: !on }),
+      body: JSON.stringify({ ip }),
     });
     return res.ok;
   } catch {
@@ -97,7 +97,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
       }
     );
 
-    const success = await toggleDevice(device.ip, device.on);
+    const success = await toggleDevice(device.ip);
     if (!success) {
       // Revert on failure
       queryClient.setQueryData(

@@ -49,6 +49,38 @@ let ignoreSseTimeout: ReturnType<typeof setTimeout> | null = null;
 const urlParams =
   typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
 
+// ============================================================================
+// PERSISTED CONFIG - Add new fields to BOTH functions below
+// ============================================================================
+
+// Extract persistable config from state (for saving)
+function getPersistedConfig(state: DashboardConfig): DashboardConfig {
+  return {
+    screens: state.screens,
+    activeScreenIndex: state.activeScreenIndex,
+    dark: state.dark,
+    driveTime: state.driveTime,
+    calendar: state.calendar,
+    brightness: state.brightness,
+    locations: state.locations,
+    widgetData: state.widgetData,
+  };
+}
+
+// Apply loaded config to state (with defaults for required fields)
+function applyPersistedConfig(config: DashboardConfig): Partial<DashboardConfig> {
+  return {
+    screens: config.screens,
+    activeScreenIndex: config.activeScreenIndex ?? 0,
+    dark: config.dark ?? true,
+    driveTime: config.driveTime,
+    calendar: config.calendar,
+    brightness: config.brightness,
+    locations: config.locations,
+    widgetData: config.widgetData,
+  };
+}
+
 // Check if we're editing remotely (via relay param) - if so, don't subscribe to SSE
 // Only the kiosk/display device should auto-refresh on config changes
 const isRemoteEditing = urlParams?.has('relay') ?? false;
@@ -80,6 +112,10 @@ interface ConfigState extends DashboardConfig {
   updateBrightness: (config: BrightnessConfig) => void;
   updateLocation: (widgetId: string, location: LocationConfig) => void;
   getLocation: (widgetId: string) => LocationConfig | undefined;
+
+  // Generic widget data (for third-party widgets)
+  updateWidgetData: (widgetId: string, data: unknown) => void;
+  getWidgetData: <T = unknown>(widgetId: string) => T | undefined;
 
   // Theme
   setDark: (dark: boolean) => void;
@@ -216,38 +252,32 @@ export const useConfigStore = create<ConfigState>()(
 
         getLocation: (widgetId) => get().locations?.[widgetId],
 
+        updateWidgetData: (widgetId, data) =>
+          set((state) => ({
+            widgetData: {
+              ...state.widgetData,
+              [widgetId]: data,
+            },
+          })),
+
+        getWidgetData: <T = unknown>(widgetId: string) =>
+          get().widgetData?.[widgetId] as T | undefined,
+
         setDark: (dark) => set({ dark }),
 
         toggleDark: () => set((state) => ({ dark: !state.dark })),
 
         exportConfig: () => {
-          const state = get();
-          const config: DashboardConfig = {
-            screens: state.screens,
-            activeScreenIndex: state.activeScreenIndex,
-            dark: state.dark,
-            driveTime: state.driveTime,
-            calendar: state.calendar,
-            locations: state.locations,
-          };
-          return JSON.stringify(config, null, 2);
+          return JSON.stringify(getPersistedConfig(get()), null, 2);
         },
 
         importConfig: (json) => {
           try {
             const config = JSON.parse(json) as DashboardConfig;
-            // Validate basic structure
             if (!config.screens || !Array.isArray(config.screens)) {
               return false;
             }
-            set({
-              screens: config.screens,
-              activeScreenIndex: config.activeScreenIndex ?? 0,
-              dark: config.dark ?? true,
-              driveTime: config.driveTime,
-              calendar: config.calendar,
-              locations: config.locations,
-            });
+            set(applyPersistedConfig(config));
             return true;
           } catch {
             return false;
@@ -262,16 +292,7 @@ export const useConfigStore = create<ConfigState>()(
 
         // Save to relay server
         _saveToRelay: async () => {
-          const state = get();
-          const config: DashboardConfig = {
-            screens: state.screens,
-            activeScreenIndex: state.activeScreenIndex,
-            dark: state.dark,
-            driveTime: state.driveTime,
-            calendar: state.calendar,
-            locations: state.locations,
-            brightness: state.brightness,
-          };
+          const config = getPersistedConfig(get());
 
           // Set flag to ignore our own SSE reload
           ignoreSseReload = true;
@@ -302,15 +323,7 @@ export const useConfigStore = create<ConfigState>()(
             if (!res.ok) return false;
             const config = (await res.json()) as DashboardConfig;
             if (config.screens && Array.isArray(config.screens)) {
-              set({
-                screens: config.screens,
-                activeScreenIndex: config.activeScreenIndex ?? 0,
-                dark: config.dark ?? true,
-                driveTime: config.driveTime,
-                calendar: config.calendar,
-                locations: config.locations,
-                brightness: config.brightness,
-              });
+              set(applyPersistedConfig(config));
               return true;
             }
             return false;
@@ -336,7 +349,9 @@ useConfigStore.subscribe(
     dark: state.dark,
     driveTime: state.driveTime,
     calendar: state.calendar,
+    brightness: state.brightness,
     locations: state.locations,
+    widgetData: state.widgetData,
   }),
   () => {
     // Debounce saves to avoid excessive API calls

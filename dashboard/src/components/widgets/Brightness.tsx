@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sun, Moon, RefreshCw, AlertCircle, Settings, MapPin } from 'lucide-react';
+import { Sun, Moon, RefreshCw, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '../shared/Modal';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
+import { NumberPickerCompact } from '../shared/NumberPicker';
 import type { WidgetComponentProps } from './index';
 import type { BrightnessConfig } from '../../types';
 import { parseDuration } from '../../types';
@@ -59,23 +60,6 @@ async function setBrightness(level: number): Promise<boolean> {
   }
 }
 
-async function geocodeLocation(query: string): Promise<GeocodingResult[]> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
-      { headers: { 'User-Agent': 'Dashboard' } }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.map((r: { lat: string; lon: string; display_name: string }) => ({
-      lat: parseFloat(r.lat),
-      lon: parseFloat(r.lon),
-      display_name: r.display_name,
-    }));
-  } catch {
-    return [];
-  }
-}
 
 async function fetchBrightnessData(): Promise<{ status: BrightnessStatus | null; error: string | null }> {
   const relayUp = await checkRelayHealth();
@@ -94,24 +78,12 @@ async function fetchBrightnessData(): Promise<{ status: BrightnessStatus | null;
 export default function Brightness({ panel, dark }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [manualBrightness, setManualBrightness] = useState<number | null>(null);
+  const [locationAddress, setLocationAddress] = useState('');
 
   // Get config from zustand store
   const config = useConfigStore((s) => s.brightness);
   const updateBrightness = useConfigStore((s) => s.updateBrightness);
-
-  // Settings form state - initialized from config
-  const [formEnabled, setFormEnabled] = useState(config?.enabled ?? false);
-  const [formDayBrightness, setFormDayBrightness] = useState(config?.dayBrightness ?? 100);
-  const [formNightBrightness, setFormNightBrightness] = useState(config?.nightBrightness ?? 1);
-  const [formLat, setFormLat] = useState<number | null>(config?.lat ?? null);
-  const [formLon, setFormLon] = useState<number | null>(config?.lon ?? null);
-
-  // Location search
-  const [locationQuery, setLocationQuery] = useState('');
-  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
-  const [searchingLocation, setSearchingLocation] = useState(false);
 
   const normalInterval = parseDuration(panel.refresh || '1m') ?? 60000;
   const modalInterval = 10000;
@@ -126,18 +98,6 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
   const status = data?.status ?? null;
   const error = data?.error ?? null;
 
-  // Reset form when opening settings modal
-  function openSettings() {
-    if (config) {
-      setFormEnabled(config.enabled ?? false);
-      setFormDayBrightness(config.dayBrightness ?? 100);
-      setFormNightBrightness(config.nightBrightness ?? 1);
-      setFormLat(config.lat ?? null);
-      setFormLon(config.lon ?? null);
-    }
-    setShowSettings(true);
-  }
-
   async function handleBrightnessChange(value: number) {
     setManualBrightness(value);
     await setBrightness(value);
@@ -146,30 +106,29 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
     }, 500);
   }
 
-  async function handleLocationSearch() {
-    if (!locationQuery.trim()) return;
-    setSearchingLocation(true);
-    const results = await geocodeLocation(locationQuery);
-    setLocationResults(results);
-    setSearchingLocation(false);
+  function handleToggleEnabled() {
+    updateBrightness({ enabled: !config?.enabled });
   }
 
-  function handleSelectLocation(result: GeocodingResult) {
-    setFormLat(result.lat);
-    setFormLon(result.lon);
-    setLocationQuery(result.display_name.split(',')[0]);
-    setLocationResults([]);
+  function handleDayBrightnessChange(value: number) {
+    updateBrightness({ dayBrightness: value });
   }
 
-  function handleSaveSettings() {
-    updateBrightness({
-      enabled: formEnabled,
-      dayBrightness: formDayBrightness,
-      nightBrightness: formNightBrightness,
-      lat: formLat ?? undefined,
-      lon: formLon ?? undefined,
-    });
-    setShowSettings(false);
+  function handleNightBrightnessChange(value: number) {
+    updateBrightness({ nightBrightness: value });
+  }
+
+  function handleTransitionChange(value: number) {
+    updateBrightness({ transitionMins: value });
+  }
+
+  function handleLocationSelect(details: { address: string; lat?: number; lon?: number }) {
+    if (details.lat && details.lon) {
+      // Extract short name (first part before comma)
+      const shortName = details.address.split(',')[0];
+      updateBrightness({ lat: details.lat, lon: details.lon, locationName: shortName });
+      setLocationAddress(shortName);
+    }
   }
 
   // Calculate if it's day based on sun times
@@ -201,20 +160,14 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
         )}
       </button>
 
-      {/* Main Modal */}
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
         title="Display Brightness"
         actions={
-          <>
-            <Button onClick={openSettings}>
-              <Settings size={14} className="mr-1" /> Settings
-            </Button>
-            <Button onClick={() => setShowModal(false)} variant="primary">
-              Close
-            </Button>
-          </>
+          <Button onClick={() => setShowModal(false)} variant="primary">
+            Close
+          </Button>
         }
       >
         <div className="space-y-4">
@@ -229,24 +182,24 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
 
           {!error && (
             <>
-              {/* Current state */}
+              {/* Current state and manual brightness */}
               <div className="flex items-center gap-4">
                 {isDay ? (
                   <Sun size={40} className="text-yellow-400" />
                 ) : (
                   <Moon size={40} className="text-blue-300" />
                 )}
-                <div>
-                  <div className="text-4xl font-light">{currentBrightness}%</div>
+                <div className="flex-1">
+                  <div className="text-3xl font-light">{currentBrightness}%</div>
                   <div className="text-sm text-neutral-500">
                     {config?.enabled ? (isDay ? 'Day mode (auto)' : 'Night mode (auto)') : 'Manual'}
                   </div>
                 </div>
               </div>
 
-              {/* Manual brightness slider */}
+              {/* Set brightness now */}
               <div>
-                <label className="block text-sm text-neutral-500 mb-2">Set Brightness</label>
+                <label className="block text-sm text-neutral-500 mb-2">Set Now</label>
                 <input
                   type="range"
                   min={1}
@@ -268,34 +221,101 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
                 </div>
               </div>
 
-              {/* Config summary */}
-              {config && (
-                <div className="pt-3 border-t border-neutral-700 text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Auto-adjust</span>
-                    <span className={config.enabled ? 'text-green-400' : 'text-neutral-400'}>
-                      {config.enabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-                  {config.enabled && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-neutral-500">Day / Night</span>
-                        <span>{config.dayBrightness ?? 100}% / {config.nightBrightness ?? 1}%</span>
+              {/* Divider */}
+              <div className="border-t border-neutral-700" />
+
+              {/* Auto-adjust toggle */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Auto-adjust by sunrise/sunset</label>
+                <button
+                  onClick={handleToggleEnabled}
+                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-600'}`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
+                  />
+                </button>
+              </div>
+
+              {config?.enabled && (
+                <>
+                  {/* Location */}
+                  <div>
+                    <label className="block text-sm text-neutral-500 mb-1">
+                      <MapPin size={14} className="inline mr-1" />
+                      Location
+                    </label>
+                    <AddressAutocomplete
+                      value={locationAddress}
+                      onChange={setLocationAddress}
+                      onSelect={handleLocationSelect}
+                      placeholder="Search city..."
+                    />
+                    {config.lat && config.lon && (
+                      <div className="mt-2 text-xs text-green-400">
+                        {config.locationName || `${config.lat.toFixed(4)}, ${config.lon.toFixed(4)}`}
                       </div>
-                      {config.lat && config.lon ? (
-                        <div className="flex justify-between">
-                          <span className="text-neutral-500">Location</span>
-                          <span>{config.lat.toFixed(2)}, {config.lon.toFixed(2)}</span>
-                        </div>
-                      ) : (
-                        <div className="text-yellow-500 text-xs">
-                          Set location in settings for sunrise/sunset
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                    )}
+                  </div>
+
+                  {/* Day brightness */}
+                  <div>
+                    <label className="block text-sm text-neutral-500 mb-1">
+                      <Sun size={14} className="inline mr-1 text-yellow-400" />
+                      Day: {config.dayBrightness ?? 100}%
+                    </label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={100}
+                      value={config.dayBrightness ?? 100}
+                      onChange={(e) => handleDayBrightnessChange(parseInt(e.target.value))}
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
+                                 [&::-webkit-slider-thumb]:appearance-none
+                                 [&::-webkit-slider-thumb]:w-4
+                                 [&::-webkit-slider-thumb]:h-4
+                                 [&::-webkit-slider-thumb]:rounded-full
+                                 [&::-webkit-slider-thumb]:bg-yellow-400"
+                    />
+                  </div>
+
+                  {/* Night brightness */}
+                  <div>
+                    <label className="block text-sm text-neutral-500 mb-1">
+                      <Moon size={14} className="inline mr-1 text-blue-300" />
+                      Night: {config.nightBrightness ?? 1}%
+                    </label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={100}
+                      value={config.nightBrightness ?? 1}
+                      onChange={(e) => handleNightBrightnessChange(parseInt(e.target.value))}
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
+                                 [&::-webkit-slider-thumb]:appearance-none
+                                 [&::-webkit-slider-thumb]:w-4
+                                 [&::-webkit-slider-thumb]:h-4
+                                 [&::-webkit-slider-thumb]:rounded-full
+                                 [&::-webkit-slider-thumb]:bg-blue-400"
+                    />
+                  </div>
+
+                  {/* Transition duration */}
+                  <div>
+                    <label className="block text-sm text-neutral-500 mb-1">
+                      <Clock size={14} className="inline mr-1" />
+                      Transition duration
+                    </label>
+                    <NumberPickerCompact
+                      value={config.transitionMins ?? 60}
+                      onChange={handleTransitionChange}
+                      min={5}
+                      max={120}
+                      step={5}
+                      suffix="min"
+                    />
+                  </div>
+                </>
               )}
             </>
           )}
@@ -304,123 +324,6 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
             <div className="flex items-center gap-2 text-neutral-500 text-sm">
               <RefreshCw size={14} className="animate-spin" /> Loading...
             </div>
-          )}
-        </div>
-      </Modal>
-
-      {/* Settings Modal */}
-      <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        title="Brightness Settings"
-        actions={
-          <>
-            <Button onClick={() => setShowSettings(false)}>Cancel</Button>
-            <Button onClick={handleSaveSettings} variant="primary">
-              Save
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {/* Enable toggle */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Auto-adjust brightness</label>
-            <button
-              onClick={() => setFormEnabled(!formEnabled)}
-              className={`w-12 h-6 rounded-full transition-colors ${formEnabled ? 'bg-green-500' : 'bg-neutral-600'}`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${formEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}
-              />
-            </button>
-          </div>
-
-          {formEnabled && (
-            <>
-              {/* Location */}
-              <div>
-                <label className="block text-sm text-neutral-500 mb-1">
-                  <MapPin size={14} className="inline mr-1" />
-                  Location (for sunrise/sunset)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={locationQuery}
-                    onChange={(e) => setLocationQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLocationSearch()}
-                    placeholder="Search city..."
-                    className="flex-1 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
-                  />
-                  <button
-                    onClick={handleLocationSearch}
-                    disabled={searchingLocation}
-                    className="px-3 py-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white disabled:opacity-50"
-                  >
-                    {searchingLocation ? '...' : 'Search'}
-                  </button>
-                </div>
-                {locationResults.length > 0 && (
-                  <div className="mt-2 bg-neutral-800 rounded-lg border border-neutral-600 max-h-40 overflow-y-auto">
-                    {locationResults.map((r, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSelectLocation(r)}
-                        className="w-full text-left px-3 py-2 hover:bg-neutral-700 text-sm truncate"
-                      >
-                        {r.display_name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {formLat && formLon && (
-                  <div className="mt-2 text-xs text-green-400">
-                    Selected: {formLat.toFixed(4)}, {formLon.toFixed(4)}
-                  </div>
-                )}
-              </div>
-
-              {/* Day brightness */}
-              <div>
-                <label className="block text-sm text-neutral-500 mb-1">
-                  Day Brightness: {formDayBrightness}%
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={formDayBrightness}
-                  onChange={(e) => setFormDayBrightness(parseInt(e.target.value))}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
-                             [&::-webkit-slider-thumb]:appearance-none
-                             [&::-webkit-slider-thumb]:w-4
-                             [&::-webkit-slider-thumb]:h-4
-                             [&::-webkit-slider-thumb]:rounded-full
-                             [&::-webkit-slider-thumb]:bg-yellow-400"
-                />
-              </div>
-
-              {/* Night brightness */}
-              <div>
-                <label className="block text-sm text-neutral-500 mb-1">
-                  Night Brightness: {formNightBrightness}%
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={formNightBrightness}
-                  onChange={(e) => setFormNightBrightness(parseInt(e.target.value))}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
-                             [&::-webkit-slider-thumb]:appearance-none
-                             [&::-webkit-slider-thumb]:w-4
-                             [&::-webkit-slider-thumb]:h-4
-                             [&::-webkit-slider-thumb]:rounded-full
-                             [&::-webkit-slider-thumb]:bg-blue-400"
-                />
-              </div>
-            </>
           )}
         </div>
       </Modal>

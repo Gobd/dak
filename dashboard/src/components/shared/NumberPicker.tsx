@@ -5,6 +5,7 @@ interface NumberPickerProps {
   onChange: (value: number) => void;
   min?: number;
   max?: number;
+  step?: number;
   suffix?: string;
   zeroLabel?: string;
 }
@@ -108,13 +109,14 @@ export function NumberPickerCompact({
   onChange,
   min = 0,
   max = 120,
+  step = 1,
   suffix = 'min',
   zeroLabel = 'Off',
 }: NumberPickerProps) {
   const [showPicker, setShowPicker] = useState(false);
 
-  // Generate array of numbers from min to max
-  const items = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  // Generate array of numbers from min to max with step
+  const items = Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step);
 
   const displayValue = value === 0 && zeroLabel ? zeroLabel : `${value} ${suffix}`;
 

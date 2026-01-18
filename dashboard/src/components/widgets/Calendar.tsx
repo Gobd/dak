@@ -671,7 +671,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         </p>
         {authError && <p className="text-sm text-red-500 mb-4 text-center">{authError}</p>}
         <Button onClick={signIn} variant="primary" disabled={authLoading}>
-          {authLoading ? 'Signing in...' : 'Sign in with Google'}
+          {authLoading ? 'Signing in...' : `Sign in with Google${isImplicitFlow ? ' (dev)' : ''}`}
         </Button>
       </div>
     );
