@@ -578,6 +578,7 @@ export default function HomeScreen() {
             borderRightWidth: 1,
             borderRightColor: colors.border,
             flexDirection: 'column',
+            zIndex: 10,
           }}
         >
           {/* Notes Header */}
