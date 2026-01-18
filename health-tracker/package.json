@@ -35,7 +35,7 @@
     "eslint-plugin-react-refresh": "catalog:vite",
     "globals": "catalog:",
     "prettier": "catalog:",
-    "rollup-plugin-visualizer": "^6.0.5",
+    "rollup-plugin-visualizer": "catalog:vite",
     "tailwindcss": "catalog:vite",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",

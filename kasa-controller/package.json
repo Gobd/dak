@@ -11,7 +11,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build"
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
+    "analyze": "ANALYZE=true vite build"
   },
   "dependencies": {
     "@tanstack/react-query": "catalog:",
@@ -35,6 +36,7 @@
     "tailwindcss": "catalog:vite",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",
+    "rollup-plugin-visualizer": "catalog:vite",
     "vite": "catalog:vite",
     "vite-plugin-pwa": "catalog:vite"
   }

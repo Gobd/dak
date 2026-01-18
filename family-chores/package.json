@@ -11,7 +11,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "analyze": "ANALYZE=true vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "catalog:",
@@ -37,6 +38,7 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",
+    "rollup-plugin-visualizer": "catalog:vite",
     "vite": "catalog:vite",
     "vite-plugin-pwa": "catalog:vite"
   }
