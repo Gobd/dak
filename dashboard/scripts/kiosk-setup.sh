@@ -37,6 +37,11 @@ else
 fi
 echo "Using: $CHROMIUM_BIN"
 
+# Fix Chromium config that adds empty --load-extension flag when /usr/share/chromium/extensions doesn't exist
+if [ -f /etc/chromium.d/extensions ]; then
+  sudo sed -i '/--load-extension=/d' /etc/chromium.d/extensions
+fi
+
 # Enable i2c for monitor brightness control
 echo "i2c-dev" | sudo tee /etc/modules-load.d/i2c.conf
 sudo modprobe i2c-dev 2>/dev/null || true
