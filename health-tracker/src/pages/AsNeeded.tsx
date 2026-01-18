@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal, DateTimePicker } from '@dak/ui';
+import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact } from '@dak/ui';
 import {
   Plus,
   Clock,
@@ -45,7 +45,7 @@ export function AsNeeded() {
   // Form state
   const [personId, setPersonId] = useState('');
   const [name, setName] = useState('');
-  const [minHours, setMinHours] = useState<number | ''>('');
+  const [minHours, setMinHours] = useState(6);
 
   useEffect(() => {
     fetchPeople();
@@ -63,11 +63,11 @@ export function AsNeeded() {
 
   const handleAddMed = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addMed({ person_id: personId, name, min_hours: Number(minHours) });
+    await addMed({ person_id: personId, name, min_hours: minHours });
     setShowAddForm(false);
     setPersonId('');
     setName('');
-    setMinHours('');
+    setMinHours(6);
   };
 
   // Group meds by person
@@ -141,77 +141,75 @@ export function AsNeeded() {
       />
 
       {/* Add Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add As-Needed</h2>
-            <form onSubmit={handleAddMed} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Person
-                </label>
-                <select
-                  value={personId}
-                  onChange={(e) => setPersonId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select person...</option>
-                  {people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Ibuprofen, Tylenol, Zyrtec"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Minimum Hours Between Doses
-                </label>
-                <input
-                  type="number"
-                  value={minHours}
-                  onChange={(e) => setMinHours(e.target.value === '' ? '' : Number(e.target.value))}
-                  min={1}
-                  max={72}
-                  placeholder="6"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-                  Common: Ibuprofen (6h), Tylenol (4h), Zyrtec (24h)
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Add
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        title="Add As-Needed"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(false)}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="add-med-form"
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Add
+            </button>
+          </>
+        }
+      >
+        <form id="add-med-form" onSubmit={handleAddMed} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
+            <select
+              value={personId}
+              onChange={(e) => setPersonId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select person...</option>
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Ibuprofen, Tylenol, Zyrtec"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              Minimum Hours Between Doses
+            </label>
+            <NumberPickerCompact
+              value={minHours}
+              onChange={setMinHours}
+              min={1}
+              max={72}
+              suffix="hours"
+              zeroLabel=""
+            />
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+              Common: Ibuprofen (6h), Tylenol (4h), Zyrtec (24h)
+            </p>
+          </div>
+        </form>
+      </Modal>
 
       {/* Meds by Person */}
       {medsByPerson.length === 0 ? (

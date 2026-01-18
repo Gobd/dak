@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Lock, RefreshCw, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { Lock, RefreshCw, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { Modal } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useInstancesStore } from '../../stores/instances-store';
 
@@ -41,21 +42,8 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-4 space-y-4">
+    <Modal open={true} onClose={onClose} title="Settings">
+      <div className="space-y-4">
           {/* PIN Section */}
           <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
@@ -199,8 +187,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
               </button>
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

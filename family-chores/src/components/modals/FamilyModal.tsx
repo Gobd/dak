@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { X, Plus, Edit2, Trash2, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check } from 'lucide-react';
+import { Modal, ConfirmModal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '@dak/ui';
 
 interface FamilyModalProps {
   onClose: () => void;
@@ -73,21 +73,8 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
   const isEditing = editingId !== null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Family Members</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <Modal open={true} onClose={onClose} title="Family Members">
+      <div className="space-y-4">
           {/* Member list */}
           {members.map((member) => (
             <div
@@ -245,7 +232,6 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
               <Plus size={20} /> Add Family Member
             </button>
           )}
-        </div>
       </div>
 
       {/* Delete confirmation */}
@@ -255,6 +241,6 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
         onConfirm={handleDelete}
         onClose={() => setDeleteConfirm(null)}
       />
-    </div>
+    </Modal>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, Check, HelpCircle } from 'lucide-react';
+import { Check, HelpCircle } from 'lucide-react';
+import { Modal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { useSettingsStore } from '../../stores/settings-store';
 import { SchedulePicker, type ScheduleConfig } from '../shared/SchedulePicker';
@@ -88,23 +89,30 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {isEditing ? 'Edit Chore' : 'New Chore'}
-          </h2>
+    <Modal
+      open={true}
+      onClose={onClose}
+      title={isEditing ? 'Edit Chore' : 'New Chore'}
+      actions={
+        <>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 dark:text-neutral-300"
           >
-            <X size={20} />
+            Cancel
           </button>
-        </div>
-
-        {/* Form */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <button
+            onClick={handleSave}
+            disabled={!name.trim() || assigneeIds.length === 0 || saving}
+            className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700"
+          >
+            <Check size={18} />
+            {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
               Name
@@ -290,26 +298,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
               </div>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex gap-2 p-4 border-t border-gray-200 dark:border-neutral-700">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 dark:text-neutral-300"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!name.trim() || assigneeIds.length === 0 || saving}
-            className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700"
-          >
-            <Check size={18} />
-            {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

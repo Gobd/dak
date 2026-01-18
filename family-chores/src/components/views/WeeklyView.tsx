@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Modal } from '@dak/ui';
 import { supabase } from '../../lib/supabase';
 import { useChoresStore } from '../../stores/chores-store';
 import { useMembersStore } from '../../stores/members-store';
@@ -171,29 +172,12 @@ export function WeeklyView() {
       )}
 
       {/* Day detail modal */}
-      {selectedDay && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {format(selectedDay, 'EEEE')}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-400">
-                  {format(selectedDay, 'MMMM d, yyyy')}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <Modal
+        open={!!selectedDay}
+        onClose={() => setSelectedDay(null)}
+        title={selectedDay ? `${format(selectedDay, 'EEEE')} - ${format(selectedDay, 'MMMM d, yyyy')}` : ''}
+      >
+        <div className="space-y-3">
               {getInstancesForDay(selectedDay).length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
                   No tasks scheduled for this day
@@ -282,10 +266,8 @@ export function WeeklyView() {
                   );
                 })
               )}
-            </div>
-          </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

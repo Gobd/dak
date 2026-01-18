@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
+import { Modal, ConfirmModal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '@dak/ui';
 
 interface RedeemModalProps {
   onClose: () => void;
@@ -47,8 +47,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
 
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm p-8 text-center">
+      <Modal open={true} onClose={onClose} fit>
+        <div className="text-center p-4">
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Points Redeemed!
@@ -57,26 +57,13 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
             {amount} points for {notes}
           </p>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Redeem Points</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+    <Modal open={true} onClose={onClose} title="Redeem Points">
+      <div className="space-y-6">
           {/* Member selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
@@ -199,7 +186,6 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
               </button>
             </>
           )}
-        </div>
       </div>
 
       {/* Confirmation modal */}
@@ -214,6 +200,6 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
         }}
         onClose={() => setShowConfirm(false)}
       />
-    </div>
+    </Modal>
   );
 }

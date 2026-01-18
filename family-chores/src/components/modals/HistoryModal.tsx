@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { X, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { format } from 'date-fns';
+import { Modal } from '@dak/ui';
 import { usePointsStore } from '../../stores/points-store';
 import { useMembersStore } from '../../stores/members-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
@@ -28,21 +29,9 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
   const getMember = (memberId: string) => members.find((m) => m.id === memberId);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Points History</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Filter */}
-        <div className="p-4 border-b border-gray-200 dark:border-neutral-700">
+    <Modal open={true} onClose={onClose} title="Points History">
+      {/* Filter */}
+      <div className="pb-4 border-b border-gray-200 dark:border-neutral-700 mb-4">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <Filter size={16} className="text-gray-400 flex-shrink-0" />
             <button
@@ -128,8 +117,7 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
               })}
             </div>
           )}
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

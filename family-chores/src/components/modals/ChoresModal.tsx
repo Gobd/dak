@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X, Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
+import { Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
+import { Modal, ConfirmModal } from '@dak/ui';
 import { useChoresStore } from '../../stores/chores-store';
 import { useInstancesStore } from '../../stores/instances-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '@dak/ui';
 import { ChoreEditModal } from './ChoreEditModal';
 import type { ChoreWithAssignments } from '../../types';
 
@@ -81,21 +81,8 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Chores</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <Modal open={true} onClose={onClose} title="Chores" wide>
+        <div className="space-y-3">
             {/* Active chores */}
             {activeChores.map((chore) => (
               <div
@@ -261,9 +248,8 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
             >
               <Plus size={20} /> Add Chore
             </button>
-          </div>
         </div>
-      </div>
+      </Modal>
 
       {/* Edit/Add Modal */}
       {(editingChore || isAddingNew) && (
