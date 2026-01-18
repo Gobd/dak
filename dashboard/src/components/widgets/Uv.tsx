@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Settings, RefreshCw } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
+import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
 import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
@@ -81,22 +81,17 @@ function saveSafeThreshold(widgetId: string, threshold: number): void {
   }
 }
 
-async function fetchUv(lat: number, lon: number): Promise<UvApiData | null> {
+async function fetchUv(lat: number, lon: number): Promise<UvApiData> {
   const cached = getCachedUv(lat, lon);
   if (cached) return cached;
 
-  try {
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=2`
-    );
-    if (!res.ok) throw new Error('Failed to fetch UV data');
-    const data = await res.json();
-    cacheUv(lat, lon, data);
-    return data;
-  } catch (err) {
-    console.error('UV fetch error:', err);
-    return null;
-  }
+  const res = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=2`
+  );
+  if (!res.ok) throw new Error('Failed to fetch UV data');
+  const data = await res.json();
+  cacheUv(lat, lon, data);
+  return data;
 }
 
 function formatHour(h: number): string {
@@ -225,9 +220,6 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
     panel.args?.lon as number | undefined
   );
 
-  const [uvData, setUvData] = useState<UvApiData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showLocationSettings, setShowLocationSettings] = useState(false);
   const [safeThreshold, setSafeThreshold] = useState(() =>
@@ -235,29 +227,20 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
   );
   const [tempThreshold, setTempThreshold] = useState(safeThreshold);
 
-  const loadUv = useCallback(async () => {
-    if (!location) return;
-
-    setLoading(true);
-    setError(null);
-    const data = await fetchUv(location.lat, location.lon);
-    if (data) {
-      setUvData(data);
-    } else {
-      setError('Failed to load UV');
+  const {
+    data: uvData,
+    isLoading,
+    error,
+  } = useWidgetQuery(
+    ['uv', location?.lat, location?.lon],
+    () => fetchUv(location!.lat, location!.lon),
+    {
+      refresh: panel.refresh,
+      enabled: !!location,
     }
-    setLoading(false);
-  }, [location]);
+  );
 
-  useEffect(() => {
-    if (location) {
-      loadUv(); // eslint-disable-line react-hooks/set-state-in-effect
-    }
-  }, [location, loadUv]);
-
-  useRefreshInterval(loadUv, panel.refresh);
-
-  if (loading && !uvData) {
+  if (isLoading && !uvData) {
     return (
       <div
         className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
@@ -272,7 +255,7 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
       <div
         className={`w-full h-full p-3 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
       >
-        <p className="text-red-500 text-xs">{error}</p>
+        <p className="text-red-500 text-xs">{error.message}</p>
       </div>
     );
   }
@@ -281,9 +264,7 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
 
   const { todayHours, tomorrowHours } = processUvData(uvData);
 
-  const currentUv = Math.round(
-    todayHours.find((h) => !h.isPast)?.uv ?? tomorrowHours[0]?.uv ?? 0
-  );
+  const currentUv = Math.round(todayHours.find((h) => !h.isPast)?.uv ?? tomorrowHours[0]?.uv ?? 0);
   const todayMax = todayHours.length ? Math.round(Math.max(...todayHours.map((h) => h.uv))) : 0;
   const tomorrowMax = tomorrowHours.length
     ? Math.round(Math.max(...tomorrowHours.map((h) => h.uv)))
@@ -351,18 +332,12 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
       </div>
 
       {/* Settings Modal */}
-      <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        title="UV Index Settings"
-      >
+      <Modal open={showSettings} onClose={() => setShowSettings(false)} title="UV Index Settings">
         <div className="space-y-4">
           {/* Location section */}
           <div>
             <label className="block text-sm text-neutral-400 mb-1">Location</label>
-            <p className="text-sm">
-              {formatLocation(location.city, location.state) || 'Not set'}
-            </p>
+            <p className="text-sm">{formatLocation(location.city, location.state) || 'Not set'}</p>
             <button
               onClick={() => {
                 setShowSettings(false);
@@ -402,8 +377,7 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
                 <b>☀️ Times:</b> When UV exceeds your threshold
               </p>
               <p>
-                <b>Scale:</b>{' '}
-                <span style={{ color: '#4ade80' }}>0-2 Low</span> ·{' '}
+                <b>Scale:</b> <span style={{ color: '#4ade80' }}>0-2 Low</span> ·{' '}
                 <span style={{ color: '#facc15' }}>3-5 Mod</span> ·{' '}
                 <span style={{ color: '#f97316' }}>6-7 High</span> ·{' '}
                 <span style={{ color: '#ef4444' }}>8-10 V.High</span> ·{' '}

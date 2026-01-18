@@ -107,9 +107,7 @@ export function LocationSettingsModal({
         )}
 
         {pendingLocation && (
-          <p className="text-sm text-green-500">
-            Selected: {pendingLocation.address}
-          </p>
+          <p className="text-sm text-green-500">Selected: {pendingLocation.address}</p>
         )}
 
         {status.message && (

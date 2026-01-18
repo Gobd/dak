@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sun, Moon, RefreshCw, AlertCircle } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
+import { parseDuration } from '../../types';
 
 interface BrightnessConfig {
   enabled: boolean;
@@ -18,6 +19,12 @@ interface BrightnessStatus {
   targetBrightness: number;
   isDay: boolean;
   nextChange: string;
+}
+
+interface BrightnessData {
+  config: BrightnessConfig | null;
+  status: BrightnessStatus | null;
+  error: string | null;
 }
 
 async function checkRelayHealth(): Promise<boolean> {
@@ -69,64 +76,47 @@ async function setBrightness(brightness: number): Promise<boolean> {
   }
 }
 
+async function fetchBrightnessData(): Promise<BrightnessData> {
+  const relayUp = await checkRelayHealth();
+  if (!relayUp) {
+    return { config: null, status: null, error: 'Relay offline' };
+  }
+
+  const [cfg, sts] = await Promise.all([fetchConfig(), fetchStatus()]);
+
+  if (!cfg && !sts) {
+    return { config: null, status: null, error: 'Could not load brightness data' };
+  }
+
+  return { config: cfg, status: sts, error: null };
+}
+
 export default function Brightness({ panel, dark }: WidgetComponentProps) {
-  const [config, setConfig] = useState<BrightnessConfig | null>(null);
-  const [status, setStatus] = useState<BrightnessStatus | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [manualBrightness, setManualBrightness] = useState<number | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Use different refresh intervals based on modal state
+  const normalInterval = parseDuration(panel.refresh || '1m') ?? 60000;
+  const modalInterval = 10000; // 10 seconds when modal is open
 
-    // First check if relay is reachable
-    const relayUp = await checkRelayHealth();
-    if (!relayUp) {
-      setError('Relay offline');
-      setLoading(false);
-      return;
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: ['brightness-data'],
+    queryFn: fetchBrightnessData,
+    refetchInterval: showModal ? modalInterval : normalInterval,
+    staleTime: 5000,
+  });
 
-    const [cfg, sts] = await Promise.all([fetchConfig(), fetchStatus()]);
-
-    if (!cfg && !sts) {
-      setError('Could not load brightness data');
-    } else {
-      setConfig(cfg);
-      setStatus(sts);
-    }
-    setLoading(false);
-  }, []);
-
-  // Initial load
-   
-  useEffect(() => {
-    loadData(); // eslint-disable-line react-hooks/set-state-in-effect
-  }, [loadData]);
-
-  // Auto-refresh when modal not open
-  useRefreshInterval(showModal ? () => {} : loadData, panel.refresh || '1m');
-
-  // Poll while modal is open
-  useEffect(() => {
-    if (showModal) {
-      loadData(); // eslint-disable-line react-hooks/set-state-in-effect
-      pollRef.current = setInterval(loadData, 10000);
-    } else {
-      if (pollRef.current) clearInterval(pollRef.current);
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [showModal, loadData]);
+  const config = data?.config ?? null;
+  const status = data?.status ?? null;
+  const error = data?.error ?? null;
 
   async function handleBrightnessChange(value: number) {
     setManualBrightness(value);
     await setBrightness(value);
-    setTimeout(loadData, 500);
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['brightness-data'] });
+    }, 500);
   }
 
   // Status indicators
@@ -149,10 +139,8 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
         ) : (
           <Moon size={24} className={hasError ? 'text-neutral-500' : 'text-blue-300'} />
         )}
-        {hasError && (
-          <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />
-        )}
-        {loading && (
+        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />}
+        {isLoading && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
       </button>
@@ -245,7 +233,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
             </>
           )}
 
-          {loading && (
+          {isLoading && (
             <div className="flex items-center gap-2 text-neutral-500 text-sm">
               <RefreshCw size={14} className="animate-spin" /> Loading...
             </div>

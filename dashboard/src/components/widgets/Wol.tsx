@@ -1,15 +1,21 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { Modal, Button } from '../shared/Modal';
 import { ConfirmModal } from '../shared/ConfirmModal';
 import type { WidgetComponentProps } from './index';
+import { parseDuration } from '../../types';
 
 interface WolDevice {
   name: string;
   mac: string;
   ip: string;
+}
+
+interface WolData {
+  statuses: Record<string, boolean>;
+  error: string | null;
 }
 
 async function pingDevice(ip: string): Promise<boolean> {
@@ -63,7 +69,36 @@ async function checkRelayHealth(): Promise<boolean> {
   }
 }
 
+async function fetchWolStatuses(devices: WolDevice[]): Promise<WolData> {
+  const relayUp = await checkRelayHealth();
+  if (!relayUp) {
+    return { statuses: {}, error: 'Relay offline' };
+  }
+
+  if (devices.length === 0) {
+    return { statuses: {}, error: null };
+  }
+
+  try {
+    const results = await Promise.all(
+      devices.map(async (d) => ({
+        ip: d.ip,
+        online: await pingDevice(d.ip),
+      }))
+    );
+
+    const statuses: Record<string, boolean> = {};
+    results.forEach((r) => {
+      statuses[r.ip] = r.online;
+    });
+    return { statuses, error: null };
+  } catch {
+    return { statuses: {}, error: 'Could not connect' };
+  }
+}
+
 export default function Wol({ panel, dark }: WidgetComponentProps) {
+  const queryClient = useQueryClient();
   const widgetId = panel.id || 'wol';
 
   // Get devices from config - memoize to prevent unnecessary re-renders
@@ -73,16 +108,27 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
   const updateLocation = useConfigStore((s) => s.updateLocation);
   const devices = useMemo(() => config?.devices ?? [], [config?.devices]);
 
-  const [statuses, setStatuses] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [waking, setWaking] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteDevice, setDeleteDevice] = useState<WolDevice | null>(null);
   const [addForm, setAddForm] = useState({ name: '', ip: '', mac: '' });
   const [addError, setAddError] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  // Use different refresh intervals based on modal state
+  const normalInterval = parseDuration(panel.refresh) ?? undefined;
+  const modalInterval = 5000; // 5 seconds when modal is open
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['wol-statuses', devices.map((d) => d.ip).join(',')],
+    queryFn: () => fetchWolStatuses(devices),
+    refetchInterval: showModal ? modalInterval : normalInterval,
+    staleTime: 3000,
+    enabled: devices.length > 0 || showModal, // Always fetch when modal is open to check relay health
+  });
+
+  const statuses = data?.statuses ?? {};
+  const error = data?.error ?? null;
 
   const saveDevices = useCallback(
     (newDevices: WolDevice[]) => {
@@ -91,75 +137,12 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
     [widgetId, updateLocation]
   );
 
-  const checkStatuses = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    // First check if relay is reachable
-    const relayUp = await checkRelayHealth();
-    if (!relayUp) {
-      setError('Relay offline');
-      setLoading(false);
-      return;
-    }
-
-    if (devices.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const results = await Promise.all(
-        devices.map(async (d) => ({
-          ip: d.ip,
-          online: await pingDevice(d.ip),
-        }))
-      );
-
-      const newStatuses: Record<string, boolean> = {};
-      results.forEach((r) => {
-        newStatuses[r.ip] = r.online;
-      });
-      setStatuses(newStatuses);
-    } catch {
-      setError('Could not connect');
-    }
-    setLoading(false);
-  }, [devices]);
-
-  // Initial load - use ref to avoid re-triggering on callback changes
-  const checkStatusesRef = useRef(checkStatuses);
-  useEffect(() => {
-    checkStatusesRef.current = checkStatuses;
-  });
-
-  useEffect(() => {
-    checkStatusesRef.current();
-  }, []); // Only run once on mount
-
-  // Auto-refresh when not modal open
-  useRefreshInterval(showModal ? () => {} : checkStatuses, panel.refresh);
-
-  // Poll while modal is open
-  useEffect(() => {
-    if (showModal && devices.length > 0) {
-      checkStatusesRef.current();
-      pollRef.current = setInterval(() => checkStatusesRef.current(), 5000);
-    } else {
-      if (pollRef.current) clearInterval(pollRef.current);
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [showModal, devices.length]);
-
   async function handleWake(device: WolDevice) {
     setWaking(device.mac);
     await wakeDevice(device.mac);
     // Check status after a delay
     setTimeout(async () => {
-      const online = await pingDevice(device.ip);
-      setStatuses((prev) => ({ ...prev, [device.ip]: online }));
+      queryClient.invalidateQueries({ queryKey: ['wol-statuses'] });
       setWaking(null);
     }, 5000);
   }
@@ -184,12 +167,14 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
     setShowAddModal(false);
     setAddForm({ name: '', ip: '', mac: '' });
     setAddError(null);
+    queryClient.invalidateQueries({ queryKey: ['wol-statuses'] });
   }
 
   function handleDelete() {
     if (!deleteDevice) return;
     saveDevices(devices.filter((d) => d.mac !== deleteDevice.mac));
     setDeleteDevice(null);
+    queryClient.invalidateQueries({ queryKey: ['wol-statuses'] });
   }
 
   // Status indicator: green if any online, red if error
@@ -207,13 +192,11 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
         title={`Wake on LAN${devices.length > 0 ? ` (${devices.length} devices)` : ''}`}
       >
         <Monitor size={24} className={anyOnline ? 'text-green-400' : 'text-neutral-500'} />
-        {hasError && (
-          <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />
-        )}
-        {loading && (
+        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />}
+        {isLoading && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
-        {!hasError && !loading && devices.length > 0 && (
+        {!hasError && !isLoading && devices.length > 0 && (
           <span className="absolute -bottom-0.5 -right-0.5 text-[9px] bg-neutral-600 px-1 rounded">
             {devices.length}
           </span>
@@ -258,14 +241,19 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                                ${online ? 'bg-green-500/20' : 'bg-neutral-700/30'}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <Monitor size={20} className={online ? 'text-green-400' : 'text-neutral-500'} />
+                      <Monitor
+                        size={20}
+                        className={online ? 'text-green-400' : 'text-neutral-500'}
+                      />
                       <div className="min-w-0">
                         <div className="font-medium truncate">{device.name}</div>
                         <div className="text-xs text-neutral-500">{device.ip}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
+                      >
                         {online ? 'Online' : 'Offline'}
                       </span>
                       {!online && (
@@ -292,7 +280,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
             </div>
           )}
 
-          {loading && devices.length > 0 && (
+          {isLoading && devices.length > 0 && (
             <div className="flex items-center gap-2 text-neutral-500 text-sm">
               <RefreshCw size={14} className="animate-spin" /> Checking status...
             </div>
@@ -351,7 +339,9 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
             />
           </div>
           {addError && (
-            <p className={`text-sm ${addError.includes('Detecting') ? 'text-blue-400' : 'text-red-500'}`}>
+            <p
+              className={`text-sm ${addError.includes('Detecting') ? 'text-blue-400' : 'text-red-500'}`}
+            >
               {addError}
             </p>
           )}

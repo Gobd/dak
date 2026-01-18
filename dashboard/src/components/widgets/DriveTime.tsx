@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Car, X, Settings, Plus, Trash2 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { Modal, Button } from '../shared/Modal';
 import { ConfirmModal } from '../shared/ConfirmModal';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
@@ -9,6 +9,7 @@ import { TimePickerCompact } from '../shared/TimePicker';
 import { NumberPickerCompact } from '../shared/NumberPicker';
 import type { WidgetComponentProps } from './index';
 import type { DriveTimeRoute } from '../../types';
+import { parseDuration } from '../../types';
 
 // API endpoints
 const isLocalDev =
@@ -103,71 +104,74 @@ async function fetchDriveTime(
   }
 }
 
+async function fetchDriveData(
+  activeRoutes: DriveTimeRoute[],
+  locations: Record<string, string>
+): Promise<Array<{ route: DriveTimeRoute; driveData: DriveData }>> {
+  if (activeRoutes.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.all(
+    activeRoutes.map(async (route) => {
+      const originAddr = locations[route.origin];
+      const destAddr = locations[route.destination];
+      if (!originAddr || !destAddr) return null;
+
+      const driveData = await fetchDriveTime(originAddr, destAddr, route.via);
+      if (!driveData) return null;
+
+      // Check minTimeToShow
+      const durationMinutes = Math.round(driveData.durationInTrafficValue / 60);
+      if (route.minTimeToShow && durationMinutes < route.minTimeToShow) {
+        return null;
+      }
+
+      return { route, driveData };
+    })
+  );
+
+  return results.filter((r): r is { route: DriveTimeRoute; driveData: DriveData } => r !== null);
+}
+
 export default function DriveTime({ panel, dark }: WidgetComponentProps) {
+  const queryClient = useQueryClient();
   const driveTimeConfig = useConfigStore((s) => s.driveTime);
   const updateDriveTime = useConfigStore((s) => s.updateDriveTime);
 
   const locations = useMemo(() => driveTimeConfig?.locations ?? {}, [driveTimeConfig?.locations]);
   const routes = useMemo(() => driveTimeConfig?.routes ?? [], [driveTimeConfig?.routes]);
 
-  const [routeData, setRouteData] = useState<
-    Array<{ route: DriveTimeRoute; driveData: DriveData }>
-  >([]);
-  const [loading, setLoading] = useState(true);
   const [showManager, setShowManager] = useState(false);
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [editingRoute, setEditingRoute] = useState<DriveTimeRoute | null>(null);
   const [deleteRoute, setDeleteRoute] = useState<DriveTimeRoute | null>(null);
+  const [dismissedVersion, setDismissedVersion] = useState(0);
 
-  // Get active routes
+  // Get active routes - recalculate when dismissedVersion changes
   const activeRoutes = useMemo(() => {
     return routes.filter((r) => isInTimeWindow(r)).filter((r) => !isDismissedToday(getRouteId(r)));
-  }, [routes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routes, dismissedVersion]);
 
-  const loadDriveData = useCallback(async () => {
-    if (activeRoutes.length === 0) {
-      setRouteData([]);
-      setLoading(false);
-      return;
-    }
+  // Create a stable key for the query based on active route IDs
+  const activeRouteIds = useMemo(
+    () => activeRoutes.map((r) => getRouteId(r)).join(','),
+    [activeRoutes]
+  );
 
-    setLoading(true);
-
-    const results = await Promise.all(
-      activeRoutes.map(async (route) => {
-        const originAddr = locations[route.origin];
-        const destAddr = locations[route.destination];
-        if (!originAddr || !destAddr) return null;
-
-        const driveData = await fetchDriveTime(originAddr, destAddr, route.via);
-        if (!driveData) return null;
-
-        // Check minTimeToShow
-        const durationMinutes = Math.round(driveData.durationInTrafficValue / 60);
-        if (route.minTimeToShow && durationMinutes < route.minTimeToShow) {
-          return null;
-        }
-
-        return { route, driveData };
-      })
-    );
-
-    setRouteData(
-      results.filter((r): r is { route: DriveTimeRoute; driveData: DriveData } => r !== null)
-    );
-    setLoading(false);
-  }, [activeRoutes, locations]);
-
-  // Initial load - fetch on mount
-  useEffect(() => {
-    loadDriveData(); // eslint-disable-line react-hooks/set-state-in-effect
-  }, [loadDriveData]);
-
-  useRefreshInterval(loadDriveData, panel.refresh || '5m');
+  const { data: routeData = [], isLoading } = useQuery({
+    queryKey: ['drive-time', activeRouteIds],
+    queryFn: () => fetchDriveData(activeRoutes, locations),
+    enabled: activeRoutes.length > 0,
+    refetchInterval: parseDuration(panel.refresh || '5m') ?? 300000,
+    staleTime: 60000,
+  });
 
   function handleDismissAll() {
     routeData.forEach(({ route }) => dismissForToday(getRouteId(route)));
-    setRouteData([]);
+    setDismissedVersion((v) => v + 1);
+    queryClient.invalidateQueries({ queryKey: ['drive-time'] });
   }
 
   function handleSaveRoute(route: DriveTimeRoute) {
@@ -195,6 +199,13 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
       routes: newRoutes,
     });
     setDeleteRoute(null);
+  }
+
+  function handleShowNow() {
+    clearDismissed();
+    setDismissedVersion((v) => v + 1);
+    setShowManager(false);
+    queryClient.invalidateQueries({ queryKey: ['drive-time'] });
   }
 
   // Show settings icon if no active routes or all dismissed
@@ -229,11 +240,7 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
             setShowRouteForm(true);
           }}
           onDeleteRoute={setDeleteRoute}
-          onShowNow={() => {
-            clearDismissed();
-            setShowManager(false);
-            loadDriveData();
-          }}
+          onShowNow={handleShowNow}
         />
 
         <RouteFormModal
@@ -262,7 +269,7 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
   }
 
   // Loading
-  if (loading && routeData.length === 0) {
+  if (isLoading && routeData.length === 0) {
     return (
       <div
         className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800' : 'bg-white'}`}
@@ -343,11 +350,7 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
           setShowRouteForm(true);
         }}
         onDeleteRoute={setDeleteRoute}
-        onShowNow={() => {
-          clearDismissed();
-          setShowManager(false);
-          loadDriveData();
-        }}
+        onShowNow={handleShowNow}
       />
 
       <RouteFormModal
@@ -663,9 +666,7 @@ function RouteFormModal({
 
         {/* Min time to show */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Only show if drive time exceeds
-          </label>
+          <label className="block text-sm font-medium mb-1">Only show if drive time exceeds</label>
           <NumberPickerCompact
             value={form.minTimeToShow}
             onChange={(v) => setForm((f) => ({ ...f, minTimeToShow: v }))}

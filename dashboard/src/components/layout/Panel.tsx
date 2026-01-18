@@ -233,11 +233,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1 }: PanelProps) {
       )}
 
       {/* Panel Settings Modal */}
-      <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        title="Panel Settings"
-      >
+      <Modal open={showSettings} onClose={() => setShowSettings(false)} title="Panel Settings">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Widget</label>

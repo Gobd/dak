@@ -35,7 +35,7 @@ function Roller({ items, value, onChange, format = (v) => String(v) }: RollerPro
   const containerRef = useRef<HTMLDivElement>(null);
   const itemHeight = 44;
   const isScrolling = useRef(false);
-  const scrollTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Create circular array: [...items, ...items, ...items]
   const circularItems = [...items, ...items, ...items];
@@ -170,11 +170,7 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
   return (
     <div className="flex items-center justify-center gap-2 bg-neutral-800 rounded-xl p-4">
       <div className="w-16">
-        <Roller
-          items={HOURS}
-          value={hour}
-          onChange={handleHourChange}
-        />
+        <Roller items={HOURS} value={hour} onChange={handleHourChange} />
       </div>
 
       <div className="text-3xl font-bold text-neutral-500">:</div>

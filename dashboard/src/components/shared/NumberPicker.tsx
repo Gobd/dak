@@ -20,7 +20,7 @@ function Roller({ items, value, onChange, format = (v) => String(v) }: RollerPro
   const containerRef = useRef<HTMLDivElement>(null);
   const itemHeight = 44;
   const isScrolling = useRef(false);
-  const scrollTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const scrollTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Create circular array for infinite scroll
   const circularItems = [...items, ...items, ...items];
@@ -109,7 +109,7 @@ export function NumberPickerCompact({
   min = 0,
   max = 120,
   suffix = 'min',
-  zeroLabel = 'Off'
+  zeroLabel = 'Off',
 }: NumberPickerProps) {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -133,11 +133,7 @@ export function NumberPickerCompact({
           <div className="bg-neutral-900 rounded-xl p-4 shadow-2xl">
             <div className="flex items-center justify-center gap-2 bg-neutral-800 rounded-xl p-4">
               <div className="w-20">
-                <Roller
-                  items={items}
-                  value={value}
-                  onChange={onChange}
-                />
+                <Roller items={items} value={value} onChange={onChange} />
               </div>
               <div className="text-lg text-neutral-400">{suffix}</div>
             </div>

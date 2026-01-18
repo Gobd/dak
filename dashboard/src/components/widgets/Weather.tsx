@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Settings, RefreshCw, AlertTriangle, Wind } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
+import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
 import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
@@ -63,50 +64,45 @@ function cacheWeather(lat: number, lon: number, data: WeatherData): void {
   }
 }
 
-async function fetchWeather(lat: number, lon: number): Promise<WeatherData | null> {
+async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   const cached = getCachedWeather(lat, lon);
   if (cached) return cached;
 
+  // Get gridpoint from coordinates
+  const pointRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+    headers: { 'User-Agent': NWS_USER_AGENT },
+  });
+  if (!pointRes.ok) throw new Error('Failed to get location');
+  const point = await pointRes.json();
+
+  // Get forecast
+  const forecastRes = await fetch(point.properties.forecast, {
+    headers: { 'User-Agent': NWS_USER_AGENT },
+  });
+  if (!forecastRes.ok) throw new Error('Failed to get forecast');
+  const forecast = await forecastRes.json();
+
+  // Get alerts (optional)
+  let alerts: NwsAlert[] = [];
   try {
-    // Get gridpoint from coordinates
-    const pointRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+    const alertsRes = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`, {
       headers: { 'User-Agent': NWS_USER_AGENT },
     });
-    if (!pointRes.ok) throw new Error('Failed to get location');
-    const point = await pointRes.json();
-
-    // Get forecast
-    const forecastRes = await fetch(point.properties.forecast, {
-      headers: { 'User-Agent': NWS_USER_AGENT },
-    });
-    if (!forecastRes.ok) throw new Error('Failed to get forecast');
-    const forecast = await forecastRes.json();
-
-    // Get alerts (optional)
-    let alerts: NwsAlert[] = [];
-    try {
-      const alertsRes = await fetch(`https://api.weather.gov/alerts/active?point=${lat},${lon}`, {
-        headers: { 'User-Agent': NWS_USER_AGENT },
-      });
-      if (alertsRes.ok) {
-        const alertsData = await alertsRes.json();
-        alerts = alertsData.features || [];
-      }
-    } catch {
-      // Alerts are optional
+    if (alertsRes.ok) {
+      const alertsData = await alertsRes.json();
+      alerts = alertsData.features || [];
     }
-
-    const data: WeatherData = {
-      periods: forecast.properties.periods.slice(0, 10), // 5 days (day/night pairs)
-      alerts,
-    };
-
-    cacheWeather(lat, lon, data);
-    return data;
-  } catch (err) {
-    console.error('Weather fetch error:', err);
-    return null;
+  } catch {
+    // Alerts are optional
   }
+
+  const data: WeatherData = {
+    periods: forecast.properties.periods.slice(0, 10), // 5 days (day/night pairs)
+    alerts,
+  };
+
+  cacheWeather(lat, lon, data);
+  return data;
 }
 
 function getAlertSeverityColor(severity: string): string {
@@ -141,6 +137,7 @@ function formatAlertTime(expires: string): string {
 }
 
 export default function Weather({ panel, dark }: WidgetComponentProps) {
+  const queryClient = useQueryClient();
   const widgetId = panel.id || 'weather';
   const layout = (panel.args?.layout as string) || 'horizontal';
   const { location, setLocation } = useLocation(
@@ -149,36 +146,30 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
     panel.args?.lon as number | undefined
   );
 
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<NwsPeriod | null>(null);
   const [selectedAlert, setSelectedAlert] = useState<NwsAlert | null>(null);
 
-  const loadWeather = useCallback(async () => {
-    if (!location) return;
-
-    setLoading(true);
-    setError(null);
-    const data = await fetchWeather(location.lat, location.lon);
-    if (data) {
-      setWeather(data);
-    } else {
-      setError('Failed to load weather');
+  const {
+    data: weather,
+    isLoading,
+    error,
+    refetch,
+  } = useWidgetQuery(
+    ['weather', location?.lat, location?.lon],
+    () => fetchWeather(location!.lat, location!.lon),
+    {
+      refresh: panel.refresh,
+      enabled: !!location,
     }
-    setLoading(false);
-  }, [location]);
+  );
 
-  useEffect(() => {
-    if (location) {
-      loadWeather(); // eslint-disable-line react-hooks/set-state-in-effect
-    }
-  }, [location, loadWeather]);
+  const handleRefresh = () => {
+    localStorage.removeItem(CACHE_KEY);
+    queryClient.invalidateQueries({ queryKey: ['weather', location?.lat, location?.lon] });
+  };
 
-  useRefreshInterval(loadWeather, panel.refresh);
-
-  if (loading && !weather) {
+  if (isLoading && !weather) {
     return (
       <div
         className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900'}`}
@@ -193,8 +184,8 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
       <div
         className={`w-full h-full p-4 ${dark ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900'}`}
       >
-        <p className="text-red-500 text-sm mb-2">{error}</p>
-        <button onClick={loadWeather} className="text-sm text-blue-500 hover:underline">
+        <p className="text-red-500 text-sm mb-2">{error.message}</p>
+        <button onClick={() => refetch()} className="text-sm text-blue-500 hover:underline">
           Retry
         </button>
       </div>
@@ -275,18 +266,13 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
               {period.temperature}°{period.temperatureUnit}
             </div>
             {isVertical && (
-              <div className="text-xs text-neutral-500 truncate flex-1">
-                {period.shortForecast}
-              </div>
+              <div className="text-xs text-neutral-500 truncate flex-1">{period.shortForecast}</div>
             )}
           </button>
         ))}
         {/* Refresh button at end */}
         <button
-          onClick={() => {
-            localStorage.removeItem(CACHE_KEY);
-            loadWeather();
-          }}
+          onClick={handleRefresh}
           className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 text-neutral-500 ${
             isVertical ? 'w-full' : 'min-w-[60px] flex-shrink-0'
           }`}

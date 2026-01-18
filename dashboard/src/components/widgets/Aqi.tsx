@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Settings, RefreshCw } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
+import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
 import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
@@ -68,22 +68,17 @@ function cacheAqi(lat: number, lon: number, data: AqiApiData): void {
   }
 }
 
-async function fetchAqi(lat: number, lon: number): Promise<AqiApiData | null> {
+async function fetchAqi(lat: number, lon: number): Promise<AqiApiData> {
   const cached = getCachedAqi(lat, lon);
   if (cached) return cached;
 
-  try {
-    const res = await fetch(
-      `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10&hourly=us_aqi&timezone=auto&forecast_days=2`
-    );
-    if (!res.ok) throw new Error('Failed to fetch AQI data');
-    const data = await res.json();
-    cacheAqi(lat, lon, data);
-    return data;
-  } catch (err) {
-    console.error('AQI fetch error:', err);
-    return null;
-  }
+  const res = await fetch(
+    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10&hourly=us_aqi&timezone=auto&forecast_days=2`
+  );
+  if (!res.ok) throw new Error('Failed to fetch AQI data');
+  const data = await res.json();
+  cacheAqi(lat, lon, data);
+  return data;
 }
 
 function formatHour(h: number): string {
@@ -179,35 +174,23 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
     panel.args?.lon as number | undefined
   );
 
-  const [aqiData, setAqiData] = useState<AqiApiData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showLocationSettings, setShowLocationSettings] = useState(false);
 
-  const loadAqi = useCallback(async () => {
-    if (!location) return;
-
-    setLoading(true);
-    setError(null);
-    const data = await fetchAqi(location.lat, location.lon);
-    if (data) {
-      setAqiData(data);
-    } else {
-      setError('Failed to load AQI');
+  const {
+    data: aqiData,
+    isLoading,
+    error,
+  } = useWidgetQuery(
+    ['aqi', location?.lat, location?.lon],
+    () => fetchAqi(location!.lat, location!.lon),
+    {
+      refresh: panel.refresh,
+      enabled: !!location,
     }
-    setLoading(false);
-  }, [location]);
+  );
 
-  useEffect(() => {
-    if (location) {
-      loadAqi(); // eslint-disable-line react-hooks/set-state-in-effect
-    }
-  }, [location, loadAqi]);
-
-  useRefreshInterval(loadAqi, panel.refresh);
-
-  if (loading && !aqiData) {
+  if (isLoading && !aqiData) {
     return (
       <div
         className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
@@ -222,7 +205,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
       <div
         className={`w-full h-full p-3 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
       >
-        <p className="text-red-500 text-xs">{error}</p>
+        <p className="text-red-500 text-xs">{error.message}</p>
       </div>
     );
   }
@@ -281,14 +264,16 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
       </div>
 
       {/* Settings Modal */}
-      <Modal open={showSettings} onClose={() => setShowSettings(false)} title="Air Quality Settings">
+      <Modal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        title="Air Quality Settings"
+      >
         <div className="space-y-4">
           {/* Location section */}
           <div>
             <label className="block text-sm text-neutral-400 mb-1">Location</label>
-            <p className="text-sm">
-              {formatLocation(location.city, location.state) || 'Not set'}
-            </p>
+            <p className="text-sm">{formatLocation(location.city, location.state) || 'Not set'}</p>
             <button
               onClick={() => {
                 setShowSettings(false);

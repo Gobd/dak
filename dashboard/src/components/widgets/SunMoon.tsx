@@ -68,7 +68,15 @@ function hourAngle(h: number, phi: number, d: number): number {
   return Math.acos((Math.sin(h) - Math.sin(phi) * Math.sin(d)) / (Math.cos(phi) * Math.cos(d)));
 }
 
-function getSetJ(h: number, lw: number, phi: number, dec: number, n: number, M: number, L: number): number {
+function getSetJ(
+  h: number,
+  lw: number,
+  phi: number,
+  dec: number,
+  n: number,
+  M: number,
+  L: number
+): number {
   const w = hourAngle(h, phi, dec);
   const a = approxTransit(w, lw, n);
   return solarTransitJ(a, M, L);
@@ -125,7 +133,7 @@ function getMoonPhase(date: Date): MoonPhase {
   const synodic = 29.53059; // days
   const known = new Date('2000-01-06T18:14:00Z'); // known new moon
   const days = (date.getTime() - known.getTime()) / DAY_MS;
-  const phase = ((days % synodic) + synodic) % synodic / synodic;
+  const phase = (((days % synodic) + synodic) % synodic) / synodic;
 
   // Determine phase name and icon
   let name = 'New';
@@ -192,7 +200,7 @@ function getMoonTimes(date: Date, lat: number, lng: number): MoonTimes {
   // Moon's mean anomaly
   const M = RAD * (134.963 + 13.064993 * d);
   // Moon's argument of latitude
-  const F = RAD * (93.272 + 13.229350 * d);
+  const F = RAD * (93.272 + 13.22935 * d);
 
   // Moon's geocentric ecliptic longitude
   const l = L + RAD * 6.289 * Math.sin(M);
@@ -228,10 +236,10 @@ function getMoonTimes(date: Date, lat: number, lng: number): MoonTimes {
 
     // Check for crossing horizon
     if (alt1 < 0 && alt2 >= 0 && !rise) {
-      rise = new Date(t1.getTime() + (0 - alt1) / (alt2 - alt1) * 3600000);
+      rise = new Date(t1.getTime() + ((0 - alt1) / (alt2 - alt1)) * 3600000);
     }
     if (alt1 >= 0 && alt2 < 0 && !set) {
-      set = new Date(t1.getTime() + (0 - alt1) / (alt2 - alt1) * 3600000);
+      set = new Date(t1.getTime() + ((0 - alt1) / (alt2 - alt1)) * 3600000);
     }
   }
 
@@ -255,7 +263,20 @@ function formatDayLength(minutes: number): string {
 
 function formatShortDate(date: Date): string {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return `${days[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}`;
 }
 
@@ -283,7 +304,8 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const sunYesterday = getSunTimes(yesterday, location.lat, location.lon);
-    const dayLengthYesterday = (sunYesterday.sunset.getTime() - sunYesterday.sunrise.getTime()) / (1000 * 60);
+    const dayLengthYesterday =
+      (sunYesterday.sunset.getTime() - sunYesterday.sunrise.getTime()) / (1000 * 60);
     const dayLengthChange = Math.round(dayLength - dayLengthYesterday);
 
     // Days to full moon
@@ -379,7 +401,8 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
                 : 'text-orange-400 bg-orange-400/15'
             }`}
           >
-            {changeSign}{dayLengthChange}m
+            {changeSign}
+            {dayLengthChange}m
           </span>
         </div>
 

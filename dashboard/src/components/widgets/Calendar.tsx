@@ -130,10 +130,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   const updateCalendar = useConfigStore((s) => s.updateCalendar);
 
   const viewPreference = calendarConfig?.view ?? 'month';
-  const hiddenCalendarIds = useMemo(
-    () => calendarConfig?.hidden ?? [],
-    [calendarConfig?.hidden]
-  );
+  const hiddenCalendarIds = useMemo(() => calendarConfig?.hidden ?? [], [calendarConfig?.hidden]);
   const calendarNames = calendarConfig?.names ?? {};
   const weekStartsOn = (panel.args?.weekStart === 'sunday' ? 0 : 1) as number;
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
@@ -141,7 +138,14 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   const showSeconds = panel.args?.showSeconds === true;
 
   // Google OAuth
-  const { isSignedIn, accessToken, loading: authLoading, error: authError, signIn, signOut } = useGoogleAuth();
+  const {
+    isSignedIn,
+    accessToken,
+    loading: authLoading,
+    error: authError,
+    signIn,
+    signOut,
+  } = useGoogleAuth();
 
   const [view, setView] = useState<'month' | 'list'>(viewPreference);
   const [gridStartDate, setGridStartDate] = useState(getMostRecentWeekStart(weekStartsOn));
@@ -163,11 +167,21 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   });
   const [addingEvent, setAddingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [editForm, setEditForm] = useState({ summary: '', startTime: '', endTime: '', allDay: false, location: '', description: '' });
+  const [editForm, setEditForm] = useState({
+    summary: '',
+    startTime: '',
+    endTime: '',
+    allDay: false,
+    location: '',
+    description: '',
+  });
   const [savingEdit, setSavingEdit] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<CalendarEvent | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [recurringChoice, setRecurringChoice] = useState<{ event: CalendarEvent; action: 'edit' | 'delete' } | null>(null);
+  const [recurringChoice, setRecurringChoice] = useState<{
+    event: CalendarEvent;
+    action: 'edit' | 'delete';
+  } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showJumpToDate, setShowJumpToDate] = useState(false);
@@ -216,7 +230,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       for (const cal of fetchedCalendars) {
         if (hiddenCalendarIds.includes(cal.id)) continue;
 
-        let syncToken = syncTokens[cal.id];
+        let syncToken: string | undefined = syncTokens[cal.id];
 
         // If we have a sync token but no events for this calendar, clear it to force full fetch
         // This handles the case where the page was refreshed and state is empty
@@ -231,9 +245,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           const params: Record<string, string> = syncToken
             ? { syncToken }
             : {
-                timeMin: new Date(
-                  gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000
-                ).toISOString(),
+                timeMin: new Date(gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
                 timeMax: new Date(
                   gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000
                 ).toISOString(),
@@ -254,8 +266,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
             }>;
             nextSyncToken?: string;
           }>(
-            `/calendars/${encodeURIComponent(cal.id)}/events?` +
-              new URLSearchParams(params),
+            `/calendars/${encodeURIComponent(cal.id)}/events?` + new URLSearchParams(params),
             accessToken
           );
 
@@ -353,7 +364,10 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   async function handleCreateEvent() {
     if (!accessToken || !selectedDate || !newEvent.summary.trim()) return;
 
-    const targetCalendarId = newEvent.calendarId || calendars.find(c => c.accessRole === 'owner')?.id || calendars[0]?.id;
+    const targetCalendarId =
+      newEvent.calendarId ||
+      calendars.find((c) => c.accessRole === 'owner')?.id ||
+      calendars[0]?.id;
     if (!targetCalendarId) return;
 
     setAddingEvent(true);
@@ -414,7 +428,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       // Close modal and reset form
       setShowAddEvent(false);
       setSelectedDate(null);
-      setNewEvent({ summary: '', startTime: '09:00', endTime: '10:00', allDay: false, calendarId: '', location: '', description: '' });
+      setNewEvent({
+        summary: '',
+        startTime: '09:00',
+        endTime: '10:00',
+        allDay: false,
+        calendarId: '',
+        location: '',
+        description: '',
+      });
     } catch (err) {
       console.error('Failed to create event:', err);
       setErrorMessage('Failed to create event. Please try again.');
@@ -465,9 +487,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
     try {
       // Determine the event ID to edit
-      const eventId = editAll && editingEvent.recurringEventId
-        ? editingEvent.recurringEventId
-        : editingEvent.id;
+      const eventId =
+        editAll && editingEvent.recurringEventId ? editingEvent.recurringEventId : editingEvent.id;
 
       // Get the event's date
       const eventDate = editingEvent.start.dateTime
@@ -544,9 +565,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     setDeleting(true);
 
     try {
-      const eventId = deleteAll && event.recurringEventId
-        ? event.recurringEventId
-        : event.id;
+      const eventId = deleteAll && event.recurringEventId ? event.recurringEventId : event.id;
 
       await fetchCalendarApi(
         `/calendars/${encodeURIComponent(event.calendarId)}/events/${encodeURIComponent(eventId)}`,
@@ -649,9 +668,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         <p className="text-sm text-neutral-500 mb-4 text-center">
           Sign in to view and manage your calendars
         </p>
-        {authError && (
-          <p className="text-sm text-red-500 mb-4 text-center">{authError}</p>
-        )}
+        {authError && <p className="text-sm text-red-500 mb-4 text-center">{authError}</p>}
         <Button onClick={signIn} variant="primary" disabled={authLoading}>
           {authLoading ? 'Signing in...' : 'Sign in with Google'}
         </Button>
@@ -913,7 +930,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         onClose={() => {
           setShowAddEvent(false);
           setSelectedDate(null);
-          setNewEvent({ summary: '', startTime: '09:00', endTime: '10:00', allDay: false, calendarId: '', location: '', description: '' });
+          setNewEvent({
+            summary: '',
+            startTime: '09:00',
+            endTime: '10:00',
+            allDay: false,
+            calendarId: '',
+            location: '',
+            description: '',
+          });
         }}
         title="Add Event"
       >
@@ -934,12 +959,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           {/* Date picker */}
           <div>
             <label className="block text-sm font-medium mb-1">Date</label>
-            {selectedDate && (
-              <DatePickerCompact
-                value={selectedDate}
-                onChange={setSelectedDate}
-              />
-            )}
+            {selectedDate && <DatePickerCompact value={selectedDate} onChange={setSelectedDate} />}
           </div>
 
           {/* All day toggle */}
@@ -998,7 +1018,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           </div>
 
           {/* Calendar picker */}
-          {calendars.filter(c => c.accessRole === 'owner' || c.accessRole === 'writer').length > 1 && (
+          {calendars.filter((c) => c.accessRole === 'owner' || c.accessRole === 'writer').length >
+            1 && (
             <div>
               <label className="block text-sm font-medium mb-1">Calendar</label>
               <select
@@ -1008,7 +1029,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               >
                 <option value="">Default</option>
                 {calendars
-                  .filter(c => c.accessRole === 'owner' || c.accessRole === 'writer')
+                  .filter((c) => c.accessRole === 'owner' || c.accessRole === 'writer')
                   .map((cal) => (
                     <option key={cal.id} value={cal.id}>
                       {getCalendarDisplayName(cal.id, cal.summary)}
@@ -1020,11 +1041,21 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         </div>
 
         <div className="flex gap-2 mt-4">
-          <Button onClick={() => {
-            setShowAddEvent(false);
-            setSelectedDate(null);
-            setNewEvent({ summary: '', startTime: '09:00', endTime: '10:00', allDay: false, calendarId: '', location: '', description: '' });
-          }}>
+          <Button
+            onClick={() => {
+              setShowAddEvent(false);
+              setSelectedDate(null);
+              setNewEvent({
+                summary: '',
+                startTime: '09:00',
+                endTime: '10:00',
+                allDay: false,
+                calendarId: '',
+                location: '',
+                description: '',
+              });
+            }}
+          >
             Cancel
           </Button>
           <Button
@@ -1072,17 +1103,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           <div className="flex gap-2 mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Close</Button>
             <Button onClick={() => handleStartEdit(selectedEvent)}>Edit</Button>
-            <Button variant="danger" onClick={() => handleStartDelete(selectedEvent)}>Delete</Button>
+            <Button variant="danger" onClick={() => handleStartDelete(selectedEvent)}>
+              Delete
+            </Button>
           </div>
         )}
       </Modal>
 
       {/* Edit Event Modal */}
-      <Modal
-        open={!!editingEvent}
-        onClose={() => setEditingEvent(null)}
-        title="Edit Event"
-      >
+      <Modal open={!!editingEvent} onClose={() => setEditingEvent(null)} title="Edit Event">
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
@@ -1161,19 +1190,11 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       </Modal>
 
       {/* Delete Confirm Modal */}
-      <Modal
-        open={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        title="Delete Event"
-      >
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Event">
         <p>Are you sure you want to delete "{deleteConfirm?.summary}"?</p>
         <div className="flex gap-2 mt-4">
           <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-          <Button
-            variant="danger"
-            onClick={() => handleDeleteEvent(false)}
-            disabled={deleting}
-          >
+          <Button variant="danger" onClick={() => handleDeleteEvent(false)} disabled={deleting}>
             {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </div>
@@ -1183,7 +1204,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       <Modal
         open={!!recurringChoice}
         onClose={() => setRecurringChoice(null)}
-        title={recurringChoice?.action === 'edit' ? 'Edit Recurring Event' : 'Delete Recurring Event'}
+        title={
+          recurringChoice?.action === 'edit' ? 'Edit Recurring Event' : 'Delete Recurring Event'
+        }
       >
         <p className="mb-4">
           This is a recurring event. What would you like to {recurringChoice?.action}?
@@ -1218,11 +1241,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       </Modal>
 
       {/* Error Modal */}
-      <Modal
-        open={!!errorMessage}
-        onClose={() => setErrorMessage(null)}
-        title="Error"
-      >
+      <Modal open={!!errorMessage} onClose={() => setErrorMessage(null)} title="Error">
         <p className="text-red-400">{errorMessage}</p>
         <div className="flex gap-2 mt-4">
           <Button onClick={() => setErrorMessage(null)}>OK</Button>
@@ -1230,15 +1249,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       </Modal>
 
       {/* Jump to Date Modal */}
-      <Modal
-        open={showJumpToDate}
-        onClose={() => setShowJumpToDate(false)}
-        title="Jump to Date"
-      >
-        <DatePicker
-          value={gridStartDate}
-          onChange={handleJumpToDate}
-        />
+      <Modal open={showJumpToDate} onClose={() => setShowJumpToDate(false)} title="Jump to Date">
+        <DatePicker value={gridStartDate} onChange={handleJumpToDate} />
       </Modal>
     </div>
   );

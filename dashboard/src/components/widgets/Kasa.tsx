@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Power, RefreshCw, AlertCircle } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
+import { parseDuration } from '../../types';
 
 interface KasaDevice {
   alias: string;
@@ -49,68 +50,72 @@ async function checkRelayHealth(): Promise<boolean> {
   }
 }
 
+async function fetchKasaDevices(): Promise<{ devices: KasaDevice[]; error: string | null }> {
+  const relayUp = await checkRelayHealth();
+  if (!relayUp) {
+    return { devices: [], error: 'Relay offline' };
+  }
+
+  const found = await discoverDevices();
+  if (found.length === 0) {
+    return { devices: [], error: 'No devices found' };
+  }
+  return { devices: found, error: null };
+}
+
 export default function Kasa({ panel, dark }: WidgetComponentProps) {
-  const [devices, setDevices] = useState<KasaDevice[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  const loadDevices = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Use different refresh intervals based on modal state
+  const normalInterval = parseDuration(panel.refresh) ?? undefined;
+  const modalInterval = 10000; // 10 seconds when modal is open
 
-    // First check if relay is reachable
-    const relayUp = await checkRelayHealth();
-    if (!relayUp) {
-      setError('Relay offline');
-      setLoading(false);
-      return;
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: ['kasa-devices'],
+    queryFn: fetchKasaDevices,
+    refetchInterval: showModal ? modalInterval : normalInterval,
+    staleTime: 5000,
+  });
 
-    const found = await discoverDevices();
-    if (found.length === 0) {
-      setError('No devices found');
-    }
-    setDevices(found);
-    setLoading(false);
-  }, []);
-
-  // Initial load
-   
-  useEffect(() => {
-    loadDevices(); // eslint-disable-line react-hooks/set-state-in-effect
-  }, [loadDevices]);
-
-  // Auto-refresh when modal not open
-  useRefreshInterval(showModal ? () => {} : loadDevices, panel.refresh);
-
-  // Poll while modal is open
-  useEffect(() => {
-    if (showModal) {
-      loadDevices(); // eslint-disable-line react-hooks/set-state-in-effect
-      pollRef.current = setInterval(loadDevices, 10000);
-    } else {
-      if (pollRef.current) clearInterval(pollRef.current);
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [showModal, loadDevices]);
+  const devices = data?.devices ?? [];
+  const error = data?.error ?? null;
 
   async function handleToggle(device: KasaDevice) {
     // Optimistic update
-    setDevices((prev) =>
-      prev.map((d) => (d.deviceId === device.deviceId ? { ...d, state: !d.state } : d))
+    queryClient.setQueryData(
+      ['kasa-devices'],
+      (old: { devices: KasaDevice[]; error: string | null } | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          devices: old.devices.map((d) =>
+            d.deviceId === device.deviceId ? { ...d, state: !d.state } : d
+          ),
+        };
+      }
     );
 
     const success = await toggleDevice(device.host, device.state);
     if (!success) {
       // Revert on failure
-      setDevices((prev) =>
-        prev.map((d) => (d.deviceId === device.deviceId ? { ...d, state: device.state } : d))
+      queryClient.setQueryData(
+        ['kasa-devices'],
+        (old: { devices: KasaDevice[]; error: string | null } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            devices: old.devices.map((d) =>
+              d.deviceId === device.deviceId ? { ...d, state: device.state } : d
+            ),
+          };
+        }
       );
     }
+  }
+
+  function handleRefresh() {
+    queryClient.invalidateQueries({ queryKey: ['kasa-devices'] });
   }
 
   // Status indicator
@@ -128,13 +133,11 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
         title={`Smart Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Power size={24} className={anyOn ? 'text-green-400' : 'text-neutral-500'} />
-        {hasError && (
-          <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />
-        )}
-        {loading && (
+        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />}
+        {isLoading && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
-        {!hasError && !loading && devices.length > 0 && (
+        {!hasError && !isLoading && devices.length > 0 && (
           <span className="absolute -bottom-0.5 -right-0.5 text-[9px] bg-neutral-600 px-1 rounded">
             {devices.length}
           </span>
@@ -148,8 +151,8 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
         title="Smart Devices"
         actions={
           <>
-            <Button onClick={loadDevices} disabled={loading}>
-              <RefreshCw size={14} className={`mr-1 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            <Button onClick={handleRefresh} disabled={isLoading}>
+              <RefreshCw size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
             </Button>
             <Button onClick={() => setShowModal(false)} variant="primary">
               Close
@@ -167,10 +170,8 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
             </div>
           )}
 
-          {devices.length === 0 && !error && !loading && (
-            <p className="text-neutral-500 text-center py-4">
-              No smart devices discovered.
-            </p>
+          {devices.length === 0 && !error && !isLoading && (
+            <p className="text-neutral-500 text-center py-4">No smart devices discovered.</p>
           )}
 
           {devices.length > 0 && (
@@ -184,17 +185,22 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
                 >
                   <span className="font-medium truncate">{device.alias}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded ${device.state ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded ${device.state ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
+                    >
                       {device.state ? 'On' : 'Off'}
                     </span>
-                    <Power size={18} className={device.state ? 'text-green-400' : 'text-neutral-500'} />
+                    <Power
+                      size={18}
+                      className={device.state ? 'text-green-400' : 'text-neutral-500'}
+                    />
                   </div>
                 </button>
               ))}
             </div>
           )}
 
-          {loading && (
+          {isLoading && (
             <div className="flex items-center gap-2 text-neutral-500 text-sm">
               <RefreshCw size={14} className="animate-spin" /> Discovering devices...
             </div>

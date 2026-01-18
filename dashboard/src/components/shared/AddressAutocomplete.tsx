@@ -112,9 +112,7 @@ export function AddressAutocomplete({
                 onClick={() => handleSelectPrediction(prediction)}
               >
                 <span className="font-medium text-white">{main}</span>
-                {secondary && (
-                  <span className="text-sm text-neutral-400 ml-1">{secondary}</span>
-                )}
+                {secondary && <span className="text-sm text-neutral-400 ml-1">{secondary}</span>}
               </button>
             );
           })}
