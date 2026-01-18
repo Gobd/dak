@@ -4,7 +4,7 @@
 
 | App | URL | Stack |
 |-----|-----|-------|
-| Dashboard | https://dak.bkemper.me/dashboard/ | Vanilla JS |
+| Dashboard | https://dak.bkemper.me/dashboard/ | Vite + React + Tailwind |
 | Family Chores | https://dak.bkemper.me/family-chores/ | Vite + React + Tailwind |
 | Health Tracker | https://dak.bkemper.me/health-tracker/ | Vite + React + Tailwind |
 | Kasa Controller | https://dak.bkemper.me/kasa-controller/ | Vite + React + Tailwind |
