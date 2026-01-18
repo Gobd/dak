@@ -219,33 +219,33 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
 
       {/* Forecast Periods */}
       <div
-        className={`flex-1 overflow-auto px-2 pb-2 ${isVertical ? 'flex flex-col gap-1' : 'flex gap-1'}`}
+        className={`flex-1 min-h-0 px-2 pb-2 ${isVertical ? 'flex flex-col' : 'flex gap-1 overflow-x-auto'}`}
       >
         {(weather.periods || []).map((period, i) => (
           <button
             key={i}
             onClick={() => setSelectedPeriod(period)}
-            className={`flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors text-left ${
-              isVertical ? 'w-full' : 'flex-col min-w-[80px] flex-shrink-0'
+            className={`flex items-center gap-2 rounded-lg hover:bg-neutral-800/50 transition-colors text-left ${
+              isVertical ? 'w-full flex-1 min-h-0 px-2' : 'flex-col min-w-[80px] flex-shrink-0 p-2'
             }`}
           >
             <div
-              className={`text-xs text-neutral-400 ${isVertical ? 'w-16 shrink-0' : 'text-center'}`}
+              className={`text-neutral-400 ${isVertical ? 'w-20 shrink-0 text-sm' : 'text-center text-xs'}`}
             >
               {period.name}
             </div>
             <img
               src={period.icon}
               alt={period.shortForecast}
-              className={`${isVertical ? 'w-8 h-8' : 'w-10 h-10'} rounded`}
+              className={`${isVertical ? 'w-10 h-10' : 'w-10 h-10'} rounded shrink-0`}
             />
             <div
-              className={`font-medium ${period.isDaytime ? 'text-orange-400' : 'text-blue-400'} ${isVertical ? '' : 'text-center'}`}
+              className={`font-medium ${period.isDaytime ? 'text-orange-400' : 'text-blue-400'} ${isVertical ? 'text-lg' : 'text-center'}`}
             >
               {period.temperature}°{period.temperatureUnit}
             </div>
             {isVertical && (
-              <div className="text-xs text-neutral-500 truncate flex-1">{period.shortForecast}</div>
+              <div className="text-sm text-neutral-500 truncate flex-1">{period.shortForecast}</div>
             )}
           </button>
         ))}
