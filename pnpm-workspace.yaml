@@ -12,7 +12,7 @@ catalog:
   eslint: ^9.39.2
   prettier: ^3.8.0
   typescript: ~5.9.3
-  globals: ^16.5.0
+  globals: ^17.0.0
   eslint-plugin-react-hooks: ^7.0.1
 
   # Shared runtime deps
@@ -37,6 +37,7 @@ catalogs:
     vite-plugin-pwa: ^1.2.0
     eslint-plugin-react-refresh: ^0.4.24
     typescript-eslint: ^8.53.0
+    rollup-plugin-visualizer: ^6.0.5
 
     # Shared Vite app deps
     lucide-react: ^0.562.0

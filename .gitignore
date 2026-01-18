@@ -7,3 +7,6 @@ node_modules
 
 # Local secrets for development
 secrets.local.js
+
+# Build analysis
+stats.html
