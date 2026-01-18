@@ -92,6 +92,9 @@ importers:
 
   dashboard:
     dependencies:
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.19(react@19.2.3)
@@ -162,6 +165,9 @@ importers:
 
   family-chores:
     dependencies:
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.90.1
@@ -253,6 +259,9 @@ importers:
 
   health-tracker:
     dependencies:
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.90.1
@@ -616,6 +625,55 @@ importers:
       workbox-strategies:
         specifier: ^7.4.0
         version: 7.4.0
+
+  ui:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: 'catalog:'
+        version: 2.90.1
+      lucide-react:
+        specifier: catalog:vite
+        version: 0.562.0(react@19.2.3)
+      react:
+        specifier: catalog:vite
+        version: 19.2.3
+      react-dom:
+        specifier: catalog:vite
+        version: 19.2.3(react@19.2.3)
+      react-router-dom:
+        specifier: catalog:vite
+        version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      zustand:
+        specifier: 'catalog:'
+        version: 5.0.10(@types/react@19.2.8)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
+    devDependencies:
+      '@eslint/js':
+        specifier: 'catalog:'
+        version: 9.39.2
+      '@types/react':
+        specifier: catalog:vite
+        version: 19.2.8
+      '@types/react-dom':
+        specifier: catalog:vite
+        version: 19.2.3(@types/react@19.2.8)
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.2(jiti@2.6.1)
+      eslint-plugin-react-hooks:
+        specifier: 'catalog:'
+        version: 7.0.1(eslint@9.39.2(jiti@2.6.1))
+      globals:
+        specifier: 'catalog:'
+        version: 17.0.0
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      typescript-eslint:
+        specifier: catalog:vite
+        version: 8.53.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
 packages:
 

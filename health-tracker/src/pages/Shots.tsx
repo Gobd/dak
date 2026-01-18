@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 import { TimePicker } from '../components/TimePicker';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -107,27 +107,25 @@ export function Shots() {
         </button>
       </div>
 
-      {confirmDelete && (
-        <ConfirmModal
-          message="Delete this schedule?"
-          onConfirm={() => {
-            deleteSchedule(confirmDelete);
-            setConfirmDelete(null);
-          }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmDelete}
+        message="Delete this schedule?"
+        onConfirm={() => {
+          if (confirmDelete) deleteSchedule(confirmDelete);
+          setConfirmDelete(null);
+        }}
+        onClose={() => setConfirmDelete(null)}
+      />
 
-      {confirmLogDelete && (
-        <ConfirmModal
-          message="Delete this history entry?"
-          onConfirm={() => {
-            deleteLog(confirmLogDelete.scheduleId, confirmLogDelete.logId);
-            setConfirmLogDelete(null);
-          }}
-          onCancel={() => setConfirmLogDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmLogDelete}
+        message="Delete this history entry?"
+        onConfirm={() => {
+          if (confirmLogDelete) deleteLog(confirmLogDelete.scheduleId, confirmLogDelete.logId);
+          setConfirmLogDelete(null);
+        }}
+        onClose={() => setConfirmLogDelete(null)}
+      />
 
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

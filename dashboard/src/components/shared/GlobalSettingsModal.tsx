@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from './Modal';
+import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type { ThemeMode } from '../../types';
 import { formatLocation } from '../../hooks/useLocation';

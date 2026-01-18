@@ -15,6 +15,7 @@
     "analyze": "ANALYZE=true vite build"
   },
   "dependencies": {
+    "@dak/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "date-fns": "catalog:vite",
     "lucide-react": "catalog:vite",

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 import { TimePicker } from '../components/TimePicker';
 import {
   Plus,
@@ -131,16 +131,15 @@ export function AsNeeded() {
         </button>
       </div>
 
-      {confirmDelete && (
-        <ConfirmModal
-          message={`Delete ${meds.find((m) => m.id === confirmDelete)?.name}?`}
-          onConfirm={() => {
-            deleteMed(confirmDelete);
-            setConfirmDelete(null);
-          }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmDelete}
+        message={`Delete ${meds.find((m) => m.id === confirmDelete)?.name}?`}
+        onConfirm={() => {
+          if (confirmDelete) deleteMed(confirmDelete);
+          setConfirmDelete(null);
+        }}
+        onClose={() => setConfirmDelete(null)}
+      />
 
       {/* Add Form Modal */}
       {showAddForm && (

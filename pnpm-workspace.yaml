@@ -5,6 +5,7 @@ packages:
   - health-tracker
   - kasa-controller
   - notes-app
+  - ui
 
 catalog:
   # Shared tooling

@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { Trash2, Settings, Move } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button } from '@dak/ui';
 import type { PanelConfig } from '../../types';
 
 const REFRESH_OPTIONS = [

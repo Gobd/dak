@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useMedicineStore } from '../stores/medicine-store';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { ConfirmModal } from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, addDays, isAfter } from 'date-fns';
 
@@ -132,16 +132,15 @@ export function Courses() {
         </button>
       </div>
 
-      {confirmDelete && (
-        <ConfirmModal
-          message="Delete this course?"
-          onConfirm={() => {
-            deleteCourse(confirmDelete);
-            setConfirmDelete(null);
-          }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmDelete}
+        message="Delete this course?"
+        onConfirm={() => {
+          if (confirmDelete) deleteCourse(confirmDelete);
+          setConfirmDelete(null);
+        }}
+        onClose={() => setConfirmDelete(null)}
+      />
 
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

@@ -3,7 +3,7 @@ import { Settings, RefreshCw } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Open-Meteo Air Quality API - free, no API key needed
