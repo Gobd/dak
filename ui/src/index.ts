@@ -15,3 +15,13 @@ export { Login } from './auth/Login';
 export { SignUp } from './auth/SignUp';
 export { ForgotPassword } from './auth/ForgotPassword';
 export { ResetPassword } from './auth/ResetPassword';
+
+// Stores
+export {
+  createThemeStore,
+  type ThemeState,
+  type CreateThemeStoreOptions,
+} from './stores/theme-store';
+
+// Realtime
+export { RealtimeSync, type RealtimeSyncOptions } from './realtime/realtime-sync';

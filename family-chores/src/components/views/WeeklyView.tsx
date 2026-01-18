@@ -182,7 +182,7 @@ export function WeeklyView() {
         }
       >
         <div className="space-y-3">
-          {getInstancesForDay(selectedDay).length === 0 ? (
+          {!selectedDay ? null : getInstancesForDay(selectedDay).length === 0 ? (
             <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
               No tasks scheduled for this day
             </p>
