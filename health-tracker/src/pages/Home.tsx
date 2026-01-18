@@ -148,9 +148,10 @@ export function Home() {
               </div>
               <div className="space-y-3">
                 {upcomingShots.map((schedule) => (
-                  <div
+                  <Link
                     key={schedule.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg"
+                    to="/shots"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                   >
                     <div>
                       <div className="font-medium">
@@ -163,7 +164,7 @@ export function Home() {
                     <div className={getDueDateClass(schedule.next_due)}>
                       {formatDueDate(schedule.next_due)}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -182,9 +183,10 @@ export function Home() {
                   const allDone = total > 0 && taken === total;
 
                   return (
-                    <div
+                    <Link
                       key={course.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg"
+                      to="/courses"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                     >
                       <div>
                         <div className="font-medium">
@@ -212,7 +214,7 @@ export function Home() {
                           </span>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -230,9 +232,10 @@ export function Home() {
                 {recentPrnMeds.map((med) => {
                   const { canGive, timeUntil, lastGiven } = getPrnStatus(med.id, med.min_hours);
                   return (
-                    <div
+                    <Link
                       key={med.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg"
+                      to="/as-needed"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
                     >
                       <div>
                         <div className="font-medium">
@@ -255,7 +258,7 @@ export function Home() {
                           </>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>

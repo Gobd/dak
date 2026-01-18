@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X, Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
+import { Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
+import { Modal, ConfirmModal } from '@dak/ui';
 import { useChoresStore } from '../../stores/chores-store';
 import { useInstancesStore } from '../../stores/instances-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '../shared/ConfirmModal';
 import { ChoreEditModal } from './ChoreEditModal';
 import type { ChoreWithAssignments } from '../../types';
 
@@ -81,189 +81,175 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Chores</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+      <Modal open={true} onClose={onClose} title="Chores" wide>
+        <div className="space-y-3">
+          {/* Active chores */}
+          {activeChores.map((chore) => (
+            <div
+              key={chore.id}
+              className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden"
             >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {/* Active chores */}
-            {activeChores.map((chore) => (
-              <div
-                key={chore.id}
-                className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden"
-              >
-                <div className="flex items-center gap-3 p-3">
-                  {/* Chore info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                        {chore.name}
-                      </h3>
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
-                        {chore.points} pts
+              <div className="flex items-center gap-3 p-3">
+                {/* Chore info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                      {chore.name}
+                    </h3>
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                      {chore.points} pts
+                    </span>
+                    {chore.assignments.length > 1 && (
+                      <span
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          chore.assignment_type === 'anyone'
+                            ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
+                            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
+                        }`}
+                      >
+                        {chore.assignment_type === 'anyone' ? (
+                          <>
+                            <Trophy size={10} />
+                            Race
+                          </>
+                        ) : (
+                          <>
+                            <User size={10} />
+                            Each
+                          </>
+                        )}
                       </span>
-                      {chore.assignments.length > 1 && (
-                        <span
-                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            chore.assignment_type === 'anyone'
-                              ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
-                              : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
-                          }`}
-                        >
-                          {chore.assignment_type === 'anyone' ? (
-                            <>
-                              <Trophy size={10} />
-                              Race
-                            </>
-                          ) : (
-                            <>
-                              <User size={10} />
-                              Each
-                            </>
-                          )}
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                      {getScheduleLabel(chore)}
+                    </p>
+                    <span className="text-gray-300 dark:text-neutral-600">•</span>
+                    <div className="flex -space-x-1">
+                      {chore.assignments.slice(0, 3).map((a) => (
+                        <MemberAvatar
+                          key={a.id}
+                          name={a.member.name}
+                          emoji={a.member.avatar_emoji}
+                          color={a.member.color}
+                          size="xs"
+                        />
+                      ))}
+                      {chore.assignments.length > 3 && (
+                        <span className="text-xs text-gray-500 dark:text-neutral-400 ml-1">
+                          +{chore.assignments.length - 3}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">
-                        {getScheduleLabel(chore)}
-                      </p>
-                      <span className="text-gray-300 dark:text-neutral-600">•</span>
-                      <div className="flex -space-x-1">
-                        {chore.assignments.slice(0, 3).map((a) => (
-                          <MemberAvatar
-                            key={a.id}
-                            name={a.member.name}
-                            emoji={a.member.avatar_emoji}
-                            color={a.member.color}
-                            size="xs"
-                          />
-                        ))}
-                        {chore.assignments.length > 3 && (
-                          <span className="text-xs text-gray-500 dark:text-neutral-400 ml-1">
-                            +{chore.assignments.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setEditingChore(chore)}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 dark:text-neutral-400"
-                      title="Edit"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(chore.id)}
-                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-neutral-400 hover:text-red-600"
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => setAssigningId(assigningId === chore.id ? null : chore.id)}
-                      className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                      title="Assign now"
-                    >
-                      <Play size={16} />
-                    </button>
                   </div>
                 </div>
 
-                {/* Assign now expanded */}
-                {assigningId === chore.id && (
-                  <div className="px-3 pb-3 pt-2 border-t border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
-                    <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2">
-                      Create task for today:
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        onClick={() => handleAssign(chore.id)}
-                        disabled={assigning}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        <Play size={14} />
-                        All ({chore.assignments.length})
-                      </button>
-                      {chore.assignments.map((a) => (
-                        <button
-                          key={a.member.id}
-                          onClick={() => handleAssign(chore.id, [a.member.id])}
-                          disabled={assigning}
-                          className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-neutral-700 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 disabled:opacity-50"
-                        >
-                          <MemberAvatar
-                            name={a.member.name}
-                            emoji={a.member.avatar_emoji}
-                            color={a.member.color}
-                            size="xs"
-                          />
-                          <span className="text-sm dark:text-white">{a.member.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* Inactive chores */}
-            {inactiveChores.length > 0 && (
-              <div className="pt-4">
-                <p className="text-xs text-gray-500 dark:text-neutral-400 uppercase tracking-wide mb-2">
-                  Disabled
-                </p>
-                {inactiveChores.map((chore) => (
-                  <div
-                    key={chore.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-neutral-900 rounded-xl border border-gray-100 dark:border-neutral-800 opacity-60 mb-2"
+                {/* Actions */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setEditingChore(chore)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-500 dark:text-neutral-400"
+                    title="Edit"
                   >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-600 dark:text-neutral-400 truncate">
-                        {chore.name}
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => toggleActive(chore.id)}
-                      className="px-3 py-1 text-sm text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg"
-                    >
-                      Enable
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(chore.id)}
-                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(chore.id)}
+                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-neutral-400 hover:text-red-600"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setAssigningId(assigningId === chore.id ? null : chore.id)}
+                    className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    title="Assign now"
+                  >
+                    <Play size={16} />
+                  </button>
+                </div>
               </div>
-            )}
 
-            {/* Add button */}
-            <button
-              onClick={() => setIsAddingNew(true)}
-              className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-xl text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-2 transition-colors"
-            >
-              <Plus size={20} /> Add Chore
-            </button>
-          </div>
+              {/* Assign now expanded */}
+              {assigningId === chore.id && (
+                <div className="px-3 pb-3 pt-2 border-t border-gray-100 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50">
+                  <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2">
+                    Create task for today:
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => handleAssign(chore.id)}
+                      disabled={assigning}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <Play size={14} />
+                      All ({chore.assignments.length})
+                    </button>
+                    {chore.assignments.map((a) => (
+                      <button
+                        key={a.member.id}
+                        onClick={() => handleAssign(chore.id, [a.member.id])}
+                        disabled={assigning}
+                        className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-neutral-700 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-600 disabled:opacity-50"
+                      >
+                        <MemberAvatar
+                          name={a.member.name}
+                          emoji={a.member.avatar_emoji}
+                          color={a.member.color}
+                          size="xs"
+                        />
+                        <span className="text-sm dark:text-white">{a.member.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Inactive chores */}
+          {inactiveChores.length > 0 && (
+            <div className="pt-4">
+              <p className="text-xs text-gray-500 dark:text-neutral-400 uppercase tracking-wide mb-2">
+                Disabled
+              </p>
+              {inactiveChores.map((chore) => (
+                <div
+                  key={chore.id}
+                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-neutral-900 rounded-xl border border-gray-100 dark:border-neutral-800 opacity-60 mb-2"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-600 dark:text-neutral-400 truncate">
+                      {chore.name}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => toggleActive(chore.id)}
+                    className="px-3 py-1 text-sm text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg"
+                  >
+                    Enable
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(chore.id)}
+                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add button */}
+          <button
+            onClick={() => setIsAddingNew(true)}
+            className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-xl text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-2 transition-colors"
+          >
+            <Plus size={20} /> Add Chore
+          </button>
         </div>
-      </div>
+      </Modal>
 
       {/* Edit/Add Modal */}
       {(editingChore || isAddingNew) && (
@@ -278,13 +264,12 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
       )}
 
       {/* Delete confirmation */}
-      {deleteConfirm && (
-        <ConfirmModal
-          message="Delete this chore? Task history will be preserved."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteConfirm(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!deleteConfirm}
+        message="Delete this chore? Task history will be preserved."
+        onConfirm={handleDelete}
+        onClose={() => setDeleteConfirm(null)}
+      />
     </>
   );
 }

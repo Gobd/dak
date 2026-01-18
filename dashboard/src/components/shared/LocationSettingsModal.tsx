@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Button } from './Modal';
+import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type { LocationConfig } from '../../types';
 import { formatLocation } from '../../hooks/useLocation';

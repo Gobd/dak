@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Modal } from '@dak/ui';
 import { supabase } from '../../lib/supabase';
 import { useChoresStore } from '../../stores/chores-store';
 import { useMembersStore } from '../../stores/members-store';
@@ -171,121 +172,106 @@ export function WeeklyView() {
       )}
 
       {/* Day detail modal */}
-      {selectedDay && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {format(selectedDay, 'EEEE')}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-400">
-                  {format(selectedDay, 'MMMM d, yyyy')}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-              >
-                <X size={20} />
-              </button>
-            </div>
+      <Modal
+        open={!!selectedDay}
+        onClose={() => setSelectedDay(null)}
+        title={
+          selectedDay
+            ? `${format(selectedDay, 'EEEE')} - ${format(selectedDay, 'MMMM d, yyyy')}`
+            : ''
+        }
+      >
+        <div className="space-y-3">
+          {!selectedDay ? null : getInstancesForDay(selectedDay).length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
+              No tasks scheduled for this day
+            </p>
+          ) : (
+            getInstancesForDay(selectedDay).map((instance) => {
+              const chore = getChore(instance.chore_id);
+              const assignedMember = getMember(instance.assigned_to);
+              const completedByMember = getMember(instance.completed_by);
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {getInstancesForDay(selectedDay).length === 0 ? (
-                <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
-                  No tasks scheduled for this day
-                </p>
-              ) : (
-                getInstancesForDay(selectedDay).map((instance) => {
-                  const chore = getChore(instance.chore_id);
-                  const assignedMember = getMember(instance.assigned_to);
-                  const completedByMember = getMember(instance.completed_by);
-
-                  return (
+              return (
+                <div
+                  key={instance.id}
+                  className={`p-3 rounded-xl border ${
+                    instance.completed
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      : 'bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Completion indicator */}
                     <div
-                      key={instance.id}
-                      className={`p-3 rounded-xl border ${
+                      className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
                         instance.completed
-                          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                          : 'bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 dark:bg-neutral-700'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
-                        {/* Completion indicator */}
-                        <div
-                          className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+                      {instance.completed && <Check size={18} strokeWidth={3} />}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3
+                          className={`font-medium ${
                             instance.completed
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-200 dark:bg-neutral-700'
+                              ? 'text-gray-500 dark:text-neutral-500 line-through'
+                              : 'text-gray-900 dark:text-white'
                           }`}
                         >
-                          {instance.completed && <Check size={18} strokeWidth={3} />}
-                        </div>
+                          {chore?.name ?? 'Unknown chore'}
+                        </h3>
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs">
+                          {instance.points_awarded ?? chore?.points ?? 0} pts
+                        </span>
+                      </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3
-                              className={`font-medium ${
-                                instance.completed
-                                  ? 'text-gray-500 dark:text-neutral-500 line-through'
-                                  : 'text-gray-900 dark:text-white'
-                              }`}
-                            >
-                              {chore?.name ?? 'Unknown chore'}
-                            </h3>
-                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs">
-                              {instance.points_awarded ?? chore?.points ?? 0} pts
+                      {/* Assignment info */}
+                      <div className="flex items-center gap-2 mt-2">
+                        {instance.completed && completedByMember ? (
+                          <>
+                            <MemberAvatar
+                              name={completedByMember.name}
+                              emoji={completedByMember.avatar_emoji}
+                              color={completedByMember.color}
+                              size="xs"
+                            />
+                            <span className="text-sm text-gray-500 dark:text-neutral-400">
+                              {completedByMember.name}
+                              {instance.completed_at && (
+                                <> at {format(new Date(instance.completed_at), 'h:mm a')}</>
+                              )}
                             </span>
-                          </div>
-
-                          {/* Assignment info */}
-                          <div className="flex items-center gap-2 mt-2">
-                            {instance.completed && completedByMember ? (
-                              <>
-                                <MemberAvatar
-                                  name={completedByMember.name}
-                                  emoji={completedByMember.avatar_emoji}
-                                  color={completedByMember.color}
-                                  size="xs"
-                                />
-                                <span className="text-sm text-gray-500 dark:text-neutral-400">
-                                  {completedByMember.name}
-                                  {instance.completed_at && (
-                                    <> at {format(new Date(instance.completed_at), 'h:mm a')}</>
-                                  )}
-                                </span>
-                              </>
-                            ) : assignedMember ? (
-                              <>
-                                <MemberAvatar
-                                  name={assignedMember.name}
-                                  emoji={assignedMember.avatar_emoji}
-                                  color={assignedMember.color}
-                                  size="xs"
-                                />
-                                <span className="text-sm text-gray-500 dark:text-neutral-400">
-                                  Assigned to {assignedMember.name}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-sm text-amber-600 dark:text-amber-400">
-                                Race - anyone can complete
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                          </>
+                        ) : assignedMember ? (
+                          <>
+                            <MemberAvatar
+                              name={assignedMember.name}
+                              emoji={assignedMember.avatar_emoji}
+                              color={assignedMember.color}
+                              size="xs"
+                            />
+                            <span className="text-sm text-gray-500 dark:text-neutral-400">
+                              Assigned to {assignedMember.name}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-amber-600 dark:text-amber-400">
+                            Race - anyone can complete
+                          </span>
+                        )}
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

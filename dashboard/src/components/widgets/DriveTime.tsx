@@ -2,11 +2,8 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Car, X, Settings, Plus, Trash2 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
-import { ConfirmModal } from '../shared/ConfirmModal';
+import { Modal, Button, ConfirmModal, TimePickerCompact, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
-import { TimePickerCompact } from '../shared/TimePicker';
-import { NumberPickerCompact } from '../shared/NumberPicker';
 import type { WidgetComponentProps } from './index';
 import type { DriveTimeRoute } from '../../types';
 import { parseDuration } from '../../types';
@@ -641,6 +638,7 @@ function RouteFormModal({
             <TimePickerCompact
               value={form.startTime}
               onChange={(v) => setForm((f) => ({ ...f, startTime: v }))}
+              minuteStep={1}
             />
           </div>
           <div className="flex-1">
@@ -648,6 +646,7 @@ function RouteFormModal({
             <TimePickerCompact
               value={form.endTime}
               onChange={(v) => setForm((f) => ({ ...f, endTime: v }))}
+              minuteStep={1}
             />
           </div>
         </div>

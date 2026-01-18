@@ -10,7 +10,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '../shared/Modal';
+import { Modal, Button } from '@dak/ui';
 import { GlobalSettingsModal } from '../shared/GlobalSettingsModal';
 import { WIDGET_DEFAULTS, type WidgetType } from '../../types';
 

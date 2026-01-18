@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useMedicineStore } from '../stores/medicine-store';
-import { ConfirmModal } from '../components/ConfirmModal';
+import { ConfirmModal, Modal, DatePickerCompact, NumberPickerCompact } from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, addDays, isAfter } from 'date-fns';
 
@@ -24,9 +24,9 @@ export function Courses() {
 
   const [personId, setPersonId] = useState('');
   const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [durationDays, setDurationDays] = useState<number | ''>('');
-  const [dosesPerDay, setDosesPerDay] = useState<number | ''>('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [durationDays, setDurationDays] = useState(7);
+  const [dosesPerDay, setDosesPerDay] = useState(2);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -65,17 +65,17 @@ export function Courses() {
     await addCourse({
       person_id: personId,
       name,
-      start_date: startDate,
-      duration_days: Number(durationDays),
-      doses_per_day: Number(dosesPerDay),
+      start_date: format(startDate, 'yyyy-MM-dd'),
+      duration_days: durationDays,
+      doses_per_day: dosesPerDay,
       notes: notes || undefined,
     });
     setShowAddForm(false);
     setPersonId('');
     setName('');
-    setStartDate(format(new Date(), 'yyyy-MM-dd'));
-    setDurationDays('');
-    setDosesPerDay('');
+    setStartDate(new Date());
+    setDurationDays(7);
+    setDosesPerDay(2);
     setNotes('');
   };
 
@@ -132,131 +132,113 @@ export function Courses() {
         </button>
       </div>
 
-      {confirmDelete && (
-        <ConfirmModal
-          message="Delete this course?"
-          onConfirm={() => {
-            deleteCourse(confirmDelete);
-            setConfirmDelete(null);
-          }}
-          onCancel={() => setConfirmDelete(null)}
-        />
-      )}
+      <ConfirmModal
+        open={!!confirmDelete}
+        message="Delete this course?"
+        onConfirm={() => {
+          if (confirmDelete) deleteCourse(confirmDelete);
+          setConfirmDelete(null);
+        }}
+        onClose={() => setConfirmDelete(null)}
+      />
 
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">New Medicine Course</h2>
-            <form onSubmit={handleAddCourse} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Person
-                </label>
-                <select
-                  value={personId}
-                  onChange={(e) => setPersonId(e.target.value)}
-                  className={inputClass}
-                  required
-                >
-                  <option value="">Select person...</option>
-                  {people.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Medicine Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Amoxicillin"
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                    Duration (days)
-                  </label>
-                  <input
-                    type="number"
-                    value={durationDays}
-                    onChange={(e) =>
-                      setDurationDays(e.target.value === '' ? '' : Number(e.target.value))
-                    }
-                    min={1}
-                    placeholder="10"
-                    className={inputClass}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                    Doses per day
-                  </label>
-                  <input
-                    type="number"
-                    value={dosesPerDay}
-                    onChange={(e) =>
-                      setDosesPerDay(e.target.value === '' ? '' : Number(e.target.value))
-                    }
-                    min={1}
-                    max={10}
-                    placeholder="2"
-                    className={inputClass}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Notes (optional)
-                </label>
-                <input
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any notes..."
-                  className={inputClass}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className={btnSecondary}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        title="New Medicine Course"
+        actions={
+          <>
+            <button type="button" onClick={() => setShowAddForm(false)} className={btnSecondary}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="add-course-form"
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Create
+            </button>
+          </>
+        }
+      >
+        <form id="add-course-form" onSubmit={handleAddCourse} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
+            <select
+              value={personId}
+              onChange={(e) => setPersonId(e.target.value)}
+              className={inputClass}
+              required
+            >
+              <option value="">Select person...</option>
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              Medicine Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Amoxicillin"
+              className={inputClass}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              Start Date
+            </label>
+            <DatePickerCompact value={startDate} onChange={setStartDate} allowFuture={true} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                Duration (days)
+              </label>
+              <NumberPickerCompact
+                value={durationDays}
+                onChange={setDurationDays}
+                min={1}
+                max={30}
+                suffix="days"
+                zeroLabel=""
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                Doses per day
+              </label>
+              <NumberPickerCompact
+                value={dosesPerDay}
+                onChange={setDosesPerDay}
+                min={1}
+                max={10}
+                suffix="doses"
+                zeroLabel=""
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              Notes (optional)
+            </label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any notes..."
+              className={inputClass}
+            />
+          </div>
+        </form>
+      </Modal>
 
       {activeCourses.length === 0 && completedCourses.length === 0 ? (
         <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center text-gray-500 dark:text-neutral-400">

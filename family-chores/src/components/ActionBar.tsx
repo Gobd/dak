@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Settings, Users, ClipboardList, Gift, History, Moon, Sun, LogOut } from 'lucide-react';
+import { ConfirmModal } from '@dak/ui';
 import { useThemeStore } from '../stores/theme-store';
 import { useAuthStore } from '../stores/auth-store';
 import { useSettingsStore } from '../stores/settings-store';
@@ -101,33 +102,17 @@ export function ActionBar({
       </button>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-xs p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Sign out?</h3>
-            <p className="text-gray-500 dark:text-neutral-400 mb-6">
-              Are you sure you want to sign out?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowLogoutConfirm(false);
-                  signOut();
-                }}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={showLogoutConfirm}
+        message="Are you sure you want to sign out?"
+        confirmText="Sign out"
+        variant="danger"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          signOut();
+        }}
+        onClose={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 }

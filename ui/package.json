@@ -1,0 +1,35 @@
+{
+  "name": "@dak/ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "catalog:",
+    "lucide-react": "catalog:vite",
+    "react": "catalog:vite",
+    "react-dom": "catalog:vite",
+    "react-router-dom": "catalog:vite",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/react": "catalog:vite",
+    "@types/react-dom": "catalog:vite",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:vite"
+  }
+}

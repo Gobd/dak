@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
+import { Modal, ConfirmModal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface RedeemModalProps {
   onClose: () => void;
@@ -47,8 +47,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
 
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm p-8 text-center">
+      <Modal open={true} onClose={onClose} fit>
+        <div className="text-center p-4">
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Points Redeemed!
@@ -57,164 +57,147 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
             {amount} points for {notes}
           </p>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Redeem Points</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* Member selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-              Family Member
-            </label>
-            <div className="flex gap-3 flex-wrap">
-              {members.map((member) => {
-                const memberBalance = balances[member.id] ?? 0;
-                return (
-                  <button
-                    key={member.id}
-                    onClick={() => {
-                      setSelectedMemberId(member.id);
-                      setAmount(0);
-                    }}
-                    className={`flex flex-col items-center p-3 rounded-xl ${
-                      selectedMemberId === member.id
-                        ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                        : 'bg-gray-50 dark:bg-neutral-800'
-                    }`}
-                  >
-                    <MemberAvatar
-                      name={member.name}
-                      emoji={member.avatar_emoji}
-                      color={member.color}
-                      size="lg"
-                    />
-                    <span className="text-sm font-medium mt-1">{member.name}</span>
-                    <span className="text-xs text-gray-500 dark:text-neutral-400">
-                      {memberBalance} pts
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+    <Modal open={true} onClose={onClose} title="Redeem Points">
+      <div className="space-y-6">
+        {/* Member selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+            Family Member
+          </label>
+          <div className="flex gap-3 flex-wrap">
+            {members.map((member) => {
+              const memberBalance = balances[member.id] ?? 0;
+              return (
+                <button
+                  key={member.id}
+                  onClick={() => {
+                    setSelectedMemberId(member.id);
+                    setAmount(0);
+                  }}
+                  className={`flex flex-col items-center p-3 rounded-xl ${
+                    selectedMemberId === member.id
+                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                      : 'bg-gray-50 dark:bg-neutral-800'
+                  }`}
+                >
+                  <MemberAvatar
+                    name={member.name}
+                    emoji={member.avatar_emoji}
+                    color={member.color}
+                    size="lg"
+                  />
+                  <span className="text-sm font-medium mt-1">{member.name}</span>
+                  <span className="text-xs text-gray-500 dark:text-neutral-400">
+                    {memberBalance} pts
+                  </span>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
-          {selectedMember && (
-            <>
-              {/* Amount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                  Points to Redeem
-                </label>
-                <div className="flex items-center justify-center gap-4 mb-3">
-                  <button
-                    onClick={() => setAmount(Math.max(0, amount - 5))}
-                    className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
-                  >
-                    <Minus size={24} />
-                  </button>
-                  <div className="text-center">
-                    <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                      {amount}
-                    </span>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">
-                      of {balance} available
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setAmount(Math.min(balance, amount + 5))}
-                    className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
-                  >
-                    <Plus size={24} />
-                  </button>
+        {selectedMember && (
+          <>
+            {/* Amount */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                Points to Redeem
+              </label>
+              <div className="flex items-center justify-center gap-4 mb-3">
+                <button
+                  onClick={() => setAmount(Math.max(0, amount - 5))}
+                  className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                >
+                  <Minus size={24} />
+                </button>
+                <div className="text-center">
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">{amount}</span>
+                  <p className="text-sm text-gray-500 dark:text-neutral-400">
+                    of {balance} available
+                  </p>
                 </div>
+                <button
+                  onClick={() => setAmount(Math.min(balance, amount + 5))}
+                  className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                >
+                  <Plus size={24} />
+                </button>
+              </div>
 
-                {/* Quick amounts */}
-                <div className="flex gap-2 justify-center">
-                  {quickAmounts.map((qa) => (
-                    <button
-                      key={qa}
-                      onClick={() => setAmount(Math.min(balance, qa))}
-                      disabled={qa > balance}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                        amount === qa
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 dark:bg-neutral-800 disabled:opacity-50'
-                      }`}
-                    >
-                      {qa}
-                    </button>
-                  ))}
+              {/* Quick amounts */}
+              <div className="flex gap-2 justify-center">
+                {quickAmounts.map((qa) => (
                   <button
-                    onClick={() => setAmount(balance)}
+                    key={qa}
+                    onClick={() => setAmount(Math.min(balance, qa))}
+                    disabled={qa > balance}
                     className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                      amount === balance
+                      amount === qa
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-neutral-800'
+                        : 'bg-gray-100 dark:bg-neutral-800 disabled:opacity-50'
                     }`}
                   >
-                    All
+                    {qa}
                   </button>
-                </div>
+                ))}
+                <button
+                  onClick={() => setAmount(balance)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    amount === balance
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-neutral-800'
+                  }`}
+                >
+                  All
+                </button>
               </div>
+            </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                  What for?
-                </label>
-                <input
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g., 30 min screen time, ice cream, etc."
-                  className="w-full px-3 py-3 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
-                />
-              </div>
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                What for?
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g., 30 min screen time, ice cream, etc."
+                className="w-full px-3 py-3 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+              />
+            </div>
 
-              {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
-              {/* Submit */}
-              <button
-                onClick={() => setShowConfirm(true)}
-                disabled={amount <= 0 || !notes.trim() || loading}
-                className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Processing...' : `Redeem ${amount} Points`}
-              </button>
-            </>
-          )}
-        </div>
+            {/* Submit */}
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={amount <= 0 || !notes.trim() || loading}
+              className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Processing...' : `Redeem ${amount} Points`}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Confirmation modal */}
-      {showConfirm && selectedMember && (
-        <ConfirmModal
-          message={`Redeem ${amount} points from ${selectedMember.name} for "${notes}"? They will have ${balance - amount} points remaining.`}
-          confirmText="Redeem"
-          confirmClassName="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-          onConfirm={() => {
-            setShowConfirm(false);
-            handleRedeem();
-          }}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
-    </div>
+      <ConfirmModal
+        open={showConfirm && !!selectedMember}
+        message={`Redeem ${amount} points from ${selectedMember?.name ?? ''} for "${notes}"? They will have ${balance - amount} points remaining.`}
+        confirmText="Redeem"
+        variant="primary"
+        onConfirm={() => {
+          setShowConfirm(false);
+          handleRedeem();
+        }}
+        onClose={() => setShowConfirm(false)}
+      />
+    </Modal>
   );
 }
