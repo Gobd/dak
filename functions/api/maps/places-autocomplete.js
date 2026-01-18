@@ -10,7 +10,9 @@ const ALLOWED_ORIGINS = [
 
 function getCorsHeaders(request) {
   const origin = request.headers.get('Origin') || '';
-  const allowedOrigin = ALLOWED_ORIGINS.find(o => origin.startsWith(o)) ? origin : ALLOWED_ORIGINS[0];
+  const allowedOrigin = ALLOWED_ORIGINS.find((o) => origin.startsWith(o))
+    ? origin
+    : ALLOWED_ORIGINS[0];
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -55,7 +57,7 @@ export async function onRequestGet(context) {
     }
 
     // Return simplified predictions
-    const predictions = (data.predictions || []).map(p => ({
+    const predictions = (data.predictions || []).map((p) => ({
       description: p.description,
       placeId: p.place_id,
     }));

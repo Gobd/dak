@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { subscribeToSync } from "../lib/realtime";
-import { useShotsStore } from "../stores/shots-store";
-import { useMedicineStore } from "../stores/medicine-store";
-import { usePrnStore } from "../stores/prn-store";
-import { usePeopleStore } from "../stores/people-store";
+import { useEffect } from 'react';
+import { subscribeToSync } from '../lib/realtime';
+import { useShotsStore } from '../stores/shots-store';
+import { useMedicineStore } from '../stores/medicine-store';
+import { usePrnStore } from '../stores/prn-store';
+import { usePeopleStore } from '../stores/people-store';
 
 /**
  * Hook to sync data across devices using Supabase Realtime broadcast
@@ -22,16 +22,16 @@ export function useRealtimeSync(userId: string | undefined) {
 
     const unsubscribe = subscribeToSync(userId, (event) => {
       switch (event.type) {
-        case "shots":
+        case 'shots':
           fetchSchedules();
           break;
-        case "medicine":
+        case 'medicine':
           fetchCourses();
           break;
-        case "prn":
+        case 'prn':
           fetchMeds();
           break;
-        case "people":
+        case 'people':
           fetchPeople();
           // People changes may affect other views
           fetchSchedules();
@@ -43,7 +43,7 @@ export function useRealtimeSync(userId: string | undefined) {
 
     // Also refetch when tab becomes visible again
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         fetchSchedules();
         fetchCourses();
         fetchMeds();
@@ -51,11 +51,11 @@ export function useRealtimeSync(userId: string | undefined) {
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       unsubscribe();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [userId, fetchSchedules, fetchCourses, fetchMeds, fetchPeople]);
 }

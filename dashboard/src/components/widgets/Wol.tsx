@@ -200,12 +200,12 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
 
   return (
     <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-900'}`}
+      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}
-        className="relative p-2 hover:bg-neutral-700/30 rounded-lg transition-colors"
+        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
         title={`Wake on LAN${devices.length > 0 ? ` (${devices.length} devices)` : ''}`}
       >
         <Monitor size={24} className={anyOnline ? 'text-green-400' : 'text-neutral-500'} />
@@ -214,7 +214,9 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
         {!hasError && !isLoading && devices.length > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 text-[9px] bg-neutral-600 px-1 rounded">
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
+          >
             {devices.length}
           </span>
         )}
@@ -255,7 +257,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                   <div
                     key={device.mac}
                     className={`flex items-center justify-between p-3 rounded-lg
-                               ${online ? 'bg-green-500/20' : 'bg-neutral-700/30'}`}
+                               ${online ? 'bg-green-500/20' : dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <Monitor
@@ -269,7 +271,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
+                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-green-500/30 text-green-400' : dark ? 'bg-neutral-600 text-neutral-400' : 'bg-neutral-300 text-neutral-600'}`}
                       >
                         {online ? 'Online' : 'Offline'}
                       </span>

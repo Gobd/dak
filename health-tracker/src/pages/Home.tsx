@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { usePeopleStore } from "../stores/people-store";
-import { useShotsStore } from "../stores/shots-store";
-import { useMedicineStore } from "../stores/medicine-store";
-import { usePrnStore } from "../stores/prn-store";
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { usePeopleStore } from '../stores/people-store';
+import { useShotsStore } from '../stores/shots-store';
+import { useMedicineStore } from '../stores/medicine-store';
+import { usePrnStore } from '../stores/prn-store';
 import {
   format,
   isToday,
@@ -12,25 +12,14 @@ import {
   addDays,
   differenceInHours,
   addHours,
-} from "date-fns";
-import {
-  Syringe,
-  Pill,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Check,
-} from "lucide-react";
+} from 'date-fns';
+import { Syringe, Pill, AlertCircle, CheckCircle2, Clock, Check } from 'lucide-react';
 
 export function Home() {
   const { people, fetchPeople } = usePeopleStore();
   const { schedules, fetchSchedules } = useShotsStore();
   const { courses, doses, fetchCourses, fetchDoses } = useMedicineStore();
-  const {
-    meds: prnMeds,
-    logs: prnLogs,
-    fetchMeds: fetchPrnMeds,
-  } = usePrnStore();
+  const { meds: prnMeds, logs: prnLogs, fetchMeds: fetchPrnMeds } = usePrnStore();
 
   useEffect(() => {
     fetchPeople();
@@ -42,10 +31,7 @@ export function Home() {
   // Fetch doses for active courses
   useEffect(() => {
     courses.forEach((course) => {
-      const endDate = addDays(
-        new Date(course.start_date + "T00:00:00"),
-        course.duration_days,
-      );
+      const endDate = addDays(new Date(course.start_date + 'T00:00:00'), course.duration_days);
       if (endDate >= new Date()) {
         fetchDoses(course.id);
       }
@@ -56,19 +42,16 @@ export function Home() {
   const upcomingShots = schedules
     .filter((s) => {
       if (!s.next_due) return false;
-      const dueDate = new Date(s.next_due + "T00:00:00");
+      const dueDate = new Date(s.next_due + 'T00:00:00');
       const now = new Date();
-      const daysPastDue = Math.floor(
-        (now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysPastDue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
       // Hide if more than 3x the interval has passed
       const maxOverdueDays = s.interval_days * 3;
       return daysPastDue <= maxOverdueDays;
     })
     .sort(
       (a, b) =>
-        new Date(a.next_due + "T00:00:00").getTime() -
-        new Date(b.next_due + "T00:00:00").getTime(),
+        new Date(a.next_due + 'T00:00:00').getTime() - new Date(b.next_due + 'T00:00:00').getTime()
     );
 
   // Check if all doses are taken for a course
@@ -79,33 +62,30 @@ export function Home() {
 
   // Get active medicine courses (not date-ended AND not all doses taken)
   const activeCourses = courses.filter((c) => {
-    const endDate = addDays(
-      new Date(c.start_date + "T00:00:00"),
-      c.duration_days,
-    );
+    const endDate = addDays(new Date(c.start_date + 'T00:00:00'), c.duration_days);
     const dateActive = endDate >= new Date();
     return dateActive && !isAllDosesTaken(c.id);
   });
 
   const formatDueDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00");
-    if (isPast(date) && !isToday(date)) return "Overdue!";
-    if (isToday(date)) return "Today";
-    if (isTomorrow(date)) return "Tomorrow";
-    return format(date, "EEE, MMM d");
+    const date = new Date(dateStr + 'T00:00:00');
+    if (isPast(date) && !isToday(date)) return 'Overdue!';
+    if (isToday(date)) return 'Today';
+    if (isTomorrow(date)) return 'Tomorrow';
+    return format(date, 'EEE, MMM d');
   };
 
   const getDueDateClass = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00");
-    if (isPast(date) && !isToday(date)) return "text-red-600 font-bold";
-    if (isToday(date)) return "text-orange-600 font-bold";
-    return "text-gray-600";
+    const date = new Date(dateStr + 'T00:00:00');
+    if (isPast(date) && !isToday(date)) return 'text-red-600 font-bold';
+    if (isToday(date)) return 'text-orange-600 font-bold';
+    return 'text-gray-600';
   };
 
   // Get today's medicine doses
   const getTodayProgress = (courseId: string) => {
     const courseDoses = doses[courseId] || [];
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = format(new Date(), 'yyyy-MM-dd');
     const todayDoses = courseDoses.filter((d) => d.scheduled_date === today);
     const taken = todayDoses.filter((d) => d.taken).length;
     return { taken, total: todayDoses.length };
@@ -116,39 +96,28 @@ export function Home() {
     const medLogs = prnLogs[med.id] || [];
     if (medLogs.length === 0) return false;
     const lastDose = medLogs[0];
-    const hoursSince = differenceInHours(
-      new Date(),
-      new Date(lastDose.given_at),
-    );
+    const hoursSince = differenceInHours(new Date(), new Date(lastDose.given_at));
     return hoursSince <= 48;
   });
 
   const getPrnStatus = (medId: string, minHours: number) => {
     const medLogs = prnLogs[medId] || [];
-    if (medLogs.length === 0)
-      return { canGive: true, timeUntil: null, lastGiven: null };
+    if (medLogs.length === 0) return { canGive: true, timeUntil: null, lastGiven: null };
     const lastDose = medLogs[0];
-    const hoursSince = differenceInHours(
-      new Date(),
-      new Date(lastDose.given_at),
-    );
+    const hoursSince = differenceInHours(new Date(), new Date(lastDose.given_at));
     const canGive = hoursSince >= minHours;
     const nextTime = addHours(new Date(lastDose.given_at), minHours);
     const now = new Date();
     let timeUntil = null;
     if (!canGive) {
-      const hoursLeft = Math.floor(
-        (nextTime.getTime() - now.getTime()) / (1000 * 60 * 60),
-      );
-      const minsLeft = Math.floor(
-        ((nextTime.getTime() - now.getTime()) / (1000 * 60)) % 60,
-      );
+      const hoursLeft = Math.floor((nextTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const minsLeft = Math.floor(((nextTime.getTime() - now.getTime()) / (1000 * 60)) % 60);
       timeUntil = hoursLeft > 0 ? `${hoursLeft}h ${minsLeft}m` : `${minsLeft}m`;
     }
     const lastDate = new Date(lastDose.given_at);
     const lastGiven = isToday(lastDate)
-      ? `Today ${format(lastDate, "h:mm a")}`
-      : format(lastDate, "MMM d h:mm a");
+      ? `Today ${format(lastDate, 'h:mm a')}`
+      : format(lastDate, 'MMM d h:mm a');
     return { canGive, timeUntil, lastGiven };
   };
 
@@ -188,8 +157,7 @@ export function Home() {
                         {schedule.person?.name} - {schedule.name}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-neutral-400">
-                        {schedule.current_dose} • every {schedule.interval_days}{" "}
-                        days
+                        {schedule.current_dose} • every {schedule.interval_days} days
                       </div>
                     </div>
                     <div className={getDueDateClass(schedule.next_due)}>
@@ -223,29 +191,18 @@ export function Home() {
                           {course.person?.name} - {course.name}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-neutral-400">
-                          {course.doses_per_day}x/day for {course.duration_days}{" "}
-                          days
+                          {course.doses_per_day}x/day for {course.duration_days} days
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {total > 0 ? (
                           <>
                             {allDone ? (
-                              <CheckCircle2
-                                className="text-green-600"
-                                size={18}
-                              />
+                              <CheckCircle2 className="text-green-600" size={18} />
                             ) : (
-                              <AlertCircle
-                                className="text-orange-500"
-                                size={18}
-                              />
+                              <AlertCircle className="text-orange-500" size={18} />
                             )}
-                            <span
-                              className={
-                                allDone ? "text-green-600" : "text-orange-600"
-                              }
-                            >
+                            <span className={allDone ? 'text-green-600' : 'text-orange-600'}>
                               {taken}/{total} today
                             </span>
                           </>
@@ -271,10 +228,7 @@ export function Home() {
               </div>
               <div className="space-y-3">
                 {recentPrnMeds.map((med) => {
-                  const { canGive, timeUntil, lastGiven } = getPrnStatus(
-                    med.id,
-                    med.min_hours,
-                  );
+                  const { canGive, timeUntil, lastGiven } = getPrnStatus(med.id, med.min_hours);
                   return (
                     <div
                       key={med.id}
@@ -296,13 +250,8 @@ export function Home() {
                           </>
                         ) : (
                           <>
-                            <AlertCircle
-                              className="text-orange-500"
-                              size={18}
-                            />
-                            <span className="text-orange-600">
-                              Wait {timeUntil}
-                            </span>
+                            <AlertCircle className="text-orange-500" size={18} />
+                            <span className="text-orange-600">Wait {timeUntil}</span>
                           </>
                         )}
                       </div>

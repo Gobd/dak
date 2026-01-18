@@ -143,11 +143,11 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
 
   return (
     <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-900'}`}
+      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       <button
         onClick={() => setShowModal(true)}
-        className="relative p-2 hover:bg-neutral-700/30 rounded-lg transition-colors"
+        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
         title={`Brightness: ${currentBrightness}%`}
       >
         {isDay ? (
@@ -208,7 +208,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
                   value={currentBrightness}
                   onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer
-                             bg-neutral-600
+                             bg-neutral-300 dark:bg-neutral-600
                              [&::-webkit-slider-thumb]:appearance-none
                              [&::-webkit-slider-thumb]:w-5
                              [&::-webkit-slider-thumb]:h-5
@@ -223,14 +223,14 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-neutral-700" />
+              <div className="border-t border-neutral-300 dark:border-neutral-700" />
 
               {/* Auto-adjust toggle */}
               <div className="flex items-center justify-between">
                 <label className="text-sm">Auto-adjust by sunrise/sunset</label>
                 <button
                   onClick={handleToggleEnabled}
-                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-600'}`}
+                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
@@ -272,7 +272,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
                       max={100}
                       value={config.dayBrightness ?? 100}
                       onChange={(e) => handleDayBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-600
                                  [&::-webkit-slider-thumb]:appearance-none
                                  [&::-webkit-slider-thumb]:w-4
                                  [&::-webkit-slider-thumb]:h-4
@@ -293,7 +293,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
                       max={100}
                       value={config.nightBrightness ?? 1}
                       onChange={(e) => handleNightBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-600
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-600
                                  [&::-webkit-slider-thumb]:appearance-none
                                  [&::-webkit-slider-thumb]:w-4
                                  [&::-webkit-slider-thumb]:h-4

@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface ThemeState {
   dark: boolean;
@@ -10,9 +10,9 @@ interface ThemeState {
 function getDarkFromQueryParam(): boolean | null {
   try {
     const params = new URLSearchParams(window.location.search);
-    const dark = params.get("dark");
-    if (dark === "true" || dark === "1") return true;
-    if (dark === "false" || dark === "0") return false;
+    const dark = params.get('dark');
+    if (dark === 'true' || dark === '1') return true;
+    if (dark === 'false' || dark === '0') return false;
   } catch {
     // Ignore errors
   }
@@ -25,8 +25,8 @@ const queryDark = getDarkFromQueryParam();
 if (queryDark !== null) {
   try {
     localStorage.setItem(
-      "family-chores-theme",
-      JSON.stringify({ state: { dark: queryDark }, version: 0 }),
+      'family-chores-theme',
+      JSON.stringify({ state: { dark: queryDark }, version: 0 })
     );
   } catch {
     // Ignore storage errors
@@ -41,27 +41,27 @@ export const useThemeStore = create<ThemeState>()(
         set((state) => {
           const newDark = !state.dark;
           if (newDark) {
-            document.documentElement.classList.add("dark");
+            document.documentElement.classList.add('dark');
           } else {
-            document.documentElement.classList.remove("dark");
+            document.documentElement.classList.remove('dark');
           }
           return { dark: newDark };
         }),
     }),
     {
-      name: "family-chores-theme",
+      name: 'family-chores-theme',
       onRehydrateStorage: () => (state) => {
         if (state?.dark) {
-          document.documentElement.classList.add("dark");
+          document.documentElement.classList.add('dark');
         }
       },
-    },
-  ),
+    }
+  )
 );
 
 // Apply initial dark mode class immediately
 if (queryDark === true) {
-  document.documentElement.classList.add("dark");
+  document.documentElement.classList.add('dark');
 } else if (queryDark === false) {
-  document.documentElement.classList.remove("dark");
+  document.documentElement.classList.remove('dark');
 }

@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { X, Check, HelpCircle } from "lucide-react";
-import { useMembersStore } from "../../stores/members-store";
-import { useSettingsStore } from "../../stores/settings-store";
-import { SchedulePicker, type ScheduleConfig } from "../shared/SchedulePicker";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import type { ChoreWithAssignments } from "../../types";
+import { useState } from 'react';
+import { X, Check, HelpCircle } from 'lucide-react';
+import { useMembersStore } from '../../stores/members-store';
+import { useSettingsStore } from '../../stores/settings-store';
+import { SchedulePicker, type ScheduleConfig } from '../shared/SchedulePicker';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import type { ChoreWithAssignments } from '../../types';
 
 interface ChoreEditModalProps {
   chore?: ChoreWithAssignments; // undefined = new chore
@@ -17,32 +17,28 @@ interface ChoreEditModalProps {
       interval_days?: number;
       weekly_days?: number[];
       monthly_day?: number;
-      assignment_type: "anyone" | "everyone";
+      assignment_type: 'anyone' | 'everyone';
       times_per_day?: number;
       target_count?: number;
-      goal_period?: "daily" | "weekly" | "monthly";
+      goal_period?: 'daily' | 'weekly' | 'monthly';
     },
-    assigneeIds: string[],
+    assigneeIds: string[]
   ) => Promise<void>;
   onClose: () => void;
 }
 
-export function ChoreEditModal({
-  chore,
-  onSave,
-  onClose,
-}: ChoreEditModalProps) {
+export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) {
   const { members } = useMembersStore();
   const { settings } = useSettingsStore();
   const hidePoints = settings?.hide_points ?? false;
   const isEditing = !!chore;
 
   // Form state
-  const [name, setName] = useState(chore?.name ?? "");
-  const [description, setDescription] = useState(chore?.description ?? "");
+  const [name, setName] = useState(chore?.name ?? '');
+  const [description, setDescription] = useState(chore?.description ?? '');
   const [points, setPoints] = useState(chore?.points ?? 1);
   const [schedule, setSchedule] = useState<ScheduleConfig>({
-    type: chore?.schedule_type ?? "daily",
+    type: chore?.schedule_type ?? 'daily',
     intervalDays: chore?.interval_days ?? undefined,
     weeklyDays: chore?.weekly_days ?? undefined,
     monthlyDay: chore?.monthly_day ?? undefined,
@@ -51,19 +47,17 @@ export function ChoreEditModal({
   });
   const [timesPerDay, setTimesPerDay] = useState(chore?.times_per_day ?? 1);
   const [assigneeIds, setAssigneeIds] = useState<string[]>(
-    chore?.assignments.map((a) => a.member.id) ?? [],
+    chore?.assignments.map((a) => a.member.id) ?? []
   );
-  const [assignmentType, setAssignmentType] = useState<"anyone" | "everyone">(
-    chore?.assignment_type ?? "everyone",
+  const [assignmentType, setAssignmentType] = useState<'anyone' | 'everyone'>(
+    chore?.assignment_type ?? 'everyone'
   );
   const [saving, setSaving] = useState(false);
   const [showAssignmentHelp, setShowAssignmentHelp] = useState(false);
 
   const toggleAssignee = (memberId: string) => {
     setAssigneeIds((prev) =>
-      prev.includes(memberId)
-        ? prev.filter((id) => id !== memberId)
-        : [...prev, memberId],
+      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
     );
   };
 
@@ -80,15 +74,14 @@ export function ChoreEditModal({
         weekly_days: schedule.weeklyDays,
         monthly_day: schedule.monthlyDay,
         // Goals are always "everyone" (per-person, no race)
-        assignment_type: schedule.type === "goal" ? "everyone" : assignmentType,
+        assignment_type: schedule.type === 'goal' ? 'everyone' : assignmentType,
         // Multi-daily (only for daily schedule)
-        times_per_day: schedule.type === "daily" ? timesPerDay : 1,
+        times_per_day: schedule.type === 'daily' ? timesPerDay : 1,
         // Goal fields
-        target_count:
-          schedule.type === "goal" ? schedule.targetCount : undefined,
-        goal_period: schedule.type === "goal" ? schedule.goalPeriod : undefined,
+        target_count: schedule.type === 'goal' ? schedule.targetCount : undefined,
+        goal_period: schedule.type === 'goal' ? schedule.goalPeriod : undefined,
       },
-      assigneeIds,
+      assigneeIds
     );
     setSaving(false);
     onClose();
@@ -100,7 +93,7 @@ export function ChoreEditModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {isEditing ? "Edit Chore" : "New Chore"}
+            {isEditing ? 'Edit Chore' : 'New Chore'}
           </h2>
           <button
             onClick={onClose}
@@ -172,7 +165,7 @@ export function ChoreEditModal({
           <SchedulePicker value={schedule} onChange={setSchedule} />
 
           {/* Times per day - only for daily schedule */}
-          {schedule.type === "daily" && (
+          {schedule.type === 'daily' && (
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
                 Times per day
@@ -217,8 +210,8 @@ export function ChoreEditModal({
                   onClick={() => toggleAssignee(member.id)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                     assigneeIds.includes(member.id)
-                      ? "bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500"
-                      : "bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600"
+                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                      : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'
                   }`}
                 >
                   <MemberAvatar
@@ -239,7 +232,7 @@ export function ChoreEditModal({
           </div>
 
           {/* Assignment Type - hide for goals (always per-person) */}
-          {assigneeIds.length > 1 && schedule.type !== "goal" && (
+          {assigneeIds.length > 1 && schedule.type !== 'goal' && (
             <div className="p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
@@ -258,45 +251,38 @@ export function ChoreEditModal({
                 <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
                   <p className="font-medium mb-1">Race mode:</p>
                   <p className="mb-2">
-                    First person to complete wins all the points. Great for
-                    motivating quick action!
+                    First person to complete wins all the points. Great for motivating quick action!
                   </p>
                   <p className="font-medium mb-1">Each person:</p>
-                  <p>
-                    Everyone gets their own task and earns points individually.
-                  </p>
+                  <p>Everyone gets their own task and earns points individually.</p>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setAssignmentType("anyone")}
+                  onClick={() => setAssignmentType('anyone')}
                   className={`p-3 rounded-lg text-left transition-all ${
-                    assignmentType === "anyone"
-                      ? "bg-amber-100 dark:bg-amber-900/50 ring-2 ring-amber-500"
-                      : "bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600"
+                    assignmentType === 'anyone'
+                      ? 'bg-amber-100 dark:bg-amber-900/50 ring-2 ring-amber-500'
+                      : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
                   }`}
                 >
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
-                    Race
-                  </p>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white">Race</p>
                   <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
                     First to finish wins
                   </p>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAssignmentType("everyone")}
+                  onClick={() => setAssignmentType('everyone')}
                   className={`p-3 rounded-lg text-left transition-all ${
-                    assignmentType === "everyone"
-                      ? "bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500"
-                      : "bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600"
+                    assignmentType === 'everyone'
+                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                      : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
                   }`}
                 >
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">
-                    Each person
-                  </p>
+                  <p className="font-medium text-sm text-gray-900 dark:text-white">Each person</p>
                   <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
                     Everyone does it
                   </p>
@@ -320,7 +306,7 @@ export function ChoreEditModal({
             className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700"
           >
             <Check size={18} />
-            {saving ? "Saving..." : isEditing ? "Save" : "Create"}
+            {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
           </button>
         </div>
       </div>

@@ -1,20 +1,13 @@
-import { useEffect, useState } from "react";
-import { usePeopleStore } from "../stores/people-store";
-import { ConfirmModal } from "../components/ConfirmModal";
-import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { usePeopleStore } from '../stores/people-store';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 export function People() {
-  const {
-    people,
-    loading,
-    fetchPeople,
-    addPerson,
-    updatePerson,
-    deletePerson,
-  } = usePeopleStore();
-  const [newName, setNewName] = useState("");
+  const { people, loading, fetchPeople, addPerson, updatePerson, deletePerson } = usePeopleStore();
+  const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
+  const [editName, setEditName] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,7 +18,7 @@ export function People() {
     e.preventDefault();
     if (!newName.trim()) return;
     await addPerson(newName.trim());
-    setNewName("");
+    setNewName('');
   };
 
   const startEdit = (id: string, name: string) => {
@@ -82,10 +75,7 @@ export function People() {
       ) : (
         <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm divide-y divide-gray-200 dark:divide-neutral-700">
           {people.map((person) => (
-            <div
-              key={person.id}
-              className="flex items-center justify-between p-4"
-            >
+            <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
                 <div className="flex items-center gap-2 flex-1">
                   <input

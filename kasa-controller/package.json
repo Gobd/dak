@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
     "@tailwindcss/vite": "catalog:vite",
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",

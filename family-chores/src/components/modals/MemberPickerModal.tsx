@@ -1,6 +1,6 @@
-import { X } from "lucide-react";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import type { FamilyMember } from "../../types";
+import { X } from 'lucide-react';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import type { FamilyMember } from '../../types';
 
 interface MemberPickerModalProps {
   members: FamilyMember[];
@@ -11,7 +11,7 @@ interface MemberPickerModalProps {
 
 export function MemberPickerModal({
   members,
-  title = "Who completed this?",
+  title = 'Who completed this?',
   onSelect,
   onCancel,
 }: MemberPickerModalProps) {
@@ -20,9 +20,7 @@ export function MemberPickerModal({
       <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {title}
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
           <button
             onClick={onCancel}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -45,9 +43,7 @@ export function MemberPickerModal({
                 color={member.color}
                 size="lg"
               />
-              <span className="font-medium text-gray-900 dark:text-white">
-                {member.name}
-              </span>
+              <span className="font-medium text-gray-900 dark:text-white">{member.name}</span>
             </button>
           ))}
         </div>

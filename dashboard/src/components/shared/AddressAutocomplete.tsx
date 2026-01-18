@@ -8,7 +8,13 @@ import {
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
-  onSelect?: (details: { address: string; lat?: number; lon?: number }) => void;
+  onSelect?: (details: {
+    address: string;
+    lat?: number;
+    lon?: number;
+    city?: string;
+    state?: string;
+  }) => void;
   placeholder?: string;
   className?: string;
 }
@@ -67,6 +73,8 @@ export function AddressAutocomplete({
         address: prediction.description,
         lat: details?.lat,
         lon: details?.lon,
+        city: details?.city,
+        state: details?.state,
       });
     }
   }

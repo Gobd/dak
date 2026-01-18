@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --default-font-family: "Open Sans", system-ui, sans-serif;
+  --default-font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 @layer base {
@@ -13,19 +13,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 button,
-[role="button"],
+[role='button'],
 a,
 select,
-input[type="checkbox"],
-input[type="radio"],
-input[type="submit"],
-input[type="button"] {
+input[type='checkbox'],
+input[type='radio'],
+input[type='submit'],
+input[type='button'] {
   cursor: pointer !important;
 }
 
 body {
   @apply bg-gray-50 text-gray-900 min-h-screen dark:bg-black dark:text-neutral-100;
-  font-family: "Open Sans", system-ui, sans-serif;
+  font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 .scrollbar-hide {

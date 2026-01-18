@@ -1,38 +1,25 @@
-import { useState } from "react";
-import { X, Plus, Edit2, Trash2, Check } from "lucide-react";
-import { useMembersStore } from "../../stores/members-store";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import { ConfirmModal } from "../shared/ConfirmModal";
+import { useState } from 'react';
+import { X, Plus, Edit2, Trash2, Check } from 'lucide-react';
+import { useMembersStore } from '../../stores/members-store';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface FamilyModalProps {
   onClose: () => void;
 }
 
-const EMOJI_OPTIONS = [
-  "👤",
-  "👦",
-  "👧",
-  "👨",
-  "👩",
-  "👴",
-  "👵",
-  "🧒",
-  "👶",
-  "🐶",
-  "🐱",
-  "🦊",
-];
+const EMOJI_OPTIONS = ['👤', '👦', '👧', '👨', '👩', '👴', '👵', '🧒', '👶', '🐶', '🐱', '🦊'];
 const COLOR_OPTIONS = [
-  "#3B82F6",
-  "#EF4444",
-  "#10B981",
-  "#F59E0B",
-  "#8B5CF6",
-  "#EC4899",
-  "#06B6D4",
-  "#84CC16",
-  "#F97316",
-  "#6366F1",
+  '#3B82F6',
+  '#EF4444',
+  '#10B981',
+  '#F59E0B',
+  '#8B5CF6',
+  '#EC4899',
+  '#06B6D4',
+  '#84CC16',
+  '#F97316',
+  '#6366F1',
 ];
 
 export function FamilyModal({ onClose }: FamilyModalProps) {
@@ -42,14 +29,14 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Form state
-  const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("👤");
-  const [color, setColor] = useState("#3B82F6");
+  const [name, setName] = useState('');
+  const [emoji, setEmoji] = useState('👤');
+  const [color, setColor] = useState('#3B82F6');
 
   const resetForm = () => {
-    setName("");
-    setEmoji("👤");
-    setColor("#3B82F6");
+    setName('');
+    setEmoji('👤');
+    setColor('#3B82F6');
   };
 
   const handleAdd = async () => {
@@ -90,9 +77,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
       <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Family Members
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Family Members</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -127,8 +112,8 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                         onClick={() => setEmoji(e)}
                         className={`w-10 h-10 text-xl rounded-lg ${
                           emoji === e
-                            ? "bg-blue-100 dark:bg-blue-900"
-                            : "bg-gray-100 dark:bg-neutral-700"
+                            ? 'bg-blue-100 dark:bg-blue-900'
+                            : 'bg-gray-100 dark:bg-neutral-700'
                         }`}
                       >
                         {e}
@@ -141,9 +126,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                         key={c}
                         onClick={() => setColor(c)}
                         className={`w-8 h-8 rounded-full ${
-                          color === c
-                            ? "ring-2 ring-offset-2 ring-blue-500"
-                            : ""
+                          color === c ? 'ring-2 ring-offset-2 ring-blue-500' : ''
                         }`}
                         style={{ backgroundColor: c }}
                       />
@@ -214,8 +197,8 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                     onClick={() => setEmoji(e)}
                     className={`w-10 h-10 text-xl rounded-lg ${
                       emoji === e
-                        ? "bg-blue-100 dark:bg-blue-900"
-                        : "bg-gray-100 dark:bg-neutral-700"
+                        ? 'bg-blue-100 dark:bg-blue-900'
+                        : 'bg-gray-100 dark:bg-neutral-700'
                     }`}
                   >
                     {e}
@@ -228,7 +211,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                     key={c}
                     onClick={() => setColor(c)}
                     className={`w-8 h-8 rounded-full ${
-                      color === c ? "ring-2 ring-offset-2 ring-blue-500" : ""
+                      color === c ? 'ring-2 ring-offset-2 ring-blue-500' : ''
                     }`}
                     style={{ backgroundColor: c }}
                   />

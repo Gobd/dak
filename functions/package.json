@@ -1,0 +1,16 @@
+{
+  "name": "functions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:"
+  }
+}

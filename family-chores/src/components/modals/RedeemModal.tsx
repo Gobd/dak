@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { X, Minus, Plus } from "lucide-react";
-import { useMembersStore } from "../../stores/members-store";
-import { usePointsStore } from "../../stores/points-store";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import { ConfirmModal } from "../shared/ConfirmModal";
+import { useState } from 'react';
+import { X, Minus, Plus } from 'lucide-react';
+import { useMembersStore } from '../../stores/members-store';
+import { usePointsStore } from '../../stores/points-store';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import { ConfirmModal } from '../shared/ConfirmModal';
 
 interface RedeemModalProps {
   onClose: () => void;
@@ -14,9 +14,9 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
   const { balances, redeemPoints } = usePointsStore();
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [amount, setAmount] = useState(0);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -27,7 +27,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
     if (!selectedMemberId || amount <= 0 || !notes.trim()) return;
 
     setLoading(true);
-    setError("");
+    setError('');
 
     const result = await redeemPoints(selectedMemberId, amount, notes.trim());
 
@@ -37,7 +37,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
         onClose();
       }, 1500);
     } else {
-      setError(result.error ?? "Failed to redeem points");
+      setError(result.error ?? 'Failed to redeem points');
     }
 
     setLoading(false);
@@ -66,9 +66,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
       <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Redeem Points
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Redeem Points</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -96,8 +94,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                     }}
                     className={`flex flex-col items-center p-3 rounded-xl ${
                       selectedMemberId === member.id
-                        ? "bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500"
-                        : "bg-gray-50 dark:bg-neutral-800"
+                        ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                        : 'bg-gray-50 dark:bg-neutral-800'
                     }`}
                   >
                     <MemberAvatar
@@ -106,9 +104,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                       color={member.color}
                       size="lg"
                     />
-                    <span className="text-sm font-medium mt-1">
-                      {member.name}
-                    </span>
+                    <span className="text-sm font-medium mt-1">{member.name}</span>
                     <span className="text-xs text-gray-500 dark:text-neutral-400">
                       {memberBalance} pts
                     </span>
@@ -157,8 +153,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                       disabled={qa > balance}
                       className={`px-4 py-2 rounded-lg text-sm font-medium ${
                         amount === qa
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 dark:bg-neutral-800 disabled:opacity-50"
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-neutral-800 disabled:opacity-50'
                       }`}
                     >
                       {qa}
@@ -168,8 +164,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                     onClick={() => setAmount(balance)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium ${
                       amount === balance
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 dark:bg-neutral-800"
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 dark:bg-neutral-800'
                     }`}
                   >
                     All
@@ -191,9 +187,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                 />
               </div>
 
-              {error && (
-                <p className="text-red-600 text-sm text-center">{error}</p>
-              )}
+              {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
               {/* Submit */}
               <button
@@ -201,7 +195,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                 disabled={amount <= 0 || !notes.trim() || loading}
                 className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Processing..." : `Redeem ${amount} Points`}
+                {loading ? 'Processing...' : `Redeem ${amount} Points`}
               </button>
             </>
           )}

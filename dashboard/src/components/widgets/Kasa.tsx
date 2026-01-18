@@ -121,12 +121,12 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
 
   return (
     <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800 text-white' : 'bg-white text-neutral-900'}`}
+      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}
-        className="relative p-2 hover:bg-neutral-700/30 rounded-lg transition-colors"
+        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
         title={`Smart Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Power size={24} className={anyOn ? 'text-green-400' : 'text-neutral-500'} />
@@ -135,7 +135,9 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
         {!hasError && !isLoading && devices.length > 0 && (
-          <span className="absolute -bottom-0.5 -right-0.5 text-[9px] bg-neutral-600 px-1 rounded">
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
+          >
             {devices.length}
           </span>
         )}
@@ -178,12 +180,12 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
                   key={device.ip}
                   onClick={() => handleToggle(device)}
                   className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors
-                             ${device.on ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-neutral-700/30 hover:bg-neutral-700/50'}`}
+                             ${device.on ? 'bg-green-500/20 hover:bg-green-500/30' : dark ? 'bg-neutral-700/30 hover:bg-neutral-700/50' : 'bg-neutral-200/50 hover:bg-neutral-300/50'}`}
                 >
                   <span className="font-medium truncate">{device.name}</span>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded ${device.on ? 'bg-green-500/30 text-green-400' : 'bg-neutral-600 text-neutral-400'}`}
+                      className={`text-xs px-2 py-0.5 rounded ${device.on ? 'bg-green-500/30 text-green-400' : dark ? 'bg-neutral-600 text-neutral-400' : 'bg-neutral-300 text-neutral-600'}`}
                     >
                       {device.on ? 'On' : 'Off'}
                     </span>

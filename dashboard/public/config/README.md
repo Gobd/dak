@@ -1,26 +1,34 @@
 # Dashboard Configuration
 
-This directory contains the default dashboard configuration template.
+This directory contains the default dashboard configuration.
 
 ## File Locations
 
-- **In repo:** `config/dashboard.json` - Default template (version controlled)
+- **In repo:** `public/config/dashboard.json` - Default template (version controlled)
 - **On kiosk:** `~/.config/home-relay/dashboard.json` - User's customized config
 
 ## Configuration Structure
 
-### global
+### globalSettings
 
 Global dashboard settings:
 
-| Field           | Type    | Default                   | Description                                                                 |
-| --------------- | ------- | ------------------------- | --------------------------------------------------------------------------- |
-| `background`    | string  | `"#111"`                  | Dashboard background color                                                  |
-| `dark`          | boolean | `true`                    | Enable dark mode for widgets                                                |
-| `navPosition`   | string  | `"bottom-right"`          | Nav button position: `top-left`, `top-right`, `bottom-left`, `bottom-right` |
-| `navButtons`    | string  | `"both"`                  | Which nav buttons to show: `both`, `next`, `prev`, `none`                   |
-| `navColor`      | string  | `"rgba(255,255,255,0.6)"` | Nav button text/arrow color                                                 |
-| `navBackground` | string  | `"rgba(255,255,255,0.1)"` | Nav button background color                                                 |
+| Field             | Type    | Default       | Description                                    |
+| ----------------- | ------- | ------------- | ---------------------------------------------- |
+| `theme`           | string  | `"dark"`      | Theme mode: `"dark"`, `"light"`, or `"system"` |
+| `defaultLocation` | object  | San Francisco | Default location for weather/UV/AQI widgets    |
+| `hideCursor`      | boolean | `false`       | Hide cursor for kiosk displays                 |
+
+The `defaultLocation` object contains:
+
+```json
+{
+  "lat": 37.7749,
+  "lon": -122.4194,
+  "city": "San Francisco",
+  "state": "CA"
+}
+```
 
 ### screens
 
@@ -29,6 +37,7 @@ Array of screen objects. Each screen contains:
 | Field    | Type   | Description                      |
 | -------- | ------ | -------------------------------- |
 | `id`     | string | Unique identifier for the screen |
+| `name`   | string | Display name for the screen      |
 | `panels` | array  | Array of panel objects           |
 
 ### Panel Options
@@ -37,13 +46,13 @@ Each panel supports:
 
 | Field     | Type   | Description                                           |
 | --------- | ------ | ----------------------------------------------------- |
-| `type`    | string | Widget type (see below)                               |
-| `src`     | string | URL for iframe panels                                 |
+| `id`      | string | Unique identifier for the panel                       |
+| `widget`  | string | Widget type (see below)                               |
 | `args`    | object | Widget-specific options                               |
-| `x`, `y`  | string | Position as percentage (e.g., `"0%"`, `"50%"`)        |
-| `w`, `h`  | string | Size as percentage (e.g., `"100%"`, `"50%"`)          |
+| `x`, `y`  | number | Position as percentage (0-100)                        |
+| `width`   | number | Width as percentage (0-100)                           |
+| `height`  | number | Height as percentage (0-100)                          |
 | `refresh` | string | Auto-refresh interval: `30s`, `1m`, `5m`, `30m`, `1h` |
-| `css`     | string | Additional CSS to apply                               |
 
 ### Widget Types
 
@@ -54,53 +63,39 @@ Each panel supports:
 | `uv`         | UV Index chart             | `safeThreshold: number`            |
 | `aqi`        | Air Quality Index chart    | -                                  |
 | `sun-moon`   | Sunrise/sunset, moon phase | -                                  |
-| `drive-time` | Commute time overlay       | `dark: boolean`                    |
+| `drive-time` | Commute time overlay       | -                                  |
 | `kasa`       | Kasa smart device toggles  | -                                  |
 | `wol`        | Wake on LAN                | -                                  |
 | `brightness` | Auto-brightness settings   | -                                  |
-| `iframe`     | Embedded URL               | -                                  |
+| `iframe`     | Embedded URL               | `src: string`                      |
 
 ### brightness
 
-Auto-brightness control settings:
+Auto-brightness control settings (stored in config, not per-widget):
 
 | Field             | Type    | Default | Description                              |
 | ----------------- | ------- | ------- | ---------------------------------------- |
 | `enabled`         | boolean | `false` | Enable auto-brightness                   |
 | `lat`             | number  | `null`  | Latitude for sunrise/sunset calculation  |
 | `lon`             | number  | `null`  | Longitude for sunrise/sunset calculation |
-| `location`        | string  | `null`  | Display name for location                |
+| `locationName`    | string  | `null`  | Display name for location                |
 | `dayBrightness`   | number  | `100`   | Brightness level during day (1-100)      |
 | `nightBrightness` | number  | `1`     | Brightness level at night (1-100)        |
 | `transitionMins`  | number  | `60`    | Transition duration in minutes           |
 
 ### locations
 
-Location settings for weather widgets:
+Per-widget location overrides. If not set, widgets use `globalSettings.defaultLocation`:
 
 ```json
 {
-  "weather": {
-    "lat": "37.7749",
-    "lon": "-122.4194",
+  "panel-weather": {
+    "lat": 37.7749,
+    "lon": -122.4194,
     "city": "San Francisco",
     "state": "CA"
   }
 }
-```
-
-### wolDevices
-
-Array of Wake-on-LAN devices:
-
-```json
-[
-  {
-    "name": "Office PC",
-    "ip": "192.168.1.100",
-    "mac": "AA:BB:CC:DD:EE:FF"
-  }
-]
 ```
 
 ### driveTime
@@ -134,8 +129,9 @@ Drive time configuration:
 ### Via Dashboard UI
 
 1. Visit the dashboard with `?edit` in the URL
-2. Configure widgets via their settings buttons
-3. Changes are saved automatically
+2. Click the gear icon to access global settings (theme, default location, cursor)
+3. Configure widgets via their settings buttons
+4. Changes are saved automatically
 
 ### Via SSH
 
@@ -154,7 +150,7 @@ The dashboard loads configuration in this order:
 
 1. **API** (`GET /config`) - Primary source from `~/.config/home-relay/dashboard.json`
 2. **localStorage** - Browser backup (updated on save)
-3. **Default template** - Fetch `config/dashboard.json` from repo
+3. **Default template** - Fetch `public/config/dashboard.json` from repo
 
 This ensures the dashboard works even if the home-relay service is down.
 
@@ -162,9 +158,9 @@ This ensures the dashboard works even if the home-relay service is down.
 
 ### Default Configuration
 
-`config/dashboard.json` is the single source of truth for default configuration.
+`dashboard.json` in this directory is the single source of truth for default configuration.
 
-- **Browser**: Fetches `/config/dashboard.json` from GitHub Pages
+- **Browser**: Fetches `/config/dashboard.json` (served from `public/`)
 - **Server**: Reads `~/dashboard/config/dashboard.json` (deployed by setup script)
 
-**When adding new config fields:** Just update `config/dashboard.json`.
+**When adding new config fields:** Update `dashboard.json` and this README.

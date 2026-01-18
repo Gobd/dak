@@ -1,25 +1,16 @@
-import { useEffect, useState, useRef } from "react";
-import { usePeopleStore } from "../stores/people-store";
-import { useMedicineStore } from "../stores/medicine-store";
-import { ConfirmModal } from "../components/ConfirmModal";
-import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from "lucide-react";
-import { format, addDays, isAfter } from "date-fns";
+import { useEffect, useState, useRef } from 'react';
+import { usePeopleStore } from '../stores/people-store';
+import { useMedicineStore } from '../stores/medicine-store';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { format, addDays, isAfter } from 'date-fns';
 
 export function Courses() {
   const { people, fetchPeople } = usePeopleStore();
-  const {
-    courses,
-    doses,
-    fetchCourses,
-    fetchDoses,
-    addCourse,
-    deleteCourse,
-    toggleDose,
-  } = useMedicineStore();
+  const { courses, doses, fetchCourses, fetchDoses, addCourse, deleteCourse, toggleDose } =
+    useMedicineStore();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [expandedCompleted, setExpandedCompleted] = useState<Set<string>>(
-    new Set(),
-  );
+  const [expandedCompleted, setExpandedCompleted] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const toggleCompleted = (courseId: string) => {
@@ -31,12 +22,12 @@ export function Courses() {
     });
   };
 
-  const [personId, setPersonId] = useState("");
-  const [name, setName] = useState("");
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [durationDays, setDurationDays] = useState<number | "">("");
-  const [dosesPerDay, setDosesPerDay] = useState<number | "">("");
-  const [notes, setNotes] = useState("");
+  const [personId, setPersonId] = useState('');
+  const [name, setName] = useState('');
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [durationDays, setDurationDays] = useState<number | ''>('');
+  const [dosesPerDay, setDosesPerDay] = useState<number | ''>('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     fetchPeople();
@@ -53,8 +44,7 @@ export function Courses() {
   useEffect(() => {
     courses.forEach((course) => {
       const courseDoses = doses[course.id] || [];
-      const allTaken =
-        courseDoses.length > 0 && courseDoses.every((d) => d.taken);
+      const allTaken = courseDoses.length > 0 && courseDoses.every((d) => d.taken);
       const wasCompleted = prevCompletionState.current[course.id] ?? false;
 
       // Only collapse if transitioning from not-completed to completed
@@ -81,12 +71,12 @@ export function Courses() {
       notes: notes || undefined,
     });
     setShowAddForm(false);
-    setPersonId("");
-    setName("");
-    setStartDate(format(new Date(), "yyyy-MM-dd"));
-    setDurationDays("");
-    setDosesPerDay("");
-    setNotes("");
+    setPersonId('');
+    setName('');
+    setStartDate(format(new Date(), 'yyyy-MM-dd'));
+    setDurationDays('');
+    setDosesPerDay('');
+    setNotes('');
   };
 
   const now = new Date();
@@ -95,23 +85,15 @@ export function Courses() {
     return courseDoses.length > 0 && courseDoses.every((d) => d.taken);
   };
   const activeCourses = courses.filter((c) => {
-    const endDate = addDays(
-      new Date(c.start_date + "T00:00:00"),
-      c.duration_days,
-    );
+    const endDate = addDays(new Date(c.start_date + 'T00:00:00'), c.duration_days);
     const dateActive =
-      isAfter(endDate, now) ||
-      format(endDate, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+      isAfter(endDate, now) || format(endDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
     return dateActive && !isAllDosesTaken(c.id);
   });
   const completedCourses = courses.filter((c) => {
-    const endDate = addDays(
-      new Date(c.start_date + "T00:00:00"),
-      c.duration_days,
-    );
+    const endDate = addDays(new Date(c.start_date + 'T00:00:00'), c.duration_days);
     const dateEnded =
-      !isAfter(endDate, now) &&
-      format(endDate, "yyyy-MM-dd") !== format(now, "yyyy-MM-dd");
+      !isAfter(endDate, now) && format(endDate, 'yyyy-MM-dd') !== format(now, 'yyyy-MM-dd');
     return dateEnded || isAllDosesTaken(c.id);
   });
 
@@ -134,9 +116,9 @@ export function Courses() {
   };
 
   const inputClass =
-    "w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500";
+    'w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500';
   const btnSecondary =
-    "flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300";
+    'flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300';
 
   return (
     <div className="space-y-6">
@@ -218,9 +200,7 @@ export function Courses() {
                     type="number"
                     value={durationDays}
                     onChange={(e) =>
-                      setDurationDays(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
+                      setDurationDays(e.target.value === '' ? '' : Number(e.target.value))
                     }
                     min={1}
                     placeholder="10"
@@ -236,9 +216,7 @@ export function Courses() {
                     type="number"
                     value={dosesPerDay}
                     onChange={(e) =>
-                      setDosesPerDay(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
+                      setDosesPerDay(e.target.value === '' ? '' : Number(e.target.value))
                     }
                     min={1}
                     max={10}
@@ -301,12 +279,8 @@ export function Courses() {
                     <div className="flex items-center gap-3">
                       <Pill className="text-green-600" size={24} />
                       <div>
-                        <div className="font-semibold">
-                          {course.person?.name}
-                        </div>
-                        <div className="text-gray-600 dark:text-neutral-400">
-                          {course.name}
-                        </div>
+                        <div className="font-semibold">{course.person?.name}</div>
+                        <div className="text-gray-600 dark:text-neutral-400">{course.name}</div>
                       </div>
                     </div>
                     <button
@@ -317,9 +291,8 @@ export function Courses() {
                     </button>
                   </div>
                   <div className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                    {course.doses_per_day}x/day for {course.duration_days} days
-                    • Started{" "}
-                    {format(new Date(course.start_date + "T00:00:00"), "MMM d")}
+                    {course.doses_per_day}x/day for {course.duration_days} days • Started{' '}
+                    {format(new Date(course.start_date + 'T00:00:00'), 'MMM d')}
                   </div>
                   {course.notes && (
                     <div className="mt-2 text-sm text-gray-500 dark:text-neutral-500 italic">
@@ -331,7 +304,7 @@ export function Courses() {
                       <div
                         className="bg-green-600 h-2 rounded-full transition-all"
                         style={{
-                          width: total > 0 ? `${(taken / total) * 100}%` : "0%",
+                          width: total > 0 ? `${(taken / total) * 100}%` : '0%',
                         }}
                       />
                     </div>
@@ -344,34 +317,27 @@ export function Courses() {
                 <div className="p-4 space-y-2">
                   {dates.map((date) => {
                     const dayDoses = dosesByDate[date];
-                    const isToday = date === format(new Date(), "yyyy-MM-dd");
+                    const isToday = date === format(new Date(), 'yyyy-MM-dd');
                     return (
                       <div
                         key={date}
-                        className={`flex items-center gap-4 p-2 rounded-lg ${isToday ? "bg-gray-100 dark:bg-neutral-800" : ""}`}
+                        className={`flex items-center gap-4 p-2 rounded-lg ${isToday ? 'bg-gray-100 dark:bg-neutral-800' : ''}`}
                       >
                         <div className="w-20 text-sm font-medium">
-                          {format(new Date(date + "T00:00:00"), "MMM d")}
-                          {isToday && (
-                            <span className="text-blue-600 ml-1">•</span>
-                          )}
+                          {format(new Date(date + 'T00:00:00'), 'MMM d')}
+                          {isToday && <span className="text-blue-600 ml-1">•</span>}
                         </div>
                         <div className="flex gap-3">
                           {dayDoses.map((dose) => (
-                            <label
-                              key={dose.id}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
+                            <label key={dose.id} className="flex items-center gap-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={dose.taken}
-                                onChange={() =>
-                                  toggleDose(dose.id, !dose.taken)
-                                }
+                                onChange={() => toggleDose(dose.id, !dose.taken)}
                                 className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-green-600 focus:ring-green-500 dark:bg-neutral-700"
                               />
                               <span
-                                className={`text-sm ${dose.taken ? "text-gray-400 line-through" : ""}`}
+                                className={`text-sm ${dose.taken ? 'text-gray-400 line-through' : ''}`}
                               >
                                 Dose {dose.dose_number}
                               </span>
@@ -411,17 +377,13 @@ export function Courses() {
                             {course.person?.name} - {course.name}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-neutral-400">
-                            {format(
-                              new Date(course.start_date + "T00:00:00"),
-                              "MMM d",
-                            )}{" "}
-                            -{" "}
+                            {format(new Date(course.start_date + 'T00:00:00'), 'MMM d')} -{' '}
                             {format(
                               addDays(
-                                new Date(course.start_date + "T00:00:00"),
-                                course.duration_days - 1,
+                                new Date(course.start_date + 'T00:00:00'),
+                                course.duration_days - 1
                               ),
-                              "MMM d",
+                              'MMM d'
                             )}
                           </div>
                           {course.notes && (
@@ -454,15 +416,9 @@ export function Courses() {
                           {dates.map((date) => {
                             const dayDoses = dosesByDate[date];
                             return (
-                              <div
-                                key={date}
-                                className="flex items-center gap-4 p-2 rounded-lg"
-                              >
+                              <div key={date} className="flex items-center gap-4 p-2 rounded-lg">
                                 <div className="w-20 text-sm font-medium text-gray-600 dark:text-neutral-400">
-                                  {format(
-                                    new Date(date + "T00:00:00"),
-                                    "MMM d",
-                                  )}
+                                  {format(new Date(date + 'T00:00:00'), 'MMM d')}
                                 </div>
                                 <div className="flex gap-3">
                                   {dayDoses.map((dose) => (
@@ -473,13 +429,11 @@ export function Courses() {
                                       <input
                                         type="checkbox"
                                         checked={dose.taken}
-                                        onChange={() =>
-                                          toggleDose(dose.id, !dose.taken)
-                                        }
+                                        onChange={() => toggleDose(dose.id, !dose.taken)}
                                         className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-green-600 focus:ring-green-500 dark:bg-neutral-700"
                                       />
                                       <span
-                                        className={`text-sm ${dose.taken ? "text-gray-400 line-through" : ""}`}
+                                        className={`text-sm ${dose.taken ? 'text-gray-400 line-through' : ''}`}
                                       >
                                         Dose {dose.dose_number}
                                       </span>

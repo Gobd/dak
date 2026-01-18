@@ -212,11 +212,11 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
   if (routes.length === 0 || (activeRoutes.length === 0 && routeData.length === 0)) {
     return (
       <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800/90' : 'bg-white/90'}`}
+        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black/90' : 'bg-white/90'}`}
       >
         <button
           onClick={() => setShowManager(true)}
-          className="p-4 rounded-xl hover:bg-neutral-700/50 transition-colors"
+          className={`p-4 rounded-xl transition-colors ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
           title="Configure drive time"
         >
           <Car size={24} className={dark ? 'text-neutral-400' : 'text-neutral-600'} />
@@ -272,7 +272,7 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
   if (isLoading && routeData.length === 0) {
     return (
       <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-800' : 'bg-white'}`}
+        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black' : 'bg-white'}`}
       >
         <span className="text-neutral-500">Checking traffic...</span>
       </div>
@@ -282,20 +282,20 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
   // Show drive time overlay
   return (
     <div
-      className={`w-full h-full p-4 ${dark ? 'bg-neutral-800/95 text-white' : 'bg-white/95 text-neutral-900'}`}
+      className={`w-full h-full p-4 ${dark ? 'bg-black/95 text-white' : 'bg-white/95 text-neutral-900'}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={handleDismissAll}
-          className="p-1 rounded hover:bg-neutral-700/50"
+          className={`p-1 rounded ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
           title="Dismiss for today"
         >
           <X size={16} />
         </button>
         <button
           onClick={() => setShowManager(true)}
-          className="p-1 rounded hover:bg-neutral-700/50"
+          className={`p-1 rounded ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
           title="Configure routes"
         >
           <Settings size={16} />
@@ -313,7 +313,7 @@ export default function DriveTime({ panel, dark }: WidgetComponentProps) {
           return (
             <div
               key={getRouteId(route)}
-              className="flex items-center justify-between p-3 rounded-lg bg-neutral-700/30"
+              className="flex items-center justify-between p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30"
             >
               <div className="min-w-0">
                 <div className="text-sm font-medium truncate">
@@ -407,7 +407,7 @@ function RouteManagerModal({
           {routes.map((route) => (
             <div
               key={getRouteId(route)}
-              className="flex items-center justify-between p-3 rounded-lg bg-neutral-700/30"
+              className="flex items-center justify-between p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium">
@@ -421,7 +421,7 @@ function RouteManagerModal({
               <div className="flex gap-1">
                 <button
                   onClick={() => onEditRoute(route)}
-                  className="p-1.5 rounded hover:bg-neutral-600"
+                  className="p-1.5 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
                   title="Edit"
                 >
                   <Settings size={14} />
@@ -552,7 +552,7 @@ function RouteFormModal({
           <select
             value={form.origin}
             onChange={(e) => setForm((f) => ({ ...f, origin: e.target.value }))}
-            className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
           >
             <option value="">Select location...</option>
             {locationKeys.map((k) => (
@@ -569,7 +569,7 @@ function RouteFormModal({
                 value={form.newOriginName}
                 onChange={(e) => setForm((f) => ({ ...f, newOriginName: e.target.value }))}
                 placeholder="Name (e.g., home)"
-                className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+                className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
               />
               <AddressAutocomplete
                 value={form.newOriginAddr}
@@ -586,7 +586,7 @@ function RouteFormModal({
           <select
             value={form.destination}
             onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
-            className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
           >
             <option value="">Select location...</option>
             {locationKeys.map((k) => (
@@ -603,7 +603,7 @@ function RouteFormModal({
                 value={form.newDestName}
                 onChange={(e) => setForm((f) => ({ ...f, newDestName: e.target.value }))}
                 placeholder="Name (e.g., work)"
-                className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+                className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
               />
               <AddressAutocomplete
                 value={form.newDestAddr}
@@ -625,7 +625,7 @@ function RouteFormModal({
                 className={`w-8 h-8 rounded text-sm font-medium ${
                   form.days.includes(day)
                     ? 'bg-blue-600 text-white'
-                    : 'bg-neutral-700 text-neutral-400'
+                    : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                 }`}
               >
                 {DAY_LABELS[i]}
@@ -660,7 +660,7 @@ function RouteFormModal({
             value={form.label}
             onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
             placeholder="e.g., Dad to Office"
-            className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
           />
         </div>
 

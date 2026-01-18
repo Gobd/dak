@@ -1,27 +1,27 @@
-import { useState } from "react";
-import { TabBar } from "./components/TabBar";
-import { ActionBar } from "./components/ActionBar";
-import { TodayView } from "./components/views/TodayView";
-import { MyTasksView } from "./components/views/MyTasksView";
-import { WeeklyView } from "./components/views/WeeklyView";
-import { LeaderboardView } from "./components/views/LeaderboardView";
-import { PinModal } from "./components/modals/PinModal";
-import { FamilyModal } from "./components/modals/FamilyModal";
-import { ChoresModal } from "./components/modals/ChoresModal";
-import { RedeemModal } from "./components/modals/RedeemModal";
-import { HistoryModal } from "./components/modals/HistoryModal";
-import { SettingsModal } from "./components/modals/SettingsModal";
-import { MemberPickerModal } from "./components/modals/MemberPickerModal";
-import { OnboardingOverlay } from "./components/OnboardingOverlay";
-import { useSettingsStore } from "./stores/settings-store";
-import { useInstancesStore } from "./stores/instances-store";
-import { useMembersStore } from "./stores/members-store";
-import type { DashboardView, FamilyMember } from "./types";
+import { useState } from 'react';
+import { TabBar } from './components/TabBar';
+import { ActionBar } from './components/ActionBar';
+import { TodayView } from './components/views/TodayView';
+import { MyTasksView } from './components/views/MyTasksView';
+import { WeeklyView } from './components/views/WeeklyView';
+import { LeaderboardView } from './components/views/LeaderboardView';
+import { PinModal } from './components/modals/PinModal';
+import { FamilyModal } from './components/modals/FamilyModal';
+import { ChoresModal } from './components/modals/ChoresModal';
+import { RedeemModal } from './components/modals/RedeemModal';
+import { HistoryModal } from './components/modals/HistoryModal';
+import { SettingsModal } from './components/modals/SettingsModal';
+import { MemberPickerModal } from './components/modals/MemberPickerModal';
+import { OnboardingOverlay } from './components/OnboardingOverlay';
+import { useSettingsStore } from './stores/settings-store';
+import { useInstancesStore } from './stores/instances-store';
+import { useMembersStore } from './stores/members-store';
+import type { DashboardView, FamilyMember } from './types';
 
-type ModalType = "settings" | "family" | "chores" | "redeem" | "history" | null;
+type ModalType = 'settings' | 'family' | 'chores' | 'redeem' | 'history' | null;
 
 export function Dashboard() {
-  const [activeView, setActiveView] = useState<DashboardView>("today");
+  const [activeView, setActiveView] = useState<DashboardView>('today');
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [pendingModal, setPendingModal] = useState<ModalType>(null);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -37,17 +37,16 @@ export function Dashboard() {
 
   // Track if onboarding has been dismissed (read once on mount)
   const [onboardingDismissed, setOnboardingDismissed] = useState(
-    () => localStorage.getItem("onboarding_dismissed") === "true",
+    () => localStorage.getItem('onboarding_dismissed') === 'true'
   );
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
   // Show onboarding if no members and hasn't been dismissed
-  const showOnboarding =
-    !membersLoading && members.length === 0 && !onboardingDismissed;
+  const showOnboarding = !membersLoading && members.length === 0 && !onboardingDismissed;
 
   const handleDismissOnboarding = () => {
     setOnboardingDismissed(true);
-    localStorage.setItem("onboarding_dismissed", "true");
+    localStorage.setItem('onboarding_dismissed', 'true');
   };
 
   const handleShowWalkthrough = () => {
@@ -59,12 +58,7 @@ export function Dashboard() {
   };
 
   // PIN-protected modals
-  const pinProtectedModals: ModalType[] = [
-    "settings",
-    "family",
-    "chores",
-    "redeem",
-  ];
+  const pinProtectedModals: ModalType[] = ['settings', 'family', 'chores', 'redeem'];
 
   const openModal = (modal: ModalType) => {
     if (modal && pinProtectedModals.includes(modal)) {
@@ -97,10 +91,7 @@ export function Dashboard() {
     clearPinVerification();
   };
 
-  const handleSelectMemberForTask = (
-    instanceId: string,
-    assignees: FamilyMember[],
-  ) => {
+  const handleSelectMemberForTask = (instanceId: string, assignees: FamilyMember[]) => {
     setMemberPickerData({ instanceId, members: assignees });
   };
 
@@ -113,31 +104,31 @@ export function Dashboard() {
 
   const renderView = () => {
     switch (activeView) {
-      case "today":
+      case 'today':
         return (
           <TodayView
             onSelectMemberForTask={handleSelectMemberForTask}
-            onOpenFamily={() => openModal("family")}
-            onOpenChores={() => openModal("chores")}
+            onOpenFamily={() => openModal('family')}
+            onOpenChores={() => openModal('chores')}
           />
         );
-      case "my-tasks":
+      case 'my-tasks':
         return (
           <MyTasksView
-            onOpenFamily={() => openModal("family")}
-            onOpenChores={() => openModal("chores")}
+            onOpenFamily={() => openModal('family')}
+            onOpenChores={() => openModal('chores')}
           />
         );
-      case "weekly":
+      case 'weekly':
         return <WeeklyView />;
-      case "leaderboard":
-        return <LeaderboardView onOpenFamily={() => openModal("family")} />;
+      case 'leaderboard':
+        return <LeaderboardView onOpenFamily={() => openModal('family')} />;
       default:
         return (
           <TodayView
             onSelectMemberForTask={handleSelectMemberForTask}
-            onOpenFamily={() => openModal("family")}
-            onOpenChores={() => openModal("chores")}
+            onOpenFamily={() => openModal('family')}
+            onOpenChores={() => openModal('chores')}
           />
         );
     }
@@ -153,11 +144,11 @@ export function Dashboard() {
 
       {/* Action bar */}
       <ActionBar
-        onOpenSettings={() => openModal("settings")}
-        onOpenFamily={() => openModal("family")}
-        onOpenChores={() => openModal("chores")}
-        onOpenRedeem={() => openModal("redeem")}
-        onOpenHistory={() => openModal("history")}
+        onOpenSettings={() => openModal('settings')}
+        onOpenFamily={() => openModal('family')}
+        onOpenChores={() => openModal('chores')}
+        onOpenRedeem={() => openModal('redeem')}
+        onOpenHistory={() => openModal('history')}
       />
 
       {/* PIN Modal */}
@@ -165,21 +156,18 @@ export function Dashboard() {
         <PinModal
           onSuccess={handlePinSuccess}
           onCancel={handlePinCancel}
-          mode={settings?.parent_pin ? "verify" : "set"}
+          mode={settings?.parent_pin ? 'verify' : 'set'}
         />
       )}
 
       {/* Content Modals */}
-      {activeModal === "settings" && (
-        <SettingsModal
-          onClose={closeModal}
-          onShowWalkthrough={handleShowWalkthrough}
-        />
+      {activeModal === 'settings' && (
+        <SettingsModal onClose={closeModal} onShowWalkthrough={handleShowWalkthrough} />
       )}
-      {activeModal === "family" && <FamilyModal onClose={closeModal} />}
-      {activeModal === "chores" && <ChoresModal onClose={closeModal} />}
-      {activeModal === "redeem" && <RedeemModal onClose={closeModal} />}
-      {activeModal === "history" && <HistoryModal onClose={closeModal} />}
+      {activeModal === 'family' && <FamilyModal onClose={closeModal} />}
+      {activeModal === 'chores' && <ChoresModal onClose={closeModal} />}
+      {activeModal === 'redeem' && <RedeemModal onClose={closeModal} />}
+      {activeModal === 'history' && <HistoryModal onClose={closeModal} />}
 
       {/* Member Picker Modal */}
       {memberPickerData && (
@@ -196,7 +184,7 @@ export function Dashboard() {
           onDismiss={handleDismissOnboarding}
           onOpenFamily={() => {
             handleDismissOnboarding();
-            openModal("family");
+            openModal('family');
           }}
         />
       )}
@@ -207,7 +195,7 @@ export function Dashboard() {
           onDismiss={handleDismissWalkthrough}
           onOpenFamily={() => {
             handleDismissWalkthrough();
-            openModal("family");
+            openModal('family');
           }}
         />
       )}

@@ -1,16 +1,10 @@
-import { create } from "zustand";
-import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  format,
-} from "date-fns";
-import { supabase } from "../lib/supabase";
-import { broadcastSync } from "../lib/realtime";
-import type { PointsLedgerEntry } from "../types";
+import { create } from 'zustand';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
+import { supabase } from '../lib/supabase';
+import { broadcastSync } from '../lib/realtime';
+import type { PointsLedgerEntry } from '../types';
 
-type Period = "week" | "month" | "all";
+type Period = 'week' | 'month' | 'all';
 
 interface PointsState {
   balances: Record<string, number>; // memberId -> total balance
@@ -24,7 +18,7 @@ interface PointsState {
   redeemPoints: (
     memberId: string,
     amount: number,
-    notes: string,
+    notes: string
   ) => Promise<{ success: boolean; error?: string }>;
   setPeriod: (period: Period) => void;
 }
@@ -34,12 +28,10 @@ export const usePointsStore = create<PointsState>((set, get) => ({
   periodPoints: {},
   ledger: [],
   loading: true,
-  currentPeriod: "week",
+  currentPeriod: 'week',
 
   fetchBalances: async () => {
-    const { data } = await supabase
-      .from("points_ledger")
-      .select("member_id, amount");
+    const { data } = await supabase.from('points_ledger').select('member_id, amount');
 
     if (!data) {
       set({ balances: {} });
@@ -48,8 +40,7 @@ export const usePointsStore = create<PointsState>((set, get) => ({
 
     const balances: Record<string, number> = {};
     for (const entry of data) {
-      balances[entry.member_id] =
-        (balances[entry.member_id] ?? 0) + entry.amount;
+      balances[entry.member_id] = (balances[entry.member_id] ?? 0) + entry.amount;
     }
 
     set({ balances });
@@ -59,24 +50,20 @@ export const usePointsStore = create<PointsState>((set, get) => ({
     set({ currentPeriod: period, loading: true });
 
     let query = supabase
-      .from("points_ledger")
-      .select("member_id, amount")
-      .eq("transaction_type", "earned");
+      .from('points_ledger')
+      .select('member_id, amount')
+      .eq('transaction_type', 'earned');
 
-    if (period === "week") {
+    if (period === 'week') {
       const now = new Date();
-      const start = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      const end = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      query = query
-        .gte("created_at", start)
-        .lte("created_at", end + "T23:59:59");
-    } else if (period === "month") {
+      const start = format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      const end = format(endOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      query = query.gte('created_at', start).lte('created_at', end + 'T23:59:59');
+    } else if (period === 'month') {
       const now = new Date();
-      const start = format(startOfMonth(now), "yyyy-MM-dd");
-      const end = format(endOfMonth(now), "yyyy-MM-dd");
-      query = query
-        .gte("created_at", start)
-        .lte("created_at", end + "T23:59:59");
+      const start = format(startOfMonth(now), 'yyyy-MM-dd');
+      const end = format(endOfMonth(now), 'yyyy-MM-dd');
+      query = query.gte('created_at', start).lte('created_at', end + 'T23:59:59');
     }
 
     const { data } = await query;
@@ -88,8 +75,7 @@ export const usePointsStore = create<PointsState>((set, get) => ({
 
     const periodPoints: Record<string, number> = {};
     for (const entry of data) {
-      periodPoints[entry.member_id] =
-        (periodPoints[entry.member_id] ?? 0) + entry.amount;
+      periodPoints[entry.member_id] = (periodPoints[entry.member_id] ?? 0) + entry.amount;
     }
 
     set({ periodPoints, loading: false });
@@ -97,13 +83,13 @@ export const usePointsStore = create<PointsState>((set, get) => ({
 
   fetchLedger: async (memberId?: string, limit = 100) => {
     let query = supabase
-      .from("points_ledger")
-      .select("*, member:family_members(*)")
-      .order("created_at", { ascending: false })
+      .from('points_ledger')
+      .select('*, member:family_members(*)')
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (memberId) {
-      query = query.eq("member_id", memberId);
+      query = query.eq('member_id', memberId);
     }
 
     const { data } = await query;
@@ -114,13 +100,13 @@ export const usePointsStore = create<PointsState>((set, get) => ({
     const balance = get().balances[memberId] ?? 0;
 
     if (amount > balance) {
-      return { success: false, error: "Not enough points" };
+      return { success: false, error: 'Not enough points' };
     }
 
-    const { error } = await supabase.from("points_ledger").insert({
+    const { error } = await supabase.from('points_ledger').insert({
       member_id: memberId,
       amount: -amount, // Negative for redemption
-      transaction_type: "redeemed",
+      transaction_type: 'redeemed',
       notes,
     });
 
@@ -129,7 +115,7 @@ export const usePointsStore = create<PointsState>((set, get) => ({
     }
 
     await get().fetchBalances();
-    broadcastSync({ type: "points" });
+    broadcastSync({ type: 'points' });
 
     return { success: true };
   },

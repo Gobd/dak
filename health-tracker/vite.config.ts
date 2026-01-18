@@ -1,12 +1,12 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import { visualizer } from "rollup-plugin-visualizer";
-import { VitePWA } from "vite-plugin-pwa";
-import type { PluginOption } from "vite";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { VitePWA } from 'vite-plugin-pwa';
+import type { PluginOption } from 'vite';
 
 export default defineConfig({
-  base: "/health-tracker/",
+  base: '/health-tracker/',
   server: {
     port: 5173,
     strictPort: true,
@@ -15,43 +15,43 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: 'autoUpdate',
       manifest: {
-        name: "Health Tracker",
-        short_name: "Health",
-        description: "Family health tracking app",
-        theme_color: "#2563eb",
-        background_color: "#000000",
-        display: "standalone",
+        name: 'Health Tracker',
+        short_name: 'Health',
+        description: 'Family health tracking app',
+        theme_color: '#2563eb',
+        background_color: '#000000',
+        display: 'standalone',
         icons: [
           {
-            src: "icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            src: "icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
           {
-            src: "icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
       },
     }),
     process.env.ANALYZE &&
       visualizer({
         open: true,
-        filename: "stats.html",
+        filename: 'stats.html',
         gzipSize: true,
-        template: "treemap",
+        template: 'treemap',
       }),
   ].filter(Boolean) as PluginOption[],
 });

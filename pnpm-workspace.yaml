@@ -1,6 +1,7 @@
 packages:
   - dashboard
   - family-chores
+  - functions
   - health-tracker
   - kasa-controller
   - notes-app
@@ -9,35 +10,35 @@ catalog:
   # Shared tooling
   "@eslint/js": ^9.39.2
   eslint: ^9.39.2
-  prettier: ^3.7.4
+  prettier: ^3.8.0
   typescript: ~5.9.3
   globals: ^16.5.0
   eslint-plugin-react-hooks: ^7.0.1
 
   # Shared runtime deps
-  "@supabase/supabase-js": ^2.89.0
-  zustand: ^5.0.9
-  "@tanstack/react-query": ^5.64.0
-  "@types/node": ^24.10.1
+  "@supabase/supabase-js": ^2.90.1
+  zustand: ^5.0.10
+  "@tanstack/react-query": ^5.90.0
+  "@types/node": ^24.10.4
 
 catalogs:
   vite:
     # React (Vite apps can use latest)
-    react: ^19.2.0
-    react-dom: ^19.2.0
-    "@types/react": ^19.2.5
+    react: ^19.2.3
+    react-dom: ^19.2.3
+    "@types/react": ^19.2.8
     "@types/react-dom": ^19.2.3
 
     # Vite tooling
-    vite: ^7.2.4
+    vite: ^7.3.1
     "@vitejs/plugin-react": ^5.1.1
     "@tailwindcss/vite": ^4.1.18
     tailwindcss: ^4.1.18
     vite-plugin-pwa: ^1.2.0
     eslint-plugin-react-refresh: ^0.4.24
-    typescript-eslint: ^8.46.4
+    typescript-eslint: ^8.53.0
 
     # Shared Vite app deps
     lucide-react: ^0.562.0
     date-fns: ^4.1.0
-    react-router-dom: ^7.11.0
+    react-router-dom: ^7.12.0

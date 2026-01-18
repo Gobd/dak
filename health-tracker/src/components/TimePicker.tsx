@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState, useCallback } from "react";
-import { getDaysInMonth, format } from "date-fns";
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { getDaysInMonth, format } from 'date-fns';
 
 const ITEM_HEIGHT = 44;
 
@@ -54,9 +54,9 @@ function Wheel({ items, value, onChange }: WheelProps) {
         onScroll={handleScroll}
         className="h-[132px] overflow-y-auto scrollbar-hide"
         style={{
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y",
-          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
+          overscrollBehavior: 'contain',
         }}
       >
         {/* Padding items for scroll */}
@@ -71,8 +71,8 @@ function Wheel({ items, value, onChange }: WheelProps) {
             <span
               className={
                 item === value
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-gray-400 dark:text-neutral-500"
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-400 dark:text-neutral-500'
               }
             >
               {item}
@@ -85,20 +85,20 @@ function Wheel({ items, value, onChange }: WheelProps) {
   );
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const FULL_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 interface MiniCalendarProps {
@@ -108,12 +108,7 @@ interface MiniCalendarProps {
   allowFuture?: boolean;
 }
 
-function MiniCalendar({
-  selectedDate,
-  onSelect,
-  onClose,
-  allowFuture = false,
-}: MiniCalendarProps) {
+function MiniCalendar({ selectedDate, onSelect, onClose, allowFuture = false }: MiniCalendarProps) {
   const [viewMonth, setViewMonth] = useState(selectedDate.getMonth());
   const [viewYear, setViewYear] = useState(selectedDate.getFullYear());
   const today = new Date();
@@ -143,11 +138,7 @@ function MiniCalendar({
     const newDate = new Date(viewYear, viewMonth, day);
     // Check if date is allowed
     if (!allowFuture) {
-      const todayStart = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-      );
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       if (newDate > todayStart) return;
     }
     onSelect(newDate);
@@ -156,11 +147,7 @@ function MiniCalendar({
   const isDayDisabled = (day: number) => {
     if (allowFuture) return false;
     const date = new Date(viewYear, viewMonth, day);
-    const todayStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-    );
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return date > todayStart;
   };
 
@@ -174,9 +161,7 @@ function MiniCalendar({
 
   const isDayToday = (day: number) => {
     return (
-      day === today.getDate() &&
-      viewMonth === today.getMonth() &&
-      viewYear === today.getFullYear()
+      day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear()
     );
   };
 
@@ -240,10 +225,10 @@ function MiniCalendar({
                 disabled={disabled}
                 className={`
                   aspect-square flex items-center justify-center text-sm rounded-full transition-colors
-                  ${disabled ? "text-gray-300 dark:text-neutral-600 cursor-not-allowed" : "cursor-pointer"}
-                  ${selected ? "bg-blue-600 text-white" : ""}
-                  ${isToday && !selected ? "border border-blue-500" : ""}
-                  ${!selected && !disabled ? "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-700" : ""}
+                  ${disabled ? 'text-gray-300 dark:text-neutral-600 cursor-not-allowed' : 'cursor-pointer'}
+                  ${selected ? 'bg-blue-600 text-white' : ''}
+                  ${isToday && !selected ? 'border border-blue-500' : ''}
+                  ${!selected && !disabled ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-700' : ''}
                 `}
               >
                 {day}
@@ -284,9 +269,7 @@ export function TimePicker({
   const [showCalendar, setShowCalendar] = useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => String(i + 1));
-  const minutes = Array.from({ length: 12 }, (_, i) =>
-    String(i * 5).padStart(2, "0"),
-  );
+  const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 
   const handleDateSelect = useCallback((date: Date) => {
     setSelectedDate(date);
@@ -304,7 +287,7 @@ export function TimePicker({
     onChange(date);
   }, [hour, minute, isPM, selectedDate, onChange]);
 
-  const formattedDate = format(selectedDate, "MMM d, yyyy");
+  const formattedDate = format(selectedDate, 'MMM d, yyyy');
 
   return (
     <div className="bg-white dark:bg-neutral-800 rounded-xl p-4">
@@ -322,17 +305,13 @@ export function TimePicker({
         {/* Time wheels */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <div className="w-10">
-            <Wheel
-              items={hours}
-              value={String(hour)}
-              onChange={(v) => setHour(Number(v))}
-            />
+            <Wheel items={hours} value={String(hour)} onChange={(v) => setHour(Number(v))} />
           </div>
           <div className="text-xl font-bold text-gray-400">:</div>
           <div className="w-10">
             <Wheel
               items={minutes}
-              value={String(minute).padStart(2, "0")}
+              value={String(minute).padStart(2, '0')}
               onChange={(v) => setMinute(Number(v))}
             />
           </div>
@@ -341,8 +320,8 @@ export function TimePicker({
               onClick={() => setIsPM(false)}
               className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
                 !isPM
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300'
               }`}
             >
               AM
@@ -351,8 +330,8 @@ export function TimePicker({
               onClick={() => setIsPM(true)}
               className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
                 isPM
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300'
               }`}
             >
               PM

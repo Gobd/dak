@@ -83,9 +83,17 @@ Replace `kiosk.local` with your kiosk's IP if hostname doesn't resolve. The `rel
 
 When you save changes, the kiosk automatically reloads via SSE (Server-Sent Events).
 
+### Global Settings
+
+Click the gear icon in edit mode to access global settings:
+
+- **Theme:** Light, Dark, or System (follows OS preference)
+- **Default Location:** Used by weather, UV, and AQI widgets as fallback
+- **Hide Cursor:** For kiosk displays (toggle with `Ctrl+Shift+H` anytime)
+
 ### Resetting to Defaults
 
-Click "Reset" in edit mode to restore the default layout from `config/dashboard.json`. This clears both the API config and localStorage.
+Click the reset button (rotate icon) in edit mode to restore the default layout from `public/config/dashboard.json`. This resets both the API config and localStorage.
 
 ## Widgets
 
@@ -173,7 +181,7 @@ In Cloudflare DNS for bkemper.me:
 
 ### Local Development
 
-To update default layouts, edit `config/dashboard.json` and push. Users can reset to get the new defaults.
+To update default layouts, edit `public/config/dashboard.json` and push. Users can reset to get the new defaults.
 
 ## Kiosk Setup (Raspberry Pi 5)
 
@@ -260,13 +268,13 @@ cat ~/.config/home-relay/dashboard.json | jq .
 
 ## Configuration
 
-Edit `config/dashboard.json` to configure default screens and layouts. See `config/README.md` for field documentation. Changes deploy automatically via GitHub Pages.
+Edit `public/config/dashboard.json` to configure default screens and layouts. See `public/config/README.md` for field documentation. Changes deploy automatically via GitHub Pages.
 
 On the kiosk, config is stored at `~/.config/home-relay/dashboard.json` and can be edited via SSH.
 
 ## Custom Widgets
 
-Add widgets under `widgets/`. Reference them in `config/dashboard.json`:
+Add widgets under `widgets/`. Reference them in `public/config/dashboard.json`:
 
 ```json
 {

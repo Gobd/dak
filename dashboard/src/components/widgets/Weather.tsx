@@ -142,7 +142,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
   if (isLoading && !weather) {
     return (
       <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900'}`}
+        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
       >
         <RefreshCw size={20} className="animate-spin text-neutral-500" />
       </div>
@@ -152,7 +152,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
   if (error && !weather) {
     return (
       <div
-        className={`w-full h-full p-4 ${dark ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900'}`}
+        className={`w-full h-full p-4 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
       >
         <p className="text-red-500 text-sm mb-2">{error.message}</p>
         <button onClick={() => refetch()} className="text-sm text-blue-500 hover:underline">
@@ -168,20 +168,29 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
 
   return (
     <div
-      className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900'}`}
+      className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 shrink-0">
         <span className="text-sm text-neutral-500 truncate">
           {formatLocation(location.city, location.state)}
         </span>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="p-1 rounded hover:bg-neutral-700/50 shrink-0"
-          title="Change location"
-        >
-          <Settings size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleRefresh}
+            className={`p-1 rounded shrink-0 ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
+            title="Refresh"
+          >
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className={`p-1 rounded shrink-0 ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
+            title="Change location"
+          >
+            <Settings size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Alerts */}
@@ -240,16 +249,6 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
             )}
           </button>
         ))}
-        {/* Refresh button at end */}
-        <button
-          onClick={handleRefresh}
-          className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 text-neutral-500 ${
-            isVertical ? 'w-full' : 'min-w-[60px] flex-shrink-0'
-          }`}
-          title="Refresh"
-        >
-          <RefreshCw size={16} />
-        </button>
       </div>
 
       {/* Period Detail Modal */}

@@ -12,8 +12,15 @@ export function Screen() {
     useConfigStore();
   const panels = useCurrentPanels();
 
-  const hasPrevScreen = activeScreenIndex > 0;
-  const hasNextScreen = activeScreenIndex < screens.length - 1;
+  const goToPrevScreen = () => {
+    const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
+    setActiveScreen(prevIndex);
+  };
+
+  const goToNextScreen = () => {
+    const nextIndex = activeScreenIndex === screens.length - 1 ? 0 : activeScreenIndex + 1;
+    setActiveScreen(nextIndex);
+  };
 
   return (
     <div
@@ -55,21 +62,17 @@ export function Screen() {
           {screens.length > 1 && (
             <>
               <button
-                onClick={() => setActiveScreen(activeScreenIndex - 1)}
-                disabled={!hasPrevScreen}
+                onClick={goToPrevScreen}
                 className="p-3 rounded-full bg-neutral-800/60 hover:bg-neutral-700
-                           text-white/80 hover:text-white shadow-lg backdrop-blur
-                           disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                           text-white/80 hover:text-white shadow-lg backdrop-blur transition-all"
                 title="Previous screen"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
-                onClick={() => setActiveScreen(activeScreenIndex + 1)}
-                disabled={!hasNextScreen}
+                onClick={goToNextScreen}
                 className="p-3 rounded-full bg-neutral-800/60 hover:bg-neutral-700
-                           text-white/80 hover:text-white shadow-lg backdrop-blur
-                           disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                           text-white/80 hover:text-white shadow-lg backdrop-blur transition-all"
                 title="Next screen"
               >
                 <ChevronRight size={20} />
