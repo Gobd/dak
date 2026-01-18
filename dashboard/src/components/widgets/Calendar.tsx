@@ -63,6 +63,17 @@ interface GoogleCalendar {
   accessRole: string;
 }
 
+// Determine if a hex color is light (returns true) or dark (returns false)
+function isLightColor(hex: string): boolean {
+  const color = hex.replace('#', '');
+  const r = parseInt(color.substring(0, 2), 16);
+  const g = parseInt(color.substring(2, 4), 16);
+  const b = parseInt(color.substring(4, 6), 16);
+  // Using relative luminance formula
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5;
+}
+
 // Format helpers
 function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
@@ -814,13 +825,16 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                     const timeRange = isAllDay
                       ? ''
                       : formatTimeRange(event.start.dateTime!, event.end.dateTime!);
+                    const bgColor = event.calendarColor || '#4285f4';
+                    const textColor = isLightColor(bgColor) ? '#000000' : '#ffffff';
 
                     return (
                       <div
                         key={event.id}
-                        className="text-[10px] truncate px-1 rounded"
+                        className="text-[11px] line-clamp-2 px-1 rounded"
                         style={{
-                          backgroundColor: (event.calendarColor || '#4285f4') + '40',
+                          backgroundColor: bgColor,
+                          color: textColor,
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -828,7 +842,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                         }}
                         title={event.summary}
                       >
-                        {timeRange && <span className="text-neutral-400">{timeRange} </span>}
+                        {timeRange && <span>{timeRange} · </span>}
                         {event.summary || '(No title)'}
                       </div>
                     );
