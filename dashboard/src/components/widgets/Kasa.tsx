@@ -79,9 +79,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
     staleTime: 5000,
   });
 
-  const devices = [...(data?.devices ?? [])].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  const devices = [...(data?.devices ?? [])].sort((a, b) => a.name.localeCompare(b.name));
   const error = data?.error ?? null;
 
   async function handleToggle(device: KasaDevice) {

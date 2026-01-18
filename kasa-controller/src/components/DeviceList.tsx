@@ -119,30 +119,30 @@ export default function DeviceList() {
       {[...devices]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((device) => (
-        <button
-          key={device.ip}
-          onClick={() => toggleMutation.mutate(device)}
-          disabled={toggleMutation.isPending}
-          className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
-            device.on
-              ? 'bg-green-900/50 border border-green-700'
-              : 'bg-slate-800 border border-slate-700'
-          } hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70`}
-        >
-          <div className={`p-3 rounded-full ${device.on ? 'bg-green-600' : 'bg-slate-600'}`}>
-            <Power className="w-6 h-6" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="font-medium">{device.name}</p>
-            <p className="text-sm text-slate-400">{device.model}</p>
-          </div>
-          <span
-            className={`text-sm font-medium ${device.on ? 'text-green-400' : 'text-slate-500'}`}
+          <button
+            key={device.ip}
+            onClick={() => toggleMutation.mutate(device)}
+            disabled={toggleMutation.isPending}
+            className={`w-full p-4 rounded-xl flex items-center gap-4 transition-all ${
+              device.on
+                ? 'bg-green-900/50 border border-green-700'
+                : 'bg-slate-800 border border-slate-700'
+            } hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70`}
           >
-            {device.on ? 'ON' : 'OFF'}
-          </span>
-        </button>
-      ))}
+            <div className={`p-3 rounded-full ${device.on ? 'bg-green-600' : 'bg-slate-600'}`}>
+              <Power className="w-6 h-6" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="font-medium">{device.name}</p>
+              <p className="text-sm text-slate-400">{device.model}</p>
+            </div>
+            <span
+              className={`text-sm font-medium ${device.on ? 'text-green-400' : 'text-slate-500'}`}
+            >
+              {device.on ? 'ON' : 'OFF'}
+            </span>
+          </button>
+        ))}
     </div>
   );
 }
