@@ -113,191 +113,191 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
       }
     >
       <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Make bed, Take vitamins"
-              maxLength={100}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
-              autoFocus
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+            Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Make bed, Take vitamins"
+            maxLength={100}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+            autoFocus
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-              Description (optional)
-            </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add details..."
-              maxLength={200}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+            Description (optional)
+          </label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add details..."
+            maxLength={200}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+          />
+        </div>
 
-          {/* Points - hidden when hide_points is enabled */}
-          {!hidePoints && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                Points
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPoints(Math.max(0, points - 1))}
-                  className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
-                >
-                  −
-                </button>
-                <span className="text-2xl font-semibold w-12 text-center dark:text-white">
-                  {points}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPoints(Math.min(100, points + 1))}
-                  className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          )}
-
-          <SchedulePicker value={schedule} onChange={setSchedule} />
-
-          {/* Times per day - only for daily schedule */}
-          {schedule.type === 'daily' && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-                Times per day
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setTimesPerDay(Math.max(1, timesPerDay - 1))}
-                  className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
-                >
-                  −
-                </button>
-                <span className="text-2xl font-semibold w-12 text-center dark:text-white">
-                  {timesPerDay}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setTimesPerDay(Math.min(10, timesPerDay + 1))}
-                  className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
-                >
-                  +
-                </button>
-              </div>
-              {timesPerDay > 1 && (
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                  Creates {timesPerDay} separate checkboxes per day
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Assignees */}
+        {/* Points - hidden when hide_points is enabled */}
+        {!hidePoints && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-              Assign to
+              Points
             </label>
-            <div className="flex gap-2 flex-wrap">
-              {members.map((member) => (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => toggleAssignee(member.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-                    assigneeIds.includes(member.id)
-                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                      : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'
-                  }`}
-                >
-                  <MemberAvatar
-                    name={member.name}
-                    emoji={member.avatar_emoji}
-                    color={member.color}
-                    size="sm"
-                  />
-                  <span className="text-sm dark:text-white">{member.name}</span>
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPoints(Math.max(0, points - 1))}
+                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+              >
+                −
+              </button>
+              <span className="text-2xl font-semibold w-12 text-center dark:text-white">
+                {points}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPoints(Math.min(100, points + 1))}
+                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+              >
+                +
+              </button>
             </div>
-            {assigneeIds.length === 0 && (
-              <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                Select at least one person
+          </div>
+        )}
+
+        <SchedulePicker value={schedule} onChange={setSchedule} />
+
+        {/* Times per day - only for daily schedule */}
+        {schedule.type === 'daily' && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              Times per day
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setTimesPerDay(Math.max(1, timesPerDay - 1))}
+                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+              >
+                −
+              </button>
+              <span className="text-2xl font-semibold w-12 text-center dark:text-white">
+                {timesPerDay}
+              </span>
+              <button
+                type="button"
+                onClick={() => setTimesPerDay(Math.min(10, timesPerDay + 1))}
+                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+              >
+                +
+              </button>
+            </div>
+            {timesPerDay > 1 && (
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                Creates {timesPerDay} separate checkboxes per day
               </p>
             )}
           </div>
+        )}
 
-          {/* Assignment Type - hide for goals (always per-person) */}
-          {assigneeIds.length > 1 && schedule.type !== 'goal' && (
-            <div className="p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
-                  How should this work?
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowAssignmentHelp(!showAssignmentHelp)}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300"
-                >
-                  <HelpCircle size={16} />
-                </button>
-              </div>
-
-              {showAssignmentHelp && (
-                <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
-                  <p className="font-medium mb-1">Race mode:</p>
-                  <p className="mb-2">
-                    First person to complete wins all the points. Great for motivating quick action!
-                  </p>
-                  <p className="font-medium mb-1">Each person:</p>
-                  <p>Everyone gets their own task and earns points individually.</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAssignmentType('anyone')}
-                  className={`p-3 rounded-lg text-left transition-all ${
-                    assignmentType === 'anyone'
-                      ? 'bg-amber-100 dark:bg-amber-900/50 ring-2 ring-amber-500'
-                      : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
-                  }`}
-                >
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">Race</p>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    First to finish wins
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAssignmentType('everyone')}
-                  className={`p-3 rounded-lg text-left transition-all ${
-                    assignmentType === 'everyone'
-                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                      : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
-                  }`}
-                >
-                  <p className="font-medium text-sm text-gray-900 dark:text-white">Each person</p>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    Everyone does it
-                  </p>
-                </button>
-              </div>
-            </div>
+        {/* Assignees */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+            Assign to
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {members.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                onClick={() => toggleAssignee(member.id)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                  assigneeIds.includes(member.id)
+                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                    : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'
+                }`}
+              >
+                <MemberAvatar
+                  name={member.name}
+                  emoji={member.avatar_emoji}
+                  color={member.color}
+                  size="sm"
+                />
+                <span className="text-sm dark:text-white">{member.name}</span>
+              </button>
+            ))}
+          </div>
+          {assigneeIds.length === 0 && (
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+              Select at least one person
+            </p>
           )}
+        </div>
+
+        {/* Assignment Type - hide for goals (always per-person) */}
+        {assigneeIds.length > 1 && schedule.type !== 'goal' && (
+          <div className="p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                How should this work?
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAssignmentHelp(!showAssignmentHelp)}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300"
+              >
+                <HelpCircle size={16} />
+              </button>
+            </div>
+
+            {showAssignmentHelp && (
+              <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">Race mode:</p>
+                <p className="mb-2">
+                  First person to complete wins all the points. Great for motivating quick action!
+                </p>
+                <p className="font-medium mb-1">Each person:</p>
+                <p>Everyone gets their own task and earns points individually.</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAssignmentType('anyone')}
+                className={`p-3 rounded-lg text-left transition-all ${
+                  assignmentType === 'anyone'
+                    ? 'bg-amber-100 dark:bg-amber-900/50 ring-2 ring-amber-500'
+                    : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                }`}
+              >
+                <p className="font-medium text-sm text-gray-900 dark:text-white">Race</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
+                  First to finish wins
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssignmentType('everyone')}
+                className={`p-3 rounded-lg text-left transition-all ${
+                  assignmentType === 'everyone'
+                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
+                    : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                }`}
+              >
+                <p className="font-medium text-sm text-gray-900 dark:text-white">Each person</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
+                  Everyone does it
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

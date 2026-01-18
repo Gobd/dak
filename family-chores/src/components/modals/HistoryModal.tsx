@@ -32,91 +32,89 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
     <Modal open={true} onClose={onClose} title="Points History">
       {/* Filter */}
       <div className="pb-4 border-b border-gray-200 dark:border-neutral-700 mb-4">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <Filter size={16} className="text-gray-400 flex-shrink-0" />
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <Filter size={16} className="text-gray-400 flex-shrink-0" />
+          <button
+            onClick={() => setFilterMemberId(null)}
+            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
+              filterMemberId === null ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-800'
+            }`}
+          >
+            All
+          </button>
+          {members.map((member) => (
             <button
-              onClick={() => setFilterMemberId(null)}
-              className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-                filterMemberId === null
+              key={member.id}
+              onClick={() => setFilterMemberId(member.id)}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
+                filterMemberId === member.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-neutral-800'
               }`}
             >
-              All
+              <span>{member.avatar_emoji}</span>
+              <span>{member.name}</span>
             </button>
-            {members.map((member) => (
-              <button
-                key={member.id}
-                onClick={() => setFilterMemberId(member.id)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-                  filterMemberId === member.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-neutral-800'
-                }`}
-              >
-                <span>{member.avatar_emoji}</span>
-                <span>{member.name}</span>
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
-            </div>
-          ) : ledger.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-neutral-400">No history yet</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100 dark:divide-neutral-800">
-              {ledger.map((entry) => {
-                const member = getMember(entry.member_id);
-                const isPositive = entry.amount > 0;
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+          </div>
+        ) : ledger.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-neutral-400">No history yet</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100 dark:divide-neutral-800">
+            {ledger.map((entry) => {
+              const member = getMember(entry.member_id);
+              const isPositive = entry.amount > 0;
 
-                return (
-                  <div
-                    key={entry.id}
-                    className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50"
-                  >
-                    {member && (
-                      <MemberAvatar
-                        name={member.name}
-                        emoji={member.avatar_emoji}
-                        color={member.color}
-                        size="md"
-                      />
-                    )}
+              return (
+                <div
+                  key={entry.id}
+                  className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50"
+                >
+                  {member && (
+                    <MemberAvatar
+                      name={member.name}
+                      emoji={member.avatar_emoji}
+                      color={member.color}
+                      size="md"
+                    />
+                  )}
 
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 dark:text-white truncate">
-                        {entry.transaction_type === 'earned'
-                          ? 'Task completed'
-                          : entry.transaction_type === 'redeemed'
-                            ? (entry.notes ?? 'Points redeemed')
-                            : (entry.notes ?? 'Adjustment')}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">
-                        {member?.name} • {format(new Date(entry.created_at), 'MMM d, h:mm a')}
-                      </p>
-                    </div>
-
-                    <span
-                      className={`text-lg font-semibold ${
-                        isPositive ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {isPositive ? '+' : ''}
-                      {entry.amount}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                      {entry.transaction_type === 'earned'
+                        ? 'Task completed'
+                        : entry.transaction_type === 'redeemed'
+                          ? (entry.notes ?? 'Points redeemed')
+                          : (entry.notes ?? 'Adjustment')}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                      {member?.name} • {format(new Date(entry.created_at), 'MMM d, h:mm a')}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-          )}
+
+                  <span
+                    className={`text-lg font-semibold ${
+                      isPositive ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    {isPositive ? '+' : ''}
+                    {entry.amount}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </Modal>
   );

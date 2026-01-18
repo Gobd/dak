@@ -148,11 +148,7 @@ export function Courses() {
         title="New Medicine Course"
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className={btnSecondary}
-            >
+            <button type="button" onClick={() => setShowAddForm(false)} className={btnSecondary}>
               Cancel
             </button>
             <button
@@ -167,9 +163,7 @@ export function Courses() {
       >
         <form id="add-course-form" onSubmit={handleAddCourse} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-              Person
-            </label>
+            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
             <select
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
@@ -201,11 +195,7 @@ export function Courses() {
             <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
               Start Date
             </label>
-            <DatePickerCompact
-              value={startDate}
-              onChange={setStartDate}
-              allowFuture={true}
-            />
+            <DatePickerCompact value={startDate} onChange={setStartDate} allowFuture={true} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

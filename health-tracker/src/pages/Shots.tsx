@@ -1,7 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
-import { ConfirmModal, Modal, DateTimePicker, DatePickerCompact, NumberPickerCompact } from '@dak/ui';
+import {
+  ConfirmModal,
+  Modal,
+  DateTimePicker,
+  DatePickerCompact,
+  NumberPickerCompact,
+} from '@dak/ui';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
