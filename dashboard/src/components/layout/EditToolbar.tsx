@@ -1,7 +1,17 @@
 import { useState, useRef } from 'react';
-import { Plus, Download, Upload, Moon, Sun, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import {
+  Plus,
+  Download,
+  Upload,
+  Settings2,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  RotateCcw,
+} from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { Modal, Button } from '../shared/Modal';
+import { GlobalSettingsModal } from '../shared/GlobalSettingsModal';
 import { WIDGET_DEFAULTS, type WidgetType } from '../../types';
 
 const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[] = [
@@ -22,8 +32,6 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
  */
 export function EditToolbar() {
   const {
-    dark,
-    toggleDark,
     setEditMode,
     addPanel,
     screens,
@@ -31,11 +39,14 @@ export function EditToolbar() {
     setActiveScreen,
     exportConfig,
     importConfig,
+    resetConfig,
   } = useConfigStore();
 
   const [showAddWidget, setShowAddWidget] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const importRef = useRef<HTMLTextAreaElement>(null);
 
@@ -78,9 +89,11 @@ export function EditToolbar() {
       >
         {/* Screen navigation */}
         <button
-          onClick={() => setActiveScreen(activeScreenIndex - 1)}
-          disabled={activeScreenIndex === 0}
-          className="p-2 rounded-full hover:bg-neutral-700 disabled:opacity-30"
+          onClick={() => {
+            const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
+            setActiveScreen(prevIndex);
+          }}
+          className="p-2 rounded-full hover:bg-neutral-700"
           title="Previous screen"
         >
           <ChevronLeft size={20} className="text-white" />
@@ -91,9 +104,11 @@ export function EditToolbar() {
         </span>
 
         <button
-          onClick={() => setActiveScreen(activeScreenIndex + 1)}
-          disabled={activeScreenIndex >= screens.length - 1}
-          className="p-2 rounded-full hover:bg-neutral-700 disabled:opacity-30"
+          onClick={() => {
+            const nextIndex = activeScreenIndex === screens.length - 1 ? 0 : activeScreenIndex + 1;
+            setActiveScreen(nextIndex);
+          }}
+          className="p-2 rounded-full hover:bg-neutral-700"
           title="Next screen"
         >
           <ChevronRight size={20} className="text-white" />
@@ -110,17 +125,13 @@ export function EditToolbar() {
           <Plus size={20} className="text-white" />
         </button>
 
-        {/* Theme toggle */}
+        {/* Settings */}
         <button
-          onClick={toggleDark}
+          onClick={() => setShowSettingsModal(true)}
           className="p-2 rounded-full hover:bg-neutral-700"
-          title="Toggle theme"
+          title="Settings"
         >
-          {dark ? (
-            <Sun size={20} className="text-yellow-400" />
-          ) : (
-            <Moon size={20} className="text-blue-400" />
-          )}
+          <Settings2 size={20} className="text-white" />
         </button>
 
         <div className="w-px h-6 bg-neutral-600" />
@@ -140,6 +151,14 @@ export function EditToolbar() {
           title="Import config"
         >
           <Upload size={20} className="text-white" />
+        </button>
+
+        <button
+          onClick={() => setShowResetModal(true)}
+          className="p-2 rounded-full hover:bg-neutral-700"
+          title="Reset config"
+        >
+          <RotateCcw size={20} className="text-white" />
         </button>
 
         <div className="w-px h-6 bg-neutral-600" />
@@ -237,6 +256,34 @@ export function EditToolbar() {
         />
         {importError && <p className="mt-2 text-sm text-red-500">{importError}</p>}
       </Modal>
+
+      {/* Reset Confirmation Modal */}
+      <Modal
+        open={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        title="Reset Configuration"
+        actions={
+          <>
+            <Button onClick={() => setShowResetModal(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                resetConfig();
+                setShowResetModal(false);
+              }}
+              variant="danger"
+            >
+              Reset
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          This will reset all settings to defaults. Your current configuration will be lost.
+        </p>
+      </Modal>
+
+      {/* Settings Modal */}
+      <GlobalSettingsModal open={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
     </>
   );
 }

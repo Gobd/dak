@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuthStore } from "../stores/auth-store";
-import { useThemeStore } from "../stores/theme-store";
-import { Moon, Sun } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
+import { Moon, Sun } from 'lucide-react';
 
 export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuthStore();
   const { dark, toggle } = useThemeStore();
@@ -15,7 +15,7 @@ export function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     const { error } = await signIn(email, password);
@@ -24,7 +24,7 @@ export function Login() {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate("/");
+      navigate('/');
     }
   };
 
@@ -37,9 +37,7 @@ export function Login() {
         {dark ? <Sun size={20} /> : <Moon size={20} />}
       </button>
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center mb-8 dark:text-white">
-          Health Tracker
-        </h1>
+        <h1 className="text-2xl font-bold text-center mb-8 dark:text-white">Health Tracker</h1>
         <form
           onSubmit={handleSubmit}
           className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 space-y-4"
@@ -74,19 +72,13 @@ export function Login() {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <div className="flex justify-between text-sm">
-            <Link
-              to="/signup"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
               Create Account
             </Link>
-            <Link
-              to="/forgot-password"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium">
               Forgot Password?
             </Link>
           </div>

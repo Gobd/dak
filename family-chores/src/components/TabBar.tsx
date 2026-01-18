@@ -1,6 +1,6 @@
-import { CalendarDays, User, Calendar, Trophy } from "lucide-react";
-import type { DashboardView } from "../types";
-import { useSettingsStore } from "../stores/settings-store";
+import { CalendarDays, User, Calendar, Trophy } from 'lucide-react';
+import type { DashboardView } from '../types';
+import { useSettingsStore } from '../stores/settings-store';
 
 interface TabBarProps {
   activeView: DashboardView;
@@ -12,10 +12,10 @@ const allTabs: {
   label: string;
   icon: typeof CalendarDays;
 }[] = [
-  { id: "today", label: "Today", icon: CalendarDays },
-  { id: "my-tasks", label: "By Person", icon: User },
-  { id: "weekly", label: "Weekly", icon: Calendar },
-  { id: "leaderboard", label: "Points", icon: Trophy },
+  { id: 'today', label: 'Today', icon: CalendarDays },
+  { id: 'my-tasks', label: 'By Person', icon: User },
+  { id: 'weekly', label: 'Weekly', icon: Calendar },
+  { id: 'leaderboard', label: 'Points', icon: Trophy },
 ];
 
 export function TabBar({ activeView, onViewChange }: TabBarProps) {
@@ -23,9 +23,7 @@ export function TabBar({ activeView, onViewChange }: TabBarProps) {
   const hidePoints = settings?.hide_points ?? false;
 
   // Filter out leaderboard tab when points are hidden
-  const tabs = hidePoints
-    ? allTabs.filter((t) => t.id !== "leaderboard")
-    : allTabs;
+  const tabs = hidePoints ? allTabs.filter((t) => t.id !== 'leaderboard') : allTabs;
 
   return (
     <div className="flex bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
@@ -38,8 +36,8 @@ export function TabBar({ activeView, onViewChange }: TabBarProps) {
             onClick={() => onViewChange(tab.id)}
             className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 px-2 text-sm font-medium transition-colors ${
               isActive
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                : "text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-neutral-800"
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-neutral-800'
             }`}
           >
             <Icon size={20} />

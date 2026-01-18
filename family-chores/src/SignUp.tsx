@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuthStore } from "./stores/auth-store";
-import { useThemeStore } from "./stores/theme-store";
-import { Moon, Sun, ClipboardList } from "lucide-react";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuthStore } from './stores/auth-store';
+import { useThemeStore } from './stores/theme-store';
+import { Moon, Sun, ClipboardList } from 'lucide-react';
 
 export function SignUp() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuthStore();
@@ -16,15 +16,15 @@ export function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError('Password must be at least 6 characters');
       return;
     }
 
@@ -55,16 +55,11 @@ export function SignUp() {
         </div>
         {success ? (
           <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center">
-            <h2 className="text-lg font-semibold dark:text-white mb-2">
-              Check your email
-            </h2>
+            <h2 className="text-lg font-semibold dark:text-white mb-2">Check your email</h2>
             <p className="text-gray-600 dark:text-neutral-400 mb-4">
               We sent a confirmation link to {email}
             </p>
-            <Link
-              to="/login"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Back to Sign In
             </Link>
           </div>
@@ -73,9 +68,7 @@ export function SignUp() {
             onSubmit={handleSubmit}
             className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 space-y-4"
           >
-            <h2 className="text-lg font-semibold dark:text-white text-center">
-              Create Account
-            </h2>
+            <h2 className="text-lg font-semibold dark:text-white text-center">Create Account</h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
                 Email
@@ -118,14 +111,11 @@ export function SignUp() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
             <p className="text-center text-sm text-gray-600 dark:text-neutral-400">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
+              Already have an account?{' '}
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                 Sign In
               </Link>
             </p>

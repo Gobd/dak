@@ -1,24 +1,21 @@
-import { useState } from "react";
-import { X, Plus, Edit2, Trash2, Play, Trophy, User } from "lucide-react";
-import { useChoresStore } from "../../stores/chores-store";
-import { useInstancesStore } from "../../stores/instances-store";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import { ConfirmModal } from "../shared/ConfirmModal";
-import { ChoreEditModal } from "./ChoreEditModal";
-import type { ChoreWithAssignments } from "../../types";
+import { useState } from 'react';
+import { X, Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
+import { useChoresStore } from '../../stores/chores-store';
+import { useInstancesStore } from '../../stores/instances-store';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import { ConfirmModal } from '../shared/ConfirmModal';
+import { ChoreEditModal } from './ChoreEditModal';
+import type { ChoreWithAssignments } from '../../types';
 
 interface ChoresModalProps {
   onClose: () => void;
 }
 
 export function ChoresModal({ onClose }: ChoresModalProps) {
-  const { chores, addChore, updateChore, deleteChore, toggleActive } =
-    useChoresStore();
+  const { chores, addChore, updateChore, deleteChore, toggleActive } = useChoresStore();
   const { assignChoreNow } = useInstancesStore();
 
-  const [editingChore, setEditingChore] = useState<ChoreWithAssignments | null>(
-    null,
-  );
+  const [editingChore, setEditingChore] = useState<ChoreWithAssignments | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [assigningId, setAssigningId] = useState<string | null>(null);
@@ -26,23 +23,23 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
 
   const getScheduleLabel = (chore: ChoreWithAssignments) => {
     switch (chore.schedule_type) {
-      case "daily":
-        return "Daily";
-      case "every_x_days":
+      case 'daily':
+        return 'Daily';
+      case 'every_x_days':
         return `Every ${chore.interval_days} days`;
-      case "weekly": {
+      case 'weekly': {
         const days = chore.weekly_days ?? [];
-        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        return days.map((d) => dayNames[d]).join(", ");
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return days.map((d) => dayNames[d]).join(', ');
       }
-      case "monthly":
+      case 'monthly':
         return chore.monthly_day === -1
-          ? "Last day of month"
-          : `${chore.monthly_day}${chore.monthly_day === 1 ? "st" : chore.monthly_day === 2 ? "nd" : chore.monthly_day === 3 ? "rd" : "th"} of month`;
-      case "as_needed":
-        return "As needed";
+          ? 'Last day of month'
+          : `${chore.monthly_day}${chore.monthly_day === 1 ? 'st' : chore.monthly_day === 2 ? 'nd' : chore.monthly_day === 3 ? 'rd' : 'th'} of month`;
+      case 'as_needed':
+        return 'As needed';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -55,16 +52,12 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
       interval_days?: number;
       weekly_days?: number[];
       monthly_day?: number;
-      assignment_type: "anyone" | "everyone";
+      assignment_type: 'anyone' | 'everyone';
     },
-    assigneeIds: string[],
+    assigneeIds: string[]
   ) => {
     if (editingChore) {
-      await updateChore(
-        editingChore.id,
-        data as Parameters<typeof updateChore>[1],
-        assigneeIds,
-      );
+      await updateChore(editingChore.id, data as Parameters<typeof updateChore>[1], assigneeIds);
     } else {
       await addChore(data as Parameters<typeof addChore>[0], assigneeIds);
     }
@@ -92,9 +85,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
         <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Chores
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Chores</h2>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -124,12 +115,12 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                       {chore.assignments.length > 1 && (
                         <span
                           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            chore.assignment_type === "anyone"
-                              ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
-                              : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400"
+                            chore.assignment_type === 'anyone'
+                              ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
+                              : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
                           }`}
                         >
-                          {chore.assignment_type === "anyone" ? (
+                          {chore.assignment_type === 'anyone' ? (
                             <>
                               <Trophy size={10} />
                               Race
@@ -147,9 +138,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                       <p className="text-sm text-gray-500 dark:text-neutral-400">
                         {getScheduleLabel(chore)}
                       </p>
-                      <span className="text-gray-300 dark:text-neutral-600">
-                        •
-                      </span>
+                      <span className="text-gray-300 dark:text-neutral-600">•</span>
                       <div className="flex -space-x-1">
                         {chore.assignments.slice(0, 3).map((a) => (
                           <MemberAvatar
@@ -186,11 +175,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                       <Trash2 size={16} />
                     </button>
                     <button
-                      onClick={() =>
-                        setAssigningId(
-                          assigningId === chore.id ? null : chore.id,
-                        )
-                      }
+                      onClick={() => setAssigningId(assigningId === chore.id ? null : chore.id)}
                       className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/50"
                       title="Assign now"
                     >
@@ -227,9 +212,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                             color={a.member.color}
                             size="xs"
                           />
-                          <span className="text-sm dark:text-white">
-                            {a.member.name}
-                          </span>
+                          <span className="text-sm dark:text-white">{a.member.name}</span>
                         </button>
                       ))}
                     </div>

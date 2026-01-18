@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import { supabase } from "../lib/supabase";
-import { broadcastSync } from "../lib/realtime";
-import type { MedicineCourse, MedicineDose } from "../types";
-import { addDays, format } from "date-fns";
+import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { broadcastSync } from '../lib/realtime';
+import type { MedicineCourse, MedicineDose } from '../types';
+import { addDays, format } from 'date-fns';
 
 interface MedicineState {
   courses: MedicineCourse[];
@@ -30,9 +30,9 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
   fetchCourses: async () => {
     set({ loading: true });
     const { data, error } = await supabase
-      .from("medicine_courses")
-      .select("*, person:people(*)")
-      .order("start_date", { ascending: false });
+      .from('medicine_courses')
+      .select('*, person:people(*)')
+      .order('start_date', { ascending: false });
 
     if (!error && data) {
       set({ courses: data });
@@ -42,11 +42,11 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
 
   fetchDoses: async (courseId: string) => {
     const { data, error } = await supabase
-      .from("medicine_doses")
-      .select("*")
-      .eq("course_id", courseId)
-      .order("scheduled_date")
-      .order("dose_number");
+      .from('medicine_doses')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('scheduled_date')
+      .order('dose_number');
 
     if (!error && data) {
       set((state) => ({
@@ -58,7 +58,7 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
   addCourse: async (data) => {
     // Create the course
     const { data: course, error } = await supabase
-      .from("medicine_courses")
+      .from('medicine_courses')
       .insert(data)
       .select()
       .single();
@@ -72,51 +72,48 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
       dose_number: number;
     }> = [];
 
-    const startDate = new Date(data.start_date + "T00:00:00");
+    const startDate = new Date(data.start_date + 'T00:00:00');
     for (let day = 0; day < data.duration_days; day++) {
       const date = addDays(startDate, day);
       for (let doseNum = 1; doseNum <= data.doses_per_day; doseNum++) {
         doses.push({
           course_id: course.id,
-          scheduled_date: format(date, "yyyy-MM-dd"),
+          scheduled_date: format(date, 'yyyy-MM-dd'),
           dose_number: doseNum,
         });
       }
     }
 
-    await supabase.from("medicine_doses").insert(doses);
+    await supabase.from('medicine_doses').insert(doses);
 
     get().fetchCourses();
     get().fetchDoses(course.id);
-    broadcastSync({ type: "medicine" });
+    broadcastSync({ type: 'medicine' });
   },
 
   deleteCourse: async (id: string) => {
-    const { error } = await supabase
-      .from("medicine_courses")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from('medicine_courses').delete().eq('id', id);
 
     if (!error) {
       get().fetchCourses();
-      broadcastSync({ type: "medicine" });
+      broadcastSync({ type: 'medicine' });
     }
   },
 
   toggleDose: async (doseId: string, taken: boolean) => {
     const { data, error } = await supabase
-      .from("medicine_doses")
+      .from('medicine_doses')
       .update({
         taken,
         taken_at: taken ? new Date().toISOString() : null,
       })
-      .eq("id", doseId)
-      .select("course_id")
+      .eq('id', doseId)
+      .select('course_id')
       .single();
 
     if (!error && data) {
       get().fetchDoses(data.course_id);
-      broadcastSync({ type: "medicine" });
+      broadcastSync({ type: 'medicine' });
     }
   },
 }));

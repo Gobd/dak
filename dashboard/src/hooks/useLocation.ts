@@ -95,28 +95,22 @@ export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails |
   }
 }
 
-// Fallback default location (San Francisco, CA) - only used if config has no defaultLocation
-const FALLBACK_LOCATION: LocationConfig = {
-  lat: 37.7749,
-  lon: -122.4194,
-  city: 'San Francisco',
-  state: 'CA',
-};
-
 /**
  * Hook for managing widget location
- * Location comes from: stored config > panel args > config defaultLocation > San Francisco fallback
+ * Location comes from: stored config > panel args > globalSettings.defaultLocation > legacy defaultLocation
  * No browser geolocation - user must configure via settings modal
  */
 export function useLocation(widgetId: string, defaultLat?: number, defaultLon?: number) {
   // Subscribe to the specific location from store (re-renders when it changes)
   const storedLocation = useConfigStore((s) => s.locations?.[widgetId]);
-  const configDefaultLocation = useConfigStore((s) => s.defaultLocation);
+  const configDefaultLocation = useConfigStore(
+    (s) => s.globalSettings?.defaultLocation ?? s.defaultLocation
+  );
   const updateLocation = useConfigStore((s) => s.updateLocation);
 
   const [localLocation, setLocalLocation] = useState<LocationConfig | null>(null);
 
-  // Derive effective location: stored > local > args > config default > fallback
+  // Derive effective location: stored > local > args > globalSettings.defaultLocation
   const argsLocation = useMemo(
     (): LocationConfig | null =>
       defaultLat !== undefined && defaultLon !== undefined
@@ -124,8 +118,8 @@ export function useLocation(widgetId: string, defaultLat?: number, defaultLon?: 
         : null,
     [defaultLat, defaultLon]
   );
-  const location: LocationConfig =
-    storedLocation ?? localLocation ?? argsLocation ?? configDefaultLocation ?? FALLBACK_LOCATION;
+  // configDefaultLocation comes from globalSettings.defaultLocation (loaded from public/config/dashboard.json)
+  const location = storedLocation ?? localLocation ?? argsLocation ?? configDefaultLocation!;
 
   // Update location manually
   const setLocation = useCallback(

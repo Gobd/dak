@@ -1,11 +1,7 @@
-import { RealtimeChannel } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-type SyncEvent =
-  | { type: "shots" }
-  | { type: "medicine" }
-  | { type: "prn" }
-  | { type: "people" };
+type SyncEvent = { type: 'shots' } | { type: 'medicine' } | { type: 'prn' } | { type: 'people' };
 
 type SyncHandler = (event: SyncEvent) => void;
 
@@ -36,14 +32,12 @@ let listenersRegistered = false;
  * This is critical for mobile browsers that suspend JS when backgrounded
  */
 function handleVisibilityChange() {
-  if (document.visibilityState === "visible" && currentUserId) {
+  if (document.visibilityState === 'visible' && currentUserId) {
     const channelState = channel?.state;
 
     // Only reconnect if channel is unhealthy
-    if (channelState !== "joined" && channelState !== "joining") {
-      console.log(
-        "[realtime] App became visible with unhealthy channel, reconnecting...",
-      );
+    if (channelState !== 'joined' && channelState !== 'joining') {
+      console.log('[realtime] App became visible with unhealthy channel, reconnecting...');
       reconnectAttempts = 0; // Reset so we don't stay in "given up" state
       reconnectChannel(currentUserId);
     }
@@ -55,7 +49,7 @@ function handleVisibilityChange() {
  */
 function handleOnline() {
   if (currentUserId) {
-    console.log("[realtime] Browser came online, reconnecting...");
+    console.log('[realtime] Browser came online, reconnecting...');
     reconnectAttempts = 0;
     reconnectChannel(currentUserId);
   }
@@ -65,10 +59,10 @@ function handleOnline() {
  * Register browser event listeners for reconnection
  */
 function registerBrowserListeners() {
-  if (listenersRegistered || typeof document === "undefined") return;
+  if (listenersRegistered || typeof document === 'undefined') return;
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
-  window.addEventListener("online", handleOnline);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('online', handleOnline);
   listenersRegistered = true;
 }
 
@@ -76,10 +70,10 @@ function registerBrowserListeners() {
  * Unregister browser event listeners
  */
 function unregisterBrowserListeners() {
-  if (!listenersRegistered || typeof document === "undefined") return;
+  if (!listenersRegistered || typeof document === 'undefined') return;
 
-  document.removeEventListener("visibilitychange", handleVisibilityChange);
-  window.removeEventListener("online", handleOnline);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('online', handleOnline);
   listenersRegistered = false;
 }
 
@@ -94,10 +88,8 @@ function startHeartbeat(userId: string) {
   heartbeatInterval = setInterval(() => {
     const channelState = channel?.state;
 
-    if (channelState !== "joined" && channelState !== "joining") {
-      console.warn(
-        `[realtime] Heartbeat detected unhealthy channel: ${channelState}`,
-      );
+    if (channelState !== 'joined' && channelState !== 'joining') {
+      console.warn(`[realtime] Heartbeat detected unhealthy channel: ${channelState}`);
       scheduleReconnect(userId);
     }
   }, HEARTBEAT_INTERVAL_MS);
@@ -122,20 +114,18 @@ function scheduleReconnect(userId: string) {
   }
 
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.error("[realtime] Max reconnection attempts reached, giving up");
+    console.error('[realtime] Max reconnection attempts reached, giving up');
     return;
   }
 
   // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
   const delay = Math.min(
     RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
-    RECONNECT_MAX_DELAY_MS,
+    RECONNECT_MAX_DELAY_MS
   );
   reconnectAttempts++;
 
-  console.log(
-    `[realtime] Scheduling reconnect attempt ${reconnectAttempts} in ${delay}ms`,
-  );
+  console.log(`[realtime] Scheduling reconnect attempt ${reconnectAttempts} in ${delay}ms`);
 
   reconnectTimeout = setTimeout(() => {
     reconnectTimeout = null;
@@ -147,7 +137,7 @@ function scheduleReconnect(userId: string) {
  * Reconnect channel after a disconnect
  */
 function reconnectChannel(userId: string) {
-  console.log("[realtime] Attempting to reconnect...");
+  console.log('[realtime] Attempting to reconnect...');
 
   // Clean up old channel
   if (channel) {
@@ -176,29 +166,27 @@ function setupChannel(userId: string) {
   });
 
   channel
-    .on("broadcast", { event: "sync" }, ({ payload }) => {
+    .on('broadcast', { event: 'sync' }, ({ payload }) => {
       const event = payload as SyncEvent;
       handlers.forEach((handler) => handler(event));
     })
-    .on("presence", { event: "sync" }, () => {
+    .on('presence', { event: 'sync' }, () => {
       // Count other devices (exclude our own deviceId)
       const state = channel?.presenceState() ?? {};
-      otherDevicesOnline = Object.keys(state).filter(
-        (key) => key !== deviceId,
-      ).length;
+      otherDevicesOnline = Object.keys(state).filter((key) => key !== deviceId).length;
     })
     .subscribe(async (status, err) => {
-      if (status === "SUBSCRIBED") {
-        console.log("[realtime] Channel connected");
+      if (status === 'SUBSCRIBED') {
+        console.log('[realtime] Channel connected');
         reconnectAttempts = 0; // Reset on successful connection
         startHeartbeat(userId);
         await channel?.track({ device_id: deviceId });
-      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-        console.error("[realtime] Channel failed:", status, err);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('[realtime] Channel failed:', status, err);
         stopHeartbeat();
         scheduleReconnect(userId);
-      } else if (status === "CLOSED") {
-        console.warn("[realtime] Channel closed, reconnecting...");
+      } else if (status === 'CLOSED') {
+        console.warn('[realtime] Channel closed, reconnecting...');
         stopHeartbeat();
         scheduleReconnect(userId);
       }
@@ -265,8 +253,8 @@ export async function broadcastSync(event: SyncEvent) {
   if (!channel || otherDevicesOnline === 0) return;
 
   await channel.send({
-    type: "broadcast",
-    event: "sync",
+    type: 'broadcast',
+    event: 'sync',
     payload: event,
   });
 }

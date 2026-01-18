@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import { supabase } from "../lib/supabase";
-import { broadcastSync } from "../lib/realtime";
-import type { ShotSchedule, ShotLog } from "../types";
-import { addDays, format } from "date-fns";
+import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { broadcastSync } from '../lib/realtime';
+import type { ShotSchedule, ShotLog } from '../types';
+import { addDays, format } from 'date-fns';
 
 interface ShotsState {
   schedules: ShotSchedule[];
@@ -19,12 +19,7 @@ interface ShotsState {
   }) => Promise<void>;
   updateSchedule: (id: string, data: Partial<ShotSchedule>) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
-  logShot: (
-    scheduleId: string,
-    dose: string,
-    notes?: string,
-    takenAt?: Date,
-  ) => Promise<void>;
+  logShot: (scheduleId: string, dose: string, notes?: string, takenAt?: Date) => Promise<void>;
   pushNextDue: (scheduleId: string, days: number) => Promise<void>;
   deleteLog: (scheduleId: string, logId: string) => Promise<void>;
 }
@@ -37,9 +32,9 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
   fetchSchedules: async () => {
     set({ loading: true });
     const { data, error } = await supabase
-      .from("shot_schedules")
-      .select("*, person:people(*)")
-      .order("next_due");
+      .from('shot_schedules')
+      .select('*, person:people(*)')
+      .order('next_due');
 
     if (!error && data) {
       set({ schedules: data });
@@ -49,10 +44,10 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
 
   fetchLogs: async (scheduleId: string) => {
     const { data, error } = await supabase
-      .from("shot_logs")
-      .select("*")
-      .eq("schedule_id", scheduleId)
-      .order("taken_at", { ascending: false })
+      .from('shot_logs')
+      .select('*')
+      .eq('schedule_id', scheduleId)
+      .order('taken_at', { ascending: false })
       .limit(20);
 
     if (!error && data) {
@@ -63,51 +58,40 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
   },
 
   addSchedule: async (data) => {
-    const { error } = await supabase.from("shot_schedules").insert(data);
+    const { error } = await supabase.from('shot_schedules').insert(data);
 
     if (!error) {
       get().fetchSchedules();
-      broadcastSync({ type: "shots" });
+      broadcastSync({ type: 'shots' });
     }
   },
 
   updateSchedule: async (id: string, data: Partial<ShotSchedule>) => {
-    const { error } = await supabase
-      .from("shot_schedules")
-      .update(data)
-      .eq("id", id);
+    const { error } = await supabase.from('shot_schedules').update(data).eq('id', id);
 
     if (!error) {
       get().fetchSchedules();
-      broadcastSync({ type: "shots" });
+      broadcastSync({ type: 'shots' });
     }
   },
 
   deleteSchedule: async (id: string) => {
-    const { error } = await supabase
-      .from("shot_schedules")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from('shot_schedules').delete().eq('id', id);
 
     if (!error) {
       get().fetchSchedules();
-      broadcastSync({ type: "shots" });
+      broadcastSync({ type: 'shots' });
     }
   },
 
-  logShot: async (
-    scheduleId: string,
-    dose: string,
-    notes?: string,
-    takenAt?: Date,
-  ) => {
+  logShot: async (scheduleId: string, dose: string, notes?: string, takenAt?: Date) => {
     const schedule = get().schedules.find((s) => s.id === scheduleId);
     if (!schedule) return;
 
     const shotTime = takenAt || new Date();
 
     // Log the shot
-    const { error } = await supabase.from("shot_logs").insert({
+    const { error } = await supabase.from('shot_logs').insert({
       schedule_id: scheduleId,
       taken_at: shotTime.toISOString(),
       dose,
@@ -119,16 +103,16 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
     // Update next due date
     const nextDue = addDays(shotTime, schedule.interval_days);
     await supabase
-      .from("shot_schedules")
+      .from('shot_schedules')
       .update({
-        next_due: format(nextDue, "yyyy-MM-dd"),
+        next_due: format(nextDue, 'yyyy-MM-dd'),
         current_dose: dose,
       })
-      .eq("id", scheduleId);
+      .eq('id', scheduleId);
 
     get().fetchSchedules();
     get().fetchLogs(scheduleId);
-    broadcastSync({ type: "shots" });
+    broadcastSync({ type: 'shots' });
   },
 
   pushNextDue: async (scheduleId: string, days: number) => {
@@ -136,52 +120,49 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
     if (!schedule) return;
 
     // Parse as local date (append time to avoid UTC interpretation)
-    const currentDue = new Date(schedule.next_due + "T00:00:00");
+    const currentDue = new Date(schedule.next_due + 'T00:00:00');
     const newDue = addDays(currentDue, days);
 
     await supabase
-      .from("shot_schedules")
-      .update({ next_due: format(newDue, "yyyy-MM-dd") })
-      .eq("id", scheduleId);
+      .from('shot_schedules')
+      .update({ next_due: format(newDue, 'yyyy-MM-dd') })
+      .eq('id', scheduleId);
 
     get().fetchSchedules();
-    broadcastSync({ type: "shots" });
+    broadcastSync({ type: 'shots' });
   },
 
   deleteLog: async (scheduleId: string, logId: string) => {
     const schedule = get().schedules.find((s) => s.id === scheduleId);
     if (!schedule) return;
 
-    const { error } = await supabase.from("shot_logs").delete().eq("id", logId);
+    const { error } = await supabase.from('shot_logs').delete().eq('id', logId);
 
     if (error) return;
 
     // Fetch remaining logs to recalculate next_due
     const { data: remainingLogs } = await supabase
-      .from("shot_logs")
-      .select("*")
-      .eq("schedule_id", scheduleId)
-      .order("taken_at", { ascending: false })
+      .from('shot_logs')
+      .select('*')
+      .eq('schedule_id', scheduleId)
+      .order('taken_at', { ascending: false })
       .limit(1);
 
     if (remainingLogs && remainingLogs.length > 0) {
       // Recalculate from most recent remaining log
       const lastLog = remainingLogs[0];
-      const nextDue = addDays(
-        new Date(lastLog.taken_at),
-        schedule.interval_days,
-      );
+      const nextDue = addDays(new Date(lastLog.taken_at), schedule.interval_days);
       await supabase
-        .from("shot_schedules")
+        .from('shot_schedules')
         .update({
-          next_due: format(nextDue, "yyyy-MM-dd"),
+          next_due: format(nextDue, 'yyyy-MM-dd'),
           current_dose: lastLog.dose,
         })
-        .eq("id", scheduleId);
+        .eq('id', scheduleId);
     }
 
     get().fetchSchedules();
     get().fetchLogs(scheduleId);
-    broadcastSync({ type: "shots" });
+    broadcastSync({ type: 'shots' });
   },
 }));

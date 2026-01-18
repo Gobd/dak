@@ -1,17 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
-import { usePeopleStore } from "../stores/people-store";
-import { useShotsStore } from "../stores/shots-store";
-import { ConfirmModal } from "../components/ConfirmModal";
-import { TimePicker } from "../components/TimePicker";
-import {
-  Plus,
-  Syringe,
-  ChevronRight,
-  ChevronLeft,
-  History,
-  Trash2,
-} from "lucide-react";
-import { format } from "date-fns";
+import { useEffect, useState, useCallback } from 'react';
+import { usePeopleStore } from '../stores/people-store';
+import { useShotsStore } from '../stores/shots-store';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { TimePicker } from '../components/TimePicker';
+import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function Shots() {
   const { people, fetchPeople } = usePeopleStore();
@@ -37,13 +30,13 @@ export function Shots() {
     logId: string;
   } | null>(null);
 
-  const [personId, setPersonId] = useState("");
-  const [name, setName] = useState("");
-  const [intervalDays, setIntervalDays] = useState<number | "">("");
-  const [currentDose, setCurrentDose] = useState("");
-  const [nextDue, setNextDue] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [logDose, setLogDose] = useState("");
-  const [logNotes, setLogNotes] = useState("");
+  const [personId, setPersonId] = useState('');
+  const [name, setName] = useState('');
+  const [intervalDays, setIntervalDays] = useState<number | ''>('');
+  const [currentDose, setCurrentDose] = useState('');
+  const [nextDue, setNextDue] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [logDose, setLogDose] = useState('');
+  const [logNotes, setLogNotes] = useState('');
   const [logTime, setLogTime] = useState<Date | null>(null);
   const [useCustomTime, setUseCustomTime] = useState(false);
 
@@ -62,11 +55,11 @@ export function Shots() {
       next_due: nextDue,
     });
     setShowAddForm(false);
-    setPersonId("");
-    setName("");
-    setIntervalDays("");
-    setCurrentDose("");
-    setNextDue(format(new Date(), "yyyy-MM-dd"));
+    setPersonId('');
+    setName('');
+    setIntervalDays('');
+    setCurrentDose('');
+    setNextDue(format(new Date(), 'yyyy-MM-dd'));
   };
 
   const handleLogShot = async (scheduleId: string) => {
@@ -74,8 +67,8 @@ export function Shots() {
     const takenAt = useCustomTime && logTime ? logTime : undefined;
     await logShot(scheduleId, logDose, logNotes || undefined, takenAt);
     setShowLogForm(null);
-    setLogDose("");
-    setLogNotes("");
+    setLogDose('');
+    setLogNotes('');
     setLogTime(null);
     setUseCustomTime(false);
   };
@@ -91,16 +84,16 @@ export function Shots() {
 
   const handleUpdateSchedule = async (
     id: string,
-    data: { interval_days?: number; current_dose?: string },
+    data: { interval_days?: number; current_dose?: string }
   ) => {
     await updateSchedule(id, data);
     setShowEditForm(null);
   };
 
   const inputClass =
-    "w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500";
+    'w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500';
   const btnSecondary =
-    "px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300";
+    'px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300';
 
   return (
     <div className="space-y-6">
@@ -181,9 +174,7 @@ export function Shots() {
                     type="number"
                     value={intervalDays}
                     onChange={(e) =>
-                      setIntervalDays(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
+                      setIntervalDays(e.target.value === '' ? '' : Number(e.target.value))
                     }
                     min={1}
                     placeholder="7"
@@ -252,23 +243,14 @@ export function Shots() {
                   <div className="flex items-center gap-3">
                     <Syringe className="text-blue-600" size={24} />
                     <div>
-                      <div className="font-semibold">
-                        {schedule.person?.name}
-                      </div>
-                      <div className="text-gray-600 dark:text-neutral-400">
-                        {schedule.name}
-                      </div>
+                      <div className="font-semibold">{schedule.person?.name}</div>
+                      <div className="text-gray-600 dark:text-neutral-400">{schedule.name}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-500 dark:text-neutral-400">
-                      Next due
-                    </div>
+                    <div className="text-sm text-gray-500 dark:text-neutral-400">Next due</div>
                     <div className="font-bold text-lg">
-                      {format(
-                        new Date(schedule.next_due + "T00:00:00"),
-                        "EEE, MMM d",
-                      )}
+                      {format(new Date(schedule.next_due + 'T00:00:00'), 'EEE, MMM d')}
                     </div>
                   </div>
                 </div>
@@ -308,10 +290,7 @@ export function Shots() {
                     <History size={16} />
                     History
                   </button>
-                  <button
-                    onClick={() => setShowEditForm(schedule.id)}
-                    className={btnSecondary}
-                  >
+                  <button onClick={() => setShowEditForm(schedule.id)} className={btnSecondary}>
                     Edit
                   </button>
                   <button
@@ -335,12 +314,7 @@ export function Shots() {
                       {(logs[schedule.id] || []).map((log) => (
                         <div key={log.id} className="text-sm">
                           <div className="flex items-center justify-between">
-                            <span>
-                              {format(
-                                new Date(log.taken_at),
-                                "MMM d, yyyy h:mm a",
-                              )}
-                            </span>
+                            <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-gray-600 dark:text-neutral-400">
                                 {log.dose}
@@ -394,17 +368,12 @@ export function Shots() {
                         <button
                           type="button"
                           onClick={() => setUseCustomTime(!useCustomTime)}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300"}`}
+                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300'}`}
                         >
-                          {useCustomTime ? "Custom time" : "Now"}
+                          {useCustomTime ? 'Custom time' : 'Now'}
                         </button>
                       </div>
-                      {useCustomTime && (
-                        <TimePicker
-                          value={logTime}
-                          onChange={handleTimeChange}
-                        />
-                      )}
+                      {useCustomTime && <TimePicker value={logTime} onChange={handleTimeChange} />}
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
@@ -469,23 +438,16 @@ export function Shots() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowEditForm(null)}
-                        className={btnSecondary}
-                      >
+                      <button onClick={() => setShowEditForm(null)} className={btnSecondary}>
                         Cancel
                       </button>
                       <button
                         onClick={() => {
                           const interval = (
-                            document.getElementById(
-                              `interval-${schedule.id}`,
-                            ) as HTMLInputElement
+                            document.getElementById(`interval-${schedule.id}`) as HTMLInputElement
                           ).value;
                           const dose = (
-                            document.getElementById(
-                              `dose-${schedule.id}`,
-                            ) as HTMLInputElement
+                            document.getElementById(`dose-${schedule.id}`) as HTMLInputElement
                           ).value;
                           handleUpdateSchedule(schedule.id, {
                             interval_days: Number(interval),

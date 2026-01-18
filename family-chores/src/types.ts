@@ -11,21 +11,15 @@ export interface Chore {
   name: string;
   description: string | null;
   points: number;
-  schedule_type:
-    | "daily"
-    | "every_x_days"
-    | "weekly"
-    | "monthly"
-    | "as_needed"
-    | "goal";
+  schedule_type: 'daily' | 'every_x_days' | 'weekly' | 'monthly' | 'as_needed' | 'goal';
   interval_days: number | null;
   weekly_days: number[] | null;
   monthly_day: number | null;
-  assignment_type: "anyone" | "everyone";
+  assignment_type: 'anyone' | 'everyone';
   times_per_day: number; // For multi-daily tasks (default 1)
   // Goal/habit fields (used when schedule_type = 'goal')
   target_count: number | null; // Target completions per period
-  goal_period: "daily" | "weekly" | "monthly" | null;
+  goal_period: 'daily' | 'weekly' | 'monthly' | null;
   is_active: boolean;
   created_at: string;
 }
@@ -68,7 +62,7 @@ export interface PointsLedgerEntry {
   id: string;
   member_id: string;
   amount: number;
-  transaction_type: "earned" | "redeemed" | "adjustment";
+  transaction_type: 'earned' | 'redeemed' | 'adjustment';
   reference_id: string | null;
   notes: string | null;
   created_at: string;
@@ -103,12 +97,12 @@ export interface GoalProgress {
   is_complete: boolean; // completions >= target
 }
 
-export type DashboardView = "today" | "my-tasks" | "weekly" | "leaderboard";
+export type DashboardView = 'today' | 'my-tasks' | 'weekly' | 'leaderboard';
 
 export type SyncEvent =
-  | { type: "members" }
-  | { type: "chores" }
-  | { type: "instances" }
-  | { type: "points" }
-  | { type: "goals" }
-  | { type: "settings" };
+  | { type: 'members' }
+  | { type: 'chores' }
+  | { type: 'instances' }
+  | { type: 'points' }
+  | { type: 'goals' }
+  | { type: 'settings' };

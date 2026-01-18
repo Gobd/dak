@@ -1,17 +1,17 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuthStore } from "./stores/auth-store";
-import { Layout } from "./components/Layout";
-import { Login } from "./pages/Login";
-import { SignUp } from "./pages/SignUp";
-import { ForgotPassword } from "./pages/ForgotPassword";
-import { ResetPassword } from "./pages/ResetPassword";
-import { Home } from "./pages/Home";
-import { Shots } from "./pages/Shots";
-import { Courses } from "./pages/Courses";
-import { AsNeeded } from "./pages/AsNeeded";
-import { People } from "./pages/People";
-import { useEffect } from "react";
-import { useRealtimeSync } from "./hooks/useRealtimeSync";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './stores/auth-store';
+import { Layout } from './components/Layout';
+import { Login } from './pages/Login';
+import { SignUp } from './pages/SignUp';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import { Home } from './pages/Home';
+import { Shots } from './pages/Shots';
+import { Courses } from './pages/Courses';
+import { AsNeeded } from './pages/AsNeeded';
+import { People } from './pages/People';
+import { useEffect } from 'react';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuthStore();

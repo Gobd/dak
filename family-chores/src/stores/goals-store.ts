@@ -1,9 +1,9 @@
-import { create } from "zustand";
-import { startOfWeek, startOfMonth, startOfDay, format } from "date-fns";
-import { supabase } from "../lib/supabase";
-import { broadcastSync } from "../lib/realtime";
-import { useChoresStore } from "./chores-store";
-import type { GoalProgress, GoalCompletion } from "../types";
+import { create } from 'zustand';
+import { startOfWeek, startOfMonth, startOfDay, format } from 'date-fns';
+import { supabase } from '../lib/supabase';
+import { broadcastSync } from '../lib/realtime';
+import { useChoresStore } from './chores-store';
+import type { GoalProgress, GoalCompletion } from '../types';
 
 interface GoalsState {
   progress: GoalProgress[];
@@ -14,14 +14,14 @@ interface GoalsState {
   removeLastCompletion: (choreId: string, memberId: string) => Promise<void>;
 }
 
-function getPeriodStart(period: "daily" | "weekly" | "monthly"): string {
+function getPeriodStart(period: 'daily' | 'weekly' | 'monthly'): string {
   const now = new Date();
-  if (period === "daily") {
-    return format(startOfDay(now), "yyyy-MM-dd");
-  } else if (period === "weekly") {
-    return format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+  if (period === 'daily') {
+    return format(startOfDay(now), 'yyyy-MM-dd');
+  } else if (period === 'weekly') {
+    return format(startOfWeek(now, { weekStartsOn: 0 }), 'yyyy-MM-dd');
   }
-  return format(startOfMonth(now), "yyyy-MM-dd");
+  return format(startOfMonth(now), 'yyyy-MM-dd');
 }
 
 export const useGoalsStore = create<GoalsState>((set, get) => ({
@@ -33,9 +33,7 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     set({ loading: true });
 
     const chores = useChoresStore.getState().chores;
-    const goals = chores.filter(
-      (c) => c.schedule_type === "goal" && c.is_active,
-    );
+    const goals = chores.filter((c) => c.schedule_type === 'goal' && c.is_active);
 
     if (goals.length === 0) {
       set({ progress: [], completions: [], loading: false });
@@ -45,10 +43,10 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     // Fetch all completions for active goals
     const goalIds = goals.map((g) => g.id);
     const { data: allCompletions } = await supabase
-      .from("goal_completions")
-      .select("*")
-      .in("chore_id", goalIds)
-      .order("completed_at", { ascending: false });
+      .from('goal_completions')
+      .select('*')
+      .in('chore_id', goalIds)
+      .order('completed_at', { ascending: false });
 
     const completions = allCompletions ?? [];
 
@@ -56,14 +54,14 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     const progressList: GoalProgress[] = [];
 
     for (const goal of goals) {
-      const periodStart = getPeriodStart(goal.goal_period ?? "weekly");
+      const periodStart = getPeriodStart(goal.goal_period ?? 'weekly');
 
       for (const assignment of goal.assignments) {
         const memberCompletions = completions.filter(
           (c) =>
             c.chore_id === goal.id &&
             c.member_id === assignment.member.id &&
-            c.period_start === periodStart,
+            c.period_start === periodStart
         );
 
         const targetCount = goal.target_count ?? 1;
@@ -88,10 +86,10 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     const goal = chores.find((c) => c.id === choreId);
     if (!goal) return;
 
-    const periodStart = getPeriodStart(goal.goal_period ?? "weekly");
+    const periodStart = getPeriodStart(goal.goal_period ?? 'weekly');
 
     // Insert completion
-    await supabase.from("goal_completions").insert({
+    await supabase.from('goal_completions').insert({
       chore_id: choreId,
       member_id: memberId,
       period_start: periodStart,
@@ -99,16 +97,16 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     });
 
     // Award points
-    await supabase.from("points_ledger").insert({
+    await supabase.from('points_ledger').insert({
       member_id: memberId,
       amount: goal.points,
-      transaction_type: "earned",
+      transaction_type: 'earned',
       notes: `${goal.name} (goal)`,
     });
 
     await get().fetchGoalProgress();
-    broadcastSync({ type: "goals" });
-    broadcastSync({ type: "points" });
+    broadcastSync({ type: 'goals' });
+    broadcastSync({ type: 'points' });
   },
 
   removeLastCompletion: async (choreId: string, memberId: string) => {
@@ -116,39 +114,36 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
     const goal = chores.find((c) => c.id === choreId);
     if (!goal) return;
 
-    const periodStart = getPeriodStart(goal.goal_period ?? "weekly");
+    const periodStart = getPeriodStart(goal.goal_period ?? 'weekly');
 
     // Find the most recent completion for this goal/member/period
     const { data: lastCompletion } = await supabase
-      .from("goal_completions")
-      .select("id, points_awarded")
-      .eq("chore_id", choreId)
-      .eq("member_id", memberId)
-      .eq("period_start", periodStart)
-      .order("completed_at", { ascending: false })
+      .from('goal_completions')
+      .select('id, points_awarded')
+      .eq('chore_id', choreId)
+      .eq('member_id', memberId)
+      .eq('period_start', periodStart)
+      .order('completed_at', { ascending: false })
       .limit(1)
       .single();
 
     if (lastCompletion) {
       // Remove the completion
-      await supabase
-        .from("goal_completions")
-        .delete()
-        .eq("id", lastCompletion.id);
+      await supabase.from('goal_completions').delete().eq('id', lastCompletion.id);
 
       // Remove points (create negative adjustment)
       if (lastCompletion.points_awarded) {
-        await supabase.from("points_ledger").insert({
+        await supabase.from('points_ledger').insert({
           member_id: memberId,
           amount: -lastCompletion.points_awarded,
-          transaction_type: "adjustment",
+          transaction_type: 'adjustment',
           notes: `Undo: ${goal.name} (goal)`,
         });
       }
     }
 
     await get().fetchGoalProgress();
-    broadcastSync({ type: "goals" });
-    broadcastSync({ type: "points" });
+    broadcastSync({ type: 'goals' });
+    broadcastSync({ type: 'points' });
   },
 }));

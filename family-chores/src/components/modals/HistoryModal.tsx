@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { X, Filter } from "lucide-react";
-import { format } from "date-fns";
-import { usePointsStore } from "../../stores/points-store";
-import { useMembersStore } from "../../stores/members-store";
-import { MemberAvatar } from "../shared/MemberAvatar";
+import { useEffect, useState } from 'react';
+import { X, Filter } from 'lucide-react';
+import { format } from 'date-fns';
+import { usePointsStore } from '../../stores/points-store';
+import { useMembersStore } from '../../stores/members-store';
+import { MemberAvatar } from '../shared/MemberAvatar';
 
 interface HistoryModalProps {
   onClose: () => void;
@@ -25,17 +25,14 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
     };
   }, [filterMemberId, fetchLedger]);
 
-  const getMember = (memberId: string) =>
-    members.find((m) => m.id === memberId);
+  const getMember = (memberId: string) => members.find((m) => m.id === memberId);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Points History
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Points History</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -52,8 +49,8 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
               onClick={() => setFilterMemberId(null)}
               className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
                 filterMemberId === null
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-neutral-800"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-neutral-800'
               }`}
             >
               All
@@ -64,8 +61,8 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
                 onClick={() => setFilterMemberId(member.id)}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
                   filterMemberId === member.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 dark:bg-neutral-800"
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-neutral-800'
                 }`}
               >
                 <span>{member.avatar_emoji}</span>
@@ -79,15 +76,11 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center p-8">
-              <div className="text-gray-500 dark:text-neutral-400">
-                Loading...
-              </div>
+              <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
             </div>
           ) : ledger.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-neutral-400">
-                No history yet
-              </p>
+              <p className="text-gray-500 dark:text-neutral-400">No history yet</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -111,24 +104,23 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
 
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 dark:text-white truncate">
-                        {entry.transaction_type === "earned"
-                          ? "Task completed"
-                          : entry.transaction_type === "redeemed"
-                            ? (entry.notes ?? "Points redeemed")
-                            : (entry.notes ?? "Adjustment")}
+                        {entry.transaction_type === 'earned'
+                          ? 'Task completed'
+                          : entry.transaction_type === 'redeemed'
+                            ? (entry.notes ?? 'Points redeemed')
+                            : (entry.notes ?? 'Adjustment')}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-neutral-400">
-                        {member?.name} •{" "}
-                        {format(new Date(entry.created_at), "MMM d, h:mm a")}
+                        {member?.name} • {format(new Date(entry.created_at), 'MMM d, h:mm a')}
                       </p>
                     </div>
 
                     <span
                       className={`text-lg font-semibold ${
-                        isPositive ? "text-green-600" : "text-red-600"
+                        isPositive ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
-                      {isPositive ? "+" : ""}
+                      {isPositive ? '+' : ''}
                       {entry.amount}
                     </span>
                   </div>

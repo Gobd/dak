@@ -1,45 +1,31 @@
-import { useMemo } from "react";
-import { format } from "date-fns";
-import { Users, ClipboardList, Target } from "lucide-react";
-import { useInstancesStore } from "../../stores/instances-store";
-import { useMembersStore } from "../../stores/members-store";
-import { useGoalsStore } from "../../stores/goals-store";
-import { TaskCard } from "../shared/TaskCard";
-import { GoalCard } from "../shared/GoalCard";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import { ProgressRing } from "../shared/ProgressRing";
-import type { FamilyMember, ChoreInstanceWithDetails } from "../../types";
+import { useMemo } from 'react';
+import { format } from 'date-fns';
+import { Users, ClipboardList, Target } from 'lucide-react';
+import { useInstancesStore } from '../../stores/instances-store';
+import { useMembersStore } from '../../stores/members-store';
+import { useGoalsStore } from '../../stores/goals-store';
+import { TaskCard } from '../shared/TaskCard';
+import { GoalCard } from '../shared/GoalCard';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import { ProgressRing } from '../shared/ProgressRing';
+import type { FamilyMember, ChoreInstanceWithDetails } from '../../types';
 
 interface TodayViewProps {
-  onSelectMemberForTask: (
-    instanceId: string,
-    assignees: FamilyMember[],
-  ) => void;
+  onSelectMemberForTask: (instanceId: string, assignees: FamilyMember[]) => void;
   onOpenFamily: () => void;
   onOpenChores: () => void;
 }
 
-export function TodayView({
-  onSelectMemberForTask,
-  onOpenFamily,
-  onOpenChores,
-}: TodayViewProps) {
-  const { instances, loading, completeTask, uncompleteTask } =
-    useInstancesStore();
+export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }: TodayViewProps) {
+  const { instances, loading, completeTask, uncompleteTask } = useInstancesStore();
   const { members } = useMembersStore();
-  const {
-    progress: goalProgress,
-    recordCompletion,
-    removeLastCompletion,
-  } = useGoalsStore();
+  const { progress: goalProgress, recordCompletion, removeLastCompletion } = useGoalsStore();
 
   // Group goals by period
   const { dailyGoals, weeklyGoals, monthlyGoals } = useMemo(() => {
-    const daily = goalProgress.filter((p) => p.chore.goal_period === "daily");
-    const weekly = goalProgress.filter((p) => p.chore.goal_period === "weekly");
-    const monthly = goalProgress.filter(
-      (p) => p.chore.goal_period === "monthly",
-    );
+    const daily = goalProgress.filter((p) => p.chore.goal_period === 'daily');
+    const weekly = goalProgress.filter((p) => p.chore.goal_period === 'weekly');
+    const monthly = goalProgress.filter((p) => p.chore.goal_period === 'monthly');
     return { dailyGoals: daily, weeklyGoals: weekly, monthlyGoals: monthly };
   }, [goalProgress]);
 
@@ -71,8 +57,7 @@ export function TodayView({
   // Overall progress
   const totalTasks = instances.length;
   const completedTasks = instances.filter((i) => i.completed).length;
-  const progressPercent =
-    totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   if (loading) {
     return (
@@ -88,10 +73,10 @@ export function TodayView({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            {format(new Date(), "EEEE")}
+            {format(new Date(), 'EEEE')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-neutral-400">
-            {format(new Date(), "MMMM d, yyyy")}
+            {format(new Date(), 'MMMM d, yyyy')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -99,9 +84,7 @@ export function TodayView({
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {completedTasks}/{totalTasks}
             </p>
-            <p className="text-xs text-gray-500 dark:text-neutral-400">
-              tasks done
-            </p>
+            <p className="text-xs text-gray-500 dark:text-neutral-400">tasks done</p>
           </div>
           <ProgressRing percent={progressPercent} size={56} />
         </div>
@@ -113,9 +96,7 @@ export function TodayView({
             <Users className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">
-              No family members yet
-            </p>
+            <p className="text-gray-500 dark:text-neutral-400">No family members yet</p>
             <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
               Start by adding your family
             </p>
@@ -134,9 +115,7 @@ export function TodayView({
             <ClipboardList className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">
-              No tasks scheduled for today
-            </p>
+            <p className="text-gray-500 dark:text-neutral-400">No tasks scheduled for today</p>
             <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
               Create chores and assign them to family members
             </p>
@@ -157,9 +136,7 @@ export function TodayView({
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">🏆</span>
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">
-                    Shared Tasks
-                  </h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-white">Shared Tasks</h2>
                   <p className="text-xs text-gray-500 dark:text-neutral-400">
                     First to complete wins the points!
                   </p>
@@ -179,9 +156,7 @@ export function TodayView({
                         onSelectMemberForTask(instance.id, instance.assignees);
                       }
                     }}
-                    onSelectMember={() =>
-                      onSelectMemberForTask(instance.id, instance.assignees)
-                    }
+                    onSelectMember={() => onSelectMemberForTask(instance.id, instance.assignees)}
                   />
                 ))}
               </div>
@@ -194,19 +169,12 @@ export function TodayView({
               const memberTasks = memberInstances[member.id] || [];
               if (memberTasks.length === 0) return null;
 
-              const memberCompleted = memberTasks.filter(
-                (t) => t.completed,
-              ).length;
+              const memberCompleted = memberTasks.filter((t) => t.completed).length;
               const memberPercent =
-                memberTasks.length > 0
-                  ? (memberCompleted / memberTasks.length) * 100
-                  : 0;
+                memberTasks.length > 0 ? (memberCompleted / memberTasks.length) * 100 : 0;
 
               return (
-                <div
-                  key={member.id}
-                  className="bg-gray-50 dark:bg-neutral-900 rounded-2xl p-4"
-                >
+                <div key={member.id} className="bg-gray-50 dark:bg-neutral-900 rounded-2xl p-4">
                   {/* Member header */}
                   <div className="flex items-center gap-3 mb-4">
                     <MemberAvatar
@@ -223,11 +191,7 @@ export function TodayView({
                         {memberCompleted}/{memberTasks.length} done
                       </p>
                     </div>
-                    <ProgressRing
-                      percent={memberPercent}
-                      size={40}
-                      strokeWidth={3}
-                    />
+                    <ProgressRing percent={memberPercent} size={40} strokeWidth={3} />
                   </div>
 
                   {/* Tasks */}
@@ -259,9 +223,7 @@ export function TodayView({
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">
-                    Daily Goals
-                  </h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-white">Daily Goals</h2>
                   <p className="text-xs text-gray-500 dark:text-neutral-400">
                     Complete these goals today
                   </p>
@@ -272,15 +234,8 @@ export function TodayView({
                   <GoalCard
                     key={`${progress.chore.id}-${progress.member.id}`}
                     progress={progress}
-                    onIncrement={() =>
-                      recordCompletion(progress.chore.id, progress.member.id)
-                    }
-                    onDecrement={() =>
-                      removeLastCompletion(
-                        progress.chore.id,
-                        progress.member.id,
-                      )
-                    }
+                    onIncrement={() => recordCompletion(progress.chore.id, progress.member.id)}
+                    onDecrement={() => removeLastCompletion(progress.chore.id, progress.member.id)}
                   />
                 ))}
               </div>
@@ -293,9 +248,7 @@ export function TodayView({
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">
-                    This Week
-                  </h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-white">This Week</h2>
                   <p className="text-xs text-gray-500 dark:text-neutral-400">
                     Weekly goals to achieve
                   </p>
@@ -306,15 +259,8 @@ export function TodayView({
                   <GoalCard
                     key={`${progress.chore.id}-${progress.member.id}`}
                     progress={progress}
-                    onIncrement={() =>
-                      recordCompletion(progress.chore.id, progress.member.id)
-                    }
-                    onDecrement={() =>
-                      removeLastCompletion(
-                        progress.chore.id,
-                        progress.member.id,
-                      )
-                    }
+                    onIncrement={() => recordCompletion(progress.chore.id, progress.member.id)}
+                    onDecrement={() => removeLastCompletion(progress.chore.id, progress.member.id)}
                   />
                 ))}
               </div>
@@ -327,9 +273,7 @@ export function TodayView({
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-6 h-6 text-teal-600 dark:text-teal-400" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">
-                    This Month
-                  </h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-white">This Month</h2>
                   <p className="text-xs text-gray-500 dark:text-neutral-400">
                     Monthly goals to achieve
                   </p>
@@ -340,15 +284,8 @@ export function TodayView({
                   <GoalCard
                     key={`${progress.chore.id}-${progress.member.id}`}
                     progress={progress}
-                    onIncrement={() =>
-                      recordCompletion(progress.chore.id, progress.member.id)
-                    }
-                    onDecrement={() =>
-                      removeLastCompletion(
-                        progress.chore.id,
-                        progress.member.id,
-                      )
-                    }
+                    onIncrement={() => recordCompletion(progress.chore.id, progress.member.id)}
+                    onDecrement={() => removeLastCompletion(progress.chore.id, progress.member.id)}
                   />
                 ))}
               </div>

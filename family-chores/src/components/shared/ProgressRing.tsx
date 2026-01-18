@@ -9,17 +9,14 @@ export function ProgressRing({
   percent,
   size = 48,
   strokeWidth = 4,
-  className = "",
+  className = '',
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percent / 100) * circumference;
 
   return (
-    <div
-      className={`relative ${className}`}
-      style={{ width: size, height: size }}
-    >
+    <div className={`relative ${className}`} style={{ width: size, height: size }}>
       <svg className="transform -rotate-90" width={size} height={size}>
         {/* Background circle */}
         <circle
@@ -43,11 +40,7 @@ export function ProgressRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           className={
-            percent === 100
-              ? "text-green-500"
-              : percent > 50
-                ? "text-blue-500"
-                : "text-orange-500"
+            percent === 100 ? 'text-green-500' : percent > 50 ? 'text-blue-500' : 'text-orange-500'
           }
         />
       </svg>

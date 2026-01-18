@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { supabase } from "../lib/supabase";
-import type { AppSettings } from "../types";
+import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import type { AppSettings } from '../types';
 
 interface SettingsState {
   settings: AppSettings | null;
@@ -20,14 +20,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   fetchSettings: async () => {
     set({ loading: true });
-    const { data } = await supabase.from("app_settings").select("*").single();
+    const { data } = await supabase.from('app_settings').select('*').single();
 
     if (data) {
       set({ settings: data, loading: false });
     } else {
       // Create default settings if none exist
       const { data: newSettings } = await supabase
-        .from("app_settings")
+        .from('app_settings')
         .insert({})
         .select()
         .single();
@@ -37,9 +37,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setPin: async (pin: string) => {
     const { data } = await supabase
-      .from("app_settings")
+      .from('app_settings')
       .update({ parent_pin: pin })
-      .eq("id", get().settings?.id)
+      .eq('id', get().settings?.id)
       .select()
       .single();
 
@@ -62,9 +62,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setHidePoints: async (hide: boolean) => {
     const { data } = await supabase
-      .from("app_settings")
+      .from('app_settings')
       .update({ hide_points: hide })
-      .eq("id", get().settings?.id)
+      .eq('id', get().settings?.id)
       .select()
       .single();
 

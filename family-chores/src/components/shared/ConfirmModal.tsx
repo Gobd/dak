@@ -10,7 +10,7 @@ export function ConfirmModal({
   message,
   onConfirm,
   onCancel,
-  confirmText = "Delete",
+  confirmText = 'Delete',
   confirmClassName,
 }: ConfirmModalProps) {
   return (
@@ -28,7 +28,7 @@ export function ConfirmModal({
             onClick={onConfirm}
             className={
               confirmClassName ??
-              "flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+              'flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700'
             }
           >
             {confirmText}

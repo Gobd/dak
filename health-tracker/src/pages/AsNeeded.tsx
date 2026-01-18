@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
-import { usePeopleStore } from "../stores/people-store";
-import { usePrnStore } from "../stores/prn-store";
-import { ConfirmModal } from "../components/ConfirmModal";
-import { TimePicker } from "../components/TimePicker";
+import { useEffect, useState, useCallback } from 'react';
+import { usePeopleStore } from '../stores/people-store';
+import { usePrnStore } from '../stores/prn-store';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { TimePicker } from '../components/TimePicker';
 import {
   Plus,
   Clock,
@@ -12,23 +12,20 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   format,
   formatDistanceToNow,
   differenceInHours,
   differenceInMinutes,
   addHours,
-} from "date-fns";
+} from 'date-fns';
 
 export function AsNeeded() {
   const { people, fetchPeople } = usePeopleStore();
-  const { meds, logs, fetchMeds, addMed, deleteMed, giveMed, undoLastDose } =
-    usePrnStore();
+  const { meds, logs, fetchMeds, addMed, deleteMed, giveMed, undoLastDose } = usePrnStore();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [expandedPersons, setExpandedPersons] = useState<Set<string>>(
-    new Set(),
-  );
+  const [expandedPersons, setExpandedPersons] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [showTimeInput, setShowTimeInput] = useState<string | null>(null);
   const [customTime, setCustomTime] = useState<Date | null>(null);
@@ -47,9 +44,9 @@ export function AsNeeded() {
   };
 
   // Form state
-  const [personId, setPersonId] = useState("");
-  const [name, setName] = useState("");
-  const [minHours, setMinHours] = useState<number | "">("");
+  const [personId, setPersonId] = useState('');
+  const [name, setName] = useState('');
+  const [minHours, setMinHours] = useState<number | ''>('');
 
   useEffect(() => {
     fetchPeople();
@@ -69,9 +66,9 @@ export function AsNeeded() {
     e.preventDefault();
     await addMed({ person_id: personId, name, min_hours: Number(minHours) });
     setShowAddForm(false);
-    setPersonId("");
-    setName("");
-    setMinHours("");
+    setPersonId('');
+    setName('');
+    setMinHours('');
   };
 
   // Group meds by person
@@ -90,10 +87,7 @@ export function AsNeeded() {
   const canGive = (medId: string, minHours: number) => {
     const lastDose = getLastDose(medId);
     if (!lastDose) return true;
-    const hoursSince = differenceInHours(
-      new Date(),
-      new Date(lastDose.given_at),
-    );
+    const hoursSince = differenceInHours(new Date(), new Date(lastDose.given_at));
     return hoursSince >= minHours;
   };
 
@@ -116,13 +110,12 @@ export function AsNeeded() {
   const formatLastGiven = (givenAt: string) => {
     const date = new Date(givenAt);
     const now = new Date();
-    const isTodayDate =
-      format(date, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+    const isTodayDate = format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
 
     if (isTodayDate) {
-      return `Today ${format(date, "h:mm a")}`;
+      return `Today ${format(date, 'h:mm a')}`;
     }
-    return format(date, "MMM d h:mm a");
+    return format(date, 'MMM d h:mm a');
   };
 
   return (
@@ -174,9 +167,7 @@ export function AsNeeded() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-                  Name
-                </label>
+                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Name</label>
                 <input
                   type="text"
                   value={name}
@@ -193,11 +184,7 @@ export function AsNeeded() {
                 <input
                   type="number"
                   value={minHours}
-                  onChange={(e) =>
-                    setMinHours(
-                      e.target.value === "" ? "" : Number(e.target.value),
-                    )
-                  }
+                  onChange={(e) => setMinHours(e.target.value === '' ? '' : Number(e.target.value))}
                   min={1}
                   max={72}
                   placeholder="6"
@@ -249,11 +236,7 @@ export function AsNeeded() {
                   <h2 className="font-semibold text-lg">{person.name}</h2>
                   <div className="flex items-center gap-2 text-gray-500 dark:text-neutral-400">
                     <span className="text-sm">({personMeds.length})</span>
-                    {isExpanded ? (
-                      <ChevronDown size={20} />
-                    ) : (
-                      <ChevronRight size={20} />
-                    )}
+                    {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                   </div>
                 </button>
                 {isExpanded && (
@@ -287,18 +270,15 @@ export function AsNeeded() {
                             <div>
                               {lastDose ? (
                                 <div className="text-sm">
-                                  <span className="text-gray-500 dark:text-neutral-400">
-                                    Last:
-                                  </span>{" "}
+                                  <span className="text-gray-500 dark:text-neutral-400">Last:</span>{' '}
                                   <span className="font-medium">
                                     {formatLastGiven(lastDose.given_at)}
                                   </span>
                                   <span className="text-gray-400 ml-2">
                                     (
-                                    {formatDistanceToNow(
-                                      new Date(lastDose.given_at),
-                                      { addSuffix: true },
-                                    )}
+                                    {formatDistanceToNow(new Date(lastDose.given_at), {
+                                      addSuffix: true,
+                                    })}
                                     )
                                   </span>
                                 </div>
@@ -344,13 +324,11 @@ export function AsNeeded() {
                                 }}
                                 className={`text-sm px-3 py-1.5 rounded-full ${
                                   showTimeInput === med.id
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300"
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300'
                                 }`}
                               >
-                                {showTimeInput === med.id
-                                  ? "Custom time"
-                                  : "Now"}
+                                {showTimeInput === med.id ? 'Custom time' : 'Now'}
                               </button>
                               <button
                                 onClick={() => {
@@ -364,8 +342,8 @@ export function AsNeeded() {
                                 }}
                                 className={`px-4 py-2 rounded-lg font-medium ${
                                   okToGive
-                                    ? "bg-green-600 text-white hover:bg-green-700"
-                                    : "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50"
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50'
                                 }`}
                               >
                                 Give
@@ -374,10 +352,7 @@ export function AsNeeded() {
                           </div>
                           {showTimeInput === med.id && (
                             <div className="mt-3">
-                              <TimePicker
-                                value={customTime}
-                                onChange={handleCustomTimeChange}
-                              />
+                              <TimePicker value={customTime} onChange={handleCustomTimeChange} />
                             </div>
                           )}
                         </div>
@@ -392,15 +367,14 @@ export function AsNeeded() {
       )}
 
       {/* People without meds */}
-      {people.filter((p) => !meds.some((m) => m.person_id === p.id)).length >
-        0 &&
+      {people.filter((p) => !meds.some((m) => m.person_id === p.id)).length > 0 &&
         medsByPerson.length > 0 && (
           <div className="text-sm text-gray-500 dark:text-neutral-400 text-center">
-            Add for:{" "}
+            Add for:{' '}
             {people
               .filter((p) => !meds.some((m) => m.person_id === p.id))
               .map((p) => p.name)
-              .join(", ")}
+              .join(', ')}
           </div>
         )}
     </div>

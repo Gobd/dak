@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuthStore } from "./stores/auth-store";
-import { useThemeStore } from "./stores/theme-store";
-import { Moon, Sun, ClipboardList } from "lucide-react";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuthStore } from './stores/auth-store';
+import { useThemeStore } from './stores/theme-store';
+import { Moon, Sun, ClipboardList } from 'lucide-react';
 
 export function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { resetPassword } = useAuthStore();
@@ -14,7 +14,7 @@ export function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     const { error } = await resetPassword(email);
@@ -43,16 +43,11 @@ export function ForgotPassword() {
         </div>
         {success ? (
           <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center">
-            <h2 className="text-lg font-semibold dark:text-white mb-2">
-              Check your email
-            </h2>
+            <h2 className="text-lg font-semibold dark:text-white mb-2">Check your email</h2>
             <p className="text-gray-600 dark:text-neutral-400 mb-4">
               We sent a password reset link to {email}
             </p>
-            <Link
-              to="/login"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
               Back to Sign In
             </Link>
           </div>
@@ -61,9 +56,7 @@ export function ForgotPassword() {
             onSubmit={handleSubmit}
             className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 space-y-4"
           >
-            <h2 className="text-lg font-semibold dark:text-white text-center">
-              Reset Password
-            </h2>
+            <h2 className="text-lg font-semibold dark:text-white text-center">Reset Password</h2>
             <p className="text-sm text-gray-600 dark:text-neutral-400 text-center">
               Enter your email and we'll send you a reset link
             </p>
@@ -85,13 +78,10 @@ export function ForgotPassword() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
             <p className="text-center text-sm text-gray-600 dark:text-neutral-400">
-              <Link
-                to="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                 Back to Sign In
               </Link>
             </p>

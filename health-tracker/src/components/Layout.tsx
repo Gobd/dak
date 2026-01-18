@@ -1,25 +1,15 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import {
-  Home,
-  Syringe,
-  Pill,
-  Clock,
-  Users,
-  LogOut,
-  Moon,
-  Sun,
-  RefreshCw,
-} from "lucide-react";
-import { useAuthStore } from "../stores/auth-store";
-import { useThemeStore } from "../stores/theme-store";
-import { ConfirmModal } from "./ConfirmModal";
+import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { Home, Syringe, Pill, Clock, Users, LogOut, Moon, Sun, RefreshCw } from 'lucide-react';
+import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
+import { ConfirmModal } from './ConfirmModal';
 
 const navItems = [
-  { to: "/shots", icon: Syringe, label: "Shots" },
-  { to: "/medicine", icon: Pill, label: "Courses" },
-  { to: "/prn", icon: Clock, label: "As-Needed" },
-  { to: "/people", icon: Users, label: "People" },
+  { to: '/shots', icon: Syringe, label: 'Shots' },
+  { to: '/medicine', icon: Pill, label: 'Courses' },
+  { to: '/prn', icon: Clock, label: 'As-Needed' },
+  { to: '/people', icon: Users, label: 'People' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -37,8 +27,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-blue-100 text-blue-700 dark:bg-neutral-800 dark:text-white"
-                    : "text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                    ? 'bg-blue-100 text-blue-700 dark:bg-neutral-800 dark:text-white'
+                    : 'text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                 }`
               }
               title="Home"
@@ -53,8 +43,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-blue-100 text-blue-700 dark:bg-neutral-800 dark:text-white"
-                      : "text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                      ? 'bg-blue-100 text-blue-700 dark:bg-neutral-800 dark:text-white'
+                      : 'text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
                   }`
                 }
               >
@@ -74,7 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={toggle}
               className="p-2 rounded-lg text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
-              title={dark ? "Light mode" : "Dark mode"}
+              title={dark ? 'Light mode' : 'Dark mode'}
             >
               {dark ? <Sun size={18} /> : <Moon size={18} />}
             </button>

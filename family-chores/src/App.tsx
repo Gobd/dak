@@ -1,18 +1,18 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuthStore } from "./stores/auth-store";
-import { Login } from "./Login";
-import { SignUp } from "./SignUp";
-import { ForgotPassword } from "./ForgotPassword";
-import { ResetPassword } from "./ResetPassword";
-import { Dashboard } from "./Dashboard";
-import { useEffect } from "react";
-import { useRealtimeSync } from "./hooks/useRealtimeSync";
-import { useMembersStore } from "./stores/members-store";
-import { useChoresStore } from "./stores/chores-store";
-import { useInstancesStore } from "./stores/instances-store";
-import { usePointsStore } from "./stores/points-store";
-import { useSettingsStore } from "./stores/settings-store";
-import { useGoalsStore } from "./stores/goals-store";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './stores/auth-store';
+import { Login } from './Login';
+import { SignUp } from './SignUp';
+import { ForgotPassword } from './ForgotPassword';
+import { ResetPassword } from './ResetPassword';
+import { Dashboard } from './Dashboard';
+import { useEffect } from 'react';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { useMembersStore } from './stores/members-store';
+import { useChoresStore } from './stores/chores-store';
+import { useInstancesStore } from './stores/instances-store';
+import { usePointsStore } from './stores/points-store';
+import { useSettingsStore } from './stores/settings-store';
+import { useGoalsStore } from './stores/goals-store';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuthStore();
@@ -26,7 +26,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       useMembersStore.getState().fetchMembers();
       useChoresStore.getState().fetchChores();
       usePointsStore.getState().fetchBalances();
-      usePointsStore.getState().fetchPeriodPoints("week");
+      usePointsStore.getState().fetchPeriodPoints('week');
       useSettingsStore.getState().fetchSettings();
 
       // Ensure today's instances exist and fetch them

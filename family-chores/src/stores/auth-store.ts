@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { supabase } from "../lib/supabase";
-import { unsubscribeFromSync } from "../lib/realtime";
-import type { Session } from "@supabase/supabase-js";
+import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { unsubscribeFromSync } from '../lib/realtime';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthState {
   session: Session | null;

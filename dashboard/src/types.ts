@@ -90,6 +90,16 @@ export interface BrightnessConfig {
   transitionMins?: number;
 }
 
+// Theme mode for global settings
+export type ThemeMode = 'dark' | 'light' | 'system';
+
+// Global settings
+export interface GlobalSettings {
+  theme: ThemeMode;
+  defaultLocation?: LocationConfig;
+  hideCursor: boolean;
+}
+
 // Dashboard configuration
 export interface DashboardConfig {
   screens: ScreenConfig[];
@@ -100,23 +110,17 @@ export interface DashboardConfig {
   locations?: Record<string, LocationConfig>;
   defaultLocation?: LocationConfig;
   brightness?: BrightnessConfig;
+  globalSettings?: GlobalSettings;
   // Generic storage for any widget - third-party widgets can persist config here
   // Usage: widgetData['my-widget-id'] = { ...any config... }
   widgetData?: Record<string, unknown>;
 }
 
-// Default dashboard configuration
+// Default dashboard configuration (minimal fallback - actual defaults come from public/config/dashboard.json)
 export const DEFAULT_CONFIG: DashboardConfig = {
-  screens: [
-    {
-      id: 'screen-1',
-      name: 'Main',
-      panels: [],
-    },
-  ],
+  screens: [{ id: 'screen-1', name: 'Main', panels: [] }],
   activeScreenIndex: 0,
   dark: true,
-  locations: {},
 };
 
 // Widget props passed to all widgets

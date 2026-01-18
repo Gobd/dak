@@ -1,12 +1,5 @@
-import { useState } from "react";
-import {
-  X,
-  Users,
-  ClipboardList,
-  CheckCircle2,
-  ArrowRight,
-  Target,
-} from "lucide-react";
+import { useState } from 'react';
+import { X, Users, ClipboardList, CheckCircle2, ArrowRight, Target } from 'lucide-react';
 
 interface OnboardingOverlayProps {
   onDismiss: () => void;
@@ -16,34 +9,30 @@ interface OnboardingOverlayProps {
 const steps = [
   {
     icon: Users,
-    title: "Add Your Family",
-    description:
-      "Start by adding family members. Give each person a name, emoji, and color.",
+    title: 'Add Your Family',
+    description: 'Start by adding family members. Give each person a name, emoji, and color.',
   },
   {
     icon: ClipboardList,
-    title: "Create Chores",
+    title: 'Create Chores',
     description:
       "Set up daily tasks with checkboxes. Use 'times per day' for things like brushing teeth twice.",
   },
   {
     icon: Target,
-    title: "Set Goals & Habits",
+    title: 'Set Goals & Habits',
     description:
       "Create goals like 'Gym 3x/week' or 'Read 8 books/month'. Track progress with a counter instead of checkboxes.",
   },
   {
     icon: CheckCircle2,
-    title: "Track & Earn",
+    title: 'Track & Earn',
     description:
-      "Complete tasks to earn points. View progress on the leaderboard and redeem rewards!",
+      'Complete tasks to earn points. View progress on the leaderboard and redeem rewards!',
   },
 ];
 
-export function OnboardingOverlay({
-  onDismiss,
-  onOpenFamily,
-}: OnboardingOverlayProps) {
+export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleNext = () => {
@@ -80,10 +69,10 @@ export function OnboardingOverlay({
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   i === currentStep
-                    ? "bg-blue-600"
+                    ? 'bg-blue-600'
                     : i < currentStep
-                      ? "bg-blue-300"
-                      : "bg-gray-200 dark:bg-neutral-700"
+                      ? 'bg-blue-300'
+                      : 'bg-gray-200 dark:bg-neutral-700'
                 }`}
               />
             ))}
@@ -95,12 +84,8 @@ export function OnboardingOverlay({
           </div>
 
           {/* Text */}
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {step.title}
-          </h2>
-          <p className="text-gray-500 dark:text-neutral-400 mb-6">
-            {step.description}
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{step.title}</h2>
+          <p className="text-gray-500 dark:text-neutral-400 mb-6">{step.description}</p>
 
           {/* Buttons */}
           <div className="flex gap-3">

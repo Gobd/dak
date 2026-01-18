@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { supabase } from "../lib/supabase";
-import { broadcastSync } from "../lib/realtime";
-import type { Person } from "../types";
+import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { broadcastSync } from '../lib/realtime';
+import type { Person } from '../types';
 
 interface PeopleState {
   people: Person[];
@@ -18,10 +18,7 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
 
   fetchPeople: async () => {
     set({ loading: true });
-    const { data, error } = await supabase
-      .from("people")
-      .select("*")
-      .order("name");
+    const { data, error } = await supabase.from('people').select('*').order('name');
 
     if (!error && data) {
       set({ people: data });
@@ -30,32 +27,29 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
   },
 
   addPerson: async (name: string) => {
-    const { error } = await supabase.from("people").insert({ name });
+    const { error } = await supabase.from('people').insert({ name });
 
     if (!error) {
       get().fetchPeople();
-      broadcastSync({ type: "people" });
+      broadcastSync({ type: 'people' });
     }
   },
 
   updatePerson: async (id: string, name: string) => {
-    const { error } = await supabase
-      .from("people")
-      .update({ name })
-      .eq("id", id);
+    const { error } = await supabase.from('people').update({ name }).eq('id', id);
 
     if (!error) {
       get().fetchPeople();
-      broadcastSync({ type: "people" });
+      broadcastSync({ type: 'people' });
     }
   },
 
   deletePerson: async (id: string) => {
-    const { error } = await supabase.from("people").delete().eq("id", id);
+    const { error } = await supabase.from('people').delete().eq('id', id);
 
     if (!error) {
       get().fetchPeople();
-      broadcastSync({ type: "people" });
+      broadcastSync({ type: 'people' });
     }
   },
 }));

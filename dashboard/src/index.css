@@ -163,3 +163,12 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: theme(colors.neutral.500);
 }
+
+/* Cursor hiding for kiosk mode - also disables mouse interactions */
+.hide-cursor {
+  cursor: none !important;
+  pointer-events: none;
+}
+.hide-cursor * {
+  cursor: none !important;
+}

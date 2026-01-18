@@ -8,6 +8,7 @@ import type {
   CalendarConfig,
   LocationConfig,
   BrightnessConfig,
+  GlobalSettings,
 } from '../types';
 import { DEFAULT_CONFIG, generateId } from '../types';
 
@@ -64,6 +65,7 @@ function getPersistedConfig(state: DashboardConfig): DashboardConfig {
     brightness: state.brightness,
     locations: state.locations,
     widgetData: state.widgetData,
+    globalSettings: state.globalSettings,
   };
 }
 
@@ -78,6 +80,7 @@ function applyPersistedConfig(config: DashboardConfig): Partial<DashboardConfig>
     brightness: config.brightness,
     locations: config.locations,
     widgetData: config.widgetData,
+    globalSettings: config.globalSettings,
   };
 }
 
@@ -121,10 +124,13 @@ interface ConfigState extends DashboardConfig {
   setDark: (dark: boolean) => void;
   toggleDark: () => void;
 
+  // Global settings
+  updateGlobalSettings: (settings: Partial<GlobalSettings>) => void;
+
   // Import/Export
   exportConfig: () => string;
   importConfig: (json: string) => boolean;
-  resetConfig: () => void;
+  resetConfig: () => Promise<void>;
 
   // Sync
   _saveToRelay: () => Promise<void>;
@@ -267,6 +273,19 @@ export const useConfigStore = create<ConfigState>()(
 
         toggleDark: () => set((state) => ({ dark: !state.dark })),
 
+        updateGlobalSettings: (settings) =>
+          set((state) => {
+            const newSettings = { ...state.globalSettings, ...settings } as GlobalSettings;
+            // Sync dark boolean with theme for backwards compatibility
+            const dark =
+              newSettings.theme === 'dark' ||
+              (newSettings.theme === 'system' &&
+                (typeof window !== 'undefined'
+                  ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                  : true));
+            return { globalSettings: newSettings, dark };
+          }),
+
         exportConfig: () => {
           return JSON.stringify(getPersistedConfig(get()), null, 2);
         },
@@ -284,11 +303,23 @@ export const useConfigStore = create<ConfigState>()(
           }
         },
 
-        resetConfig: () =>
-          set({
-            ...DEFAULT_CONFIG,
-            isEditMode: false,
-          }),
+        resetConfig: async () => {
+          // Load default config from static file
+          try {
+            const baseUrl = import.meta.env.BASE_URL || '/';
+            const res = await fetch(`${baseUrl}config/dashboard.json`);
+            if (res.ok) {
+              const config = (await res.json()) as DashboardConfig;
+              if (config.screens && Array.isArray(config.screens)) {
+                set({ ...applyPersistedConfig(config), isEditMode: false });
+                return;
+              }
+            }
+          } catch {
+            // Fall back to DEFAULT_CONFIG if fetch fails
+          }
+          set({ ...DEFAULT_CONFIG, isEditMode: false });
+        },
 
         // Save to relay server
         _saveToRelay: async () => {
@@ -334,10 +365,52 @@ export const useConfigStore = create<ConfigState>()(
       }),
       {
         name: 'dashboard-config',
+        onRehydrateStorage: () => {
+          return () => {
+            // Called after localStorage hydration is complete
+            // Now safe to load external configs without losing localStorage data
+            initializeExternalConfigs();
+          };
+        },
       }
     )
   )
 );
+
+// Initialize external configs (static file + relay) after localStorage hydration
+function initializeExternalConfigs() {
+  // Load static config for defaults, then relay for sync
+  loadStaticConfig().then((staticLoaded) => {
+    console.log('Static config load result:', staticLoaded);
+
+    // Then try relay (it will override if available)
+    useConfigStore
+      .getState()
+      ._loadFromRelay()
+      .then((loaded) => {
+        console.log('Relay load result:', loaded);
+
+        // Only connect to SSE for auto-refresh if NOT editing remotely
+        if (!isRemoteEditing) {
+          connectToConfigUpdates();
+        } else {
+          console.log('Remote editing mode - SSE refresh disabled');
+        }
+
+        // Apply screen index from URL after config is loaded
+        const urlParams = new URLSearchParams(window.location.search);
+        const screenParam = urlParams.get('screen');
+        if (screenParam !== null) {
+          const screenIndex = parseInt(screenParam, 10);
+          if (!isNaN(screenIndex)) {
+            const state = useConfigStore.getState();
+            const validIndex = Math.max(0, Math.min(screenIndex, state.screens.length - 1));
+            useConfigStore.setState({ activeScreenIndex: validIndex });
+          }
+        }
+      });
+  });
+}
 
 // Auto-save to relay when config changes (debounced)
 let saveDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -352,6 +425,7 @@ useConfigStore.subscribe(
     brightness: state.brightness,
     locations: state.locations,
     widgetData: state.widgetData,
+    globalSettings: state.globalSettings,
   }),
   () => {
     // Debounce saves to avoid excessive API calls
@@ -434,15 +508,14 @@ async function loadStaticConfig(): Promise<boolean> {
     const config = (await res.json()) as DashboardConfig;
     console.log('Static config loaded:', config);
     if (config.screens && Array.isArray(config.screens)) {
-      useConfigStore.setState({
-        screens: config.screens,
-        activeScreenIndex: config.activeScreenIndex ?? 0,
-        dark: config.dark ?? true,
-        driveTime: config.driveTime,
-        calendar: config.calendar,
-        locations: config.locations,
-      });
-      console.log('Config applied to store');
+      // Only apply static config if no config in localStorage yet
+      const currentState = useConfigStore.getState();
+      if (!currentState.globalSettings) {
+        useConfigStore.setState(applyPersistedConfig(config));
+        console.log('Static config applied to store');
+      } else {
+        console.log('Skipping static config, localStorage already has config');
+      }
       return true;
     }
     return false;
@@ -452,48 +525,8 @@ async function loadStaticConfig(): Promise<boolean> {
   }
 }
 
-// Initialize config and SSE connection
+// Browser event listeners
 if (typeof window !== 'undefined') {
-  // Always try to load static config first for defaults, then relay can override
-  loadStaticConfig().then((staticLoaded) => {
-    console.log('Static config load result:', staticLoaded);
-    console.log('Current store state after static load:', {
-      screens: useConfigStore.getState().screens.length,
-      locations: Object.keys(useConfigStore.getState().locations ?? {}),
-    });
-
-    // Then try relay (it will override if available)
-    useConfigStore
-      .getState()
-      ._loadFromRelay()
-      .then((loaded) => {
-        console.log('Relay load result:', loaded);
-        console.log('Current store state after relay load:', {
-          screens: useConfigStore.getState().screens.length,
-          locations: Object.keys(useConfigStore.getState().locations ?? {}),
-        });
-
-        // Only connect to SSE for auto-refresh if NOT editing remotely
-        if (!isRemoteEditing) {
-          connectToConfigUpdates();
-        } else {
-          console.log('Remote editing mode - SSE refresh disabled');
-        }
-
-        // Apply screen index from URL after config is loaded
-        const urlParams = new URLSearchParams(window.location.search);
-        const screenParam = urlParams.get('screen');
-        if (screenParam !== null) {
-          const screenIndex = parseInt(screenParam, 10);
-          if (!isNaN(screenIndex)) {
-            const state = useConfigStore.getState();
-            const validIndex = Math.max(0, Math.min(screenIndex, state.screens.length - 1));
-            useConfigStore.setState({ activeScreenIndex: validIndex });
-          }
-        }
-      });
-  });
-
   // Handle browser back/forward navigation
   window.addEventListener('popstate', () => {
     const urlParams = new URLSearchParams(window.location.search);

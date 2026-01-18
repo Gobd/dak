@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
-import { format } from "date-fns";
-import { Users, ClipboardList } from "lucide-react";
-import { useInstancesStore } from "../../stores/instances-store";
-import { useMembersStore } from "../../stores/members-store";
-import { usePointsStore } from "../../stores/points-store";
-import { TaskCard } from "../shared/TaskCard";
-import { MemberAvatar } from "../shared/MemberAvatar";
-import { ProgressRing } from "../shared/ProgressRing";
+import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
+import { Users, ClipboardList } from 'lucide-react';
+import { useInstancesStore } from '../../stores/instances-store';
+import { useMembersStore } from '../../stores/members-store';
+import { usePointsStore } from '../../stores/points-store';
+import { TaskCard } from '../shared/TaskCard';
+import { MemberAvatar } from '../shared/MemberAvatar';
+import { ProgressRing } from '../shared/ProgressRing';
 
 interface MyTasksViewProps {
   onOpenFamily: () => void;
@@ -17,9 +17,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
   const { instances, completeTask, uncompleteTask } = useInstancesStore();
   const { members } = useMembersStore();
   const { balances } = usePointsStore();
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
-    members[0]?.id ?? null,
-  );
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(members[0]?.id ?? null);
 
   const selectedMember = members.find((m) => m.id === selectedMemberId);
 
@@ -27,13 +25,10 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
   // 1. Personal tasks (assigned_to matches this member)
   // 2. Shared tasks (assigned_to is null) where this member is in assignees
   const { personalTasks, sharedTasks } = useMemo(() => {
-    const personal = instances.filter(
-      (instance) => instance.assigned_to === selectedMemberId,
-    );
+    const personal = instances.filter((instance) => instance.assigned_to === selectedMemberId);
     const shared = instances.filter(
       (instance) =>
-        !instance.assigned_to &&
-        instance.assignees.some((a) => a.id === selectedMemberId),
+        !instance.assigned_to && instance.assignees.some((a) => a.id === selectedMemberId)
     );
     return { personalTasks: personal, sharedTasks: shared };
   }, [instances, selectedMemberId]);
@@ -41,13 +36,9 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
   const allMemberTasks = [...personalTasks, ...sharedTasks];
   const completedCount = allMemberTasks.filter((t) => t.completed).length;
   const progressPercent =
-    allMemberTasks.length > 0
-      ? (completedCount / allMemberTasks.length) * 100
-      : 0;
+    allMemberTasks.length > 0 ? (completedCount / allMemberTasks.length) * 100 : 0;
 
-  const memberBalance = selectedMemberId
-    ? (balances[selectedMemberId] ?? 0)
-    : 0;
+  const memberBalance = selectedMemberId ? (balances[selectedMemberId] ?? 0) : 0;
 
   return (
     <div className="p-4 space-y-6">
@@ -81,17 +72,13 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
                 {selectedMember.name}'s Tasks
               </h2>
               <p className="text-sm text-gray-500 dark:text-neutral-400">
-                {format(new Date(), "EEEE, MMMM d")}
+                {format(new Date(), 'EEEE, MMMM d')}
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
-                  {memberBalance}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400">
-                  total points
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{memberBalance}</p>
+                <p className="text-xs text-gray-500 dark:text-neutral-400">total points</p>
               </div>
               <ProgressRing percent={progressPercent} size={56} />
             </div>
@@ -123,9 +110,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
                         key={instance.id}
                         instance={instance}
                         showAssignees={false}
-                        onToggle={() =>
-                          completeTask(instance.id, selectedMemberId!)
-                        }
+                        onToggle={() => completeTask(instance.id, selectedMemberId!)}
                       />
                     ))}
                 </div>
@@ -144,9 +129,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
                         key={instance.id}
                         instance={instance}
                         showAssignees={true}
-                        onToggle={() =>
-                          completeTask(instance.id, selectedMemberId!)
-                        }
+                        onToggle={() => completeTask(instance.id, selectedMemberId!)}
                       />
                     ))}
                 </div>
@@ -179,9 +162,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
             <Users className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">
-              No family members yet
-            </p>
+            <p className="text-gray-500 dark:text-neutral-400">No family members yet</p>
             <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
               Add your family to start tracking tasks
             </p>

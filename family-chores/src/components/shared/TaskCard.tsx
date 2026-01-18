@@ -1,8 +1,8 @@
-import { Check, Trophy, User } from "lucide-react";
-import type { ChoreInstanceWithDetails } from "../../types";
-import { MemberAvatar } from "./MemberAvatar";
-import { format } from "date-fns";
-import { useSettingsStore } from "../../stores/settings-store";
+import { Check, Trophy, User } from 'lucide-react';
+import type { ChoreInstanceWithDetails } from '../../types';
+import { MemberAvatar } from './MemberAvatar';
+import { format } from 'date-fns';
+import { useSettingsStore } from '../../stores/settings-store';
 
 interface TaskCardProps {
   instance: ChoreInstanceWithDetails;
@@ -17,14 +17,8 @@ export function TaskCard({
   onSelectMember,
   showAssignees = true,
 }: TaskCardProps) {
-  const {
-    chore,
-    completed,
-    completed_by_member,
-    assigned_member,
-    assignees,
-    points_awarded,
-  } = instance;
+  const { chore, completed, completed_by_member, assigned_member, assignees, points_awarded } =
+    instance;
   const { settings } = useSettingsStore();
   const hidePoints = settings?.hide_points ?? false;
 
@@ -46,38 +40,34 @@ export function TaskCard({
 
   // Get left border color based on task type
   const getLeftBorderStyle = () => {
-    if (completed) return "";
+    if (completed) return '';
     if (isSharedTask && assignees.length > 1) {
       // Race task - amber dashed border
-      return "border-l-4 border-l-amber-400 dark:border-l-amber-500";
+      return 'border-l-4 border-l-amber-400 dark:border-l-amber-500';
     }
     if (assigned_member) {
       // Personal task - solid border in member's color
-      return "border-l-4";
+      return 'border-l-4';
     }
-    return "";
+    return '';
   };
 
   return (
     <div
       className={`flex items-center gap-3 p-3 sm:p-4 bg-white dark:bg-neutral-800 rounded-xl shadow-sm border ${
         completed
-          ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20"
-          : "border-gray-200 dark:border-neutral-700"
+          ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+          : 'border-gray-200 dark:border-neutral-700'
       } ${getLeftBorderStyle()}`}
-      style={
-        !completed && assigned_member
-          ? { borderLeftColor: assigned_member.color }
-          : undefined
-      }
+      style={!completed && assigned_member ? { borderLeftColor: assigned_member.color } : undefined}
     >
       {/* Checkbox */}
       <button
         onClick={handleToggle}
         className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
           completed
-            ? "bg-green-500 border-green-500 text-white"
-            : "border-gray-300 dark:border-neutral-600 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            ? 'bg-green-500 border-green-500 text-white'
+            : 'border-gray-300 dark:border-neutral-600 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
         }`}
       >
         {completed && <Check size={28} strokeWidth={3} />}
@@ -90,8 +80,8 @@ export function TaskCard({
             <h3
               className={`font-medium text-base sm:text-lg truncate ${
                 completed
-                  ? "text-gray-500 dark:text-neutral-500 line-through"
-                  : "text-gray-900 dark:text-white"
+                  ? 'text-gray-500 dark:text-neutral-500 line-through'
+                  : 'text-gray-900 dark:text-white'
               }`}
             >
               {chore.name}
@@ -113,8 +103,8 @@ export function TaskCard({
               <span
                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   isSharedTask
-                    ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
-                    : "bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400"
+                    ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
+                    : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
                 }`}
               >
                 {isSharedTask ? (
@@ -134,8 +124,8 @@ export function TaskCard({
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
                   completed
-                    ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
-                    : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                    : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
                 }`}
               >
                 {points_awarded} pts
@@ -176,7 +166,7 @@ export function TaskCard({
 
           {completed && instance.completed_at && (
             <span className="text-xs text-gray-400 dark:text-neutral-500">
-              {format(new Date(instance.completed_at), "h:mm a")}
+              {format(new Date(instance.completed_at), 'h:mm a')}
             </span>
           )}
         </div>
