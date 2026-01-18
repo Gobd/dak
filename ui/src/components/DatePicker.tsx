@@ -76,7 +76,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
             onClick={handlePrevYear}
             className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
             type="button"
-            title="Previous year"
+            aria-label="Previous year"
           >
             <ChevronsLeft size={16} />
           </button>
@@ -84,7 +84,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
             onClick={handlePrevMonth}
             className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
             type="button"
-            title="Previous month"
+            aria-label="Previous month"
           >
             <ChevronLeft size={16} />
           </button>
@@ -97,7 +97,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
             onClick={handleNextMonth}
             className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
             type="button"
-            title="Next month"
+            aria-label="Next month"
           >
             <ChevronRight size={16} />
           </button>
@@ -105,7 +105,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
             onClick={handleNextYear}
             className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
             type="button"
-            title="Next year"
+            aria-label="Next year"
           >
             <ChevronsRight size={16} />
           </button>

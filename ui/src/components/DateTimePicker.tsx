@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { DatePicker } from './DatePicker';
 import { Roller } from './Roller';
 
@@ -49,6 +49,12 @@ export function DateTimePicker({
   const [isPM, setIsPM] = useState(() => baseDate.getHours() >= 12);
   const [showCalendar, setShowCalendar] = useState(false);
 
+  // Store onChange in ref to avoid it triggering the effect (prevents memory leak from unstable callbacks)
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   // Emit changes when any value changes
   useEffect(() => {
     const date = new Date(selectedDate);
@@ -58,8 +64,8 @@ export function DateTimePicker({
     if (!isPM && hour === 12) h = 0;
 
     date.setHours(h, minute, 0, 0);
-    onChange(date);
-  }, [hour, minute, isPM, selectedDate, onChange]);
+    onChangeRef.current(date);
+  }, [hour, minute, isPM, selectedDate]);
 
   const handleDateSelect = (date: Date) => {
     // Check if date is allowed

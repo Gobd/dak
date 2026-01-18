@@ -84,8 +84,14 @@ export class RealtimeSync<TEvent> {
    * Call this after login.
    */
   subscribe(userId: string): void {
-    if (this.channel && this.currentUserId === userId) {
-      return; // Already subscribed for this user
+    // Check if already subscribed with a healthy channel
+    const channelState = this.channel?.state;
+    if (
+      this.channel &&
+      this.currentUserId === userId &&
+      (channelState === 'joined' || channelState === 'joining')
+    ) {
+      return; // Already subscribed for this user with healthy channel
     }
 
     // Clean up old channel if user changed
