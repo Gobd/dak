@@ -7,8 +7,6 @@ import { Modal, Button } from '../shared/Modal';
 import type { WidgetComponentProps } from './index';
 
 // Open-Meteo Air Quality API - free, no API key needed
-const AQI_CACHE_KEY = 'aqi-cache';
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 interface HourEntry {
   time: Date;
@@ -47,38 +45,12 @@ function getAqiLabel(aqi: number): string {
   return 'Hazardous';
 }
 
-function getCachedAqi(lat: number, lon: number): AqiApiData | null {
-  try {
-    const cache = JSON.parse(localStorage.getItem(AQI_CACHE_KEY) || '{}');
-    const entry = cache[`${lat},${lon}`];
-    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
-  } catch {
-    // Ignore cache read errors
-  }
-  return null;
-}
-
-function cacheAqi(lat: number, lon: number, data: AqiApiData): void {
-  try {
-    const cache = JSON.parse(localStorage.getItem(AQI_CACHE_KEY) || '{}');
-    cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
-    localStorage.setItem(AQI_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore cache write errors
-  }
-}
-
 async function fetchAqi(lat: number, lon: number): Promise<AqiApiData> {
-  const cached = getCachedAqi(lat, lon);
-  if (cached) return cached;
-
   const res = await fetch(
     `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10&hourly=us_aqi&timezone=auto&forecast_days=2`
   );
   if (!res.ok) throw new Error('Failed to fetch AQI data');
-  const data = await res.json();
-  cacheAqi(lat, lon, data);
-  return data;
+  return res.json();
 }
 
 function formatHour(h: number): string {

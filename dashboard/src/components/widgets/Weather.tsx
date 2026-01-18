@@ -9,8 +9,6 @@ import type { WidgetComponentProps } from './index';
 
 // NWS API - free, no auth, CORS-enabled
 const NWS_USER_AGENT = 'Dashboard (bkemper.me)';
-const CACHE_KEY = 'weather-cache';
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 interface NwsPeriod {
   name: string;
@@ -43,31 +41,7 @@ interface WeatherData {
   alerts: NwsAlert[];
 }
 
-function getCachedWeather(lat: number, lon: number): WeatherData | null {
-  try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    const entry = cache[`${lat},${lon}`];
-    if (entry && Date.now() - entry.timestamp < CACHE_DURATION) return entry.data;
-  } catch {
-    // Ignore cache read errors
-  }
-  return null;
-}
-
-function cacheWeather(lat: number, lon: number, data: WeatherData): void {
-  try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    cache[`${lat},${lon}`] = { data, timestamp: Date.now() };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore cache write errors
-  }
-}
-
 async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
-  const cached = getCachedWeather(lat, lon);
-  if (cached) return cached;
-
   // Get gridpoint from coordinates
   const pointRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
     headers: { 'User-Agent': NWS_USER_AGENT },
@@ -96,13 +70,10 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
     // Alerts are optional
   }
 
-  const data: WeatherData = {
+  return {
     periods: forecast.properties.periods.slice(0, 10), // 5 days (day/night pairs)
     alerts,
   };
-
-  cacheWeather(lat, lon, data);
-  return data;
 }
 
 function getAlertSeverityColor(severity: string): string {
@@ -165,7 +136,6 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
   );
 
   const handleRefresh = () => {
-    localStorage.removeItem(CACHE_KEY);
     queryClient.invalidateQueries({ queryKey: ['weather', location?.lat, location?.lon] });
   };
 
