@@ -638,7 +638,6 @@ function RouteFormModal({
             <TimePickerCompact
               value={form.startTime}
               onChange={(v) => setForm((f) => ({ ...f, startTime: v }))}
-              minuteStep={1}
             />
           </div>
           <div className="flex-1">
@@ -646,7 +645,6 @@ function RouteFormModal({
             <TimePickerCompact
               value={form.endTime}
               onChange={(v) => setForm((f) => ({ ...f, endTime: v }))}
-              minuteStep={1}
             />
           </div>
         </div>

@@ -8,7 +8,7 @@ const LOCAL_URL_MAP: Record<string, string> = {
 };
 
 // Apps that support dark mode via ?dark=true query param
-const DARK_MODE_APPS = ['/notes-app/', '/health-tracker/'];
+const DARK_MODE_APPS = ['/notes-app/', '/health-tracker/', '/family-chores/'];
 
 const isLocalDev =
   typeof window !== 'undefined' &&

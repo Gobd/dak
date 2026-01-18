@@ -60,6 +60,14 @@ export default function App() {
     initialize();
   }, [initialize]);
 
+  // Apply dark mode from query param (for iframe embedding)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dark') === 'true') {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

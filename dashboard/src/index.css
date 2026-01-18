@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @source "../../ui/src/**/*.tsx";
 
+/* Enable class-based dark mode (triggered by .dark class on document) */
+@variant dark (&:where(.dark, .dark *));
+
 /* Custom font */
 @theme {
   --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
@@ -165,10 +168,9 @@
   background: theme(colors.neutral.500);
 }
 
-/* Cursor hiding for kiosk mode - also disables mouse interactions */
+/* Cursor hiding for kiosk mode */
 .hide-cursor {
   cursor: none !important;
-  pointer-events: none;
 }
 .hide-cursor * {
   cursor: none !important;
