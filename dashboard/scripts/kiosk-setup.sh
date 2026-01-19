@@ -3,8 +3,8 @@
 # Uses Wayland + Cage (minimal kiosk compositor)
 #
 # Copy scripts folder to Pi and run:
-#   scp -r scripts kiosk@kiosk.local:~
-#   ssh kiosk@kiosk.local
+#   scp -r scripts kiosk@kiosk.home.arpa:~
+#   ssh kiosk@kiosk.home.arpa
 #   bash ~/dashboard/scripts/kiosk-setup.sh
 #
 # For self-hosting, create ~/.config/dashboard/kiosk.conf before running:

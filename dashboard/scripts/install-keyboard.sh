@@ -4,11 +4,11 @@
 #   version: semver like v3.0.1 or 3.0.1 - downloads from GitHub releases
 #   branch:  branch name like main - downloads nightly build from GitHub Actions
 #   user@host: optional remote host to install on via SSH
-#   default: v3.0.5
+#   default: v3.0.6
 
 set -e
 
-INPUT="${1:-v3.0.5}"
+INPUT="${1:-v3.0.6}"
 REMOTE="$2"
 DEST_DIR=~/.config/chromium-extensions
 

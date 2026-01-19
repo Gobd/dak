@@ -6,7 +6,7 @@ interface SettingsState {
   setRelayUrl: (url: string) => void;
 }
 
-const DEFAULT_RELAY_URL = 'http://kiosk.local:5111';
+const DEFAULT_RELAY_URL = 'http://kiosk.home.arpa:5111';
 
 export const useSettingsStore = create<SettingsState>()(
   persist(

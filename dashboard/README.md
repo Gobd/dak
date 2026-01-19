@@ -11,7 +11,7 @@ A kiosk dashboard for Raspberry Pi with drag-and-drop layouts, widgets, and smar
 1. Flash **Raspberry Pi OS Lite (64-bit)** with SSH enabled
 2. Deploy from your Mac:
    ```bash
-   ./scripts/deploy.sh kiosk@kiosk.local
+   ./scripts/deploy.sh kiosk@kiosk.home.arpa
    ```
 
 The Pi reboots into kiosk mode with the dashboard running.
@@ -45,10 +45,10 @@ For touchscreen kiosks without a physical keyboard:
 
 ```bash
 # Install latest release to kiosk
-./scripts/install-keyboard.sh v3.0.5 kiosk@kiosk.local
+./scripts/install-keyboard.sh v3.0.5 kiosk@kiosk.home.arpa
 
 # Install nightly build from branch
-./scripts/install-keyboard.sh main kiosk@kiosk.local
+./scripts/install-keyboard.sh main kiosk@kiosk.home.arpa
 
 # Install locally (for testing)
 ./scripts/install-keyboard.sh
@@ -88,7 +88,7 @@ Widget-specific settings in `args`. See `public/config/README.md` for details.
 Edit a kiosk's layout from any device on your network:
 
 ```
-https://dak.bkemper.me/dashboard/?edit&relay=kiosk.local:5111
+https://dak.bkemper.me/dashboard/?edit&relay=kiosk.home.arpa:5111
 ```
 
 The `relay` param tells the dashboard where to save config. Changes save to the kiosk and it auto-reloads via SSE.
@@ -187,7 +187,7 @@ The dashboard works without API keys—you just won't have calendar or drive-tim
 If you get a host key error after reimaging the Pi:
 
 ```bash
-ssh-keygen -R kiosk.local
+ssh-keygen -R kiosk.home.arpa
 ```
 
 ### Logs & Status

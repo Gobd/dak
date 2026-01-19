@@ -166,7 +166,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 setRelayUrlInput(e.target.value);
                 setRelayStatus('idle');
               }}
-              placeholder="kiosk.local:5111"
+              placeholder="kiosk.home.arpa:5111"
               className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
                          bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
