@@ -11,7 +11,9 @@ export function getCorsHeaders(request, env) {
     ? [env.ALLOWED_ORIGIN, ...LOCALHOST_ORIGINS]
     : LOCALHOST_ORIGINS;
 
-  const allowedOrigin = allowedOrigins.find((o) => origin.startsWith(o)) ? origin : allowedOrigins[0];
+  const allowedOrigin = allowedOrigins.find((o) => origin.startsWith(o))
+    ? origin
+    : allowedOrigins[0];
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
