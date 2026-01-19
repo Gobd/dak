@@ -14,7 +14,7 @@ const isLocalDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-const PROD_ORIGIN = 'https://dak.bkemper.me';
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 
 function resolveUrl(url: string, dark: boolean): string {
   if (!url) return url;
@@ -33,8 +33,8 @@ function resolveUrl(url: string, dark: boolean): string {
       }
     }
   } else if (isLocalDev && url.startsWith('/') && !url.startsWith('//')) {
-    // On localhost (not in local mode), map relative URLs to production
-    resolvedUrl = PROD_ORIGIN + url;
+    // On localhost (not in local mode), map relative URLs to app URL
+    resolvedUrl = APP_URL + url;
   }
 
   // Append dark mode param for supported apps
