@@ -59,6 +59,7 @@ export default function Iframe({ panel, dark }: WidgetComponentProps) {
 
   return (
     <iframe
+      id={`iframe-${panel.id}`}
       src={src}
       className="w-full h-full border-0"
       title={`iframe-${panel.id}`}
