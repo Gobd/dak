@@ -1,16 +1,16 @@
-import { useConfigStore, useCurrentPanels } from '../../stores/config-store';
+import { useConfigStore } from '../../stores/config-store';
 import { Panel } from './Panel';
 import { EditToolbar } from './EditToolbar';
 import { WidgetRenderer } from '../widgets';
 import { Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
- * Screen component - renders the current screen with all panels
+ * Screen component - renders all screens, hiding inactive ones to preserve iframe state
  */
 export function Screen() {
   const { dark, isEditMode, setEditMode, screens, activeScreenIndex, setActiveScreen } =
     useConfigStore();
-  const panels = useCurrentPanels();
+  const activePanels = screens[activeScreenIndex]?.panels ?? [];
 
   const goToPrevScreen = () => {
     const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
@@ -26,18 +26,36 @@ export function Screen() {
     <div
       className={`relative min-h-screen w-full ${dark ? 'dark bg-neutral-950' : 'bg-neutral-100'}`}
     >
-      {/* Panels - sorted by area descending so smaller panels render on top */}
+      {/* All screens - inactive ones hidden to preserve iframe state */}
       <div className="relative w-full h-screen overflow-hidden">
-        {[...panels]
-          .sort((a, b) => b.width * b.height - a.width * a.height)
-          .map((panel, index) => (
-            <Panel key={panel.id} panel={panel} isEditMode={isEditMode} zIndex={index + 1}>
-              <WidgetRenderer panel={panel} dark={dark} isEditMode={isEditMode} />
-            </Panel>
-          ))}
+        {screens.map((screen, screenIndex) => {
+          const isActive = screenIndex === activeScreenIndex;
+          const sortedPanels = [...screen.panels].sort(
+            (a, b) => b.width * b.height - a.width * a.height
+          );
 
-        {/* Empty state */}
-        {panels.length === 0 && !isEditMode && (
+          return (
+            <div
+              key={screen.id}
+              className={isActive ? '' : 'invisible absolute inset-0'}
+              aria-hidden={!isActive}
+            >
+              {sortedPanels.map((panel, index) => (
+                <Panel
+                  key={panel.id}
+                  panel={panel}
+                  isEditMode={isActive && isEditMode}
+                  zIndex={index + 1}
+                >
+                  <WidgetRenderer panel={panel} dark={dark} isEditMode={isActive && isEditMode} />
+                </Panel>
+              ))}
+            </div>
+          );
+        })}
+
+        {/* Empty state - only for active screen */}
+        {activePanels.length === 0 && !isEditMode && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <p className="text-neutral-500 dark:text-neutral-400 mb-4">

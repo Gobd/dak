@@ -385,9 +385,8 @@ export const useConfigStore = create<ConfigState>()(
         name: 'dashboard-config',
         onRehydrateStorage: () => {
           return () => {
-            // Called after localStorage hydration is complete
-            // Now safe to load external configs without losing localStorage data
-            initializeExternalConfigs();
+            // Defer to next tick - store isn't fully initialized during callback
+            queueMicrotask(initializeExternalConfigs);
           };
         },
       }
@@ -404,21 +403,15 @@ function initializeExternalConfigs() {
   }
 
   // Load static config for defaults, then relay for sync
-  loadStaticConfig().then((staticLoaded) => {
-    console.log('Static config load result:', staticLoaded);
-
+  loadStaticConfig().then(() => {
     // Then try relay (it will override if available)
     useConfigStore
       .getState()
       ._loadFromRelay()
-      .then((loaded) => {
-        console.log('Relay load result:', loaded);
-
+      .then(() => {
         // Only connect to SSE for auto-refresh if NOT editing remotely
         if (!isRemoteEditing) {
           connectToConfigUpdates();
-        } else {
-          console.log('Remote editing mode - SSE refresh disabled');
         }
 
         // Apply screen index from URL after config is loaded
@@ -522,28 +515,23 @@ async function loadStaticConfig(): Promise<boolean> {
   try {
     // Relative path works for any deploy location (local, prod, branch deploys)
     const configUrl = './config/dashboard.json';
-    console.log('Loading static config from', configUrl);
     const res = await fetch(configUrl);
     if (!res.ok) {
-      console.error('Failed to load static config:', res.status, res.statusText);
       return false;
     }
     const config = (await res.json()) as DashboardConfig;
-    console.log('Static config loaded:', config);
     if (config.screens && Array.isArray(config.screens)) {
-      // Only apply static config if no config in localStorage yet
+      // Only apply static config if localStorage has no real config
+      // (empty panels = default/fresh install state)
       const currentState = useConfigStore.getState();
-      if (!currentState.globalSettings) {
+      const hasRealConfig = currentState.screens.some((s) => s.panels.length > 0);
+      if (!hasRealConfig) {
         useConfigStore.setState(applyPersistedConfig(config));
-        console.log('Static config applied to store');
-      } else {
-        console.log('Skipping static config, localStorage already has config');
       }
       return true;
     }
     return false;
-  } catch (err) {
-    console.error('Error loading static config:', err);
+  } catch {
     return false;
   }
 }
