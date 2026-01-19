@@ -33,6 +33,11 @@ rsync -avz --delete \
   --exclude='.venv' \
   --exclude='node_modules' \
   --exclude='__pycache__' \
+  --exclude='.ruff_cache' \
+  --exclude='.mypy_cache' \
+  --exclude='.pytest_cache' \
+  --exclude='.claude' \
+  --exclude='.DS_Store' \
   --include='scripts/***' \
   --include='services/***' \
   --exclude='*' \
