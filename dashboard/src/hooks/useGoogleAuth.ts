@@ -11,8 +11,9 @@ const isLocalDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// Token API - always use production endpoint
-const TOKEN_API = 'https://dak.bkemper.me/api/oauth/token';
+// Token API - use env var for self-hosting, fallback to production
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
+const TOKEN_API = `${APP_URL}/api/oauth/token`;
 
 interface AuthState {
   accessToken: string | null;

@@ -1,30 +1,12 @@
 // Cloudflare Pages Function for Google Places Autocomplete API
 // Proxies requests to avoid CORS and keeps API key server-side
 
-const ALLOWED_ORIGINS = [
-  'https://dak.bkemper.me',
-  'https://bkemper.me',
-  'http://localhost:8080',
-  'http://127.0.0.1:8080',
-];
-
-function getCorsHeaders(request) {
-  const origin = request.headers.get('Origin') || '';
-  const allowedOrigin = ALLOWED_ORIGINS.find((o) => origin.startsWith(o))
-    ? origin
-    : ALLOWED_ORIGINS[0];
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Cache-Control': 'public, max-age=86400',
-  };
-}
+import { getCorsHeaders, handleOptions } from '../_cors.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  const corsHeaders = getCorsHeaders(request);
+  const corsHeaders = getCorsHeaders(request, env);
 
   try {
     const url = new URL(request.url);
@@ -75,8 +57,5 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestOptions(context) {
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(context.request),
-  });
+  return handleOptions(context.request, context.env);
 }

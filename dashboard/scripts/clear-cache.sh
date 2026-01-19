@@ -1,57 +1,72 @@
 #!/bin/bash
 # Clear Chromium browser cache and storage
-# Run this when the kiosk needs a fresh start
+# Usage: ./scripts/clear-cache.sh [user@host]
+#   user@host: optional remote kiosk to clear via SSH
+#   If no host specified, runs locally
 
 set -e
 
-echo "=== Clearing Chromium cache and storage ==="
+REMOTE="$1"
 
-# Stop kiosk if running
-if systemctl is-active --quiet cage@kiosk 2>/dev/null; then
-  echo "Stopping kiosk service..."
-  sudo systemctl stop cage@kiosk || true
-fi
+clear_cache() {
+  echo "=== Clearing Chromium cache and storage ==="
 
-# Kill any running chromium processes
-pkill -f chromium || true
-sleep 1
+  # Stop kiosk if running
+  if systemctl is-active --quiet cage@kiosk 2>/dev/null; then
+    echo "Stopping kiosk service..."
+    sudo systemctl stop cage@kiosk || true
+  fi
 
-# Chromium config directory
-CHROMIUM_DIR="$HOME/.config/chromium/Default"
+  # Kill any running chromium processes
+  pkill -f chromium || true
+  pkill -f cage || true
+  sleep 1
 
-if [ -d "$CHROMIUM_DIR" ]; then
-  echo "Clearing localStorage..."
-  rm -rf "$CHROMIUM_DIR/Local Storage/"
+  # Chromium config directory
+  CHROMIUM_DIR="$HOME/.config/chromium/Default"
 
-  echo "Clearing sessionStorage..."
-  rm -rf "$CHROMIUM_DIR/Session Storage/"
+  if [ -d "$CHROMIUM_DIR" ]; then
+    echo "Clearing localStorage..."
+    rm -rf "$CHROMIUM_DIR/Local Storage/"
 
-  echo "Clearing IndexedDB..."
-  rm -rf "$CHROMIUM_DIR/IndexedDB/"
+    echo "Clearing sessionStorage..."
+    rm -rf "$CHROMIUM_DIR/Session Storage/"
 
-  echo "Clearing cookies..."
-  rm -f "$CHROMIUM_DIR/Cookies"
-  rm -f "$CHROMIUM_DIR/Cookies-journal"
+    echo "Clearing IndexedDB..."
+    rm -rf "$CHROMIUM_DIR/IndexedDB/"
 
-  echo "Clearing Service Workers..."
-  rm -rf "$CHROMIUM_DIR/Service Worker/"
+    echo "Clearing cookies..."
+    rm -f "$CHROMIUM_DIR/Cookies"
+    rm -f "$CHROMIUM_DIR/Cookies-journal"
 
-  echo "Clearing cache..."
-  rm -rf "$HOME/.cache/chromium/"
+    echo "Clearing Service Workers..."
+    rm -rf "$CHROMIUM_DIR/Service Worker/"
+
+    echo "Clearing cache..."
+    rm -rf "$HOME/.cache/chromium/"
+  else
+    echo "Chromium directory not found: $CHROMIUM_DIR"
+  fi
+
+  echo "Clearing dashboard config..."
+  rm -f ~/.config/home-relay/dashboard.json
+
+  echo "=== Cache cleared ==="
+  echo "Restarting kiosk..."
+  sleep 2
+  if sudo systemctl restart getty@tty1; then
+    echo "Done"
+  else
+    echo "Getty restart failed, rebooting..."
+    sudo reboot
+  fi
+}
+
+if [[ -z "$REMOTE" ]]; then
+  # Run locally
+  clear_cache
 else
-  echo "Chromium directory not found: $CHROMIUM_DIR"
-fi
-
-echo "Clearing dashboard config..."
-rm -f ~/.config/home-relay/dashboard.json
-
-echo "=== Cache cleared ==="
-echo "Restarting kiosk..."
-pkill -f cage 2>/dev/null || true
-sleep 2
-if sudo systemctl restart getty@tty1; then
-  echo "Done"
-else
-  echo "Getty restart failed, rebooting..."
-  sudo reboot
+  # Run remotely via SSH
+  echo "=== Clearing cache on $REMOTE ==="
+  ssh -t "$REMOTE" "$(declare -f clear_cache); clear_cache"
 fi

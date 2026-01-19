@@ -13,30 +13,49 @@ import type {
 import { DEFAULT_CONFIG, generateId } from '../types';
 
 // API endpoint for home-relay config
-// Can be overridden with ?relay=host:port URL param for remote editing
-const DEFAULT_RELAY_URL = 'http://localhost:5111';
+// Priority: URL param > globalSettings > default
+const DEFAULT_RELAY_URL = 'http://kiosk.local:5111';
 
-function getRelayUrlFromParams(): string {
-  if (typeof window === 'undefined') return DEFAULT_RELAY_URL;
-  const params = new URLSearchParams(window.location.search);
-  const relayParam = params.get('relay');
-  if (relayParam) {
-    return relayParam.startsWith('http') ? relayParam : `http://${relayParam}`;
-  }
-  return DEFAULT_RELAY_URL;
+function normalizeRelayUrl(url: string): string {
+  return url.startsWith('http') ? url : `http://${url}`;
 }
 
-let relayUrl = DEFAULT_RELAY_URL;
-if (typeof window !== 'undefined') {
-  relayUrl = getRelayUrlFromParams();
-  if (relayUrl !== DEFAULT_RELAY_URL) {
-    console.log(`Using remote relay: ${relayUrl}`);
-  }
+function getRelayUrlFromParams(): string | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const relayParam = params.get('relay');
+  return relayParam ? normalizeRelayUrl(relayParam) : null;
+}
+
+const urlParamRelay = getRelayUrlFromParams();
+let relayUrl = urlParamRelay ?? DEFAULT_RELAY_URL;
+if (urlParamRelay) {
+  console.log(`Using relay from URL param: ${relayUrl}`);
 }
 
 // Export for widgets that need relay access (kasa, wol, brightness)
 export function getRelayUrl(): string {
   return relayUrl;
+}
+
+// Update relay URL from settings (URL param always takes priority)
+export function setRelayUrl(url: string) {
+  if (urlParamRelay) return;
+  relayUrl = normalizeRelayUrl(url);
+}
+
+// Test relay connection
+export async function testRelayConnection(url?: string): Promise<boolean> {
+  const testUrl = url ? normalizeRelayUrl(url) : relayUrl;
+  try {
+    const res = await fetch(`${testUrl}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // SSE connection state
@@ -379,6 +398,12 @@ export const useConfigStore = create<ConfigState>()(
 
 // Initialize external configs (static file + relay) after localStorage hydration
 function initializeExternalConfigs() {
+  // Apply relay URL from localStorage settings (if not overridden by URL param)
+  const state = useConfigStore.getState();
+  if (state.globalSettings?.relayUrl && !urlParamRelay) {
+    setRelayUrl(state.globalSettings.relayUrl);
+  }
+
   // Load static config for defaults, then relay for sync
   loadStaticConfig().then((staticLoaded) => {
     console.log('Static config load result:', staticLoaded);

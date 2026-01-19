@@ -1,6 +1,12 @@
 #!/bin/bash
 # Kiosk startup script - launches Chromium in kiosk mode via Cage compositor
 
+# Load config if exists (for self-hosting - set DASHBOARD_URL)
+# shellcheck source=/dev/null
+[ -f ~/.config/dashboard/kiosk.conf ] && source ~/.config/dashboard/kiosk.conf
+
+DASHBOARD_URL="${DASHBOARD_URL:-https://dak.bkemper.me/dashboard}"
+
 export WLR_LIBINPUT_NO_DEVICES=1
 
 CHROMIUM_BIN=$(command -v chromium || command -v chromium-browser)
@@ -30,4 +36,4 @@ exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --overscroll-history-navigation=0 \
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \
   --ozone-platform=wayland \
-  https://dak.bkemper.me/dashboard
+  "$DASHBOARD_URL"

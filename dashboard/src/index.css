@@ -4,6 +4,12 @@
 /* Enable class-based dark mode (triggered by .dark class on document) */
 @variant dark (&:where(.dark, .dark *));
 
+/* Prevent virtual keyboard scroll-extend from creating scroll */
+html,
+body {
+  overflow: hidden;
+}
+
 /* Custom font */
 @theme {
   --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;

@@ -12,7 +12,8 @@ import { parseDuration } from '../../types';
 const isLocalDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const API_BASE = isLocalDev ? 'https://dak.bkemper.me/api/maps' : '/api/maps';
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
+const API_BASE = isLocalDev ? `${APP_URL}/api/maps` : '/api/maps';
 
 const DAY_NAMES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];

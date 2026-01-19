@@ -6,8 +6,23 @@
 #   scp -r scripts kiosk@kiosk.local:~
 #   ssh kiosk@kiosk.local
 #   bash ~/dashboard/scripts/kiosk-setup.sh
+#
+# For self-hosting, create ~/.config/dashboard/kiosk.conf before running:
+#   DASHBOARD_URL=https://yourdomain.com/dashboard
 
 set -e
+
+# Copy config from scripts folder if not already present
+mkdir -p ~/.config/dashboard
+if [ -f ~/dashboard/scripts/kiosk.conf ] && [ ! -f ~/.config/dashboard/kiosk.conf ]; then
+  cp ~/dashboard/scripts/kiosk.conf ~/.config/dashboard/kiosk.conf
+fi
+# shellcheck source=/dev/null
+[ -f ~/.config/dashboard/kiosk.conf ] && source ~/.config/dashboard/kiosk.conf
+
+DASHBOARD_URL="${DASHBOARD_URL:-https://dak.bkemper.me/dashboard}"
+# Extract origin from URL for Chromium policies
+DASHBOARD_ORIGIN="${DASHBOARD_URL%%/dashboard*}"
 
 echo "=== Updating and upgrading system ==="
 sudo apt-get update
@@ -50,16 +65,16 @@ bash ~/dashboard/scripts/install-keyboard.sh || echo "Warning: install-keyboard.
 
 echo "=== Configuring Chromium policies ==="
 sudo mkdir -p /etc/chromium/policies/managed
-sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << 'EOF'
+sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << EOF
 {
   "AutofillAddressEnabled": false,
   "AutofillCreditCardEnabled": false,
   "PasswordManagerEnabled": false,
   "AudioCaptureAllowed": true,
-  "AudioCaptureAllowedUrls": ["https://dak.bkemper.me"],
+  "AudioCaptureAllowedUrls": ["$DASHBOARD_ORIGIN"],
   "InsecurePrivateNetworkRequestsAllowed": true,
-  "InsecurePrivateNetworkRequestsAllowedForUrls": ["https://dak.bkemper.me"],
-  "LocalNetworkAccessAllowedForUrls": ["https://dak.bkemper.me"]
+  "InsecurePrivateNetworkRequestsAllowedForUrls": ["$DASHBOARD_ORIGIN"],
+  "LocalNetworkAccessAllowedForUrls": ["$DASHBOARD_ORIGIN"]
 }
 EOF
 

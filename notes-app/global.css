@@ -6,9 +6,25 @@
   * {
     font-synthesis: weight;
   }
+  html,
   body {
     font-family: 'Open Sans', system-ui, sans-serif;
+    overflow: hidden;
   }
+}
+
+/* Prevent white flash from keyboard scroll-extend */
+html {
+  background: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  html {
+    background: #0a0a0a;
+  }
+}
+.dark html,
+html.dark {
+  background: #0a0a0a;
 }
 
 /* Pointer cursor for all clickable elements (React Native Web renders Pressable as role="button") */

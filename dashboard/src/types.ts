@@ -98,6 +98,7 @@ export interface GlobalSettings {
   theme: ThemeMode;
   defaultLocation?: LocationConfig;
   hideCursor: boolean;
+  relayUrl?: string;
 }
 
 // Dashboard configuration

@@ -1,6 +1,11 @@
-import { useState } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
-import { useConfigStore } from '../../stores/config-store';
+import { useState, useEffect } from 'react';
+import { Sun, Moon, Monitor, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import {
+  useConfigStore,
+  testRelayConnection,
+  setRelayUrl,
+  getRelayUrl,
+} from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type { ThemeMode } from '../../types';
@@ -22,10 +27,33 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const updateGlobalSettings = useConfigStore((s) => s.updateGlobalSettings);
 
   const [locationQuery, setLocationQuery] = useState('');
+  const [relayUrlInput, setRelayUrlInput] = useState('');
+  const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
 
   const currentTheme = globalSettings?.theme ?? 'dark';
   const defaultLocation = globalSettings?.defaultLocation;
   const hideCursor = globalSettings?.hideCursor ?? false;
+
+  // Reset relay URL input when modal opens (valid pattern for form initialization)
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- form reset on modal open
+      setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
+      setRelayStatus('idle');
+    }
+  }, [open, globalSettings?.relayUrl]);
+
+  async function handleTestRelay() {
+    setRelayStatus('testing');
+    const success = await testRelayConnection(relayUrlInput);
+    setRelayStatus(success ? 'success' : 'error');
+  }
+
+  function handleSaveRelay() {
+    updateGlobalSettings({ relayUrl: relayUrlInput });
+    setRelayUrl(relayUrlInput);
+    setRelayStatus('idle');
+  }
 
   function handleThemeChange(theme: ThemeMode) {
     updateGlobalSettings({ theme });
@@ -123,6 +151,52 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               </p>
             </div>
           </label>
+        </div>
+
+        {/* Relay URL */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Relay URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={relayUrlInput}
+              onChange={(e) => {
+                setRelayUrlInput(e.target.value);
+                setRelayStatus('idle');
+              }}
+              placeholder="kiosk.local:5111"
+              className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                         bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Button
+              onClick={handleTestRelay}
+              variant="default"
+              disabled={relayStatus === 'testing'}
+            >
+              {relayStatus === 'testing' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : relayStatus === 'success' ? (
+                <CheckCircle size={18} className="text-green-500" />
+              ) : relayStatus === 'error' ? (
+                <XCircle size={18} className="text-red-500" />
+              ) : (
+                'Test'
+              )}
+            </Button>
+            <Button
+              onClick={handleSaveRelay}
+              variant="primary"
+              disabled={relayUrlInput === (globalSettings?.relayUrl ?? '')}
+            >
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Home-relay server for Kasa, WoL, brightness, and config sync
+          </p>
         </div>
       </div>
 

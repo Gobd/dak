@@ -8,7 +8,8 @@ import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // NWS API - free, no auth, CORS-enabled
-const NWS_USER_AGENT = 'Dashboard (bkemper.me)';
+const APP_URL = import.meta.env.VITE_APP_URL || 'https://example.com';
+const NWS_USER_AGENT = `Dashboard (${APP_URL.replace(/^https?:\/\//, '')})`;
 
 interface NwsPeriod {
   name: string;
