@@ -138,7 +138,7 @@ Drive time configuration:
 Edit the config file directly:
 
 ```bash
-ssh kiosk@kiosk.local
+ssh kiosk@kiosk.home.arpa
 nano ~/.config/home-relay/dashboard.json
 ```
 
