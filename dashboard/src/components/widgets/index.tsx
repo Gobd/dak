@@ -20,6 +20,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   wol: lazy(() => import('./Wol')),
   brightness: lazy(() => import('./Brightness')),
   iframe: lazy(() => import('./Iframe')),
+  climate: lazy(() => import('./Climate')),
 };
 
 // Loading placeholder

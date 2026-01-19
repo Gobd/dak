@@ -1,26 +1,28 @@
 # Voice Control Plan
 
 Fully local voice control for the kiosk RPi. Two components:
+
 1. **Vosk in Chrome keyboard extension** - faster STT for typing
 2. **Wake word voice commands** - "hey kiosk add cheese to groceries"
 
 ## Hardware
 
-| Item | Status | Notes |
-|------|--------|-------|
-| ReSpeaker XVF3800 4-Mic Array | ✅ Have | Far-field, noise cancellation, beamforming |
-| Raspberry Pi (kiosk) | ✅ Have | Running Chromium + home-relay |
-| Speaker for audio feedback | ❓ Need? | USB speaker (~$10) or HDMI if monitor has speakers |
+| Item                          | Status   | Notes                                              |
+| ----------------------------- | -------- | -------------------------------------------------- |
+| ReSpeaker XVF3800 4-Mic Array | ✅ Have  | Far-field, noise cancellation, beamforming         |
+| Raspberry Pi (kiosk)          | ✅ Have  | Running Chromium + home-relay                      |
+| Speaker for audio feedback    | ❓ Need? | USB speaker (~$10) or HDMI if monitor has speakers |
 
 ### Speaker Options (if needed)
 
-| Option | Price | Link |
-|--------|-------|------|
-| HDMI audio | Free | Use monitor speakers if available |
-| USB Mini Speaker | ~$10 | [Amazon](https://www.amazon.com/dp/B075M7FHM1) |
-| 3.5mm Speaker | ~$8 | If RPi has audio jack |
+| Option           | Price | Link                                           |
+| ---------------- | ----- | ---------------------------------------------- |
+| HDMI audio       | Free  | Use monitor speakers if available              |
+| USB Mini Speaker | ~$10  | [Amazon](https://www.amazon.com/dp/B075M7FHM1) |
+| 3.5mm Speaker    | ~$8   | If RPi has audio jack                          |
 
 Test if you already have audio:
+
 ```bash
 aplay /usr/share/sounds/alsa/Front_Center.wav
 ```
@@ -33,11 +35,11 @@ Replace Whisper with Vosk in `/Users/bkemper/Developer/chrome-virtual-keyboard` 
 
 ### Why Switch
 
-| | Whisper (current) | Vosk (proposed) |
-|---|-------------------|-----------------|
-| Speed on RPi | Painfully slow | Fast |
-| Accuracy | Excellent | Good (fine for commands) |
-| Model size | 41-488MB | ~50MB |
+|              | Whisper (current) | Vosk (proposed)          |
+| ------------ | ----------------- | ------------------------ |
+| Speed on RPi | Painfully slow    | Fast                     |
+| Accuracy     | Excellent         | Good (fine for commands) |
+| Model size   | 41-488MB          | ~50MB                    |
 
 ### Install vosk-browser
 
@@ -47,6 +49,7 @@ pnpm add vosk-browser
 ```
 
 Download English model (~50MB):
+
 - https://alphacephei.com/vosk/models
 - `vosk-model-small-en-us-0.15` (recommended for RPi)
 
@@ -175,7 +178,7 @@ class VoiceInput {
     }
 
     if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
     }
 
@@ -209,6 +212,7 @@ export default VoiceInput;
 ### Model Placement
 
 Place the Vosk model in the extension:
+
 ```
 chrome-virtual-keyboard/
   models/
@@ -674,15 +678,16 @@ curl -X POST http://localhost:5111/voice/add-to-list \
 
 ## Summary
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| Vosk in keyboard | `chrome-virtual-keyboard/src/voice/VoiceInput.js` | Faster STT for typing |
-| OpenWakeWord | `home-relay/voice_control.py` | Always listening for "hey kiosk" |
-| Vosk STT | `home-relay/voice_control.py` | Transcribe commands after wake |
-| Voice routes | `home-relay/routes/voice.py` | Execute parsed commands |
-| Supabase client | `home-relay/lib/supabase.py` | Add items to notes-app |
+| Component        | Location                                          | Purpose                          |
+| ---------------- | ------------------------------------------------- | -------------------------------- |
+| Vosk in keyboard | `chrome-virtual-keyboard/src/voice/VoiceInput.js` | Faster STT for typing            |
+| OpenWakeWord     | `home-relay/voice_control.py`                     | Always listening for "hey kiosk" |
+| Vosk STT         | `home-relay/voice_control.py`                     | Transcribe commands after wake   |
+| Voice routes     | `home-relay/routes/voice.py`                      | Execute parsed commands          |
+| Supabase client  | `home-relay/lib/supabase.py`                      | Add items to notes-app           |
 
 **Flow:**
+
 ```
 "Hey kiosk add cheese to groceries"
     ↓
@@ -877,13 +882,13 @@ def execute_command(text: str) -> dict:
 
 ### Available Commands
 
-| Command | Examples | Action |
-|---------|----------|--------|
-| Add to list | "add cheese to groceries" | Appends `- [ ] item` to note |
-| Climate | "is it warmer outside" | Returns indoor/outdoor comparison |
-| Devices | "turn on the lamp" | Toggles Kasa device |
-| Weather | "what's the weather" | Gets forecast |
-| Help | "what can you do" | Lists commands |
+| Command     | Examples                  | Action                            |
+| ----------- | ------------------------- | --------------------------------- |
+| Add to list | "add cheese to groceries" | Appends `- [ ] item` to note      |
+| Climate     | "is it warmer outside"    | Returns indoor/outdoor comparison |
+| Devices     | "turn on the lamp"        | Toggles Kasa device               |
+| Weather     | "what's the weather"      | Gets forecast                     |
+| Help        | "what can you do"         | Lists commands                    |
 
 Easy to add more - just add a `@register_command` decorated function.
 
@@ -922,9 +927,7 @@ export default function VoiceHelp({ panel }: { panel: Panel }) {
 
   return (
     <div className="p-3 h-full">
-      <div className="text-sm font-medium text-gray-400 mb-2">
-        🎤 Say "Hey Kiosk" then...
-      </div>
+      <div className="text-sm font-medium text-gray-400 mb-2">🎤 Say "Hey Kiosk" then...</div>
       <div className="space-y-1 text-xs">
         {commands.map((cmd) => (
           <div key={cmd.name} className="text-gray-300">
@@ -942,11 +945,7 @@ export default function VoiceHelp({ panel }: { panel: Panel }) {
 ```tsx
 // Single line hint
 export function VoiceHelpMini() {
-  return (
-    <div className="text-xs text-gray-500 px-2">
-      🎤 "Hey Kiosk, add X to groceries"
-    </div>
-  );
+  return <div className="text-xs text-gray-500 px-2">🎤 "Hey Kiosk, add X to groceries"</div>;
 }
 ```
 
@@ -1003,12 +1002,12 @@ def play_sound(sound_name: str):
 
 ## Future Command Ideas
 
-| Command | Pattern | Action |
-|---------|---------|--------|
-| Timer | "set timer for 5 minutes" | Dashboard countdown |
-| Brightness | "dim the screen" | Adjust display brightness |
-| Screen | "show weather screen" | Switch dashboard screens |
-| Reminder | "remind me to X at Y" | Add timed notification |
-| Music | "play music" | Control media (if integrated) |
+| Command    | Pattern                   | Action                        |
+| ---------- | ------------------------- | ----------------------------- |
+| Timer      | "set timer for 5 minutes" | Dashboard countdown           |
+| Brightness | "dim the screen"          | Adjust display brightness     |
+| Screen     | "show weather screen"     | Switch dashboard screens      |
+| Reminder   | "remind me to X at Y"     | Add timed notification        |
+| Music      | "play music"              | Control media (if integrated) |
 
 Just add more `@register_command` decorated functions!

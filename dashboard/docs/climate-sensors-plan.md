@@ -4,24 +4,26 @@ Display indoor vs outdoor temperature and humidity with trend arrows, and show w
 
 ## Hardware to Buy
 
-| Item | Product | Est. Cost | Notes |
-|------|---------|-----------|-------|
-| Zigbee USB Coordinator | [SONOFF Zigbee 3.0 Dongle-P (EFR32MG24)](https://www.amazon.com/dp/B0FMJD288B) | ~$35 | EFR32MG24 chip, best range, future-proof |
-| Indoor Sensor | [Aqara Temperature & Humidity Sensor](https://www.amazon.com/dp/B07D37FKGY) | ~$20 | Model WSDCGQ11LM, well-loved |
-| Outdoor Sensor | [Aqara Temperature & Humidity Sensor](https://www.amazon.com/dp/B07D37FKGY) | ~$20 | Same sensor, DIY weatherproof |
-| Optional: Range Extender | [SONOFF S31 Lite Zigbee Plug](https://www.amazon.com/dp/B08X2944W7) | ~$12 | Place near window facing outdoor sensor |
+| Item                     | Product                                                                        | Est. Cost | Notes                                    |
+| ------------------------ | ------------------------------------------------------------------------------ | --------- | ---------------------------------------- |
+| Zigbee USB Coordinator   | [SONOFF Zigbee 3.0 Dongle-P (EFR32MG24)](https://www.amazon.com/dp/B0FMJD288B) | ~$35      | EFR32MG24 chip, best range, future-proof |
+| Indoor Sensor            | [Aqara Temperature & Humidity Sensor](https://www.amazon.com/dp/B07D37FKGY)    | ~$20      | Model WSDCGQ11LM, well-loved             |
+| Outdoor Sensor           | [Aqara Temperature & Humidity Sensor](https://www.amazon.com/dp/B07D37FKGY)    | ~$20      | Same sensor, DIY weatherproof            |
+| Optional: Range Extender | [SONOFF S31 Lite Zigbee Plug](https://www.amazon.com/dp/B08X2944W7)            | ~$12      | Place near window facing outdoor sensor  |
 
 **Total: ~$75-87**
 
 ### Outdoor Sensor Weatherproofing
 
 **Option A: DIY (free/$5)**
+
 - Cover the LED hole with waterproof tape (electrical tape, Gorilla tape, etc.)
 - Mount sensor-hole-down so rain drains away
 - Place under eave/overhang to keep out of direct rain
 - Many people report years of outdoor use this way
 
 **Option B: Enclosure (~$10-15)**
+
 - [Sensor Weather Shield](https://www.amazon.com/dp/B0BRNS4J8Z) or similar
 - Vented to allow airflow while blocking rain
 - Better for fully exposed locations
@@ -30,19 +32,21 @@ Display indoor vs outdoor temperature and humidity with trend arrows, and show w
 
 ## Zigbee Range
 
-| Condition | Typical Range |
-|-----------|---------------|
+| Condition                         | Typical Range        |
+| --------------------------------- | -------------------- |
 | Line of sight (outdoor, no walls) | 50-100m (~150-300ft) |
-| Through 1-2 interior walls | 10-20m (~30-60ft) |
-| Through exterior wall | 5-15m (~15-50ft) |
-| Through brick/concrete | 5-10m (~15-30ft) |
+| Through 1-2 interior walls        | 10-20m (~30-60ft)    |
+| Through exterior wall             | 5-15m (~15-50ft)     |
+| Through brick/concrete            | 5-10m (~15-30ft)     |
 
 **Key points:**
+
 - Zigbee is a **mesh network** - any mains-powered device (smart plugs, bulbs) acts as a repeater
 - Battery-powered sensors (like Aqara) do NOT repeat - they're "end devices"
 - If outdoor sensor struggles, add a Zigbee smart plug near the window facing it
 
 **For your 100ft outdoor placement:**
+
 - Probably works if sensor is visible from window/RPi location
 - May need a repeater plug near the window if there are walls in the way
 - Test first before buying extra hardware
@@ -67,6 +71,7 @@ Display indoor vs outdoor temperature and humidity with trend arrows, and show w
 ```
 
 **Trend arrows:**
+
 - `↑` Rising - current value > recent average + threshold
 - `↓` Falling - current value < recent average - threshold
 - `→` Steady - within threshold of recent average
@@ -79,9 +84,9 @@ Display indoor vs outdoor temperature and humidity with trend arrows, and show w
 
 Toggle between cooling (summer) and heating (winter) mode to change window recommendations.
 
-| Mode | Setting | Open windows when... |
-|------|---------|----------------------|
-| ☀️ Cooling | `wantCooler: true` | Outside feels **cooler** |
+| Mode       | Setting             | Open windows when...     |
+| ---------- | ------------------- | ------------------------ |
+| ☀️ Cooling | `wantCooler: true`  | Outside feels **cooler** |
 | ❄️ Heating | `wantCooler: false` | Outside feels **warmer** |
 
 **Storage:** Widget setting stored in `panel.args.wantCooler` (boolean, default `true`)
@@ -89,6 +94,7 @@ Toggle between cooling (summer) and heating (winter) mode to change window recom
 **UI:** Clickable toggle button in widget header - tap to switch modes
 
 **Examples:**
+
 - Summer, 75°F inside, 65°F outside → "Open windows" (cooling mode)
 - Summer, 75°F inside, 85°F outside → "Keep closed" (cooling mode)
 - Winter, 65°F inside, 55°F outside → "Keep closed" (heating mode)
@@ -479,7 +485,8 @@ function Trend({ trend, value, unit }: { trend: keyof typeof TREND; value: numbe
   const { icon, color } = TREND[trend];
   return (
     <span className="inline-flex items-center gap-1">
-      {value}{unit} <span className={color}>{icon}</span>
+      {value}
+      {unit} <span className={color}>{icon}</span>
     </span>
   );
 }
@@ -604,11 +611,15 @@ export default function Climate({ panel }: { panel: Panel }) {
 
       {/* Recommendation */}
       {recommendation && (
-        <div className={`p-3 rounded-lg text-center ${
-          recommendation.action === 'open' ? 'bg-green-900/30 text-green-200' :
-          recommendation.action === 'close' ? 'bg-gray-800/50 text-gray-300' :
-          'bg-gray-800/50 text-gray-300'
-        }`}>
+        <div
+          className={`p-3 rounded-lg text-center ${
+            recommendation.action === 'open'
+              ? 'bg-green-900/30 text-green-200'
+              : recommendation.action === 'close'
+                ? 'bg-gray-800/50 text-gray-300'
+                : 'bg-gray-800/50 text-gray-300'
+          }`}
+        >
           <div className="text-2xl mb-1">{recommendation.icon}</div>
           <div className="text-sm">{recommendation.text}</div>
         </div>
@@ -634,6 +645,7 @@ climate: Climate,
 After hardware arrives and setup script runs:
 
 1. **Enable pairing:**
+
    ```bash
    # Edit /opt/zigbee2mqtt/data/configuration.yaml
    # Set: permit_join: true
@@ -645,6 +657,7 @@ After hardware arrives and setup script runs:
    - Check web UI at http://kiosk.local:8080
 
 3. **Name sensors** in config:
+
    ```yaml
    devices:
      '0x00158d0001234567':
@@ -663,12 +676,12 @@ After hardware arrives and setup script runs:
 
 ## API Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /sensors/status` | MQTT connection status |
-| `GET /sensors/indoor` | Indoor temp, humidity, trends, feels-like |
+| Endpoint               | Description                                |
+| ---------------------- | ------------------------------------------ |
+| `GET /sensors/status`  | MQTT connection status                     |
+| `GET /sensors/indoor`  | Indoor temp, humidity, trends, feels-like  |
 | `GET /sensors/outdoor` | Outdoor temp, humidity, trends, feels-like |
-| `GET /sensors/all` | Both + comparison (which feels cooler) |
+| `GET /sensors/all`     | Both + comparison (which feels cooler)     |
 
 ### Example: `/sensors/all`
 
@@ -717,13 +730,13 @@ curl http://localhost:5111/sensors/all
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Dongle not detected | `ls /dev/ttyUSB* /dev/ttyACM*` - update config if different |
-| Sensor won't pair | Hold button longer (5-10s), check `permit_join: true` |
-| No MQTT data | `systemctl status mosquitto zigbee2mqtt` |
-| Outdoor sensor drops | Add Zigbee repeater (smart plug) near window |
-| Stale readings | Check `age_seconds` in API response, sensor may need new battery |
+| Issue                | Solution                                                         |
+| -------------------- | ---------------------------------------------------------------- |
+| Dongle not detected  | `ls /dev/ttyUSB* /dev/ttyACM*` - update config if different      |
+| Sensor won't pair    | Hold button longer (5-10s), check `permit_join: true`            |
+| No MQTT data         | `systemctl status mosquitto zigbee2mqtt`                         |
+| Outdoor sensor drops | Add Zigbee repeater (smart plug) near window                     |
+| Stale readings       | Check `age_seconds` in API response, sensor may need new battery |
 
 ---
 
@@ -739,6 +752,7 @@ Compact 2-row version for the calendar header whitespace:
 ```
 
 Or when warmer outside:
+
 ```
 ┌───────────────────────────────────────┐
 │ 🏠 72°↑ 45%→   🌳 85°↑ 70%↑   [⚙️]  │
@@ -749,11 +763,13 @@ Or when warmer outside:
 **Settings button [⚙️]:** Tap to toggle mode (☀️ Cooling ↔ ❄️ Heating) or open mini settings popover
 
 **Shows:**
+
 - Indoor temp + trend, humidity + trend
 - Outdoor temp + trend, humidity + trend
 - Which feels cooler/warmer and by how much
 
 **Widget variants:**
+
 - `climate` - full panel version with all details + mode toggle
 - `climate-mini` - compact 2-row for calendar header
 

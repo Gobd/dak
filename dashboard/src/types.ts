@@ -9,7 +9,8 @@ export type WidgetType =
   | 'sun-moon'
   | 'aqi'
   | 'uv'
-  | 'iframe';
+  | 'iframe'
+  | 'climate';
 
 // Panel configuration
 export interface PanelConfig {
@@ -35,6 +36,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
+  climate: { width: 20, height: 8, refresh: '1m' },
 };
 
 // Screen configuration

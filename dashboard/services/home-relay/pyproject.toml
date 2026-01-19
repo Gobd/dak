@@ -10,6 +10,7 @@ dependencies = [
     "tzdata>=2024.1",
     "getmac>=0.9.0",
     "astral>=3.2",
+    "paho-mqtt>=2.0.0",
 ]
 
 [dependency-groups]
@@ -39,6 +40,7 @@ ignore = [
     "PLW0602", # Global statement without assignment
     "PLW0603", # Global statement to update
     "COM812",  # Trailing comma (conflicts with formatter)
+    "PLR2004", # Magic value comparisons (thresholds are readable inline)
     "DTZ",     # Timezone-naive datetime
     "FURB162", # Timezone replacement pattern
 ]

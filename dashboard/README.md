@@ -34,8 +34,8 @@ All scripts are in `scripts/`. Run from your Mac unless noted.
 | Script                                      | Description                                   |
 | ------------------------------------------- | --------------------------------------------- |
 | `deploy.sh <user@host>`                     | Sync files and run setup on kiosk             |
-| `deploy.sh <user@host> --no-setup`          | Sync files only (skip setup)                  |
-| `deploy.sh <user@host> --restart`           | Sync and restart home-relay service           |
+| `deploy.sh <user@host> --no-setup`          | Sync files, deps, and restart (skip setup)    |
+| `zigbee-setup.sh <user@host>`               | Install Zigbee2MQTT for climate sensors       |
 | `install-keyboard.sh [version] [user@host]` | Install Chrome virtual keyboard extension     |
 | `clear-cache.sh`                            | Clear browser cache and config (run on kiosk) |
 
@@ -72,6 +72,7 @@ These are installed to `~/scripts/` on the kiosk:
 | ------------ | ---------------------------------------------- |
 | `calendar`   | Google Calendar (OAuth, auto-refreshes tokens) |
 | `weather`    | NWS weather forecast                           |
+| `climate`    | Indoor/outdoor temp & humidity (Zigbee)        |
 | `uv`         | UV index chart                                 |
 | `aqi`        | Air quality index                              |
 | `sun-moon`   | Sunrise/sunset, moon phase                     |
