@@ -323,10 +323,9 @@ export const useConfigStore = create<ConfigState>()(
         },
 
         resetConfig: async () => {
-          // Load default config from static file
+          // Load default config from static file (relative path works for any deploy location)
           try {
-            const baseUrl = import.meta.env.BASE_URL || '/';
-            const res = await fetch(`${baseUrl}config/dashboard.json`);
+            const res = await fetch('./config/dashboard.json');
             if (res.ok) {
               const config = (await res.json()) as DashboardConfig;
               if (config.screens && Array.isArray(config.screens)) {
@@ -521,9 +520,8 @@ function cleanupSSE() {
 // Load from static config file as fallback
 async function loadStaticConfig(): Promise<boolean> {
   try {
-    // Use Vite's base URL (/ in dev, /dashboard/ in prod)
-    const baseUrl = import.meta.env.BASE_URL || '/';
-    const configUrl = `${baseUrl}config/dashboard.json`;
+    // Relative path works for any deploy location (local, prod, branch deploys)
+    const configUrl = './config/dashboard.json';
     console.log('Loading static config from', configUrl);
     const res = await fetch(configUrl);
     if (!res.ok) {
