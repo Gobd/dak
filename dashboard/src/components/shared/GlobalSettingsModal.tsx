@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sun, Moon, Monitor, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Sun, Moon, Monitor, CheckCircle, XCircle, Loader2, Mic } from 'lucide-react';
 import {
   useConfigStore,
   testRelayConnection,
@@ -8,8 +8,15 @@ import {
 } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import type { ThemeMode } from '../../types';
+import type { ThemeMode, WakeWord } from '../../types';
 import { formatLocation } from '../../hooks/useLocation';
+
+const WAKE_WORD_OPTIONS: { value: WakeWord; label: string }[] = [
+  { value: 'hey_jarvis', label: 'Hey Jarvis' },
+  { value: 'alexa', label: 'Alexa' },
+  { value: 'hey_mycroft', label: 'Hey Mycroft' },
+  { value: 'hey_rhasspy', label: 'Hey Rhasspy' },
+];
 
 interface GlobalSettingsModalProps {
   open: boolean;
@@ -33,6 +40,8 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const currentTheme = globalSettings?.theme ?? 'dark';
   const defaultLocation = globalSettings?.defaultLocation;
   const hideCursor = globalSettings?.hideCursor ?? false;
+  const voiceEnabled = globalSettings?.voiceEnabled ?? false;
+  const wakeWord = globalSettings?.wakeWord ?? 'hey_jarvis';
 
   // Reset relay URL input when modal opens (valid pattern for form initialization)
   useEffect(() => {
@@ -151,6 +160,48 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               </p>
             </div>
           </label>
+        </div>
+
+        {/* Voice Control */}
+        <div>
+          <label className="flex items-center gap-3 cursor-pointer mb-3">
+            <input
+              type="checkbox"
+              checked={voiceEnabled}
+              onChange={(e) => updateGlobalSettings({ voiceEnabled: e.target.checked })}
+              className="w-5 h-5 rounded border-neutral-300 dark:border-neutral-600
+                         text-blue-600 focus:ring-blue-500 dark:bg-neutral-800"
+            />
+            <div className="flex items-center gap-2">
+              <Mic size={18} className="text-neutral-500" />
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                Voice Control
+              </span>
+            </div>
+          </label>
+          {voiceEnabled && (
+            <div className="ml-8">
+              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                Wake Word
+              </label>
+              <select
+                value={wakeWord}
+                onChange={(e) => updateGlobalSettings({ wakeWord: e.target.value as WakeWord })}
+                className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                           bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                           focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                {WAKE_WORD_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Say the wake word, then your command (e.g., "add milk to groceries")
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Relay URL */}

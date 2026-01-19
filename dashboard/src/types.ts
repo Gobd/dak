@@ -95,12 +95,18 @@ export interface BrightnessConfig {
 // Theme mode for global settings
 export type ThemeMode = 'dark' | 'light' | 'system';
 
+// Wake word options (built-in, no training needed)
+export type WakeWord = 'hey_jarvis' | 'alexa' | 'hey_mycroft' | 'hey_rhasspy';
+
 // Global settings
 export interface GlobalSettings {
   theme: ThemeMode;
   defaultLocation?: LocationConfig;
   hideCursor: boolean;
   relayUrl?: string;
+  // Voice control
+  voiceEnabled?: boolean;
+  wakeWord?: WakeWord;
 }
 
 // Dashboard configuration

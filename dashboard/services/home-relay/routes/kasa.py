@@ -97,6 +97,66 @@ async def _toggle_device(ip):
     return {"ip": ip, "on": dev.is_on, "name": getattr(dev, "alias", ip)}
 
 
+@bp.route("/toggle-by-name", methods=["POST"])
+def toggle_by_name():
+    """Toggle a Kasa device by name (for voice commands)."""
+    data = request.get_json() or {}
+    name = data.get("device") or data.get("name")
+    state = data.get("state")  # Optional: True=on, False=off, None=toggle
+
+    if not name:
+        return jsonify({"error": "device name required"}), 400
+
+    try:
+        result = asyncio.run(_toggle_device_by_name(name, state=state))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+async def _toggle_device_by_name(name: str, *, state: bool | None):
+    """Find device by name and toggle/set state."""
+    global _device_cache
+    name_lower = name.lower()
+
+    # First try cache
+    for ip, dev in _device_cache.items():
+        dev_name = getattr(dev, "alias", "") or ""
+        if name_lower in dev_name.lower():
+            return await _set_device_state(dev, ip, state=state)
+
+    # Refresh discovery if not found
+    await _discover_devices()
+
+    for ip, dev in _device_cache.items():
+        dev_name = getattr(dev, "alias", "") or ""
+        if name_lower in dev_name.lower():
+            return await _set_device_state(dev, ip, state=state)
+
+    return {"error": f"Device '{name}' not found"}
+
+
+async def _set_device_state(dev, ip: str, *, state: bool | None):
+    """Set device to specific state or toggle."""
+    with contextlib.suppress(Exception):
+        await dev.update()
+
+    if state is None:
+        # Toggle
+        if dev.is_on:
+            await dev.turn_off()
+        else:
+            await dev.turn_on()
+    elif state:
+        await dev.turn_on()
+    else:
+        await dev.turn_off()
+
+    with contextlib.suppress(Exception):
+        await dev.update()
+    return {"ip": ip, "on": dev.is_on, "name": getattr(dev, "alias", ip)}
+
+
 @bp.route("/status", methods=["GET"])
 def status():
     """Get status of a specific device."""

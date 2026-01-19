@@ -16,7 +16,7 @@ from flask import Flask, Response, jsonify, request
 # Disable Flask/Werkzeug access logs
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-from routes import brightness_bp, kasa_bp, sensors_bp, wol_bp
+from routes import brightness_bp, kasa_bp, sensors_bp, voice_bp, wol_bp
 from routes.brightness import init_app as init_brightness
 
 app = Flask(__name__)
@@ -26,6 +26,7 @@ app.register_blueprint(kasa_bp)
 app.register_blueprint(wol_bp)
 app.register_blueprint(brightness_bp)
 app.register_blueprint(sensors_bp)
+app.register_blueprint(voice_bp)
 
 # SSE subscribers
 _sse_subscribers = []
