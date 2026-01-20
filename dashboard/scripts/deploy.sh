@@ -35,6 +35,7 @@ rsync -avz --delete \
   "$REPO_DIR/" "$REMOTE:~/dashboard/"
 
 echo "=== Syncing Python dependencies ==="
+ssh "$REMOTE" "command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh"
 ssh "$REMOTE" "cd ~/dashboard/services/home-relay && ~/.local/bin/uv sync"
 
 if [[ "$SKIP_SETUP" == "true" ]]; then

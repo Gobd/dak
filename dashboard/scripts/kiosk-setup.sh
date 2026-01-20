@@ -154,13 +154,14 @@ if ! command -v node &>/dev/null || [[ "$(node -v)" != v24* ]]; then
   sudo apt-get install -y nodejs
 fi
 
-echo "Installing Zigbee2MQTT..."
-if [ ! -d /opt/zigbee2mqtt ]; then
-  sudo mkdir -p /opt/zigbee2mqtt
-  sudo chown -R "$USER:$USER" /opt/zigbee2mqtt
-  git clone --depth 1 https://github.com/Koenkk/zigbee2mqtt.git /opt/zigbee2mqtt
-  cd /opt/zigbee2mqtt && npm ci
-fi
+ZIGBEE2MQTT_VERSION="2.7.2"
+echo "Installing Zigbee2MQTT $ZIGBEE2MQTT_VERSION..."
+sudo mkdir -p /opt/zigbee2mqtt
+sudo chown -R "$USER:$USER" /opt/zigbee2mqtt
+curl -Lo /tmp/zigbee2mqtt.tar.gz "https://github.com/Koenkk/zigbee2mqtt/archive/refs/tags/${ZIGBEE2MQTT_VERSION}.tar.gz"
+tar -xzf /tmp/zigbee2mqtt.tar.gz -C /opt/zigbee2mqtt --strip-components=1
+rm /tmp/zigbee2mqtt.tar.gz
+cd /opt/zigbee2mqtt && sudo corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile
 
 # Copy zigbee2mqtt config (uses auto-detect for serial port)
 mkdir -p /opt/zigbee2mqtt/data
