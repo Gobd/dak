@@ -11,12 +11,31 @@ const outDir = join(__dirname, 'dist');
 try { rmSync(outDir, { recursive: true }); } catch {}
 mkdirSync(outDir, { recursive: true });
 
+// Dynamically get all exports from React so we don't hardcode them
+const React = await import('react');
+const reactExports = Object.keys(React).filter(k =>
+  k !== 'default' &&
+  k !== 'module.exports' &&
+  !k.includes('DO_NOT_USE') &&
+  !k.startsWith('__') &&
+  !k.startsWith('unstable_') &&
+  k !== 'StrictMode' &&
+  k !== 'version' &&
+  k !== 'captureOwnerStack' &&
+  k !== 'act' &&
+  k !== 'Profiler' &&
+  k !== 'useDebugValue'
+);
+console.log('React exports:', reactExports);
+
 // Build React standalone
+// Explicitly list exports since esbuild doesn't properly handle `export *` with React's module format
 const reactResult = await build({
   stdin: {
     contents: `
-      export * from 'react';
-      export { default } from 'react';
+      import React, { ${reactExports.join(', ')} } from 'react';
+      export { ${reactExports.join(', ')} };
+      export default React;
     `,
     resolveDir: __dirname,
     loader: 'js',
@@ -24,6 +43,7 @@ const reactResult = await build({
   bundle: true,
   format: 'esm',
   minify: true,
+  treeShaking: false,
   write: false,
 });
 
@@ -32,14 +52,19 @@ const reactHash = createHash('md5').update(reactCode).digest('hex').slice(0, 8);
 const reactFileName = `react-${reactHash}.js`;
 writeFileSync(join(outDir, reactFileName), reactCode);
 
+// Dynamically get all exports from react-dom/client
+const ReactDOMClient = await import('react-dom/client');
+const clientExports = Object.keys(ReactDOMClient).filter(k => k !== 'default' && k !== 'module.exports' && k !== 'version' && k !== 'hydrateRoot');
+console.log('ReactDOM/client exports:', clientExports);
+
 // Build ReactDOM/client (includes all of react-dom)
 // This is what apps actually import
 const clientResult = await build({
   stdin: {
     contents: `
-      import * as ReactDOMClient from 'react-dom/client';
-      export * from 'react-dom/client';
-      export { ReactDOMClient as default };
+      import ReactDOMClient, { ${clientExports.join(', ')} } from 'react-dom/client';
+      export { ${clientExports.join(', ')} };
+      export default ReactDOMClient;
     `,
     resolveDir: __dirname,
     loader: 'js',
@@ -47,6 +72,7 @@ const clientResult = await build({
   bundle: true,
   format: 'esm',
   minify: true,
+  treeShaking: false,
   external: ['react'],
   write: false,
 });
