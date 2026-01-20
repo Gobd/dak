@@ -19,12 +19,17 @@ const reactExports = Object.keys(React).filter(k =>
   !k.includes('DO_NOT_USE') &&
   !k.startsWith('__') &&
   !k.startsWith('unstable_') &&
-  k !== 'StrictMode' &&
   k !== 'version' &&
   k !== 'captureOwnerStack' &&
   k !== 'act' &&
   k !== 'Profiler' &&
-  k !== 'useDebugValue'
+  k !== 'useDebugValue' &&
+  k !== 'Activity' &&
+  k !== 'cache' &&
+  k !== 'cacheSignal' &&
+  k !== 'useEffectEvent' &&
+  k !== 'useOptimistic' &&
+  k !== 'useActionState'
 );
 console.log('React exports:', reactExports);
 
@@ -45,6 +50,9 @@ const reactResult = await build({
   minify: true,
   treeShaking: false,
   write: false,
+  define: {
+    'process.env.NODE_ENV': '"production"',
+  },
 });
 
 const reactCode = reactResult.outputFiles[0].text;
@@ -75,6 +83,9 @@ const clientResult = await build({
   treeShaking: false,
   external: ['react'],
   write: false,
+  define: {
+    'process.env.NODE_ENV': '"production"',
+  },
 });
 
 const clientCode = clientResult.outputFiles[0].text;
