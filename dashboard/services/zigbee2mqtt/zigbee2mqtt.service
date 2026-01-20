@@ -2,8 +2,6 @@
 Description=Zigbee2MQTT
 After=network.target mosquitto.service
 Requires=mosquitto.service
-ConditionPathExistsGlob=/dev/ttyUSB*
-ConditionPathExistsGlob=|/dev/ttyACM*
 
 [Service]
 Type=simple
@@ -14,4 +12,5 @@ Restart=on-failure
 RestartSec=10
 
 [Install]
-WantedBy=multi-user.target
+# Started by udev rule when Zigbee dongle is plugged in
+# WantedBy=multi-user.target

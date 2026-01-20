@@ -129,7 +129,7 @@ if [ -d ~/dashboard/services/home-relay ]; then
   uv sync
 
   # Install and enable systemd service
-  sudo cp home-relay.service /etc/systemd/system/
+  sed "s|__USER__|$USER|g" home-relay.service | sudo tee /etc/systemd/system/home-relay.service > /dev/null
   sudo systemctl daemon-reload
   sudo systemctl enable home-relay
   sudo systemctl start home-relay
@@ -179,9 +179,8 @@ sed "s|__USER__|$USER|g" \
   | sudo tee /etc/systemd/system/zigbee2mqtt.service > /dev/null
 
 sudo systemctl daemon-reload
-sudo systemctl enable zigbee2mqtt
 
-# Service has ConditionPathExistsGlob - will only run if dongle present
+# Service started by udev when dongle is plugged in (not at boot)
 sudo systemctl start zigbee2mqtt || true
 if systemctl is-active --quiet zigbee2mqtt; then
   echo "Zigbee2MQTT running. Web UI at http://localhost:8080"
@@ -224,10 +223,9 @@ if [ -d ~/dashboard/services/home-relay ]; then
 
   echo "Installing voice control service..."
   sudo usermod -a -G audio "$USER"
-  sudo cp ~/dashboard/services/home-relay/voice-control.service /etc/systemd/system/
+  sed "s|__USER__|$USER|g" ~/dashboard/services/home-relay/voice-control.service | sudo tee /etc/systemd/system/voice-control.service > /dev/null
   sudo systemctl daemon-reload
-  sudo systemctl enable voice-control
-  sudo systemctl start voice-control
+  # Voice control started via Settings UI, not at boot
   echo "Voice control installed."
   echo "  1. Enable in Settings > Voice Control"
   echo "  2. Download a speech model"

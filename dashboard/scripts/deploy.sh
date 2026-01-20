@@ -39,12 +39,16 @@ ssh "$REMOTE" "command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/
 ssh "$REMOTE" "cd ~/dashboard/services/home-relay && ~/.local/bin/uv sync"
 
 if [[ "$SKIP_SETUP" == "true" ]]; then
-  echo "=== Sync complete (setup skipped) ==="
+  echo "=== Updating services ==="
+  ssh "$REMOTE" "sed \"s|__USER__|\$USER|g\" ~/dashboard/services/home-relay/home-relay.service | sudo tee /etc/systemd/system/home-relay.service > /dev/null && \
+    sed \"s|__USER__|\$USER|g\" ~/dashboard/services/home-relay/voice-control.service | sudo tee /etc/systemd/system/voice-control.service > /dev/null && \
+    sed \"s|__USER__|\$USER|g\" ~/dashboard/services/zigbee2mqtt/zigbee2mqtt.service | sudo tee /etc/systemd/system/zigbee2mqtt.service > /dev/null && \
+    sudo systemctl daemon-reload"
 else
   echo "=== Running setup ==="
   ssh -t "$REMOTE" "bash ~/dashboard/scripts/kiosk-setup.sh"
 fi
 
-echo "=== Restarting home-relay service ==="
-ssh "$REMOTE" "sudo systemctl restart home-relay"
+echo "=== Restarting services ==="
+ssh "$REMOTE" "sudo systemctl restart home-relay voice-control zigbee2mqtt 2>/dev/null || true"
 echo "=== Deploy complete ==="
