@@ -31,14 +31,14 @@ Config saves to `~/.config/home-relay/dashboard.json` and syncs via SSE.
 
 All scripts are in `scripts/`. Run from your Mac unless noted.
 
-| Script                                      | Description                                   |
-| ------------------------------------------- | --------------------------------------------- |
-| `deploy.sh <user@host>`                     | Sync files and run setup (restarts cage)      |
+| Script                                      | Description                                     |
+| ------------------------------------------- | ----------------------------------------------- |
+| `deploy.sh <user@host>`                     | Sync files and run setup (restarts cage)        |
 | `deploy.sh <user@host> --reboot`            | Sync and setup with reboot (for kernel updates) |
-| `install-keyboard.sh [version] [user@host]` | Install Chrome virtual keyboard extension     |
-| `debug-mode.sh`                             | Switch to debug mode (run via SSH on kiosk)   |
-| `kiosk-mode.sh`                             | Restore kiosk mode (run via SSH on kiosk)     |
-| `restart-kiosk.sh`                          | Quick restart cage (run via SSH on kiosk)     |
+| `install-keyboard.sh [version] [user@host]` | Install Chrome virtual keyboard extension       |
+| `debug-mode.sh`                             | Switch to debug mode (run via SSH on kiosk)     |
+| `kiosk-mode.sh`                             | Restore kiosk mode (run via SSH on kiosk)       |
+| `restart-kiosk.sh`                          | Quick restart cage (run via SSH on kiosk)       |
 | `brightness.sh`                             | Manual brightness adjust (run via SSH on kiosk) |
 
 ### Virtual Keyboard
