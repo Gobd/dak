@@ -101,18 +101,19 @@ You can set a default relay URL in global settings (gear icon). This controls wh
 
 Enable voice control in Settings (gear icon) and choose a wake word. Say the wake word, then:
 
-| Command                              | What it does                          |
-| ------------------------------------ | ------------------------------------- |
-| "add [item] to [list]"               | Add item to groceries, shopping, etc. |
-| "is it warmer/colder outside"        | Compare indoor vs outdoor temp        |
-| "turn on/off [device]"               | Control Kasa smart devices            |
-| "set [X] minute timer [called Y]"    | Start a timer (name optional)         |
-| "add [X] minutes [to Y timer]"       | Add time to a timer                   |
-| "subtract [X] minutes [from Y timer]"| Remove time from a timer              |
-| "stop/cancel [name] timer"           | Dismiss alarm, or cancel by name      |
-| "help"                               | List available commands               |
+| Command                               | What it does                          |
+| ------------------------------------- | ------------------------------------- |
+| "add [item] to [list]"                | Add item to groceries, shopping, etc. |
+| "is it warmer/colder outside"         | Compare indoor vs outdoor temp        |
+| "turn on/off [device]"                | Control Kasa smart devices            |
+| "set [X] minute timer [called Y]"     | Start a timer (name optional)         |
+| "add [X] minutes [to Y timer]"        | Add time to a timer                   |
+| "subtract [X] minutes [from Y timer]" | Remove time from a timer              |
+| "stop/cancel [name] timer"            | Dismiss alarm, or cancel by name      |
+| "help"                                | List available commands               |
 
 **Examples:**
+
 - "Hey Jarvis, add milk to groceries"
 - "Hey Jarvis, is it colder outside"
 - "Hey Jarvis, turn off the lamp"
@@ -121,6 +122,7 @@ Enable voice control in Settings (gear icon) and choose a wake word. Say the wak
 - "Hey Jarvis, subtract 2 minutes"
 
 **Timer UI controls:**
+
 - Click timer name → rename
 - Scroll wheel over timer → add/subtract 1 minute
 - X button → cancel timer or dismiss alarm

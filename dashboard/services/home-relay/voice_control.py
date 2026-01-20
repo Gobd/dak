@@ -253,7 +253,8 @@ def cmd_stop_timer(params: dict) -> dict:
 @command(
     name="add_time",
     patterns=[
-        r"add (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?(?: to)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
+        r"add (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?"
+        r"(?: to)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
     ],
     help_text="Add time to a timer",
     examples=["add 5 minutes to pasta timer", "add 10 minutes"],
@@ -283,7 +284,8 @@ def cmd_add_time(params: dict) -> dict:
 @command(
     name="subtract_time",
     patterns=[
-        r"(?:subtract|remove|minus|take) (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?(?: from)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
+        r"(?:subtract|remove|minus|take) (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?"
+        r"(?: from)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
     ],
     help_text="Subtract time from a timer",
     examples=["subtract 5 minutes from pasta timer", "remove 2 minutes"],

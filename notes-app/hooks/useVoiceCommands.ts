@@ -89,14 +89,15 @@ export function useVoiceCommands() {
           console.log('[voice] Unknown command type:', command.type);
       }
     },
-    [addItemToList, fetchNotes, user?.id, showToast]
+    [addItemToList, fetchNotes, user, showToast]
   );
 
   useEffect(() => {
     // Only set up listener on web
     if (Platform.OS !== 'web') return;
 
-    const handleMessage = (event: MessageEvent) => {
+    // eslint-disable-next-line no-undef
+    const handleMessage = (event: MessageEvent<VoiceCommand>) => {
       // Validate origin
       if (!ALLOWED_ORIGINS.some((origin) => event.origin.startsWith(origin))) {
         console.log('[voice] Ignoring message from unknown origin:', event.origin);

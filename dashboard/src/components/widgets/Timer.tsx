@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Bell, BellOff, Plus, Minus, Timer as TimerIcon, Trash2, X } from 'lucide-react';
+import { Bell, BellOff, Plus, Minus, Timer as TimerIcon, Trash2 } from 'lucide-react';
 import { Roller, ConfirmModal } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
@@ -47,7 +47,8 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function Timer({ panel }: WidgetComponentProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function Timer({ panel, dark }: WidgetComponentProps) {
   const [timers, setTimers] = useState<TimerData[]>(loadTimers);
   const [now, setNow] = useState(() => Date.now());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -275,11 +276,21 @@ export default function Timer({ panel }: WidgetComponentProps) {
           />
           <div className="flex items-center gap-2 mb-2">
             <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-              <Roller items={HOURS} value={createHours} onChange={setCreateHours} format={(v) => `${v}h`} />
+              <Roller
+                items={HOURS}
+                value={createHours}
+                onChange={setCreateHours}
+                format={(v) => `${v}h`}
+              />
             </div>
             <span className="text-neutral-400">:</span>
             <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-              <Roller items={MINUTES} value={createMins} onChange={setCreateMins} format={(v) => `${v.toString().padStart(2, '0')}m`} />
+              <Roller
+                items={MINUTES}
+                value={createMins}
+                onChange={setCreateMins}
+                format={(v) => `${v.toString().padStart(2, '0')}m`}
+              />
             </div>
           </div>
           <button
@@ -295,9 +306,7 @@ export default function Timer({ panel }: WidgetComponentProps) {
       {/* Timer list */}
       <div className="flex-1 overflow-y-auto space-y-2">
         {timers.length === 0 && !showCreate && (
-          <div className="text-center text-neutral-500 text-sm py-4">
-            No timers yet
-          </div>
+          <div className="text-center text-neutral-500 text-sm py-4">No timers yet</div>
         )}
 
         {timers.map((timer) => {
@@ -322,8 +331,24 @@ export default function Timer({ panel }: WidgetComponentProps) {
                 ) : (
                   <div className="w-4 h-4 flex-shrink-0">
                     <svg className="w-4 h-4 -rotate-90">
-                      <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                      <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={`${progress * 37.7} 37.7`} />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        opacity="0.3"
+                      />
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeDasharray={`${progress * 37.7} 37.7`}
+                      />
                     </svg>
                   </div>
                 )}
@@ -347,7 +372,9 @@ export default function Timer({ panel }: WidgetComponentProps) {
                       {timer.name}
                     </button>
                   )}
-                  <div className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                  <div
+                    className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+                  >
                     {isAlerting ? "Time's up!" : formatTime(remaining)}
                   </div>
                 </div>
@@ -362,7 +389,7 @@ export default function Timer({ panel }: WidgetComponentProps) {
                 )}
 
                 <button
-                  onClick={() => isAlerting ? dismissTimer(timer.id) : setDeleteId(timer.id)}
+                  onClick={() => (isAlerting ? dismissTimer(timer.id) : setDeleteId(timer.id))}
                   className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
                   title={isAlerting ? 'Dismiss' : 'Cancel'}
                 >
@@ -379,7 +406,12 @@ export default function Timer({ panel }: WidgetComponentProps) {
                     <Minus className="w-3 h-3" />
                   </button>
                   <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
-                    <Roller items={ADJUST_MINUTES} value={adjustMinutes} onChange={setAdjustMinutes} format={(v) => `${v}m`} />
+                    <Roller
+                      items={ADJUST_MINUTES}
+                      value={adjustMinutes}
+                      onChange={setAdjustMinutes}
+                      format={(v) => `${v}m`}
+                    />
                   </div>
                   <button
                     onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
