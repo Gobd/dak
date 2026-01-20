@@ -11,8 +11,5 @@
   "dependencies": {
     "react": "catalog:vite",
     "react-dom": "catalog:vite"
-  },
-  "devDependencies": {
-    "esbuild": "^0.25.0"
   }
 }
