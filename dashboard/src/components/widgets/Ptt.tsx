@@ -36,8 +36,8 @@ export default function Ptt() {
     queryKey: ['relay-health', relayUrl],
     queryFn: () => checkRelayHealth(relayUrl!),
     enabled: !!relayUrl,
-    refetchInterval: 30000,
-    staleTime: 10000,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
   });
 
   const showResponse = useVoiceResponseStore((s) => s.showResponse);

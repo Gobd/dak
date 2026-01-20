@@ -157,7 +157,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
     ['aqi', location?.lat, location?.lon],
     () => fetchAqi(location!.lat, location!.lon),
     {
-      refresh: panel.refresh,
+      refresh: '30m',
       enabled: !!location,
     }
   );

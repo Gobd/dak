@@ -5,7 +5,6 @@ import { useConfigStore } from '../../stores/config-store';
 import { Modal, Button, ConfirmModal, TimePickerCompact, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import type { DriveTimeRoute } from '../../types';
-import { parseDuration } from '../../types';
 
 // API endpoints
 const isLocalDev =
@@ -108,7 +107,7 @@ function hasRouteMeetingThreshold(
   });
 }
 
-export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
+export default function DriveTime() {
   const driveTimeConfig = useConfigStore((s) => s.driveTime);
   const updateDriveTime = useConfigStore((s) => s.updateDriveTime);
 
@@ -119,6 +118,10 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
   const [showRouteForm, setShowRouteForm] = useState(false);
   const [editingRoute, setEditingRoute] = useState<DriveTimeRoute | null>(null);
   const [deleteRoute, setDeleteRoute] = useState<DriveTimeRoute | null>(null);
+  const [detailRoute, setDetailRoute] = useState<{
+    route: DriveTimeRoute;
+    driveData: DriveData;
+  } | null>(null);
 
   // Floating window state
   const [floatingOpen, setFloatingOpen] = useState(false);
@@ -149,7 +152,7 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
     queryKey: ['drive-time-all', allRouteIds],
     queryFn: () => fetchDriveData(routes, locations),
     enabled: routes.length > 0 && floatingOpen,
-    refetchInterval: parseDuration(panel.refresh || '5m') ?? 300000,
+    refetchInterval: 300_000,
     staleTime: 60000,
   });
   const isLoading = isPending || isFetching;
@@ -159,7 +162,7 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
     queryKey: ['drive-time-active', activeRouteIds],
     queryFn: () => fetchDriveData(activeRoutes, locations),
     enabled: activeRoutes.length > 0,
-    refetchInterval: parseDuration(panel.refresh || '5m') ?? 300000,
+    refetchInterval: 300_000,
     staleTime: 60000,
   });
 
@@ -323,12 +326,13 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
                   const isActive = isInTimeWindow(route);
 
                   return (
-                    <div
+                    <button
                       key={getRouteId(route)}
-                      className={`flex items-center justify-between p-2 rounded-lg ${
+                      onClick={() => setDetailRoute({ route, driveData })}
+                      className={`w-full text-left flex items-center justify-between p-2 rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-neutral-200/50 dark:bg-neutral-700/50'
-                          : 'bg-neutral-100/50 dark:bg-neutral-800/50 opacity-60'
+                          ? 'bg-neutral-200/50 dark:bg-neutral-700/50 hover:bg-neutral-300/50 dark:hover:bg-neutral-600/50'
+                          : 'bg-neutral-100/50 dark:bg-neutral-800/50 opacity-60 hover:opacity-80'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -349,7 +353,7 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
                           <span className="text-xs text-neutral-500">+{delayMinutes}</span>
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </>
@@ -396,6 +400,132 @@ export default function DriveTime({ panel }: { panel: { refresh?: string } }) {
         message={`Delete "${deleteRoute?.label || `${deleteRoute?.origin} → ${deleteRoute?.destination}`}"?`}
         confirmText="Delete"
       />
+
+      {/* Route Detail Modal */}
+      <Modal
+        open={!!detailRoute}
+        onClose={() => setDetailRoute(null)}
+        title="Route Details"
+        actions={
+          <>
+            <Button
+              onClick={() => {
+                if (detailRoute) {
+                  setEditingRoute(detailRoute.route);
+                  setShowRouteForm(true);
+                  setDetailRoute(null);
+                }
+              }}
+            >
+              Edit
+            </Button>
+            <Button onClick={() => setDetailRoute(null)} variant="primary">
+              Close
+            </Button>
+          </>
+        }
+      >
+        {detailRoute && (
+          <div className="space-y-4">
+            {/* Route name and time */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-lg font-medium">
+                  {detailRoute.route.label ||
+                    `${detailRoute.route.origin} → ${detailRoute.route.destination}`}
+                </div>
+                <div className="text-sm text-neutral-500">
+                  {detailRoute.route.origin} → {detailRoute.route.destination}
+                </div>
+              </div>
+              <div
+                className="text-3xl font-bold"
+                style={{
+                  color: getTrafficColor(
+                    Math.round(detailRoute.driveData.durationInTrafficValue / 60),
+                    Math.round(detailRoute.driveData.durationValue / 60)
+                  ),
+                }}
+              >
+                {detailRoute.driveData.durationInTraffic}
+              </div>
+            </div>
+
+            {/* Current route info */}
+            {detailRoute.driveData.summary && (
+              <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
+                <div className="text-xs text-neutral-500 mb-1">Current route</div>
+                <div className="font-medium">via {detailRoute.driveData.summary}</div>
+              </div>
+            )}
+
+            {/* Locked route info */}
+            {detailRoute.route.viaLabel && (
+              <div className="p-3 rounded-lg bg-blue-600/20 border border-blue-500/30">
+                <div className="text-xs text-blue-400 mb-1">Locked to</div>
+                <div className="font-medium text-blue-300">{detailRoute.route.viaLabel}</div>
+                <div className="text-xs text-neutral-500 mt-1">
+                  {detailRoute.route.via?.length || 0} waypoint
+                  {(detailRoute.route.via?.length || 0) !== 1 ? 's' : ''} saved
+                </div>
+              </div>
+            )}
+
+            {!detailRoute.route.viaLabel && (
+              <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
+                <div className="text-xs text-neutral-500">
+                  No route locked — using fastest available route
+                </div>
+              </div>
+            )}
+
+            {/* Schedule */}
+            <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
+              <div className="text-xs text-neutral-500 mb-1">Active schedule</div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  {detailRoute.route.days.map((d) => d.charAt(0).toUpperCase()).join(' ')}
+                </span>
+                <span className="text-neutral-500">
+                  {detailRoute.route.startTime} – {detailRoute.route.endTime}
+                </span>
+              </div>
+              {detailRoute.route.minTimeToShow ? (
+                <div className="text-xs text-neutral-500 mt-1">
+                  Shows when ≥ {detailRoute.route.minTimeToShow} min
+                </div>
+              ) : null}
+            </div>
+
+            {/* Comparison */}
+            <div className="flex gap-4 text-sm">
+              <div>
+                <span className="text-neutral-500">Normal: </span>
+                <span>{Math.round(detailRoute.driveData.durationValue / 60)} min</span>
+              </div>
+              <div>
+                <span className="text-neutral-500">Delay: </span>
+                <span
+                  className={
+                    detailRoute.driveData.durationInTrafficValue >
+                    detailRoute.driveData.durationValue
+                      ? 'text-orange-400'
+                      : 'text-green-400'
+                  }
+                >
+                  +
+                  {Math.round(
+                    (detailRoute.driveData.durationInTrafficValue -
+                      detailRoute.driveData.durationValue) /
+                      60
+                  )}{' '}
+                  min
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
@@ -569,6 +699,15 @@ interface RouteFormModalProps {
   onSave: (route: DriveTimeRoute, newLocations?: Record<string, string>) => void;
 }
 
+interface RouteAlternative {
+  index: number;
+  summary: string;
+  duration: string;
+  durationInTraffic: string;
+  distance: string;
+  waypointCoords: Array<{ lat: number; lng: number }>;
+}
+
 function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormModalProps) {
   const locationKeys = Object.keys(locations);
   const isEdit = !!route;
@@ -582,11 +721,73 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
     endTime: route?.endTime ?? '08:00',
     label: route?.label ?? '',
     minTimeToShow: route?.minTimeToShow ?? 0,
+    via: route?.via ?? ([] as string[]),
+    viaLabel: route?.viaLabel ?? '',
     newOriginName: '',
     newOriginAddr: '',
     newDestName: '',
     newDestAddr: '',
   }));
+
+  // Route alternatives state
+  const [alternatives, setAlternatives] = useState<RouteAlternative[]>([]);
+  const [loadingAlternatives, setLoadingAlternatives] = useState(false);
+
+  // Get the actual addresses for origin/destination
+  const getOriginAddr = () => {
+    if (form.origin === '__new__') return form.newOriginAddr;
+    return locations[form.origin] ?? '';
+  };
+  const getDestAddr = () => {
+    if (form.destination === '__new__') return form.newDestAddr;
+    return locations[form.destination] ?? '';
+  };
+
+  const canPreviewRoutes = getOriginAddr() && getDestAddr();
+
+  async function fetchAlternatives() {
+    const originAddr = getOriginAddr();
+    const destAddr = getDestAddr();
+    if (!originAddr || !destAddr) return;
+
+    setLoadingAlternatives(true);
+    setAlternatives([]);
+
+    try {
+      const res = await fetch(`${API_BASE}/alternatives`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin: originAddr, destination: destAddr }),
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch routes');
+
+      const data = await res.json();
+      setAlternatives(data.routes || []);
+
+      // Auto-select first route if none selected
+      if (data.routes?.length > 0 && form.via.length === 0) {
+        const first = data.routes[0];
+        setForm((f) => ({
+          ...f,
+          via: first.waypointCoords.map((c: { lat: number; lng: number }) => `${c.lat},${c.lng}`),
+          viaLabel: first.summary,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch route alternatives:', err);
+    } finally {
+      setLoadingAlternatives(false);
+    }
+  }
+
+  function selectRoute(alt: RouteAlternative) {
+    setForm((f) => ({
+      ...f,
+      via: alt.waypointCoords.map((c) => `${c.lat},${c.lng}`),
+      viaLabel: alt.summary,
+    }));
+  }
 
   function handleSave() {
     let origin = form.origin;
@@ -616,6 +817,8 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
       {
         origin,
         destination,
+        via: form.via.length > 0 ? form.via : undefined,
+        viaLabel: form.viaLabel || undefined,
         days: form.days,
         startTime: form.startTime,
         endTime: form.endTime,
@@ -716,6 +919,73 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
             </div>
           )}
         </div>
+
+        {/* Route Preview */}
+        {canPreviewRoutes && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium">Route</label>
+              <Button onClick={fetchAlternatives} disabled={loadingAlternatives}>
+                {loadingAlternatives
+                  ? 'Loading...'
+                  : alternatives.length > 0
+                    ? 'Refresh'
+                    : form.viaLabel
+                      ? 'Change Route'
+                      : 'Preview Routes'}
+              </Button>
+            </div>
+            {/* Show current locked route when not previewing */}
+            {form.viaLabel && alternatives.length === 0 && (
+              <div className="p-3 rounded-lg bg-blue-600/20 border border-blue-500/30">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-blue-400">Locked to:</span>
+                  <span className="text-sm font-medium text-blue-300">{form.viaLabel}</span>
+                </div>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Click "Change Route" to see alternatives
+                </p>
+              </div>
+            )}
+            {alternatives.length > 0 && (
+              <div className="space-y-2 max-h-40 overflow-auto">
+                {alternatives.map((alt) => {
+                  const isSelected =
+                    form.viaLabel === alt.summary ||
+                    (form.via.length > 0 &&
+                      alt.waypointCoords.length > 0 &&
+                      form.via[0] === `${alt.waypointCoords[0].lat},${alt.waypointCoords[0].lng}`);
+
+                  return (
+                    <button
+                      key={alt.index}
+                      onClick={() => selectRoute(alt)}
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        isSelected
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-neutral-200/50 dark:bg-neutral-700/30 hover:bg-neutral-300/50 dark:hover:bg-neutral-600/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{alt.summary}</span>
+                        <span
+                          className={`text-sm ${isSelected ? 'text-blue-100' : 'text-neutral-500'}`}
+                        >
+                          {alt.distance}
+                        </span>
+                      </div>
+                      <div
+                        className={`text-xs ${isSelected ? 'text-blue-200' : 'text-neutral-500'}`}
+                      >
+                        {alt.durationInTraffic} (with traffic)
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Days */}
         <div>

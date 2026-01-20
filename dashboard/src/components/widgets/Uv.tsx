@@ -235,7 +235,7 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
     ['uv', location?.lat, location?.lon],
     () => fetchUv(location!.lat, location!.lon),
     {
-      refresh: panel.refresh,
+      refresh: '30m',
       enabled: !!location,
     }
   );

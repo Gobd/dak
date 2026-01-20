@@ -63,8 +63,8 @@ export default function Climate({ dark }: WidgetComponentProps) {
     queryKey: ['relay-health', relayUrl],
     queryFn: () => checkRelayHealth(relayUrl!),
     enabled: !!relayUrl,
-    refetchInterval: 30000,
-    staleTime: 10000,
+    refetchInterval: 300_000,
+    staleTime: 60_000,
   });
 
   const relayOffline = relayUrl && relayUp === false;
@@ -90,7 +90,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
       if (!res.ok) throw new Error('Failed to fetch');
       return res.json();
     },
-    { refetchInterval: 60_000, enabled: !!relayUrl && relayUp !== false }
+    { refresh: '5m', enabled: !!relayUrl && relayUp !== false }
   );
 
   // Fetch available devices (only when settings open and relay is up)
