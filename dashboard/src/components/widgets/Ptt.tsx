@@ -201,7 +201,7 @@ export default function Ptt() {
     }
   };
 
-  const relayOffline = relayUrl && relayUp === false;
+  const relayOffline = !!relayUrl && relayUp === false;
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-2">
