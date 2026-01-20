@@ -12,7 +12,8 @@ export type WidgetType =
   | 'iframe'
   | 'climate'
   | 'timer'
-  | 'ptt';
+  | 'ptt'
+  | 'mqtt';
 
 // Panel configuration
 export interface PanelConfig {
@@ -41,6 +42,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   climate: { width: 20, height: 8, refresh: '1m' },
   timer: { width: 6, height: 6 },
   ptt: { width: 6, height: 6 },
+  mqtt: { width: 10, height: 10, refresh: '10s' },
 };
 
 // Screen configuration
@@ -90,6 +92,8 @@ export interface BrightnessConfig {
   enabled?: boolean;
   lat?: number;
   lon?: number;
+  city?: string;
+  state?: string;
   locationName?: string;
   dayBrightness?: number;
   nightBrightness?: number;

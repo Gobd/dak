@@ -4,6 +4,7 @@ import { Sun, Moon, RefreshCw, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
+import { formatLocation } from '../../hooks/useLocation';
 import type { WidgetComponentProps } from './index';
 import type { BrightnessConfig } from '../../types';
 
@@ -82,7 +83,26 @@ export default function Brightness({ dark }: WidgetComponentProps) {
 
   // Get config from zustand store
   const config = useConfigStore((s) => s.brightness);
+  const globalSettings = useConfigStore((s) => s.globalSettings);
   const updateBrightness = useConfigStore((s) => s.updateBrightness);
+
+  // Use brightness-specific location, or fall back to global default
+  const effectiveLocation =
+    config?.lat && config?.lon
+      ? {
+          lat: config.lat,
+          lon: config.lon,
+          name: config.locationName || formatLocation(config.city, config.state),
+        }
+      : globalSettings?.defaultLocation
+        ? {
+            ...globalSettings.defaultLocation,
+            name: formatLocation(
+              globalSettings.defaultLocation.city,
+              globalSettings.defaultLocation.state
+            ),
+          }
+        : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ['brightness-status'],
@@ -103,8 +123,22 @@ export default function Brightness({ dark }: WidgetComponentProps) {
   }
 
   function handleToggleEnabled() {
-    updateBrightness({ enabled: !config?.enabled });
+    const enabling = !config?.enabled;
+    if (enabling && !config?.lat && !config?.lon && effectiveLocation) {
+      // Copy global default location to brightness config when enabling
+      updateBrightness({
+        enabled: true,
+        lat: effectiveLocation.lat,
+        lon: effectiveLocation.lon,
+        locationName: effectiveLocation.name,
+      });
+    } else {
+      updateBrightness({ enabled: enabling });
+    }
   }
+
+  // Check if we have any location available (brightness-specific or global)
+  const hasLocation = !!(config?.lat && config?.lon) || !!effectiveLocation;
 
   function handleDayBrightnessChange(value: number) {
     updateBrightness({ dayBrightness: value });
@@ -118,12 +152,24 @@ export default function Brightness({ dark }: WidgetComponentProps) {
     updateBrightness({ transitionMins: value });
   }
 
-  function handleLocationSelect(details: { address: string; lat?: number; lon?: number }) {
+  function handleLocationSelect(details: {
+    address: string;
+    lat?: number;
+    lon?: number;
+    city?: string;
+    state?: string;
+  }) {
     if (details.lat && details.lon) {
-      // Extract short name (first part before comma)
-      const shortName = details.address.split(',')[0];
-      updateBrightness({ lat: details.lat, lon: details.lon, locationName: shortName });
-      setLocationAddress(shortName);
+      const locationName =
+        formatLocation(details.city, details.state) || details.address.split(',')[0];
+      updateBrightness({
+        lat: details.lat,
+        lon: details.lon,
+        city: details.city,
+        state: details.state,
+        locationName,
+      });
+      setLocationAddress(locationName);
     }
   }
 
@@ -220,10 +266,18 @@ export default function Brightness({ dark }: WidgetComponentProps) {
 
               {/* Auto-adjust toggle */}
               <div className="flex items-center justify-between">
-                <label className="text-sm">Auto-adjust by sunrise/sunset</label>
+                <div>
+                  <label className="text-sm">Auto-adjust by sunrise/sunset</label>
+                  {!hasLocation && (
+                    <div className="text-xs text-neutral-500">
+                      Set location in Global Settings first
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={handleToggleEnabled}
-                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'}`}
+                  disabled={!hasLocation && !config?.enabled}
+                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'} ${!hasLocation && !config?.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
@@ -243,14 +297,20 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                       value={locationAddress}
                       onChange={setLocationAddress}
                       onSelect={handleLocationSelect}
-                      placeholder="Search city..."
+                      placeholder={effectiveLocation?.name || 'Search city...'}
                     />
-                    {config.lat && config.lon && (
+                    {config?.lat && config?.lon ? (
                       <div className="mt-2 text-xs text-green-400">
                         {config.locationName ||
                           `${config.lat.toFixed(4)}, ${config.lon.toFixed(4)}`}
                       </div>
-                    )}
+                    ) : effectiveLocation ? (
+                      <div className="mt-2 text-xs text-blue-400">
+                        Using global default:{' '}
+                        {effectiveLocation.name ||
+                          `${effectiveLocation.lat.toFixed(4)}, ${effectiveLocation.lon.toFixed(4)}`}
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* Day brightness */}

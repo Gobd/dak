@@ -11,35 +11,29 @@ packages:
 catalog:
   # Shared tooling
   concurrently: ^9.2.1
-  "@eslint/js": ^9.39.2
-  eslint: ^9.39.2
-  prettier: ^3.8.0
   typescript: ~5.9.3
   globals: ^17.0.0
-  eslint-plugin-react-hooks: ^7.0.1
 
   # Shared runtime deps
-  "@supabase/supabase-js": ^2.90.1
+  '@supabase/supabase-js': ^2.91.0
   zustand: ^5.0.10
-  "@tanstack/react-query": ^5.90.0
-  "@types/node": ^24.10.4
+  '@tanstack/react-query': ^5.90.19
+  '@types/node': ^24.10.9
 
 catalogs:
   vite:
     # React (Vite apps can use latest)
     react: ^19.2.3
     react-dom: ^19.2.3
-    "@types/react": ^19.2.8
-    "@types/react-dom": ^19.2.3
+    '@types/react': ^19.2.9
+    '@types/react-dom': ^19.2.3
 
     # Vite tooling
-    vite: ^7.3.1
-    "@vitejs/plugin-react": ^5.1.1
-    "@tailwindcss/vite": ^4.1.18
+    vite: 8.0.0-beta.8
+    '@vitejs/plugin-react': ^5.1.2
+    '@tailwindcss/vite': ^4.1.18
     tailwindcss: ^4.1.18
     vite-plugin-pwa: ^1.2.0
-    eslint-plugin-react-refresh: ^0.4.24
-    typescript-eslint: ^8.53.0
     rollup-plugin-visualizer: ^6.0.5
 
     # Shared Vite app deps

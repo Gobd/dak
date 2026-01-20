@@ -1,9 +1,11 @@
 # Notes App - Implementation Plan
 
 ## Overview
+
 Cross-platform note-taking app (iOS, Android, Web) with sync, sharing, tags, and search. Similar to Simplenote but with family/team sharing and offline support.
 
 ### Product Philosophy
+
 **Simple and cheap to host.** This is not Google Docs or Notion.
 
 - We're building for users who want a fast, reliable notes app - not a collaboration suite
@@ -35,9 +37,11 @@ Editor:       Plain text / Markdown
 ```
 
 ### Authentication: Email-First Registration
+
 Email must be verified before setting password.
 
 **Registration flow:**
+
 1. Enter email → click "Register"
 2. We send verification email
 3. User clicks link in email
@@ -45,15 +49,18 @@ Email must be verified before setting password.
 5. Set password → account created, logged in
 
 **Login flow:**
+
 1. Enter email + password
 2. Logged in
 
 **Forgot password:**
+
 1. Enter email
 2. We send reset link
 3. Click link → set new password
 
 Benefits:
+
 - Email verified before account exists
 - No unverified accounts in database
 - Prevents spam signups
@@ -97,23 +104,23 @@ Benefits:
 
 ### Plans
 
-| Plan | Monthly | Annual | Includes |
-|------|---------|--------|----------|
-| **Free** | $0 | $0 | 1 user, 100 notes, online-only, no sharing |
-| **Pro Solo** | $5/mo | $50/yr | 1 user, 5,000 notes, offline, per-note sharing |
-| **Pro Family** | $12/mo | $120/yr | Up to 6 users, 10,000 shared notes, workspace |
-| **Pro Team** | $5/user/mo | $50/user/yr | 7+ users, scales with team size |
+| Plan           | Monthly    | Annual      | Includes                                       |
+| -------------- | ---------- | ----------- | ---------------------------------------------- |
+| **Free**       | $0         | $0          | 1 user, 100 notes, online-only, no sharing     |
+| **Pro Solo**   | $5/mo      | $50/yr      | 1 user, 5,000 notes, offline, per-note sharing |
+| **Pro Family** | $12/mo     | $120/yr     | Up to 6 users, 10,000 shared notes, workspace  |
+| **Pro Team**   | $5/user/mo | $50/user/yr | 7+ users, scales with team size                |
 
 ### Feature Matrix
 
-| Feature | Free | Solo | Family | Team |
-|---------|------|------|--------|------|
-| Users | 1 | 1 | Up to 6 | Unlimited |
-| Notes | 100 | 5,000 | 10,000 shared | 10,000 + 1,000/user |
-| Tags | 20 | 500 | 1,000 | Unlimited |
-| Offline mode | ❌ | ✅ | ✅ | ✅ |
-| Shared workspace | ❌ | ❌ | ✅ | ✅ |
-| Import/Export | ❌ | ✅ | ✅ | ✅ |
+| Feature          | Free | Solo  | Family        | Team                |
+| ---------------- | ---- | ----- | ------------- | ------------------- |
+| Users            | 1    | 1     | Up to 6       | Unlimited           |
+| Notes            | 100  | 5,000 | 10,000 shared | 10,000 + 1,000/user |
+| Tags             | 20   | 500   | 1,000         | Unlimited           |
+| Offline mode     | ❌   | ✅    | ✅            | ✅                  |
+| Shared workspace | ❌   | ❌    | ✅            | ✅                  |
+| Import/Export    | ❌   | ✅    | ✅            | ✅                  |
 
 ### Stripe Implementation
 
@@ -126,8 +133,8 @@ const PLANS = {
     workspace: false,
   },
   solo: {
-    monthlyPriceId: 'price_solo_monthly',  // $5
-    annualPriceId: 'price_solo_annual',    // $50
+    monthlyPriceId: 'price_solo_monthly', // $5
+    annualPriceId: 'price_solo_annual', // $50
     maxUsers: 1,
     maxNotes: 5000,
     offline: true,
@@ -135,7 +142,7 @@ const PLANS = {
   },
   family: {
     monthlyPriceId: 'price_family_monthly', // $12
-    annualPriceId: 'price_family_annual',   // $120
+    annualPriceId: 'price_family_annual', // $120
     maxUsers: 6,
     maxNotes: 10000,
     offline: true,
@@ -143,7 +150,7 @@ const PLANS = {
   },
   team: {
     monthlyPricePerUser: 'price_team_monthly', // $5/user
-    annualPricePerUser: 'price_team_annual',   // $50/user
+    annualPricePerUser: 'price_team_annual', // $50/user
     maxUsers: Infinity,
     notesPerUser: 1000,
     baseNotes: 10000,
@@ -323,10 +330,10 @@ SELECT cron.schedule('cleanup-workspaces', '0 4 * * *',
 
 ### Note Limits & Where They Count
 
-| Note Location | Counts Against |
-|---------------|----------------|
-| Personal notes | Your personal limit |
-| Workspace notes | Workspace's shared pool |
+| Note Location         | Counts Against               |
+| --------------------- | ---------------------------- |
+| Personal notes        | Your personal limit          |
+| Workspace notes       | Workspace's shared pool      |
 | Notes shared WITH you | Owner's limit (free for you) |
 
 ---
@@ -336,30 +343,34 @@ SELECT cron.schedule('cleanup-workspaces', '0 4 * * *',
 **Simple workspace-based sharing - no per-note permissions.**
 
 ### How It Works
+
 - Each note has `is_private` boolean (default: `true`)
 - Invite people to your workspace by email
 - They see ALL your non-private notes
 - Private notes (`is_private = true`) only visible to creator
 
 ### No Fine-Grained Sharing
+
 - No per-note sharing UI
 - No view/edit permission levels
 - No "Shared with me" section
 - You're either in the workspace or you're not
 
 ### User Flow
+
 1. Create workspace (automatic on paid plan)
 2. Invite family/team members by email
 3. Mark notes as "Shared" or "Private"
 4. All members see all shared notes
 
 ### Permissions
-| Action | Creator | Other Members |
-|--------|---------|---------------|
-| View shared note | ✅ | ✅ |
-| Edit shared note | ✅ | ✅ |
-| Toggle private/shared | ✅ | ❌ |
-| Delete note | ✅ | ❌ |
+
+| Action                | Creator | Other Members |
+| --------------------- | ------- | ------------- |
+| View shared note      | ✅      | ✅            |
+| Edit shared note      | ✅      | ✅            |
+| Toggle private/shared | ✅      | ❌            |
+| Delete note           | ✅      | ❌            |
 
 **UI hint:** Show lock icon on notes you can't make private (not your note). Gray out the toggle.
 
@@ -368,6 +379,7 @@ SELECT cron.schedule('cleanup-workspaces', '0 4 * * *',
 ## Import / Export
 
 ### Export (Solo, Family, Team)
+
 Users can export all their notes for backup or migration away.
 
 **Formats:**
@@ -379,6 +391,7 @@ Users can export all their notes for backup or migration away.
 **UI:** Settings → Export → Choose format → Download ZIP
 
 ### Import
+
 Users can import from other note apps to migrate here.
 
 **Supported sources:**
@@ -389,6 +402,7 @@ Users can import from other note apps to migrate here.
 | **Plain text** | `.txt` files | Each file = one note |
 
 **Import flow:**
+
 1. Settings → Import
 2. Select source (Simplenote, Markdown, Text)
 3. Upload file(s) or ZIP
@@ -396,6 +410,7 @@ Users can import from other note apps to migrate here.
 5. Confirm → notes created
 
 **Tag handling on import:**
+
 - Simplenote: tags preserved from JSON
 - Markdown: filename becomes title, no tags (user can bulk-tag after)
 
@@ -403,11 +418,11 @@ Users can import from other note apps to migrate here.
 
 ## Trash Behavior
 
-| Note Type | Trash Location | Who Can Restore |
-|-----------|----------------|-----------------|
-| Personal note | Your trash | Only you |
-| Workspace note | Workspace trash | Any member |
-| Note you shared | Your trash | Only you |
+| Note Type       | Trash Location  | Who Can Restore |
+| --------------- | --------------- | --------------- |
+| Personal note   | Your trash      | Only you        |
+| Workspace note  | Workspace trash | Any member      |
+| Note you shared | Your trash      | Only you        |
 
 - Auto-delete after 30 days
 - Workspace deletion: 7-day grace period with email notification
@@ -495,10 +510,10 @@ async function sync(database: Database) {
 
 ### Architecture
 
-| Platform | Local DB | Persistence |
-|----------|----------|-------------|
-| iOS/Android | WatermelonDB (SQLite) | Disk |
-| Web | LokiJS | IndexedDB |
+| Platform    | Local DB              | Persistence |
+| ----------- | --------------------- | ----------- |
+| iOS/Android | WatermelonDB (SQLite) | Disk        |
+| Web         | LokiJS                | IndexedDB   |
 
 ### How It Works
 
@@ -507,36 +522,35 @@ async function sync(database: Database) {
 const results = await database
   .get('notes')
   .query(
-    Q.or(
-      Q.where('title', Q.like(`%${query}%`)),
-      Q.where('content', Q.like(`%${query}%`))
-    ),
+    Q.or(Q.where('title', Q.like(`%${query}%`)), Q.where('content', Q.like(`%${query}%`))),
     Q.where('trashed_at', null)
   )
   .fetch();
 
 // LokiJS (web) - in-memory with IndexedDB persistence
 const results = notesCollection.find({
-  '$or': [
-    { title: { '$regex': new RegExp(query, 'i') } },
-    { content: { '$regex': new RegExp(query, 'i') } }
+  $or: [
+    { title: { $regex: new RegExp(query, 'i') } },
+    { content: { $regex: new RegExp(query, 'i') } },
   ],
-  trashed_at: null
+  trashed_at: null,
 });
 ```
 
 ### Ranking Priority (client-side)
+
 1. **Exact title match** - highest priority
 2. **Title contains** - high priority
 3. **Tag match** - medium priority
 4. **Content match** - lower priority
 
 ### Performance
-| Notes | Response Time | Memory (web) |
-|-------|---------------|--------------|
-| 100 | <1ms | ~100KB |
-| 5,000 | <10ms | ~5MB |
-| 10,000 | <20ms | ~10MB |
+
+| Notes  | Response Time | Memory (web) |
+| ------ | ------------- | ------------ |
+| 100    | <1ms          | ~100KB       |
+| 5,000  | <10ms         | ~5MB         |
+| 10,000 | <20ms         | ~10MB        |
 
 For <10k notes, client-side search is faster than network round-trip.
 
@@ -561,6 +575,7 @@ const noteTags = db.addCollection('note_tags', { indices: ['note_id', 'tag_id'] 
 ```
 
 ### Why No Server Search?
+
 - **Cost:** No GIN index, no search_vector computation on every write
 - **Speed:** Local search is faster than network for <10k notes
 - **Offline:** Works without internet
@@ -571,6 +586,7 @@ const noteTags = db.addCollection('note_tags', { indices: ['note_id', 'tag_id'] 
 ## React Native Web
 
 ### Expo Commands
+
 ```bash
 # Development
 npx expo start --web
@@ -583,6 +599,7 @@ cd dist && vercel deploy
 ```
 
 ### Responsive Layout
+
 ```typescript
 function App() {
   const { width } = useWindowDimensions();
@@ -598,6 +615,7 @@ function App() {
 ```
 
 ### Platform-Specific Files
+
 ```
 Button.tsx        → default (all platforms)
 Button.web.tsx    → web only
@@ -658,17 +676,17 @@ Button.native.tsx → iOS + Android only
 
 ## Implementation Timeline
 
-| Phase | Duration | What |
-|-------|----------|------|
-| 1. Setup + Auth | 1 week | Expo, Supabase, auth flow |
-| 2. Notes CRUD | 1.5 weeks | Create, edit, delete, list |
-| 3. Tags | 1 week | Tag chips, filter by tag |
-| 4. Search | 1 week | Full-text with tag support |
-| 5. Offline + Sync | 2 weeks | WatermelonDB, sync engine |
-| 6. Sharing | 1.5 weeks | Per-note + workspaces |
-| 7. Stripe | 1 week | Plans, checkout, webhooks |
-| 8. Polish + Deploy | 1.5 weeks | Testing, app stores |
-| **Total** | **~10-11 weeks** | Solo, full-time |
+| Phase              | Duration         | What                       |
+| ------------------ | ---------------- | -------------------------- |
+| 1. Setup + Auth    | 1 week           | Expo, Supabase, auth flow  |
+| 2. Notes CRUD      | 1.5 weeks        | Create, edit, delete, list |
+| 3. Tags            | 1 week           | Tag chips, filter by tag   |
+| 4. Search          | 1 week           | Full-text with tag support |
+| 5. Offline + Sync  | 2 weeks          | WatermelonDB, sync engine  |
+| 6. Sharing         | 1.5 weeks        | Per-note + workspaces      |
+| 7. Stripe          | 1 week           | Plans, checkout, webhooks  |
+| 8. Polish + Deploy | 1.5 weeks        | Testing, app stores        |
+| **Total**          | **~10-11 weeks** | Solo, full-time            |
 
 ---
 
@@ -676,21 +694,22 @@ Button.native.tsx → iOS + Android only
 
 ### Monthly Infrastructure
 
-| Users | Supabase | Vercel | Stripe Fees | Total |
-|-------|----------|--------|-------------|-------|
-| 100 | $0 | $0 | ~$0 | **~$15/mo** |
-| 10,000 | $75 | $20 | ~$200 | **~$300/mo** |
-| 100,000 | $800 | $150 | ~$2,000 | **~$3,000/mo** |
+| Users   | Supabase | Vercel | Stripe Fees | Total          |
+| ------- | -------- | ------ | ----------- | -------------- |
+| 100     | $0       | $0     | ~$0         | **~$15/mo**    |
+| 10,000  | $75      | $20    | ~$200       | **~$300/mo**   |
+| 100,000 | $800     | $150   | ~$2,000     | **~$3,000/mo** |
 
 ### Revenue Projection (5% conversion)
 
-| Users | Paid | Mix | Monthly Rev |
-|-------|------|-----|-------------|
-| 1,000 | 50 | 30 solo, 15 family, 5 team | ~$300 |
-| 10,000 | 500 | 300 solo, 150 family, 50 team | ~$3,500 |
-| 100,000 | 5,000 | 3k solo, 1.5k family, 500 team | ~$35,000 |
+| Users   | Paid  | Mix                            | Monthly Rev |
+| ------- | ----- | ------------------------------ | ----------- |
+| 1,000   | 50    | 30 solo, 15 family, 5 team     | ~$300       |
+| 10,000  | 500   | 300 solo, 150 family, 50 team  | ~$3,500     |
+| 100,000 | 5,000 | 3k solo, 1.5k family, 500 team | ~$35,000    |
 
 ### One-Time Costs
+
 - Apple Developer: $99/year
 - Google Play: $25 one-time
 - Domain: ~$15/year
@@ -699,12 +718,12 @@ Button.native.tsx → iOS + Android only
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Sync conflicts | High | Last-write-wins first, add conflict UI if needed |
-| WatermelonDB complexity | High | Start with online-only MVP, add offline in Phase 5 |
-| React Native Web gaps | Medium | Test web early, platform-specific files |
-| Scope creep | High | Strict phases, defer nice-to-haves |
+| Risk                    | Impact | Mitigation                                         |
+| ----------------------- | ------ | -------------------------------------------------- |
+| Sync conflicts          | High   | Last-write-wins first, add conflict UI if needed   |
+| WatermelonDB complexity | High   | Start with online-only MVP, add offline in Phase 5 |
+| React Native Web gaps   | Medium | Test web early, platform-specific files            |
+| Scope creep             | High   | Strict phases, defer nice-to-haves                 |
 
 ---
 
@@ -712,22 +731,22 @@ Button.native.tsx → iOS + Android only
 
 ### Easy to Change Later ✅
 
-| Component | Why Easy |
-|-----------|----------|
-| Email (SMTP) | Just swap credentials in Supabase settings |
-| Analytics (PostHog) | Swap SDK, lose history but no big deal |
-| Error tracking (Highlight) | Same, just swap SDK |
-| Stripe | You're locked in, but why leave? It's the standard |
-| Styling (NativeWind) | Just CSS, can refactor anytime |
-| State (Zustand) | Small, easy to swap |
+| Component                  | Why Easy                                           |
+| -------------------------- | -------------------------------------------------- |
+| Email (SMTP)               | Just swap credentials in Supabase settings         |
+| Analytics (PostHog)        | Swap SDK, lose history but no big deal             |
+| Error tracking (Highlight) | Same, just swap SDK                                |
+| Stripe                     | You're locked in, but why leave? It's the standard |
+| Styling (NativeWind)       | Just CSS, can refactor anytime                     |
+| State (Zustand)            | Small, easy to swap                                |
 
 ### Medium Effort to Change 🟡
 
-| Component | Migration Path |
-|-----------|----------------|
-| Database schema | Standard PostgreSQL - can export/import to any Postgres host |
-| WatermelonDB | Could swap to other local DB, but would need to rewrite sync logic |
-| Search | PostgreSQL FTS is standard SQL, portable |
+| Component       | Migration Path                                                     |
+| --------------- | ------------------------------------------------------------------ |
+| Database schema | Standard PostgreSQL - can export/import to any Postgres host       |
+| WatermelonDB    | Could swap to other local DB, but would need to rewrite sync logic |
+| Search          | PostgreSQL FTS is standard SQL, portable                           |
 
 ### Hard to Change / Lock-in Risk ⚠️
 
@@ -757,15 +776,15 @@ This keeps costs low while providing responsive sync across all platforms.
 
 ### Platform-Specific Sync Triggers
 
-| Platform | Trigger | Method |
-|----------|---------|--------|
-| **Web** | Tab open | Realtime ping channel (lightweight) |
-| **Web** | Tab hidden → visible | Sync on visibility change |
-| **iOS/Android** | App opens | Sync on launch |
-| **iOS/Android** | Shared note changed | Silent push → background sync |
-| **iOS/Android** | App in foreground | Push notification (no polling) |
-| **All** | User saves note | Push immediately to server |
-| **All** | Pull-to-refresh | Manual sync |
+| Platform        | Trigger              | Method                              |
+| --------------- | -------------------- | ----------------------------------- |
+| **Web**         | Tab open             | Realtime ping channel (lightweight) |
+| **Web**         | Tab hidden → visible | Sync on visibility change           |
+| **iOS/Android** | App opens            | Sync on launch                      |
+| **iOS/Android** | Shared note changed  | Silent push → background sync       |
+| **iOS/Android** | App in foreground    | Push notification (no polling)      |
+| **All**         | User saves note      | Push immediately to server          |
+| **All**         | Pull-to-refresh      | Manual sync                         |
 
 ### Web: Lightweight Realtime Ping
 
@@ -802,7 +821,7 @@ async function onNoteSaved(note: Note, savedByUserId: string) {
   // Send silent push (no alert, just data)
   await sendPushNotifications(deviceTokens, {
     data: { action: 'sync' },
-    contentAvailable: true,  // iOS silent push
+    contentAvailable: true, // iOS silent push
     priority: 'normal',
   });
 }
@@ -820,6 +839,7 @@ messaging().onMessage(async (message) => {
 ### How It All Flows
 
 **Scenario 1: Same user, multiple devices (personal sync)**
+
 ```
 You save note on iPhone
     ↓
@@ -834,6 +854,7 @@ All your devices up to date
 ```
 
 **Scenario 2: Shared note with another user**
+
 ```
 User B saves shared note on phone
     ↓
@@ -857,7 +878,7 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
     .from('user_devices')
     .select('*')
     .eq('user_id', savedByUserId)
-    .neq('id', savedByDeviceId);  // Exclude device that saved
+    .neq('id', savedByDeviceId); // Exclude device that saved
   devicesToNotify.push(...userDevices);
 
   // 2. If shared note (is_private = false): notify workspace members
@@ -866,7 +887,7 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
       .from('workspace_members')
       .select('user_id')
       .eq('workspace_id', note.workspace_id)
-      .neq('user_id', savedByUserId);  // Don't notify the saver
+      .neq('user_id', savedByUserId); // Don't notify the saver
     for (const member of members) {
       const devices = await getUserDevices(member.user_id);
       devicesToNotify.push(...devices);
@@ -874,8 +895,8 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
   }
 
   // Send notifications by platform
-  const webDevices = devicesToNotify.filter(d => d.platform === 'web');
-  const mobileDevices = devicesToNotify.filter(d => d.platform !== 'web');
+  const webDevices = devicesToNotify.filter((d) => d.platform === 'web');
+  const mobileDevices = devicesToNotify.filter((d) => d.platform !== 'web');
 
   // Web: Realtime broadcast
   for (const device of webDevices) {
@@ -886,10 +907,13 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
   }
 
   // Mobile: Silent push
-  await sendPushNotifications(mobileDevices.map(d => d.device_token), {
-    data: { action: 'sync' },
-    contentAvailable: true,
-  });
+  await sendPushNotifications(
+    mobileDevices.map((d) => d.device_token),
+    {
+      data: { action: 'sync' },
+      contentAvailable: true,
+    }
+  );
 }
 ```
 
@@ -898,11 +922,13 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
 When the same note is edited by two users, merge changes intelligently instead of losing data.
 
 **Strategy:**
+
 1. **Field-level first:** If only title OR content changed, no conflict
 2. **Line-level merge for content:** Treat content as lines, merge additions from both sides
 3. **Same-line conflict:** If both edited the same line, keep remote (rare edge case)
 
 **Algorithm:**
+
 ```typescript
 function mergeContent(base: string, local: string, remote: string): string {
   // If no base (new note), can't merge - remote wins
@@ -945,6 +971,7 @@ function mergeContent(base: string, local: string, remote: string): string {
 ```
 
 **Example - Shopping List:**
+
 ```
 Base:           User A:         User B:         Merged:
 - Milk          - Milk          - Milk          - Milk
@@ -954,19 +981,20 @@ Base:           User A:         User B:         Merged:
 ```
 
 **Edge cases:**
+
 - Both delete same line → stays deleted
 - Both edit same line differently → keep both versions (rare, user can clean up)
 - One deletes, one edits → keep the edit
 
 ### When to Sync
 
-| Event | Action |
-|-------|--------|
-| App opens | Pull all changes since last sync |
-| Note saved | Push that note immediately |
-| App backgrounded | Push any pending changes |
-| Every 60s | Background sync if app is open |
-| Pull-to-refresh | Manual sync trigger |
+| Event            | Action                           |
+| ---------------- | -------------------------------- |
+| App opens        | Pull all changes since last sync |
+| Note saved       | Push that note immediately       |
+| App backgrounded | Push any pending changes         |
+| Every 60s        | Background sync if app is open   |
+| Pull-to-refresh  | Manual sync trigger              |
 
 ---
 

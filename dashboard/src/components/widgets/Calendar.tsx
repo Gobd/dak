@@ -145,6 +145,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
   const showTime = panel.args?.showTime === true;
   const showSeconds = panel.args?.showSeconds === true;
+  const headerHeight = (panel.args?.headerHeight as number) ?? 0; // Extra height in pixels for header
 
   // Google OAuth
   const {
@@ -252,6 +253,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
         try {
           // Build query params - use sync token if available AND we have cached events, otherwise full fetch
+          const isFullFetch = !syncToken;
           const params: Record<string, string> = syncToken
             ? { syncToken }
             : {
@@ -262,6 +264,12 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 singleEvents: 'true',
                 maxResults: '250',
               };
+
+          // For full fetch, clear existing events for this calendar first
+          // (deleted events won't be in the response, so we need to start fresh)
+          if (isFullFetch) {
+            updatedEvents = updatedEvents.filter((e) => e.calendarId !== cal.id);
+          }
 
           const eventsResponse = await fetchCalendarApi<{
             items?: Array<{
@@ -294,6 +302,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
             // Add event if not cancelled/deleted
             if (event.status !== 'cancelled' && event.start && event.end) {
+              // Debug: log if event has dateTime vs date
+              if (event.start.date && !event.start.dateTime) {
+                console.debug(
+                  `Event "${event.summary}" is all-day (has date: ${event.start.date})`
+                );
+              } else if (event.start.dateTime) {
+                console.debug(`Event "${event.summary}" has time: ${event.start.dateTime}`);
+              }
+
               updatedEvents.push({
                 id: event.id,
                 calendarId: cal.id,
@@ -420,6 +437,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         eventBody.description = newEvent.description.trim();
       }
 
+      console.debug('Creating event:', eventBody);
+
       await fetchCalendarApi(
         `/calendars/${encodeURIComponent(targetCalendarId)}/events`,
         accessToken,
@@ -516,8 +535,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       if (editForm.allDay) {
-        const endDate = new Date(eventDate!);
-        endDate.setDate(endDate.getDate() + 1);
+        // Parse date as local (not UTC) to avoid timezone issues
+        const [year, month, day] = eventDate!.split('-').map(Number);
+        const endDate = new Date(year, month - 1, day + 1);
         eventBody = {
           summary: editForm.summary.trim(),
           start: { date: eventDate! },
@@ -702,7 +722,10 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-700">
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b border-neutral-700"
+        style={headerHeight > 0 ? { minHeight: `${headerHeight}px` } : undefined}
+      >
         <div className="flex items-center gap-1">
           <button onClick={handlePrevWeek} className="p-1 rounded hover:bg-neutral-700/50">
             <ChevronLeft size={16} />

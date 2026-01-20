@@ -23,6 +23,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   climate: lazy(() => import('./Climate')),
   timer: lazy(() => import('./Timer')),
   ptt: lazy(() => import('./Ptt')),
+  mqtt: lazy(() => import('./Mqtt')),
 };
 
 // Loading placeholder

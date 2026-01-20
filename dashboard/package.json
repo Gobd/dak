@@ -1,22 +1,21 @@
 {
   "name": "dashboard",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:relay": "concurrently -n vite,relay -c blue,green \"vite\" \"uv run --directory services/home-relay python relay.py\"",
     "build": "tsc -b && vite build",
     "preview": "vite build --mode development && vite preview --port 8080",
-    "lint": "eslint .",
     "lint:sh": "shellcheck scripts/*.sh",
     "typecheck": "tsc --noEmit",
-    "format:check": "prettier --check .",
-    "format": "prettier --write .",
-    "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm typecheck && pnpm build",
-    "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'"
+    "check": "pnpm lint:sh && pnpm typecheck && pnpm build",
+    "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'",
+    "gen:api": "cd services/home-relay && uv run python -c \"from app.main import app; import json; print(json.dumps(app.openapi()))\" > /tmp/openapi.json && cd ../.. && npx @hey-api/openapi-ts -i /tmp/openapi.json -o src/api/generated -c @hey-api/client-fetch",
+    "gen:api:check": "pnpm gen:api && git diff --exit-code src/api/generated || (echo 'Error: Generated API client is out of sync. Run pnpm gen:api and commit.' && exit 1)"
   },
   "dependencies": {
+    "@dak/kasa-client": "workspace:*",
     "@dak/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:vite",
@@ -25,24 +24,18 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "concurrently": "catalog:",
-    "@eslint/js": "catalog:",
+    "@dak/vite-shared-react": "workspace:*",
+    "@hey-api/openapi-ts": "^0.90.4",
     "@tailwindcss/vite": "catalog:vite",
     "@types/node": "catalog:",
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",
     "@vitejs/plugin-react": "catalog:vite",
-    "eslint": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:vite",
     "globals": "catalog:",
-    "prettier": "catalog:",
     "rollup-plugin-visualizer": "catalog:vite",
     "shellcheck": "^4.1.0",
     "tailwindcss": "catalog:vite",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:vite",
-    "vite": "catalog:vite",
-    "@dak/vite-shared-react": "workspace:*"
+    "vite": "catalog:vite"
   }
 }

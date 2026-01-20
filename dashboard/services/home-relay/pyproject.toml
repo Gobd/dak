@@ -1,27 +1,24 @@
 [project]
 name = "home-relay"
-version = "1.0.0"
+version = "2.0.0"
 description = "Home relay service for Kasa and WOL"
-requires-python = ">=3.11,<3.12"
+requires-python = "==3.11.*"
 dependencies = [
-    "flask>=3.1.0",
-    "flask-sock>=0.7.0",
-    "python-kasa>=0.9.0",
-    "wakeonlan>=3.1.0",
-    "tzdata>=2024.1",
-    "getmac>=0.9.0",
-    "astral>=3.2",
-    "paho-mqtt>=2.0.0",
-    "vosk>=0.3.45; sys_platform == 'linux'",
-    "httpx>=0.27.0",
+  "fastapi>=0.109.0",
+  "uvicorn[standard]>=0.27.0",
+  "python-kasa>=0.10.0",
+  "wakeonlan>=3.1.0",
+  "tzdata>=2024.1",
+  "getmac>=0.9.0",
+  "astral>=3.2",
+  "paho-mqtt>=2.0.0",
+  "vosk>=0.3.45; sys_platform == 'linux'",
+  "httpx>=0.27.0",
 ]
 
 [dependency-groups]
 dev = ["ruff>=0.9.0"]
-voice = [
-    "openwakeword>=0.6.0",
-    "pyaudio>=0.2.14",
-]
+voice = ["openwakeword>=0.6.0", "pyaudio>=0.2.14"]
 
 [tool.ruff]
 line-length = 100
@@ -29,30 +26,43 @@ line-length = 100
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "D1",      # Missing docstrings
-    "D203",    # Conflicts with D211
-    "D212",    # Conflicts with D213
-    "D400",    # First line period
-    "D205",    # Blank line after summary
-    "D415",    # First line punctuation
-    "EXE001",  # Shebang without executable
-    "ANN",     # Type annotations (too strict for this project)
-    "E402",    # Module level import order (needed for logging setup)
-    "S",       # Security warnings (trusted local service)
-    "BLE001",  # Blind exception catching
-    "PLW1510", # subprocess.run without check
-    "TRY",     # Try-except rules
-    "EM",      # Exception message rules
-    "PLR0913", # Too many arguments
-    "PLW0602", # Global statement without assignment
-    "PLW0603", # Global statement to update
-    "COM812",  # Trailing comma (conflicts with formatter)
-    "PLR2004", # Magic value comparisons (thresholds are readable inline)
-    "DTZ",     # Timezone-naive datetime
-    "FURB162", # Timezone replacement pattern
-    "PLC0415", # Import not at top-level (lazy imports for platform-specific deps)
-    "PLR0911", # Too many return statements
-    "PLR0912", # Too many branches
-    "PLR0915", # Too many statements
-    "C901",    # Function complexity
+  "D1", # Missing docstrings
+  "D203", # Conflicts with D211
+  "D212", # Conflicts with D213
+  "D213", # Docstring summary should start at second line
+  "D400", # First line period
+  "D205", # Blank line after summary
+  "D413", # Blank line after last section
+  "D415", # First line punctuation
+  "EXE001", # Shebang without executable
+  "ANN", # Type annotations (too strict for this project)
+  "E402", # Module level import order (needed for logging setup)
+  "S", # Security warnings (trusted local service)
+  "BLE001", # Blind exception catching
+  "PLW1510", # subprocess.run without check
+  "TRY", # Try-except rules
+  "EM", # Exception message rules
+  "PLR0913", # Too many arguments
+  "PLW0602", # Global statement without assignment
+  "PLW0603", # Global statement to update
+  "COM812", # Trailing comma (conflicts with formatter)
+  "PLR2004", # Magic value comparisons (thresholds are readable inline)
+  "DTZ", # Timezone-naive datetime
+  "FURB162", # Timezone replacement pattern
+  "PLC0415", # Import not at top-level (lazy imports for platform-specific deps)
+  "PLR0911", # Too many return statements
+  "PLR0912", # Too many branches
+  "PLR0915", # Too many statements
+  "C901", # Function complexity
+  "INP001", # Implicit namespace package (no __init__.py needed)
+  "N815", # Mixed case variable names (match frontend JSON)
+  "FBT", # Boolean positional arguments
+  "RET504", # Unnecessary assignment before return
+  "UP007", # Union syntax (prefer Union for response_model readability)
+  "B904", # raise from (HTTPException pattern is idiomatic)
+  "FAST002", # Annotated FastAPI params (prefer Query(...) style)
+  "ASYNC221", # Blocking subprocess (acceptable for quick operations)
+  "SIM117", # Nested with statements
+  "SIM102", # Nested if statements (readable as-is)
+  "SIM105", # contextlib.suppress (try/except/pass is clearer)
 ]

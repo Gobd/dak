@@ -41,7 +41,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     return int16;
   }
 
-  process(inputs, outputs, parameters) {
+  process(inputs, _outputs, _parameters) {
     const input = inputs[0];
     if (!input || !input[0]) return true;
 

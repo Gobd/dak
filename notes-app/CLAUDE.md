@@ -2,11 +2,11 @@
 
 ## Code Quality
 
-Always run these checks before considering work complete:
+Always run these checks before considering work complete (from repo root):
 
 ```bash
-pnpm lint        # ESLint
-pnpm format:check # Prettier
+pnpm lint        # oxlint
+pnpm format:check # oxfmt
 pnpm typecheck   # TypeScript
 ```
 
