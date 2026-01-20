@@ -1,29 +1,54 @@
 /**
- * Timer widget - create and manage countdown timers.
- * Supports voice control and touch UI with roller-based time picking.
+ * Timer widget - create and manage countdown timers and stopwatches.
+ * Unified view with both types in a single list.
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Bell, BellOff, Plus, Minus, Timer as TimerIcon, Trash2 } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  Plus,
+  Minus,
+  Timer as TimerIcon,
+  Trash2,
+  Play,
+  Pause,
+  Clock,
+  X,
+} from 'lucide-react';
 import { Roller, ConfirmModal } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Time picker options
-const HOURS = Array.from({ length: 13 }, (_, i) => i); // 0-12 hours
-const MINUTES = Array.from({ length: 60 }, (_, i) => i); // 0-59 minutes
-const ADJUST_MINUTES = Array.from({ length: 60 }, (_, i) => i + 1); // 1-60 for adjustment
+const HOURS = Array.from({ length: 13 }, (_, i) => i);
+const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const ADJUST_MINUTES = Array.from({ length: 60 }, (_, i) => i + 1);
+
+type CreateMode = null | 'timer' | 'stopwatch';
 
 interface TimerData {
   id: string;
+  type: 'timer';
   name: string;
-  endTime: number; // Unix timestamp
-  duration: number; // Original duration in seconds
+  endTime: number;
+  duration: number;
   dismissed?: boolean;
 }
 
-const STORAGE_KEY = 'dashboard-timers';
+interface StopwatchData {
+  id: string;
+  type: 'stopwatch';
+  name: string;
+  startTime: number;
+  elapsed: number;
+  running: boolean;
+}
 
-function loadTimers(): TimerData[] {
+type ItemData = TimerData | StopwatchData;
+
+const STORAGE_KEY = 'dashboard-timers-v2';
+
+function loadItems(): ItemData[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -32,8 +57,8 @@ function loadTimers(): TimerData[] {
   }
 }
 
-function saveTimers(timers: TimerData[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+function saveItems(items: ItemData[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 function formatTime(seconds: number): string {
@@ -48,12 +73,13 @@ function formatTime(seconds: number): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function Timer({ panel, dark }: WidgetComponentProps) {
-  const [timers, setTimers] = useState<TimerData[]>(loadTimers);
+export default function Timer(_: WidgetComponentProps) {
+  const [items, setItems] = useState<ItemData[]>(loadItems);
   const [now, setNow] = useState(() => Date.now());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [createHours, setCreateHours] = useState(0);
   const [createMins, setCreateMins] = useState(5);
   const [createName, setCreateName] = useState('');
@@ -63,7 +89,7 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevAlertingRef = useRef<Set<string>>(new Set());
 
-  const timerToDelete = timers.find((t) => t.id === deleteId);
+  const itemToDelete = items.find((t) => t.id === deleteId);
 
   // Update time every second
   useEffect(() => {
@@ -71,21 +97,21 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Save timers when they change
+  // Save items when they change
   useEffect(() => {
-    saveTimers(timers);
-  }, [timers]);
+    saveItems(items);
+  }, [items]);
 
   // Compute alerting timers
   const alertingTimerIds = useMemo(() => {
     const ids = new Set<string>();
-    for (const timer of timers) {
-      if (timer.endTime <= now && !timer.dismissed) {
-        ids.add(timer.id);
+    for (const item of items) {
+      if (item.type === 'timer' && item.endTime <= now && !item.dismissed) {
+        ids.add(item.id);
       }
     }
     return ids;
-  }, [timers, now]);
+  }, [items, now]);
 
   // Play/stop alarm
   useEffect(() => {
@@ -118,58 +144,70 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
     if (data.type === 'timer') {
       const newTimer: TimerData = {
         id: `timer-${Date.now()}`,
+        type: 'timer',
         name: data.name || 'Timer',
         endTime: Date.now() + data.seconds * 1000,
         duration: data.seconds,
       };
-      setTimers((prev) => [...prev, newTimer]);
+      setItems((prev) => [...prev, newTimer]);
+    }
+
+    if (data.type === 'stopwatch') {
+      const newStopwatch: StopwatchData = {
+        id: `stopwatch-${Date.now()}`,
+        type: 'stopwatch',
+        name: data.name || 'Stopwatch',
+        startTime: Date.now(),
+        elapsed: 0,
+        running: true,
+      };
+      setItems((prev) => [...prev, newStopwatch]);
     }
 
     if (data.type === 'adjust-timer') {
       const deltaSeconds = data.seconds as number;
       const name = data.name as string | undefined;
 
-      setTimers((prev) => {
+      setItems((prev) => {
+        const timers = prev.filter((i) => i.type === 'timer') as TimerData[];
         if (name) {
-          // Adjust specific timer by name
           return prev.map((t) =>
-            t.name.toLowerCase().includes(name.toLowerCase())
+            t.type === 'timer' && t.name.toLowerCase().includes(name.toLowerCase())
               ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
               : t
           );
         }
-        // No name - only adjust if exactly 1 timer
-        if (prev.length === 1) {
-          return prev.map((t) => ({
-            ...t,
-            endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000),
-          }));
+        if (timers.length === 1) {
+          return prev.map((t) =>
+            t.type === 'timer'
+              ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
+              : t
+          );
         }
-        // Multiple timers - do nothing, need to specify name
         return prev;
       });
     }
 
     if (data.type === 'stop-timer') {
       if (data.name) {
-        // Cancel specific timer by name
-        setTimers((prev) =>
-          prev.filter((t) => !t.name.toLowerCase().includes(data.name.toLowerCase()))
+        setItems((prev) =>
+          prev.filter(
+            (t) => !(t.type === 'timer' && t.name.toLowerCase().includes(data.name.toLowerCase()))
+          )
         );
       } else {
-        // No name given - only cancel if exactly 1 timer, or dismiss alerting timers
-        setTimers((prev) => {
-          const alerting = prev.filter((t) => t.endTime <= Date.now() && !t.dismissed);
+        setItems((prev) => {
+          const alerting = prev.filter(
+            (t) => t.type === 'timer' && t.endTime <= Date.now() && !t.dismissed
+          );
           if (alerting.length > 0) {
-            // Dismiss all alerting timers
             const alertingIds = new Set(alerting.map((t) => t.id));
             return prev.filter((t) => !alertingIds.has(t.id));
           }
-          // Only cancel if exactly 1 timer exists
-          if (prev.length === 1) {
-            return [];
+          const timers = prev.filter((i) => i.type === 'timer');
+          if (timers.length === 1) {
+            return prev.filter((t) => t.type !== 'timer');
           }
-          // Multiple timers - do nothing, need to specify name
           return prev;
         });
       }
@@ -194,8 +232,8 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
     return () => window.removeEventListener('voice-timer', handleTimerEvent);
   }, [handleVoiceCommand]);
 
-  const dismissTimer = useCallback((id: string) => {
-    setTimers((prev) => prev.filter((t) => t.id !== id));
+  const deleteItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((t) => t.id !== id));
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -203,23 +241,23 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
   }, []);
 
   const adjustTime = useCallback((id: string, deltaSeconds: number) => {
-    setTimers((prev) =>
+    setItems((prev) =>
       prev.map((t) =>
-        t.id === id
+        t.type === 'timer' && t.id === id
           ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
           : t
       )
     );
   }, []);
 
-  const startEditing = useCallback((timer: TimerData) => {
-    setEditingId(timer.id);
-    setEditName(timer.name);
+  const startEditing = useCallback((item: ItemData) => {
+    setEditingId(item.id);
+    setEditName(item.name);
   }, []);
 
   const saveEdit = useCallback(() => {
     if (editingId && editName.trim()) {
-      setTimers((prev) =>
+      setItems((prev) =>
         prev.map((t) => (t.id === editingId ? { ...t, name: editName.trim() } : t))
       );
     }
@@ -233,16 +271,80 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
     const seconds = totalMinutes * 60;
     const newTimer: TimerData = {
       id: `timer-${Date.now()}`,
+      type: 'timer',
       name: createName.trim() || 'Timer',
       endTime: Date.now() + seconds * 1000,
       duration: seconds,
     };
-    setTimers((prev) => [...prev, newTimer]);
-    setShowCreate(false);
+    setItems((prev) => [...prev, newTimer]);
+    setCreateMode(null);
     setCreateName('');
     setCreateHours(0);
     setCreateMins(5);
   }, [createHours, createMins, createName]);
+
+  const createStopwatch = useCallback(() => {
+    const newStopwatch: StopwatchData = {
+      id: `stopwatch-${Date.now()}`,
+      type: 'stopwatch',
+      name: createName.trim() || 'Stopwatch',
+      startTime: Date.now(),
+      elapsed: 0,
+      running: true,
+    };
+    setItems((prev) => [...prev, newStopwatch]);
+    setCreateMode(null);
+    setCreateName('');
+  }, [createName]);
+
+  const toggleStopwatch = useCallback((id: string) => {
+    setItems((prev) =>
+      prev.map((s) => {
+        if (s.type !== 'stopwatch' || s.id !== id) return s;
+        if (s.running) {
+          return { ...s, elapsed: s.elapsed + (Date.now() - s.startTime), running: false };
+        } else {
+          return { ...s, startTime: Date.now(), running: true };
+        }
+      })
+    );
+  }, []);
+
+  const getStopwatchElapsed = (sw: StopwatchData) => {
+    if (sw.running) {
+      return sw.elapsed + (now - sw.startTime);
+    }
+    return sw.elapsed;
+  };
+
+  const openCreate = (mode: 'timer' | 'stopwatch') => {
+    setShowMenu(false);
+    setCreateMode(mode);
+  };
+
+  const hasItems = items.length > 0;
+
+  // Minimal view when empty - just a centered icon button
+  if (!hasItems && !createMode && !showMenu) {
+    return (
+      <div className="h-full flex items-center justify-center p-2">
+        {/* Hidden audio */}
+        <audio
+          ref={audioRef}
+          src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=="
+        />
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(true)}
+            className="p-3 rounded-full bg-neutral-200/50 dark:bg-neutral-700/50 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+            title="Add timer or stopwatch"
+          >
+            <TimerIcon className="w-6 h-6 text-neutral-500" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col p-3 overflow-hidden">
@@ -252,21 +354,88 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
         src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=="
       />
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Timers</span>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className={`p-1.5 rounded transition-colors ${showCreate ? 'bg-blue-600 text-white' : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'}`}
-          title="New timer"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
+      {/* Header - only show when there are items or creating */}
+      {(hasItems || createMode) && (
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            {items.length > 0 ? `${items.length} active` : 'New'}
+          </span>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className={`p-1.5 rounded transition-colors ${showMenu ? 'bg-blue-600 text-white' : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'}`}
+              title="Add"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            {/* Dropdown menu */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-10 min-w-[140px]">
+                <button
+                  onClick={() => openCreate('timer')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-t-lg"
+                >
+                  <TimerIcon className="w-4 h-4" />
+                  Timer
+                </button>
+                <button
+                  onClick={() => openCreate('stopwatch')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-b-lg"
+                >
+                  <Clock className="w-4 h-4" />
+                  Stopwatch
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating menu when empty but menu open */}
+      {!hasItems && !createMode && showMenu && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(false)}
+              className="p-3 rounded-full bg-blue-600 text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-10 min-w-[140px]">
+              <button
+                onClick={() => openCreate('timer')}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-t-lg"
+              >
+                <TimerIcon className="w-4 h-4" />
+                Timer
+              </button>
+              <button
+                onClick={() => openCreate('stopwatch')}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-b-lg"
+              >
+                <Clock className="w-4 h-4" />
+                Stopwatch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create panel */}
-      {showCreate && (
+      {createMode && (
         <div className="mb-3 p-3 bg-neutral-200/50 dark:bg-neutral-700/50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-neutral-500">
+              New {createMode === 'timer' ? 'Timer' : 'Stopwatch'}
+            </span>
+            <button
+              onClick={() => setCreateMode(null)}
+              className="p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
           <input
             type="text"
             value={createName}
@@ -274,155 +443,180 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
             placeholder="Name (optional)"
             className="w-full px-2 py-1.5 mb-2 bg-neutral-100 dark:bg-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-              <Roller
-                items={HOURS}
-                value={createHours}
-                onChange={setCreateHours}
-                format={(v) => `${v}h`}
-              />
-            </div>
-            <span className="text-neutral-400">:</span>
-            <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-              <Roller
-                items={MINUTES}
-                value={createMins}
-                onChange={setCreateMins}
-                format={(v) => `${v.toString().padStart(2, '0')}m`}
-              />
-            </div>
-          </div>
-          <button
-            onClick={createTimer}
-            disabled={createHours === 0 && createMins === 0}
-            className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-400 dark:disabled:bg-neutral-600 disabled:cursor-not-allowed rounded text-sm font-medium text-white"
-          >
-            Start
-          </button>
+          {createMode === 'timer' ? (
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
+                  <Roller
+                    items={HOURS}
+                    value={createHours}
+                    onChange={setCreateHours}
+                    format={(v) => `${v}h`}
+                  />
+                </div>
+                <span className="text-neutral-400">:</span>
+                <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
+                  <Roller
+                    items={MINUTES}
+                    value={createMins}
+                    onChange={setCreateMins}
+                    format={(v) => `${v.toString().padStart(2, '0')}m`}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={createTimer}
+                disabled={createHours === 0 && createMins === 0}
+                className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-400 dark:disabled:bg-neutral-600 disabled:cursor-not-allowed rounded text-sm font-medium text-white"
+              >
+                Start
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={createStopwatch}
+              className="w-full py-1.5 bg-green-600 hover:bg-green-500 rounded text-sm font-medium text-white"
+            >
+              Start
+            </button>
+          )}
         </div>
       )}
 
-      {/* Timer list */}
+      {/* Unified list */}
       <div className="flex-1 overflow-y-auto space-y-2">
-        {timers.length === 0 && !showCreate && (
-          <div className="text-center text-neutral-500 text-sm py-4">No timers yet</div>
-        )}
+        {items.map((item) => {
+          if (item.type === 'timer') {
+            const timer = item;
+            const remaining = Math.max(0, Math.floor((timer.endTime - now) / 1000));
+            const isAlerting = alertingTimerIds.has(timer.id);
+            const progress = remaining / timer.duration;
+            const isAdjusting = adjustingId === timer.id;
 
-        {timers.map((timer) => {
-          const remaining = Math.max(0, Math.floor((timer.endTime - now) / 1000));
-          const isAlerting = alertingTimerIds.has(timer.id);
-          const progress = remaining / timer.duration;
-          const isAdjusting = adjustingId === timer.id;
+            return (
+              <div key={timer.id} className="space-y-1">
+                <div
+                  onWheel={(e) => {
+                    if (!isAlerting) {
+                      e.preventDefault();
+                      adjustTime(timer.id, e.deltaY < 0 ? 60 : -60);
+                    }
+                  }}
+                  className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-red-500 text-white animate-pulse' : 'bg-neutral-200/50 dark:bg-neutral-700/50'}`}
+                >
+                  {isAlerting ? (
+                    <Bell className="w-4 h-4 animate-bounce flex-shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 flex-shrink-0">
+                      <svg className="w-4 h-4 -rotate-90">
+                        <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+                        <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={`${progress * 37.7} 37.7`} />
+                      </svg>
+                    </div>
+                  )}
 
-          return (
-            <div key={timer.id} className="space-y-1">
-              <div
-                onWheel={(e) => {
-                  if (!isAlerting) {
-                    e.preventDefault();
-                    adjustTime(timer.id, e.deltaY < 0 ? 60 : -60);
-                  }
-                }}
-                className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-red-500 text-white animate-pulse' : 'bg-neutral-200/50 dark:bg-neutral-700/50'}`}
-              >
-                {isAlerting ? (
-                  <Bell className="w-4 h-4 animate-bounce flex-shrink-0" />
-                ) : (
-                  <div className="w-4 h-4 flex-shrink-0">
-                    <svg className="w-4 h-4 -rotate-90">
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        opacity="0.3"
+                  <div className="flex-1 min-w-0">
+                    {editingId === timer.id ? (
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                        className="w-full bg-transparent border-b border-white/50 text-xs outline-none"
+                        autoFocus
                       />
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeDasharray={`${progress * 37.7} 37.7`}
-                      />
-                    </svg>
+                    ) : (
+                      <button onClick={() => startEditing(timer)} className="text-xs hover:underline text-left truncate w-full">
+                        {timer.name}
+                      </button>
+                    )}
+                    <div className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                      {isAlerting ? "Time's up!" : formatTime(remaining)}
+                    </div>
+                  </div>
+
+                  {!isAlerting && (
+                    <button
+                      onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
+                      className={`p-1 rounded ${isAdjusting ? 'bg-blue-600 text-white' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                    >
+                      <TimerIcon className="w-3 h-3" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
+                    className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                    title={isAlerting ? 'Dismiss' : 'Cancel'}
+                  >
+                    {isAlerting ? <BellOff className="w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
+                  </button>
+                </div>
+
+                {isAdjusting && (
+                  <div className="flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
+                    <button onClick={() => adjustTime(timer.id, -adjustMinutes * 60)} className="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white">
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
+                      <Roller items={ADJUST_MINUTES} value={adjustMinutes} onChange={setAdjustMinutes} format={(v) => `${v}m`} />
+                    </div>
+                    <button onClick={() => adjustTime(timer.id, adjustMinutes * 60)} className="p-1.5 bg-green-600 hover:bg-green-500 rounded text-white">
+                      <Plus className="w-3 h-3" />
+                    </button>
                   </div>
                 )}
+              </div>
+            );
+          } else {
+            const sw = item;
+            const elapsedMs = getStopwatchElapsed(sw);
+            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+            return (
+              <div key={sw.id} className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50">
+                <Clock className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`} />
 
                 <div className="flex-1 min-w-0">
-                  {editingId === timer.id ? (
+                  {editingId === sw.id ? (
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onBlur={saveEdit}
                       onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                      className="w-full bg-transparent border-b border-white/50 text-xs outline-none"
+                      className="w-full bg-transparent border-b border-neutral-400 text-xs outline-none"
                       autoFocus
                     />
                   ) : (
-                    <button
-                      onClick={() => startEditing(timer)}
-                      className="text-xs hover:underline text-left truncate w-full"
-                    >
-                      {timer.name}
+                    <button onClick={() => startEditing(sw)} className="text-xs hover:underline text-left truncate w-full">
+                      {sw.name}
                     </button>
                   )}
-                  <div
-                    className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
-                  >
-                    {isAlerting ? "Time's up!" : formatTime(remaining)}
+                  <div className="text-sm font-mono text-neutral-600 dark:text-neutral-300">
+                    {formatTime(elapsedSeconds)}
                   </div>
                 </div>
-
-                {!isAlerting && (
-                  <button
-                    onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                    className={`p-1 rounded ${isAdjusting ? 'bg-blue-600 text-white' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
-                  >
-                    <TimerIcon className="w-3 h-3" />
-                  </button>
-                )}
 
                 <button
-                  onClick={() => (isAlerting ? dismissTimer(timer.id) : setDeleteId(timer.id))}
-                  className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
-                  title={isAlerting ? 'Dismiss' : 'Cancel'}
+                  onClick={() => toggleStopwatch(sw.id)}
+                  className={`p-1 rounded ${sw.running ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-green-600 hover:bg-green-500'} text-white`}
+                  title={sw.running ? 'Pause' : 'Resume'}
                 >
-                  {isAlerting ? <BellOff className="w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
+                  {sw.running ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                </button>
+
+                <button
+                  onClick={() => setDeleteId(sw.id)}
+                  className="p-1 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3 h-3" />
                 </button>
               </div>
-
-              {isAdjusting && (
-                <div className="flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
-                  <button
-                    onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
-                    className="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
-                    <Roller
-                      items={ADJUST_MINUTES}
-                      value={adjustMinutes}
-                      onChange={setAdjustMinutes}
-                      format={(v) => `${v}m`}
-                    />
-                  </div>
-                  <button
-                    onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
-                    className="p-1.5 bg-green-600 hover:bg-green-500 rounded text-white"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-            </div>
-          );
+            );
+          }
         })}
       </div>
 
@@ -432,14 +626,14 @@ export default function Timer({ panel, dark }: WidgetComponentProps) {
         onClose={() => setDeleteId(null)}
         onConfirm={() => {
           if (deleteId) {
-            dismissTimer(deleteId);
+            deleteItem(deleteId);
             setDeleteId(null);
           }
         }}
-        title="Cancel Timer"
-        message={`Cancel "${timerToDelete?.name || 'Timer'}"?`}
-        confirmLabel="Cancel Timer"
-        confirmVariant="danger"
+        title={itemToDelete?.type === 'timer' ? 'Cancel Timer' : 'Delete Stopwatch'}
+        message={`${itemToDelete?.type === 'timer' ? 'Cancel' : 'Delete'} "${itemToDelete?.name}"?`}
+        confirmText={itemToDelete?.type === 'timer' ? 'Cancel Timer' : 'Delete'}
+        variant="danger"
       />
     </div>
   );

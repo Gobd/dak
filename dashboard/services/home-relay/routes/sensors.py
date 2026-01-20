@@ -1,6 +1,7 @@
 """
 Indoor/outdoor climate sensor routes.
 Subscribes to Zigbee2MQTT via MQTT, tracks history for trends.
+Supports dynamic sensor selection from available Zigbee devices.
 """
 
 import json
@@ -10,20 +11,20 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import paho.mqtt.client as mqtt
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 logger = logging.getLogger(__name__)
 bp = Blueprint("sensors", __name__, url_prefix="/sensors")
 
-# Config - update these after pairing sensors
+# Config
 MQTT_HOST = "localhost"
 MQTT_PORT = 1883
-INDOOR_TOPIC = "zigbee2mqtt/indoor_climate"
-OUTDOOR_TOPIC = "zigbee2mqtt/outdoor_climate"
 HISTORY_SIZE = 60  # Several hours of history
 TREND_WINDOW = 6  # ~30-60 min of readings for trend
+CONFIG_FILE = Path(__file__).parent.parent / "sensor_config.json"
 
 
 @dataclass
@@ -40,13 +41,36 @@ class SensorData:
     history: deque = field(default_factory=lambda: deque(maxlen=HISTORY_SIZE))
 
 
+# State
 sensors: dict[str, SensorData] = {
     "indoor": SensorData(),
     "outdoor": SensorData(),
 }
-
+available_devices: list[dict] = []  # Devices from Zigbee2MQTT
+sensor_config: dict[str, str] = {"indoor": "", "outdoor": ""}  # friendly_name -> role
 mqtt_client: mqtt.Client | None = None
 mqtt_connected = False
+subscribed_topics: set[str] = set()
+
+
+def load_config():
+    """Load sensor config from file."""
+    global sensor_config
+    if CONFIG_FILE.exists():
+        try:
+            sensor_config = json.loads(CONFIG_FILE.read_text())
+            logger.info("Loaded sensor config: %s", sensor_config)
+        except Exception:
+            logger.exception("Failed to load sensor config")
+
+
+def save_config():
+    """Save sensor config to file."""
+    try:
+        CONFIG_FILE.write_text(json.dumps(sensor_config, indent=2))
+        logger.info("Saved sensor config: %s", sensor_config)
+    except Exception:
+        logger.exception("Failed to save sensor config")
 
 
 def feels_like(temp_c: float, humidity: float) -> float:
@@ -94,12 +118,45 @@ def get_trend(current: float, history: deque, attr: str) -> str:
     return "steady"
 
 
+def get_topic_for_device(friendly_name: str) -> str:
+    """Get MQTT topic for a device."""
+    return f"zigbee2mqtt/{friendly_name}"
+
+
+def update_subscriptions():
+    """Subscribe to configured sensor topics."""
+    global subscribed_topics
+    if not mqtt_client or not mqtt_connected:
+        return
+
+    # Determine which topics we need
+    needed_topics = set()
+    for role in ("indoor", "outdoor"):
+        device_name = sensor_config.get(role)
+        if device_name:
+            needed_topics.add(get_topic_for_device(device_name))
+
+    # Unsubscribe from old topics
+    for topic in subscribed_topics - needed_topics:
+        mqtt_client.unsubscribe(topic)
+        logger.info("Unsubscribed from %s", topic)
+
+    # Subscribe to new topics
+    for topic in needed_topics - subscribed_topics:
+        mqtt_client.subscribe(topic)
+        logger.info("Subscribed to %s", topic)
+
+    subscribed_topics = needed_topics
+
+
 def on_connect(client, _userdata, _flags, rc, _properties=None):
     global mqtt_connected
     mqtt_connected = rc == 0
     if mqtt_connected:
-        client.subscribe(INDOOR_TOPIC)
-        client.subscribe(OUTDOOR_TOPIC)
+        # Always subscribe to bridge/devices to get device list
+        client.subscribe("zigbee2mqtt/bridge/devices")
+        # Subscribe to configured sensors
+        update_subscriptions()
         logger.info("MQTT connected")
 
 
@@ -109,15 +166,40 @@ def on_disconnect(_client, _userdata, _rc, _properties=None):
 
 
 def on_message(_client, _userdata, msg):
+    global available_devices
     try:
+        # Handle device list updates
+        if msg.topic == "zigbee2mqtt/bridge/devices":
+            devices = json.loads(msg.payload.decode())
+            # Filter to only devices with temperature/humidity (climate sensors)
+            available_devices = [
+                {
+                    "friendly_name": d.get("friendly_name", ""),
+                    "model": d.get("definition", {}).get("model", "Unknown"),
+                    "description": d.get("definition", {}).get("description", ""),
+                }
+                for d in devices
+                if d.get("definition", {}).get("exposes")
+                and any(
+                    e.get("property") == "temperature"
+                    for e in d.get("definition", {}).get("exposes", [])
+                    if isinstance(e, dict)
+                )
+            ]
+            logger.info("Found %d climate sensors", len(available_devices))
+            return
+
+        # Handle sensor data
         data = json.loads(msg.payload.decode())
-        key = (
-            "indoor"
-            if msg.topic == INDOOR_TOPIC
-            else "outdoor"
-            if msg.topic == OUTDOOR_TOPIC
-            else None
-        )
+
+        # Determine which sensor this is (indoor or outdoor)
+        key = None
+        for role in ("indoor", "outdoor"):
+            device_name = sensor_config.get(role)
+            if device_name and msg.topic == get_topic_for_device(device_name):
+                key = role
+                break
+
         if not key:
             return
 
@@ -135,6 +217,8 @@ def on_message(_client, _userdata, msg):
 
 def start_mqtt():
     global mqtt_client
+    load_config()
+
     mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
@@ -176,6 +260,38 @@ def status():
     return jsonify({"mqtt_connected": mqtt_connected})
 
 
+@bp.route("/devices")
+def devices():
+    """List available climate sensors from Zigbee2MQTT."""
+    return jsonify(
+        {
+            "devices": available_devices,
+            "config": sensor_config,
+        }
+    )
+
+
+@bp.route("/config", methods=["POST"])
+def set_config():
+    """Set which device is indoor/outdoor."""
+    global sensor_config
+    data = request.get_json()
+
+    # Update config
+    if "indoor" in data:
+        sensor_config["indoor"] = data["indoor"] or ""
+        # Clear old data when changing sensor
+        sensors["indoor"] = SensorData()
+    if "outdoor" in data:
+        sensor_config["outdoor"] = data["outdoor"] or ""
+        sensors["outdoor"] = SensorData()
+
+    save_config()
+    update_subscriptions()
+
+    return jsonify({"success": True, "config": sensor_config})
+
+
 @bp.route("/indoor")
 def indoor():
     return jsonify(sensor_response("indoor"))
@@ -200,7 +316,14 @@ def all_sensors():
             "difference": round(diff, 1),
         }
 
-    return jsonify({"indoor": ind, "outdoor": out, "comparison": comparison})
+    return jsonify(
+        {
+            "indoor": ind,
+            "outdoor": out,
+            "comparison": comparison,
+            "config": sensor_config,
+        }
+    )
 
 
 start_mqtt()

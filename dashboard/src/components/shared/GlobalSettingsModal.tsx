@@ -1,5 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Sun, Moon, Monitor, CheckCircle, XCircle, Loader2, Mic } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Sun,
+  Moon,
+  Monitor,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Mic,
+  Volume2,
+  Plus,
+  Minus,
+} from 'lucide-react';
 import {
   useConfigStore,
   testRelayConnection,
@@ -36,6 +47,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const [locationQuery, setLocationQuery] = useState('');
   const [relayUrlInput, setRelayUrlInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [volume, setVolume] = useState(50);
+  const [volumeLoading, setVolumeLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentTheme = globalSettings?.theme ?? 'dark';
   const defaultLocation = globalSettings?.defaultLocation;
@@ -43,14 +57,71 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const voiceEnabled = globalSettings?.voiceEnabled ?? false;
   const wakeWord = globalSettings?.wakeWord ?? 'hey_jarvis';
 
-  // Reset relay URL input when modal opens (valid pattern for form initialization)
+  // Reset relay URL input when modal opens
   useEffect(() => {
     if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- form reset on modal open
       setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
       setRelayStatus('idle');
     }
   }, [open, globalSettings?.relayUrl]);
+
+  // Fetch current volume when modal opens
+  useEffect(() => {
+    if (open) {
+      const relayUrl = getRelayUrl();
+      if (relayUrl) {
+        fetch(`${relayUrl}/volume`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (typeof data.volume === 'number') {
+              setVolume(data.volume);
+            }
+          })
+          .catch(() => {
+            // Ignore errors - volume endpoint may not exist
+          });
+      }
+    }
+  }, [open]);
+
+  // Play test sound at current volume
+  const playTestSound = useCallback(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(
+        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=='
+      );
+    }
+    audioRef.current.volume = volume / 100;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {});
+  }, [volume]);
+
+  // Change volume via relay
+  const changeVolume = useCallback(
+    async (newVolume: number) => {
+      const clamped = Math.max(0, Math.min(100, newVolume));
+      setVolume(clamped);
+
+      const relayUrl = getRelayUrl();
+      if (relayUrl) {
+        setVolumeLoading(true);
+        try {
+          await fetch(`${relayUrl}/volume`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ volume: clamped }),
+          });
+          // Play test sound after setting
+          setTimeout(playTestSound, 100);
+        } catch {
+          // Ignore errors
+        } finally {
+          setVolumeLoading(false);
+        }
+      }
+    },
+    [playTestSound]
+  );
 
   async function handleTestRelay() {
     setRelayStatus('testing');
@@ -160,6 +231,48 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               </p>
             </div>
           </label>
+        </div>
+
+        {/* Volume Control */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <Volume2 size={18} />
+            Volume
+          </label>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => changeVolume(volume - 10)}
+              disabled={volumeLoading || volume <= 0}
+              className="p-2 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Minus size={16} />
+            </button>
+            <div className="flex-1 relative">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={volume}
+                onChange={(e) => changeVolume(parseInt(e.target.value, 10))}
+                disabled={volumeLoading}
+                className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-neutral-500">
+                {volume}%
+              </div>
+            </div>
+            <button
+              onClick={() => changeVolume(volume + 10)}
+              disabled={volumeLoading || volume >= 100}
+              className="p-2 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Plays a test sound when changed. Controls kiosk speaker volume.
+          </p>
         </div>
 
         {/* Voice Control */}

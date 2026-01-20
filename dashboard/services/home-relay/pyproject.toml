@@ -5,21 +5,22 @@ description = "Home relay service for Kasa and WOL"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "flask>=3.1.0",
+    "flask-sock>=0.7.0",
     "python-kasa>=0.9.0",
     "wakeonlan>=3.1.0",
     "tzdata>=2024.1",
     "getmac>=0.9.0",
     "astral>=3.2",
     "paho-mqtt>=2.0.0",
+    "vosk>=0.3.45; sys_platform == 'linux'",
+    "httpx>=0.27.0",
 ]
 
 [dependency-groups]
 dev = ["ruff>=0.9.0"]
 voice = [
     "openwakeword>=0.6.0",
-    "vosk>=0.3.45",
     "pyaudio>=0.2.14",
-    "requests>=2.31.0",
 ]
 
 [tool.ruff]

@@ -3,6 +3,7 @@
 ## Goal
 
 Decouple Vosk (speech-to-text) from openwakeword so users can have:
+
 - **Button only**: Push-to-talk in dashboard, no always-on mic
 - **Wake word only**: Hands-free with openwakeword
 - **Both**: Wake word + button
@@ -206,6 +207,7 @@ function resample(input: Float32Array, fromRate: number, toRate: number): Float3
 ```
 
 **Benefits**:
+
 - Toggle mode: tap to start, tap to stop
 - Streams audio chunks in real-time
 - Server stops on silence detection OR 6 second max OR user tap
@@ -288,12 +290,14 @@ function PushToTalk() {
 ### 2. Settings toggle
 
 Add to dashboard settings:
+
 - "Enable push-to-talk button" (shows/hides mic button)
 - Existing "Enable wake word" (controls voice_control.py service)
 
 ## Dependencies
 
 ### pyproject.toml changes
+
 ```toml
 dependencies = [
     # ... existing ...
@@ -337,21 +341,21 @@ unconditionally - this is good. Just need to add `ffmpeg` for push-to-talk audio
 
 Everything - no choices during setup:
 
-| Component | Installed |
-|-----------|-----------|
-| Vosk model (~50MB) | ✅ |
-| openwakeword | ✅ |
-| pyaudio | ✅ |
-| voice-control.service | ✅ |
+| Component             | Installed |
+| --------------------- | --------- |
+| Vosk model (~50MB)    | ✅        |
+| openwakeword          | ✅        |
+| pyaudio               | ✅        |
+| voice-control.service | ✅        |
 
 Note: No ffmpeg needed - browser streams raw PCM directly to server via WebSocket.
 
 ### Dashboard settings
 
-| Feature | Default | Toggle needed? |
-|---------|---------|----------------|
-| Push-to-talk | **Always on** | No - mic button always available |
-| Wake word | Off | Yes - opt-in (always-listening is invasive) |
+| Feature      | Default       | Toggle needed?                              |
+| ------------ | ------------- | ------------------------------------------- |
+| Push-to-talk | **Always on** | No - mic button always available            |
+| Wake word    | Off           | Yes - opt-in (always-listening is invasive) |
 
 Push-to-talk just works after setup. Wake word requires enabling in Settings because
 it's constantly listening on the Pi's microphone.
@@ -372,6 +376,7 @@ def fetch_config(self) -> bool:
 ```
 
 This is nice because:
+
 - Systemd always starts the service (simple setup)
 - User controls it via dashboard toggle (no SSH needed)
 - Service restarts every few seconds (RestartSec=5), checks config, exits if disabled
@@ -386,6 +391,7 @@ Keep the current approach: **install everything unconditionally**. Users control
 active via dashboard toggles, not by installing/uninstalling deps.
 
 The existing voice setup (lines 237-288) stays mostly the same. Just:
+
 - Remove `wget` from packages (line 58)
 - Change `wget` to `curl` for Vosk download (line 252)
 

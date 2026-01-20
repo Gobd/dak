@@ -1,4 +1,5 @@
 packages:
+  - climate-display
   - dashboard
   - family-chores
   - functions

@@ -56,7 +56,6 @@ sudo apt-get install -y --no-install-recommends \
   cage \
   ddcutil \
   curl \
-  wget \
   git \
   unzip \
   jq \
@@ -249,7 +248,7 @@ if [ -d ~/dashboard/services/home-relay ]; then
   MODELS_DIR=~/dashboard/services/home-relay/models
   mkdir -p "$MODELS_DIR"
   if [ ! -d "$MODELS_DIR/vosk-model-small-en-us" ]; then
-    wget -q --show-progress -O /tmp/vosk-model.zip \
+    curl -L --progress-bar -o /tmp/vosk-model.zip \
       https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
     unzip -q /tmp/vosk-model.zip -d "$MODELS_DIR"
     mv "$MODELS_DIR/vosk-model-small-en-us-0.15" "$MODELS_DIR/vosk-model-small-en-us"
@@ -296,7 +295,7 @@ echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
 echo ""
 if ls /dev/ttyUSB* /dev/ttyACM* &>/dev/null; then
   echo "Zigbee dongle detected! After reboot:"
-  echo "  1. Open http://$(hostname).local:8080"
+  echo "  1. Open http://$(hostname).home.arpa:8080"
   echo "  2. Enable permit_join in Settings"
   echo "  3. Hold sensor button 5s to pair"
   echo "  4. Name devices 'indoor_climate' and 'outdoor_climate'"

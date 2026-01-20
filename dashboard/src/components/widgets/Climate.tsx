@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
-import { useConfigStore, getRelayUrl } from '../../stores/config-store';
+import { getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import type { PanelConfig } from '../../types';
 
@@ -24,16 +24,26 @@ interface ClimateData {
     outside_feels_warmer: boolean;
     difference: number;
   } | null;
+  config: { indoor: string; outdoor: string };
+}
+
+interface DeviceInfo {
+  friendly_name: string;
+  model: string;
+  description: string;
+}
+
+interface DevicesResponse {
+  devices: DeviceInfo[];
+  config: { indoor: string; outdoor: string };
 }
 
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 
-export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boolean }) {
+export default function Climate({ dark }: { panel: PanelConfig; dark: boolean }) {
   const relayUrl = getRelayUrl();
-  const updatePanel = useConfigStore((s) => s.updatePanel);
   const [showSettings, setShowSettings] = useState(false);
-
-  const wantCooler = (panel.args?.wantCooler as boolean) ?? true;
+  const [saving, setSaving] = useState(false);
 
   // Derive Zigbee2MQTT URL from relay URL
   const getZigbeeUrl = () => {
@@ -48,6 +58,7 @@ export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boo
   };
   const zigbeeUrl = getZigbeeUrl();
 
+  // Fetch sensor data
   const { data, isLoading, error } = useWidgetQuery<ClimateData>(
     ['climate', relayUrl],
     async () => {
@@ -58,9 +69,41 @@ export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boo
     { refetchInterval: 60_000, enabled: !!relayUrl }
   );
 
+  // Fetch available devices (only when settings open)
+  const { data: devicesData, refetch: refetchDevices } = useWidgetQuery<DevicesResponse>(
+    ['climate-devices', relayUrl],
+    async () => {
+      const res = await fetch(`${relayUrl}/sensors/devices`);
+      if (!res.ok) throw new Error('Failed to fetch devices');
+      return res.json();
+    },
+    { enabled: !!relayUrl && showSettings, staleTime: 10_000 }
+  );
+
+  const devices = devicesData?.devices ?? [];
+  const currentConfig = devicesData?.config ?? data?.config ?? { indoor: '', outdoor: '' };
+
   const sensorsConnected = data
     ? (data.indoor?.available ? 1 : 0) + (data.outdoor?.available ? 1 : 0)
     : 0;
+
+  // Save sensor config
+  const saveSensorConfig = async (role: 'indoor' | 'outdoor', deviceName: string) => {
+    if (!relayUrl) return;
+    setSaving(true);
+    try {
+      await fetch(`${relayUrl}/sensors/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [role]: deviceName }),
+      });
+      refetchDevices();
+    } catch (e) {
+      console.error('Failed to save sensor config:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Get recommendation
   const getRecommendation = () => {
@@ -92,6 +135,41 @@ export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boo
       <span>
         {icon} {Math.round(sensor.temperature)}°{tTemp} {Math.round(sensor.humidity)}%{tHum}
       </span>
+    );
+  };
+
+  // Sensor dropdown
+  const renderSensorSelect = (role: 'indoor' | 'outdoor', label: string) => {
+    const otherRole = role === 'indoor' ? 'outdoor' : 'indoor';
+    const otherSelected = currentConfig[otherRole];
+    // Filter out the device selected for the other role
+    const availableDevices = devices.filter((d) => d.friendly_name !== otherSelected);
+
+    return (
+      <div>
+        <label
+          className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
+        >
+          {label}
+        </label>
+        <select
+          value={currentConfig[role] || ''}
+          onChange={(e) => saveSensorConfig(role, e.target.value)}
+          disabled={saving}
+          className={`w-full px-3 py-2 rounded text-sm ${
+            dark
+              ? 'bg-neutral-700 text-neutral-200 border-neutral-600'
+              : 'bg-neutral-100 text-neutral-800 border-neutral-300'
+          } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        >
+          <option value="">Not configured</option>
+          {availableDevices.map((device) => (
+            <option key={device.friendly_name} value={device.friendly_name}>
+              {device.friendly_name} ({device.model})
+            </option>
+          ))}
+        </select>
+      </div>
     );
   };
 
@@ -147,78 +225,43 @@ export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boo
         }
       >
         <div className="space-y-4">
+          {/* Sensor Selection */}
+          {devices.length > 0 ? (
+            <>
+              {renderSensorSelect('indoor', '🏠 Indoor Sensor')}
+              {renderSensorSelect('outdoor', '🌳 Outdoor Sensor')}
+            </>
+          ) : (
+            <div className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+              No climate sensors found. Pair sensors in Zigbee2MQTT first.
+            </div>
+          )}
+
           {/* Connection Status */}
           <div>
             <label
               className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
             >
-              Sensor Status
+              Status
             </label>
             <div className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
               {sensorsConnected === 2 ? (
-                <span className="text-green-500">2 sensors connected</span>
+                <span className="text-green-500">✓ Both sensors receiving data</span>
               ) : sensorsConnected === 1 ? (
                 <span className="text-yellow-500">
-                  1 sensor connected ({data?.indoor?.available ? 'indoor' : 'outdoor'} only)
+                  ⚠ Only {data?.indoor?.available ? 'indoor' : 'outdoor'} receiving data
                 </span>
+              ) : currentConfig.indoor || currentConfig.outdoor ? (
+                <span className="text-yellow-500">⚠ Waiting for sensor data...</span>
               ) : (
-                <span className="text-red-500">No sensors connected</span>
+                <span className="text-neutral-500">Select sensors above</span>
               )}
             </div>
-          </div>
-
-          {/* Season Mode */}
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-            >
-              Season Mode
-            </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  updatePanel(panel.id, { ...panel, args: { ...panel.args, wantCooler: true } });
-                }}
-                className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
-                  wantCooler
-                    ? 'bg-orange-600 text-white'
-                    : dark
-                      ? 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
-                      : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                }`}
-              >
-                ☀️ Cooling
-              </button>
-              <button
-                onClick={() => {
-                  updatePanel(panel.id, { ...panel, args: { ...panel.args, wantCooler: false } });
-                }}
-                className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
-                  !wantCooler
-                    ? 'bg-blue-600 text-white'
-                    : dark
-                      ? 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
-                      : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                }`}
-              >
-                ❄️ Heating
-              </button>
-            </div>
-            <p className={`text-xs mt-1 ${dark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {wantCooler
-                ? 'Recommends opening windows when outside is cooler'
-                : 'Recommends opening windows when outside is warmer'}
-            </p>
           </div>
 
           {/* Zigbee2MQTT Link */}
           {zigbeeUrl && (
             <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-              >
-                Sensor Management
-              </label>
               <a
                 href={zigbeeUrl}
                 target="_blank"
@@ -232,7 +275,7 @@ export default function Climate({ panel, dark }: { panel: PanelConfig; dark: boo
                 Open Zigbee2MQTT UI
               </a>
               <p className={`text-xs mt-1 ${dark ? 'text-gray-500' : 'text-gray-500'}`}>
-                Pair sensors, rename devices, check signal strength
+                Pair new sensors, rename devices, check signal
               </p>
             </div>
           )}
