@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { writeFileSync, mkdirSync, rmSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync, copyFileSync, readdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
@@ -47,13 +47,22 @@ const clientHash = createHash('md5').update(clientCode).digest('hex').slice(0, 8
 const clientFileName = `react-dom-client-${clientHash}.js`;
 writeFileSync(join(outDir, clientFileName), clientCode);
 
+// Copy fonts to dist
+const fontsDir = join(__dirname, 'fonts');
+const fontFiles = readdirSync(fontsDir);
+for (const file of fontFiles) {
+  copyFileSync(join(fontsDir, file), join(outDir, file));
+}
+
 // Write manifest
 const manifest = {
   react: `/_shared/${reactFileName}`,
   'react-dom/client': `/_shared/${clientFileName}`,
+  fonts: '/_shared/fonts.css',
 };
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 console.log('Built shared React vendor:');
 console.log(`  react: ${reactFileName} (${(reactCode.length / 1024).toFixed(1)} KB)`);
 console.log(`  react-dom/client: ${clientFileName} (${(clientCode.length / 1024).toFixed(1)} KB)`);
+console.log(`  fonts: ${fontFiles.join(', ')}`);
