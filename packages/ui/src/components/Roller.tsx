@@ -23,7 +23,7 @@ export function Roller({ items, value, onChange, format = (v) => String(v) }: Ro
         onValueChange={onChange}
         infinite
         optionItemHeight={36}
-        visibleCount={16}
+        visibleCount={11}
         dragSensitivity={2}
         scrollSensitivity={3}
       />
