@@ -200,6 +200,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                 Say the wake word, then your command (e.g., "add milk to groceries")
               </p>
+              <details className="mt-3">
+                <summary className="text-xs text-blue-500 cursor-pointer hover:text-blue-400">
+                  View available commands
+                </summary>
+                <ul className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 space-y-1 pl-2">
+                  <li>"add [item] to [list]" — add to groceries, shopping, etc.</li>
+                  <li>"is it warmer/colder outside" — compare indoor/outdoor temp</li>
+                  <li>"turn on/off [device]" — control Kasa devices</li>
+                  <li>"set [X] minute timer [called Y]" — start a timer</li>
+                  <li>"add [X] minutes [to Y timer]" — add time</li>
+                  <li>"subtract [X] minutes [from Y timer]" — remove time</li>
+                  <li>"stop/cancel [name] timer" — dismiss alarm or cancel</li>
+                  <li>"help" — list commands</li>
+                </ul>
+              </details>
             </div>
           )}
         </div>

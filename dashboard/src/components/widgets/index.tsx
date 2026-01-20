@@ -21,6 +21,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   brightness: lazy(() => import('./Brightness')),
   iframe: lazy(() => import('./Iframe')),
   climate: lazy(() => import('./Climate')),
+  timer: lazy(() => import('./Timer')),
 };
 
 // Loading placeholder

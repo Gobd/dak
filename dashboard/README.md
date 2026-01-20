@@ -73,6 +73,7 @@ These are installed to `~/scripts/` on the kiosk:
 | `calendar`   | Google Calendar (OAuth, auto-refreshes tokens) |
 | `weather`    | NWS weather forecast                           |
 | `climate`    | Indoor/outdoor temp & humidity (Zigbee)        |
+| `timer`      | Countdown timers (voice + touch UI)            |
 | `uv`         | UV index chart                                 |
 | `aqi`        | Air quality index                              |
 | `sun-moon`   | Sunrise/sunset, moon phase                     |
@@ -95,6 +96,36 @@ https://dak.bkemper.me/dashboard/?edit&relay=kiosk.home.arpa:5111
 The `relay` param tells the dashboard where to save config. Changes save to the kiosk and it auto-reloads via SSE.
 
 You can set a default relay URL in global settings (gear icon). This controls where all home-relay API calls go (config, Kasa, WoL, brightness), so set it to your kiosk's address if you're editing from another device.
+
+## Voice Commands
+
+Enable voice control in Settings (gear icon) and choose a wake word. Say the wake word, then:
+
+| Command                              | What it does                          |
+| ------------------------------------ | ------------------------------------- |
+| "add [item] to [list]"               | Add item to groceries, shopping, etc. |
+| "is it warmer/colder outside"        | Compare indoor vs outdoor temp        |
+| "turn on/off [device]"               | Control Kasa smart devices            |
+| "set [X] minute timer [called Y]"    | Start a timer (name optional)         |
+| "add [X] minutes [to Y timer]"       | Add time to a timer                   |
+| "subtract [X] minutes [from Y timer]"| Remove time from a timer              |
+| "stop/cancel [name] timer"           | Dismiss alarm, or cancel by name      |
+| "help"                               | List available commands               |
+
+**Examples:**
+- "Hey Jarvis, add milk to groceries"
+- "Hey Jarvis, is it colder outside"
+- "Hey Jarvis, turn off the lamp"
+- "Hey Jarvis, set 10 minute timer for pasta"
+- "Hey Jarvis, add 5 minutes to pasta timer"
+- "Hey Jarvis, subtract 2 minutes"
+
+**Timer UI controls:**
+- Click timer name → rename
+- Scroll wheel over timer → add/subtract 1 minute
+- X button → cancel timer or dismiss alarm
+
+Requires ReSpeaker mic array and voice-setup.sh on the kiosk.
 
 ## Keyboard Shortcuts
 

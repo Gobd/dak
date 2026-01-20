@@ -31,7 +31,7 @@ interface VoiceCommand {
 function handleCommand(command: VoiceCommand) {
   console.log('[voice-relay] Received command:', command);
 
-  // Timer commands are handled by the TimerOverlay
+  // Timer commands are handled by the Timer widget
   if (command.type === 'timer' || command.type === 'stop-timer') {
     window.dispatchEvent(new CustomEvent('voice-timer', { detail: command }));
     return;

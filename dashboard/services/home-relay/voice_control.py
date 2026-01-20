@@ -251,6 +251,66 @@ def cmd_stop_timer(params: dict) -> dict:
 
 
 @command(
+    name="add_time",
+    patterns=[
+        r"add (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?(?: to)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
+    ],
+    help_text="Add time to a timer",
+    examples=["add 5 minutes to pasta timer", "add 10 minutes"],
+)
+def cmd_add_time(params: dict) -> dict:
+    """Add time to a timer."""
+    duration = int(params["duration"])
+    unit = params["unit"].lower()
+    name = (params.get("name") or "").strip() or None
+
+    multipliers = {"second": 1, "minute": 60, "hour": 3600}
+    seconds = duration * multipliers.get(unit, 60)
+
+    response = requests.post(
+        f"{HOME_RELAY_URL}/voice/command",
+        json={"type": "adjust-timer", "seconds": seconds, "name": name},
+        timeout=5,
+    )
+
+    unit_display = unit + ("s" if duration != 1 else "")
+    return {
+        "success": response.ok,
+        "message": f"Added {duration} {unit_display}" if response.ok else "Failed",
+    }
+
+
+@command(
+    name="subtract_time",
+    patterns=[
+        r"(?:subtract|remove|minus|take) (?P<duration>\d+) ?(?P<unit>second|minute|hour)s?(?: from)?(?: (?:the )?(?P<name>.+?))?(?: timer)?$",
+    ],
+    help_text="Subtract time from a timer",
+    examples=["subtract 5 minutes from pasta timer", "remove 2 minutes"],
+)
+def cmd_subtract_time(params: dict) -> dict:
+    """Subtract time from a timer."""
+    duration = int(params["duration"])
+    unit = params["unit"].lower()
+    name = (params.get("name") or "").strip() or None
+
+    multipliers = {"second": 1, "minute": 60, "hour": 3600}
+    seconds = -(duration * multipliers.get(unit, 60))  # Negative for subtraction
+
+    response = requests.post(
+        f"{HOME_RELAY_URL}/voice/command",
+        json={"type": "adjust-timer", "seconds": seconds, "name": name},
+        timeout=5,
+    )
+
+    unit_display = unit + ("s" if duration != 1 else "")
+    return {
+        "success": response.ok,
+        "message": f"Subtracted {duration} {unit_display}" if response.ok else "Failed",
+    }
+
+
+@command(
     name="help",
     patterns=[
         r"(what can you do|help|commands|what can i say)",

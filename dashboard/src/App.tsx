@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfigStore } from './stores/config-store';
 import { useVoiceCommandRelay } from './hooks/useVoiceCommandRelay';
 import { Screen } from './components/layout/Screen';
-import { TimerOverlay } from './components/TimerOverlay';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,7 +82,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Screen />
-      <TimerOverlay />
     </QueryClientProvider>
   );
 }
