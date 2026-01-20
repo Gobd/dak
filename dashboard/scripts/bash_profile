@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+# Auto-start kiosk on TTY1 login
 if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
   exec ~/.kiosk.sh
 fi

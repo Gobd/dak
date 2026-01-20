@@ -75,8 +75,8 @@ class VoiceControl:
         try:
             response = httpx.get(f"{HOME_RELAY_URL}/config", timeout=5)
             if not response.is_success:
-                logger.warning("Failed to fetch config, using defaults")
-                return True  # Assume enabled if can't fetch
+                logger.warning("Failed to fetch config, defaulting to disabled")
+                return False
 
             config = response.json()
             global_settings = config.get("globalSettings", {})
@@ -93,7 +93,7 @@ class VoiceControl:
 
         except Exception:
             logger.exception("Error fetching config")
-            return True  # Assume enabled if can't fetch
+            return False
 
     def load_models(self):
         """Load wake word model."""

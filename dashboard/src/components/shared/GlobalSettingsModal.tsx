@@ -501,7 +501,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               <div className="flex gap-2">
                 <select
                   value={voiceModel}
-                  onChange={(e) => updateGlobalSettings({ voiceModel: e.target.value as VoskModel })}
+                  onChange={(e) =>
+                    updateGlobalSettings({ voiceModel: e.target.value as VoskModel })
+                  }
                   className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
                              bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
                              focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"

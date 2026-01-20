@@ -509,8 +509,24 @@ export default function Timer(_: WidgetComponentProps) {
                   ) : (
                     <div className="w-4 h-4 flex-shrink-0">
                       <svg className="w-4 h-4 -rotate-90">
-                        <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                        <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={`${progress * 37.7} 37.7`} />
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="6"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          opacity="0.3"
+                        />
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="6"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeDasharray={`${progress * 37.7} 37.7`}
+                        />
                       </svg>
                     </div>
                   )}
@@ -527,11 +543,16 @@ export default function Timer(_: WidgetComponentProps) {
                         autoFocus
                       />
                     ) : (
-                      <button onClick={() => startEditing(timer)} className="text-xs hover:underline text-left truncate w-full">
+                      <button
+                        onClick={() => startEditing(timer)}
+                        className="text-xs hover:underline text-left truncate w-full"
+                      >
                         {timer.name}
                       </button>
                     )}
-                    <div className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                    <div
+                      className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+                    >
                       {isAlerting ? "Time's up!" : formatTime(remaining)}
                     </div>
                   </div>
@@ -556,13 +577,24 @@ export default function Timer(_: WidgetComponentProps) {
 
                 {isAdjusting && (
                   <div className="flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
-                    <button onClick={() => adjustTime(timer.id, -adjustMinutes * 60)} className="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white">
+                    <button
+                      onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
+                      className="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white"
+                    >
                       <Minus className="w-3 h-3" />
                     </button>
                     <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
-                      <Roller items={ADJUST_MINUTES} value={adjustMinutes} onChange={setAdjustMinutes} format={(v) => `${v}m`} />
+                      <Roller
+                        items={ADJUST_MINUTES}
+                        value={adjustMinutes}
+                        onChange={setAdjustMinutes}
+                        format={(v) => `${v}m`}
+                      />
                     </div>
-                    <button onClick={() => adjustTime(timer.id, adjustMinutes * 60)} className="p-1.5 bg-green-600 hover:bg-green-500 rounded text-white">
+                    <button
+                      onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
+                      className="p-1.5 bg-green-600 hover:bg-green-500 rounded text-white"
+                    >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
@@ -575,8 +607,13 @@ export default function Timer(_: WidgetComponentProps) {
             const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
             return (
-              <div key={sw.id} className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50">
-                <Clock className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`} />
+              <div
+                key={sw.id}
+                className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50"
+              >
+                <Clock
+                  className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`}
+                />
 
                 <div className="flex-1 min-w-0">
                   {editingId === sw.id ? (
@@ -590,7 +627,10 @@ export default function Timer(_: WidgetComponentProps) {
                       autoFocus
                     />
                   ) : (
-                    <button onClick={() => startEditing(sw)} className="text-xs hover:underline text-left truncate w-full">
+                    <button
+                      onClick={() => startEditing(sw)}
+                      className="text-xs hover:underline text-left truncate w-full"
+                    >
                       {sw.name}
                     </button>
                   )}

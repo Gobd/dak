@@ -50,7 +50,11 @@ export function useVoiceCommandRelay() {
       }
 
       // Timer commands are handled by the Timer widget
-      if (command.type === 'timer' || command.type === 'stop-timer' || command.type === 'adjust-timer') {
+      if (
+        command.type === 'timer' ||
+        command.type === 'stop-timer' ||
+        command.type === 'adjust-timer'
+      ) {
         window.dispatchEvent(new CustomEvent('voice-timer', { detail: command }));
         return;
       }
