@@ -17,6 +17,7 @@ interface PanelProps {
   children: ReactNode;
   isEditMode: boolean;
   zIndex?: number;
+  frameless?: boolean;
 }
 
 // Convert pixel delta to percentage of viewport
@@ -28,7 +29,7 @@ function pxToPercent(px: number, total: number): number {
  * Panel wrapper component - handles positioning, resizing, and edit mode controls
  * Position/size values are stored as percentages (0-100) for responsive scaling
  */
-export function Panel({ panel, children, isEditMode, zIndex = 1 }: PanelProps) {
+export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = false }: PanelProps) {
   const movePanel = useConfigStore((s) => s.movePanel);
   const resizePanel = useConfigStore((s) => s.resizePanel);
   const removePanel = useConfigStore((s) => s.removePanel);
@@ -166,7 +167,8 @@ export function Panel({ panel, children, isEditMode, zIndex = 1 }: PanelProps) {
   return (
     <div
       ref={panelRef}
-      className={`absolute bg-white dark:bg-neutral-800 rounded-xl shadow-lg overflow-hidden
+      className={`absolute overflow-hidden
+                  ${frameless ? '' : 'bg-white dark:bg-neutral-800 rounded-xl shadow-lg'}
                   ${isEditMode ? 'ring-2 ring-blue-500/50 cursor-move' : ''}
                   ${isDragging ? 'opacity-80' : ''}`}
       style={{

@@ -1,0 +1,18 @@
+[Unit]
+Description=Voice Control Service
+After=network.target home-relay.service
+Wants=home-relay.service
+
+[Service]
+Type=simple
+User=kiosk
+WorkingDirectory=/home/kiosk/dashboard/services/home-relay
+ExecStart=/home/kiosk/.local/bin/uv run --group voice python voice_control.py
+Restart=on-failure
+RestartSec=5
+
+# Audio device access
+SupplementaryGroups=audio
+
+[Install]
+WantedBy=multi-user.target

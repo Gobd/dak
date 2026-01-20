@@ -1,11 +1,12 @@
 packages:
+  - climate-display
   - dashboard
   - family-chores
   - functions
   - health-tracker
   - kasa-controller
   - notes-app
-  - ui
+  - packages/*
 
 catalog:
   # Shared tooling

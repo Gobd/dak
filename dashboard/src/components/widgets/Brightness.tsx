@@ -6,7 +6,6 @@ import { Modal, Button, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import type { WidgetComponentProps } from './index';
 import type { BrightnessConfig } from '../../types';
-import { parseDuration } from '../../types';
 
 interface SunTimes {
   date: string | null;
@@ -75,7 +74,7 @@ async function fetchBrightnessData(): Promise<{
   return { status, error: null };
 }
 
-export default function Brightness({ panel, dark }: WidgetComponentProps) {
+export default function Brightness({ dark }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [manualBrightness, setManualBrightness] = useState<number | null>(null);
@@ -85,13 +84,10 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
   const config = useConfigStore((s) => s.brightness);
   const updateBrightness = useConfigStore((s) => s.updateBrightness);
 
-  const normalInterval = parseDuration(panel.refresh || '1m') ?? 60000;
-  const modalInterval = 10000;
-
   const { data, isLoading } = useQuery({
     queryKey: ['brightness-status'],
     queryFn: fetchBrightnessData,
-    refetchInterval: showModal ? modalInterval : normalInterval,
+    refetchInterval: showModal ? 5_000 : 60_000,
     staleTime: 5000,
   });
 
@@ -141,9 +137,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
   const currentBrightness = manualBrightness ?? status?.current ?? 100;
 
   return (
-    <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className="w-full h-full flex items-center justify-center">
       <button
         onClick={() => setShowModal(true)}
         className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}

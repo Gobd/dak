@@ -4,7 +4,6 @@ import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-rea
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, ConfirmModal } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
-import { parseDuration } from '../../types';
 
 interface WolDevice {
   name: string;
@@ -115,16 +114,12 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
   const [addError, setAddError] = useState<string | null>(null);
   const [detectingMac, setDetectingMac] = useState(false);
 
-  // Use different refresh intervals based on modal state
-  const normalInterval = parseDuration(panel.refresh) ?? undefined;
-  const modalInterval = 5000; // 5 seconds when modal is open
-
   const { data, isLoading } = useQuery({
     queryKey: ['wol-statuses', devices.map((d) => d.ip).join(',')],
     queryFn: () => fetchWolStatuses(devices),
-    refetchInterval: showModal ? modalInterval : normalInterval,
+    refetchInterval: showModal ? 5_000 : 60_000,
     staleTime: 3000,
-    enabled: devices.length > 0 || showModal, // Always fetch when modal is open to check relay health
+    enabled: devices.length > 0 || showModal,
   });
 
   const statuses = data?.statuses ?? {};
@@ -198,9 +193,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
   const hasError = !!error;
 
   return (
-    <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}

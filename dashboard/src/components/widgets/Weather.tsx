@@ -131,7 +131,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
     ['weather', location?.lat, location?.lon],
     () => fetchWeather(location!.lat, location!.lon),
     {
-      refresh: panel.refresh,
+      refresh: '30m',
       enabled: !!location,
     }
   );

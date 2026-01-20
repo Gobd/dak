@@ -5,15 +5,23 @@ description = "Home relay service for Kasa and WOL"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "flask>=3.1.0",
+    "flask-sock>=0.7.0",
     "python-kasa>=0.9.0",
     "wakeonlan>=3.1.0",
     "tzdata>=2024.1",
     "getmac>=0.9.0",
     "astral>=3.2",
+    "paho-mqtt>=2.0.0",
+    "vosk>=0.3.45; sys_platform == 'linux'",
+    "httpx>=0.27.0",
 ]
 
 [dependency-groups]
 dev = ["ruff>=0.9.0"]
+voice = [
+    "openwakeword>=0.6.0",
+    "pyaudio>=0.2.14",
+]
 
 [tool.ruff]
 line-length = 100
@@ -39,6 +47,12 @@ ignore = [
     "PLW0602", # Global statement without assignment
     "PLW0603", # Global statement to update
     "COM812",  # Trailing comma (conflicts with formatter)
+    "PLR2004", # Magic value comparisons (thresholds are readable inline)
     "DTZ",     # Timezone-naive datetime
     "FURB162", # Timezone replacement pattern
+    "PLC0415", # Import not at top-level (lazy imports for platform-specific deps)
+    "PLR0911", # Too many return statements
+    "PLR0912", # Too many branches
+    "PLR0915", # Too many statements
+    "C901",    # Function complexity
 ]

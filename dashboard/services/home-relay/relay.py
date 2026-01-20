@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Home Relay Service
-Provides HTTP endpoints for Kasa smart devices, Wake-on-LAN, and brightness control
+Provides HTTP endpoints for Kasa smart devices, Wake-on-LAN, brightness control,
+and voice transcription.
 """
 
 import contextlib
@@ -12,19 +13,41 @@ import threading
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, request
+from flask_sock import Sock
 
 # Disable Flask/Werkzeug access logs
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-from routes import brightness_bp, kasa_bp, wol_bp
+from routes import (
+    brightness_bp,
+    init_voice_websocket,
+    kasa_bp,
+    models_bp,
+    sensors_bp,
+    transcribe_bp,
+    voice_bp,
+    voices_bp,
+    volume_bp,
+    wol_bp,
+)
 from routes.brightness import init_app as init_brightness
 
 app = Flask(__name__)
+sock = Sock(app)
 
 # Register blueprints
 app.register_blueprint(kasa_bp)
 app.register_blueprint(wol_bp)
 app.register_blueprint(brightness_bp)
+app.register_blueprint(sensors_bp)
+app.register_blueprint(voice_bp)
+app.register_blueprint(transcribe_bp)
+app.register_blueprint(models_bp)
+app.register_blueprint(voices_bp)
+app.register_blueprint(volume_bp)
+
+# Initialize voice WebSocket routes
+init_voice_websocket(sock)
 
 # SSE subscribers
 _sse_subscribers = []
@@ -71,9 +94,12 @@ def _save_config(config):
         json.dump(config, f, indent=2)
 
 
-def _notify_config_updated():
+def _notify_config_updated(save_id: str | None = None):
     """Notify all SSE subscribers that config has changed."""
-    message = json.dumps({"type": "config-updated"})
+    payload = {"type": "config-updated"}
+    if save_id:
+        payload["saveId"] = save_id
+    message = json.dumps(payload)
     with _sse_lock:
         for q in _sse_subscribers:
             with contextlib.suppress(queue.Full):
@@ -129,8 +155,10 @@ def get_config():
 def set_config():
     """Save dashboard configuration."""
     data = request.get_json() or {}
+    # Extract and remove _saveId before persisting
+    save_id = data.pop("_saveId", None)
     _save_config(data)
-    _notify_config_updated()
+    _notify_config_updated(save_id)
     return jsonify(data)
 
 

@@ -340,7 +340,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   }, [isSignedIn, accessToken]);
 
   // Auto-refresh events
-  useRefreshInterval(loadEvents, panel.refresh, { immediate: false });
+  useRefreshInterval(loadEvents, '5m', { immediate: false });
 
   // Filter events for a specific date
   function getEventsForDate(date: Date): CalendarEvent[] {

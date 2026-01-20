@@ -1,0 +1,14 @@
+# Zigbee2MQTT configuration
+
+homeassistant: false
+permit_join: false
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://localhost
+serial:
+  port: null # Auto-detect
+frontend:
+  port: 8080
+advanced:
+  log_level: warn
+  network_key: GENERATE

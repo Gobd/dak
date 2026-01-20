@@ -323,7 +323,7 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
 
   // Refresh periodically
   const [, forceUpdate] = useState(0);
-  useRefreshInterval(() => forceUpdate((n) => n + 1), panel.refresh || '1h');
+  useRefreshInterval(() => forceUpdate((n) => n + 1), '30m');
 
   if (!data) {
     return (

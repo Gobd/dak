@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sharedReact } from '@dak/vite-shared-react';
 
 export default defineConfig({
   base: '/family-chores/',
@@ -13,6 +14,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    sharedReact(),
     process.env.ANALYZE &&
       visualizer({
         open: true,

@@ -9,7 +9,10 @@ export type WidgetType =
   | 'sun-moon'
   | 'aqi'
   | 'uv'
-  | 'iframe';
+  | 'iframe'
+  | 'climate'
+  | 'timer'
+  | 'ptt';
 
 // Panel configuration
 export interface PanelConfig {
@@ -27,7 +30,7 @@ export interface PanelConfig {
 export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   weather: { width: 20, height: 25, refresh: '30m' },
   calendar: { width: 30, height: 40, refresh: '5m' },
-  'drive-time': { width: 25, height: 20, refresh: '5m' },
+  'drive-time': { width: 6, height: 6, refresh: '5m' },
   kasa: { width: 10, height: 10, refresh: '5m' },
   wol: { width: 10, height: 10, refresh: '5m' },
   brightness: { width: 10, height: 10, refresh: '1m' },
@@ -35,6 +38,9 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
+  climate: { width: 20, height: 8, refresh: '1m' },
+  timer: { width: 6, height: 6 },
+  ptt: { width: 6, height: 6 },
 };
 
 // Screen configuration
@@ -93,12 +99,53 @@ export interface BrightnessConfig {
 // Theme mode for global settings
 export type ThemeMode = 'dark' | 'light' | 'system';
 
+// Wake word options (built-in, no training needed)
+export type WakeWord = 'hey_jarvis' | 'alexa' | 'hey_mycroft' | 'hey_rhasspy';
+
+// Vosk speech model options
+export type VoskModel = 'small' | 'medium' | 'large';
+
+// Vosk model metadata (returned from backend)
+export interface VoskModelInfo {
+  id: VoskModel;
+  name: string;
+  size: string;
+  description: string;
+  downloaded: boolean;
+  downloading?: boolean;
+  progress?: number; // 0-100 during download
+}
+
+// Piper TTS voice options
+export type TtsVoice = 'amy' | 'danny' | 'lessac' | 'ryan';
+
+// Voice response mode - how to show command responses
+export type VoiceResponseMode = 'tts' | 'modal' | 'both' | 'none';
+
+// Piper voice metadata (returned from backend)
+export interface TtsVoiceInfo {
+  id: TtsVoice;
+  name: string;
+  description: string;
+  size: string;
+  downloaded: boolean;
+  downloading?: boolean;
+  progress?: number; // 0-100 during download
+}
+
 // Global settings
 export interface GlobalSettings {
   theme: ThemeMode;
   defaultLocation?: LocationConfig;
   hideCursor: boolean;
   relayUrl?: string;
+  // Voice control
+  voiceEnabled?: boolean;
+  wakeWord?: WakeWord;
+  voiceModel?: VoskModel;
+  ttsVoice?: TtsVoice;
+  voiceResponseMode?: VoiceResponseMode;
+  maxRecordingDuration?: number; // seconds, for PTT and wake word
 }
 
 // Dashboard configuration

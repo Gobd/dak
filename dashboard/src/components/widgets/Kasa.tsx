@@ -4,7 +4,6 @@ import { Power, RefreshCw, AlertCircle } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
-import { parseDuration } from '../../types';
 
 interface KasaDevice {
   ip: string;
@@ -64,18 +63,14 @@ async function fetchKasaDevices(): Promise<{ devices: KasaDevice[]; error: strin
   return { devices: found, error: null };
 }
 
-export default function Kasa({ panel, dark }: WidgetComponentProps) {
+export default function Kasa({ dark }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
-
-  // Use different refresh intervals based on modal state
-  const normalInterval = parseDuration(panel.refresh) ?? undefined;
-  const modalInterval = 10000; // 10 seconds when modal is open
 
   const { data, isLoading } = useQuery({
     queryKey: ['kasa-devices'],
     queryFn: fetchKasaDevices,
-    refetchInterval: showModal ? modalInterval : normalInterval,
+    refetchInterval: showModal ? 5_000 : 60_000,
     staleTime: 5000,
   });
 
@@ -120,9 +115,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
   const hasError = !!error;
 
   return (
-    <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}

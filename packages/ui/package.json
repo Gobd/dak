@@ -14,6 +14,7 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck"
   },
   "dependencies": {
+    "@ncdai/react-wheel-picker": "^1.1.0",
     "@supabase/supabase-js": "catalog:",
     "lucide-react": "catalog:vite",
     "react": "catalog:vite",
