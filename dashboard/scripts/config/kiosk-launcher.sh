@@ -27,7 +27,6 @@ fi
 exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --kiosk \
   --no-first-run \
-  --disk-cache-size=1 \
   --disable-translate \
   --disable-infobars \
   --noerrdialogs \

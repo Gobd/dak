@@ -5,9 +5,9 @@ Wants=home-relay.service
 
 [Service]
 Type=simple
-User=kiosk
-WorkingDirectory=/home/kiosk/dashboard/services/home-relay
-ExecStart=/home/kiosk/.local/bin/uv run --group voice python voice_control.py
+User=__USER__
+WorkingDirectory=/home/__USER__/dashboard/services/home-relay
+ExecStart=/home/__USER__/.local/bin/uv run --group voice python voice_control.py
 Restart=on-failure
 RestartSec=5
 
@@ -15,4 +15,5 @@ RestartSec=5
 SupplementaryGroups=audio
 
 [Install]
-WantedBy=multi-user.target
+# Started via Settings UI, not at boot
+# WantedBy=multi-user.target
