@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@source "../../ui/src/**/*.tsx";
+@source "../../packages/ui/src/**/*.tsx";
 
 @theme {
   --default-font-family: 'Open Sans', system-ui, sans-serif;
@@ -29,10 +29,5 @@ body {
   font-family: 'Open Sans', system-ui, sans-serif;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+/* Shared utilities from UI package */
+@import '../../packages/ui/src/utilities.css';

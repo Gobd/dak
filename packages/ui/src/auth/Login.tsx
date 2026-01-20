@@ -35,13 +35,7 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
-      <button
-        onClick={toggle}
-        className="absolute top-4 right-4 p-2 rounded-lg text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-700"
-      >
-        {dark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-xs">
         <h1 className="text-2xl font-bold text-center mb-8 dark:text-white">{appName}</h1>
         <form
           onSubmit={handleSubmit}
@@ -88,6 +82,12 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
             </Link>
           </div>
         </form>
+        <button
+          onClick={toggle}
+          className="mt-6 mx-auto flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-700"
+        >
+          {dark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
       </div>
     </div>
   );
