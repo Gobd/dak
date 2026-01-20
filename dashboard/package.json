@@ -40,6 +40,7 @@
     "tailwindcss": "catalog:vite",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",
-    "vite": "catalog:vite"
+    "vite": "catalog:vite",
+    "@dak/vite-shared-react": "workspace:*"
   }
 }

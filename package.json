@@ -19,8 +19,9 @@
     "format:check": "pnpm -r format:check",
     "format": "pnpm -r format",
     "typecheck": "pnpm -r typecheck",
-    "build": "pnpm -r build",
+    "build:react-vendor": "pnpm --filter @dak/vite-shared-react build:vendor",
+    "build": "pnpm build:react-vendor && pnpm -r build",
     "check": "pnpm -r check",
-    "build:pages": "pnpm build && rm -rf _site && mkdir -p _site && cp _site_index.html _site/index.html && cp _headers _site/ && cp -r climate-display/dist _site/climate-display && cp -r dashboard/dist _site/dashboard && cp -r family-chores/dist _site/family-chores && cp -r health-tracker/dist _site/health-tracker && cp -r kasa-controller/dist _site/kasa-controller && cp -r notes-app/dist _site/notes-app"
+    "build:pages": "pnpm build && rm -rf _site && mkdir -p _site/_shared && cp _site_index.html _site/index.html && cp _headers _site/ && cp packages/vite-shared-react/dist/* _site/_shared/ && cp -r climate-display/dist _site/climate-display && cp -r dashboard/dist _site/dashboard && cp -r family-chores/dist _site/family-chores && cp -r health-tracker/dist _site/health-tracker && cp -r kasa-controller/dist _site/kasa-controller && cp -r notes-app/dist _site/notes-app"
   }
 }

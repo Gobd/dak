@@ -41,6 +41,7 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",
     "vite": "catalog:vite",
-    "vite-plugin-pwa": "catalog:vite"
+    "vite-plugin-pwa": "catalog:vite",
+    "@dak/vite-shared-react": "workspace:*"
   }
 }

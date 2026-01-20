@@ -2,13 +2,14 @@ import { defineConfig, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { sharedReact } from '@dak/vite-shared-react';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ command, mode }) => {
-  const plugins: PluginOption[] = [react(), tailwindcss()];
+  const plugins: PluginOption[] = [react(), tailwindcss(), sharedReact()];
 
   // Bundle analyzer - run with: pnpm analyze
   if (process.env.ANALYZE) {

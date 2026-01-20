@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sharedReact } from '@dak/vite-shared-react';
 import type { PluginOption } from 'vite';
 
 export default defineConfig({
@@ -14,6 +15,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    sharedReact(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
