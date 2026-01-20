@@ -6,5 +6,6 @@
   "AudioCaptureAllowedUrls": ["__DASHBOARD_ORIGIN__"],
   "InsecurePrivateNetworkRequestsAllowed": true,
   "InsecurePrivateNetworkRequestsAllowedForUrls": ["__DASHBOARD_ORIGIN__"],
-  "LocalNetworkAccessAllowedForUrls": ["__DASHBOARD_ORIGIN__"]
+  "LocalNetworkAccessAllowedForUrls": ["__DASHBOARD_ORIGIN__"],
+  "InsecureContentAllowedForUrls": ["__DASHBOARD_ORIGIN__"]
 }
