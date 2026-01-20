@@ -94,9 +94,12 @@ def _save_config(config):
         json.dump(config, f, indent=2)
 
 
-def _notify_config_updated():
+def _notify_config_updated(save_id: str | None = None):
     """Notify all SSE subscribers that config has changed."""
-    message = json.dumps({"type": "config-updated"})
+    payload = {"type": "config-updated"}
+    if save_id:
+        payload["saveId"] = save_id
+    message = json.dumps(payload)
     with _sse_lock:
         for q in _sse_subscribers:
             with contextlib.suppress(queue.Full):
@@ -152,8 +155,10 @@ def get_config():
 def set_config():
     """Save dashboard configuration."""
     data = request.get_json() or {}
+    # Extract and remove _saveId before persisting
+    save_id = data.pop("_saveId", None)
     _save_config(data)
-    _notify_config_updated()
+    _notify_config_updated(save_id)
     return jsonify(data)
 
 

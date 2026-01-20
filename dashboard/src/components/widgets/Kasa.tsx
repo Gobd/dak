@@ -120,9 +120,7 @@ export default function Kasa({ panel, dark }: WidgetComponentProps) {
   const hasError = !!error;
 
   return (
-    <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}

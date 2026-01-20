@@ -30,7 +30,7 @@ export interface PanelConfig {
 export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   weather: { width: 20, height: 25, refresh: '30m' },
   calendar: { width: 30, height: 40, refresh: '5m' },
-  'drive-time': { width: 25, height: 20, refresh: '5m' },
+  'drive-time': { width: 6, height: 6, refresh: '5m' },
   kasa: { width: 10, height: 10, refresh: '5m' },
   wol: { width: 10, height: 10, refresh: '5m' },
   brightness: { width: 10, height: 10, refresh: '1m' },
@@ -39,8 +39,8 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
   climate: { width: 20, height: 8, refresh: '1m' },
-  timer: { width: 15, height: 20 },
-  ptt: { width: 8, height: 10 },
+  timer: { width: 6, height: 6 },
+  ptt: { width: 6, height: 6 },
 };
 
 // Screen configuration
@@ -145,6 +145,7 @@ export interface GlobalSettings {
   voiceModel?: VoskModel;
   ttsVoice?: TtsVoice;
   voiceResponseMode?: VoiceResponseMode;
+  maxRecordingDuration?: number; // seconds, for PTT and wake word
 }
 
 // Dashboard configuration

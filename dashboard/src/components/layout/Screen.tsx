@@ -40,16 +40,30 @@ export function Screen() {
               className={isActive ? '' : 'invisible absolute inset-0'}
               aria-hidden={!isActive}
             >
-              {sortedPanels.map((panel, index) => (
-                <Panel
-                  key={panel.id}
-                  panel={panel}
-                  isEditMode={isActive && isEditMode}
-                  zIndex={index + 1}
-                >
-                  <WidgetRenderer panel={panel} dark={dark} isEditMode={isActive && isEditMode} />
-                </Panel>
-              ))}
+              {sortedPanels.map((panel, index) => {
+                // Minimal widgets get no background (frameless)
+                const framelessWidgets = [
+                  'timer',
+                  'ptt',
+                  'wol',
+                  'kasa',
+                  'brightness',
+                  'drive-time',
+                ];
+                const isFrameless = framelessWidgets.includes(panel.widget);
+
+                return (
+                  <Panel
+                    key={panel.id}
+                    panel={panel}
+                    isEditMode={isActive && isEditMode}
+                    zIndex={index + 1}
+                    frameless={isFrameless}
+                  >
+                    <WidgetRenderer panel={panel} dark={dark} isEditMode={isActive && isEditMode} />
+                  </Panel>
+                );
+              })}
             </div>
           );
         })}

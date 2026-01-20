@@ -18,6 +18,8 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'calendar', label: 'Calendar', description: 'Google Calendar integration' },
   { type: 'weather', label: 'Weather', description: 'Current weather and forecast' },
   { type: 'climate', label: 'Climate', description: 'Indoor/outdoor temp & humidity' },
+  { type: 'timer', label: 'Timer', description: 'Countdown timers & stopwatches' },
+  { type: 'ptt', label: 'Push to Talk', description: 'Voice command button' },
   { type: 'drive-time', label: 'Drive Time', description: 'Commute traffic overlay' },
   { type: 'sun-moon', label: 'Sun & Moon', description: 'Sunrise, sunset, moon phase' },
   { type: 'aqi', label: 'Air Quality', description: 'Air quality index' },
@@ -44,6 +46,7 @@ export function EditToolbar() {
   } = useConfigStore();
 
   const [showAddWidget, setShowAddWidget] = useState(false);
+  const [widgetSearch, setWidgetSearch] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -51,6 +54,11 @@ export function EditToolbar() {
   const [importError, setImportError] = useState<string | null>(null);
   const importRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredWidgets = WIDGET_OPTIONS.filter(({ label, description }) => {
+    const search = widgetSearch.toLowerCase();
+    return label.toLowerCase().includes(search) || description.toLowerCase().includes(search);
+  });
 
   function handleAddWidget(type: WidgetType) {
     const defaults = WIDGET_DEFAULTS[type] ?? {};
@@ -63,6 +71,7 @@ export function EditToolbar() {
       refresh: defaults.refresh,
     });
     setShowAddWidget(false);
+    setWidgetSearch('');
   }
 
   function handleExport() {
@@ -203,9 +212,29 @@ export function EditToolbar() {
       </div>
 
       {/* Add Widget Modal */}
-      <Modal open={showAddWidget} onClose={() => setShowAddWidget(false)} title="Add Widget">
-        <div className="grid gap-2">
-          {WIDGET_OPTIONS.map(({ type, label, description }) => (
+      <Modal
+        open={showAddWidget}
+        onClose={() => {
+          setShowAddWidget(false);
+          setWidgetSearch('');
+        }}
+        title="Add Widget"
+      >
+        <input
+          type="text"
+          value={widgetSearch}
+          onChange={(e) => setWidgetSearch(e.target.value)}
+          placeholder="Search widgets..."
+          autoFocus
+          className="w-full mb-3 px-3 py-2 rounded-lg
+                     bg-neutral-100 dark:bg-neutral-800
+                     border border-neutral-300 dark:border-neutral-600
+                     text-neutral-900 dark:text-white
+                     placeholder:text-neutral-400
+                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <div className="grid gap-2 max-h-80 overflow-y-auto custom-scrollbar">
+          {filteredWidgets.map(({ type, label, description }) => (
             <button
               key={type}
               onClick={() => handleAddWidget(type)}
@@ -218,6 +247,9 @@ export function EditToolbar() {
               <span className="text-sm text-neutral-500 dark:text-neutral-400">{description}</span>
             </button>
           ))}
+          {filteredWidgets.length === 0 && (
+            <p className="text-center text-neutral-500 py-4">No widgets match your search</p>
+          )}
         </div>
       </Modal>
 

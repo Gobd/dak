@@ -141,9 +141,7 @@ export default function Brightness({ panel, dark }: WidgetComponentProps) {
   const currentBrightness = manualBrightness ?? status?.current ?? 100;
 
   return (
-    <div
-      className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className="w-full h-full flex items-center justify-center">
       <button
         onClick={() => setShowModal(true)}
         className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}

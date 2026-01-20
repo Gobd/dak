@@ -62,8 +62,8 @@ export async function testRelayConnection(url?: string): Promise<boolean> {
 let sseConnection: EventSource | null = null;
 let sseRetryCount = 0;
 let sseRetryTimeout: ReturnType<typeof setTimeout> | null = null;
-let ignoreSseReload = false;
-let ignoreSseTimeout: ReturnType<typeof setTimeout> | null = null;
+// Track save IDs we've sent to ignore our own SSE notifications
+const pendingSaveIds = new Set<string>();
 
 // Check URL params for edit mode and remote relay
 const urlParams =
@@ -342,23 +342,20 @@ export const useConfigStore = create<ConfigState>()(
         // Save to relay server
         _saveToRelay: async () => {
           const config = getPersistedConfig(get());
-
-          // Set flag to ignore our own SSE reload
-          ignoreSseReload = true;
-          if (ignoreSseTimeout) clearTimeout(ignoreSseTimeout);
-          ignoreSseTimeout = setTimeout(() => {
-            ignoreSseReload = false;
-            ignoreSseTimeout = null;
-          }, 2000);
+          const saveId = crypto.randomUUID();
+          pendingSaveIds.add(saveId);
+          // Safety cleanup in case SSE message never arrives
+          setTimeout(() => pendingSaveIds.delete(saveId), 10000);
 
           try {
             await fetch(`${relayUrl}/config`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(config),
+              body: JSON.stringify({ ...config, _saveId: saveId }),
             });
           } catch {
             // Relay not running, localStorage-only is fine
+            pendingSaveIds.delete(saveId);
           }
         },
 
@@ -475,13 +472,20 @@ function connectToConfigUpdates() {
     };
 
     sseConnection.onmessage = (event) => {
-      if (event.data === 'reload') {
-        if (ignoreSseReload) {
-          console.log('Ignoring SSE reload for our own save');
-          return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'config-updated') {
+          // Check if this is our own save by matching the saveId
+          if (data.saveId && pendingSaveIds.has(data.saveId)) {
+            pendingSaveIds.delete(data.saveId);
+            console.log('Ignoring SSE reload for our own save');
+            return;
+          }
+          console.log('Config changed externally, reloading...');
+          useConfigStore.getState()._loadFromRelay();
         }
-        console.log('Config changed externally, reloading...');
-        useConfigStore.getState()._loadFromRelay();
+      } catch {
+        // Ignore non-JSON messages (keepalive, etc)
       }
     };
 

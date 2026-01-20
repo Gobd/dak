@@ -15,9 +15,9 @@ import {
   Pause,
   Clock,
   X,
+  Check,
 } from 'lucide-react';
-import { Roller, ConfirmModal } from '@dak/ui';
-import type { WidgetComponentProps } from './index';
+import { Roller, ConfirmModal, Modal, Button } from '@dak/ui';
 
 // Time picker options
 const HOURS = Array.from({ length: 13 }, (_, i) => i);
@@ -72,8 +72,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function Timer(_: WidgetComponentProps) {
+export default function Timer() {
   const [items, setItems] = useState<ItemData[]>(loadItems);
   const [now, setNow] = useState(() => Date.now());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -277,6 +276,7 @@ export default function Timer(_: WidgetComponentProps) {
       duration: seconds,
     };
     setItems((prev) => [...prev, newTimer]);
+    setShowMenu(false);
     setCreateMode(null);
     setCreateName('');
     setCreateHours(0);
@@ -293,6 +293,7 @@ export default function Timer(_: WidgetComponentProps) {
       running: true,
     };
     setItems((prev) => [...prev, newStopwatch]);
+    setShowMenu(false);
     setCreateMode(null);
     setCreateName('');
   }, [createName]);
@@ -317,348 +318,405 @@ export default function Timer(_: WidgetComponentProps) {
     return sw.elapsed;
   };
 
-  const openCreate = (mode: 'timer' | 'stopwatch') => {
-    setShowMenu(false);
-    setCreateMode(mode);
+  const hasItems = items.length > 0;
+  const [floatingOpen, setFloatingOpen] = useState(true);
+  const [floatingPos, setFloatingPos] = useState({ x: 100, y: 100 });
+  const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(
+    null
+  );
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    dragRef.current = {
+      startX: clientX,
+      startY: clientY,
+      posX: floatingPos.x,
+      posY: floatingPos.y,
+    };
   };
 
-  const hasItems = items.length > 0;
+  useEffect(() => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (!dragRef.current) return;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - dragRef.current.startX;
+      const dy = clientY - dragRef.current.startY;
+      setFloatingPos({
+        x: Math.max(0, Math.min(window.innerWidth - 200, dragRef.current.posX + dx)),
+        y: Math.max(0, Math.min(window.innerHeight - 100, dragRef.current.posY + dy)),
+      });
+    };
+    const handleUp = () => {
+      dragRef.current = null;
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, [floatingPos]);
 
-  // Minimal view when empty - just a centered icon button
-  if (!hasItems && !createMode && !showMenu) {
-    return (
-      <div className="h-full flex items-center justify-center p-2">
-        {/* Hidden audio */}
-        <audio
-          ref={audioRef}
-          src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=="
-        />
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(true)}
-            className="p-3 rounded-full bg-neutral-200/50 dark:bg-neutral-700/50 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
-            title="Add timer or stopwatch"
-          >
-            <TimerIcon className="w-6 h-6 text-neutral-500" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // The widget is just a trigger button
   return (
-    <div className="h-full flex flex-col p-3 overflow-hidden">
+    <div className="h-full w-full flex items-center justify-center">
       {/* Hidden audio */}
       <audio
         ref={audioRef}
         src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=="
       />
 
-      {/* Header - only show when there are items or creating */}
-      {(hasItems || createMode) && (
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            {items.length > 0 ? `${items.length} active` : 'New'}
+      {/* Trigger button */}
+      <button
+        onClick={() => (hasItems ? setFloatingOpen(true) : setShowMenu(true))}
+        className="relative p-2 rounded-lg transition-colors hover:bg-neutral-700/30"
+        title={hasItems ? 'Show timers' : 'Add timer or stopwatch'}
+      >
+        <TimerIcon size={24} className={hasItems ? 'text-blue-400' : 'text-neutral-500'} />
+        {hasItems && (
+          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+            {items.length}
           </span>
-          <div className="relative">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className={`p-1.5 rounded transition-colors ${showMenu ? 'bg-blue-600 text-white' : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'}`}
-              title="Add"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+        )}
+      </button>
 
-            {/* Dropdown menu */}
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-10 min-w-[140px]">
-                <button
-                  onClick={() => openCreate('timer')}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-t-lg"
-                >
-                  <TimerIcon className="w-4 h-4" />
-                  Timer
-                </button>
-                <button
-                  onClick={() => openCreate('stopwatch')}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-b-lg"
-                >
-                  <Clock className="w-4 h-4" />
-                  Stopwatch
-                </button>
-              </div>
-            )}
+      {/* Create Modal */}
+      <Modal
+        open={showMenu || createMode !== null}
+        onClose={() => {
+          setShowMenu(false);
+          setCreateMode(null);
+        }}
+        title={createMode ? `New ${createMode === 'timer' ? 'Timer' : 'Stopwatch'}` : 'Create'}
+        fit
+      >
+        {!createMode ? (
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => setCreateMode('timer')}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-200 text-sm font-medium transition-colors"
+            >
+              <TimerIcon className="w-5 h-5" />
+              Timer
+            </button>
+            <button
+              onClick={() => setCreateMode('stopwatch')}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-200 text-sm font-medium transition-colors"
+            >
+              <Clock className="w-5 h-5" />
+              Stopwatch
+            </button>
           </div>
-        </div>
-      )}
-
-      {/* Floating menu when empty but menu open */}
-      {!hasItems && !createMode && showMenu && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="relative">
-            <button
-              onClick={() => setShowMenu(false)}
-              className="p-3 rounded-full bg-blue-600 text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-10 min-w-[140px]">
-              <button
-                onClick={() => openCreate('timer')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-t-lg"
+        ) : createMode === 'timer' ? (
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="Name (optional)"
+              className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg overflow-hidden">
+                <Roller
+                  items={HOURS}
+                  value={createHours}
+                  onChange={setCreateHours}
+                  format={(v) => `${v}h`}
+                />
+              </div>
+              <span className="text-neutral-400 font-bold text-xl">:</span>
+              <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg overflow-hidden">
+                <Roller
+                  items={MINUTES}
+                  value={createMins}
+                  onChange={setCreateMins}
+                  format={(v) => `${v.toString().padStart(2, '0')}m`}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setCreateMode(null)}>Back</Button>
+              <Button
+                onClick={() => {
+                  createTimer();
+                  setFloatingOpen(true);
+                }}
+                disabled={createHours === 0 && createMins === 0}
+                variant="primary"
               >
-                <TimerIcon className="w-4 h-4" />
-                Timer
+                Start Timer
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="Name (optional)"
+              className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex gap-2">
+              <Button onClick={() => setCreateMode(null)}>Back</Button>
+              <Button
+                onClick={() => {
+                  createStopwatch();
+                  setFloatingOpen(true);
+                }}
+                variant="primary"
+              >
+                Start Stopwatch
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Floating timer window */}
+      {hasItems && floatingOpen && (
+        <div
+          className="fixed z-50 bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700 w-[180px]"
+          style={{ left: floatingPos.x, top: floatingPos.y }}
+        >
+          {/* Draggable header */}
+          <div
+            className="flex items-center justify-between px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-t-xl cursor-move select-none"
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
+          >
+            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+              {items.length} active
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowMenu(true)}
+                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                title="Add"
+              >
+                <Plus className="w-4 h-4" />
               </button>
               <button
-                onClick={() => openCreate('stopwatch')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-b-lg"
+                onClick={() => setFloatingOpen(false)}
+                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                title="Minimize"
               >
-                <Clock className="w-4 h-4" />
-                Stopwatch
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Create panel */}
-      {createMode && (
-        <div className="mb-3 p-3 bg-neutral-200/50 dark:bg-neutral-700/50 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-neutral-500">
-              New {createMode === 'timer' ? 'Timer' : 'Stopwatch'}
-            </span>
-            <button
-              onClick={() => setCreateMode(null)}
-              className="p-0.5 hover:bg-neutral-300 dark:hover:bg-neutral-600 rounded"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-          <input
-            type="text"
-            value={createName}
-            onChange={(e) => setCreateName(e.target.value)}
-            placeholder="Name (optional)"
-            className="w-full px-2 py-1.5 mb-2 bg-neutral-100 dark:bg-neutral-600 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          {createMode === 'timer' ? (
-            <>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-                  <Roller
-                    items={HOURS}
-                    value={createHours}
-                    onChange={setCreateHours}
-                    format={(v) => `${v}h`}
-                  />
-                </div>
-                <span className="text-neutral-400">:</span>
-                <div className="flex-1 bg-neutral-100 dark:bg-neutral-600 rounded">
-                  <Roller
-                    items={MINUTES}
-                    value={createMins}
-                    onChange={setCreateMins}
-                    format={(v) => `${v.toString().padStart(2, '0')}m`}
-                  />
-                </div>
-              </div>
-              <button
-                onClick={createTimer}
-                disabled={createHours === 0 && createMins === 0}
-                className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-400 dark:disabled:bg-neutral-600 disabled:cursor-not-allowed rounded text-sm font-medium text-white"
-              >
-                Start
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={createStopwatch}
-              className="w-full py-1.5 bg-green-600 hover:bg-green-500 rounded text-sm font-medium text-white"
-            >
-              Start
-            </button>
-          )}
-        </div>
-      )}
+          {/* Timer list */}
+          <div className="p-2 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+            {items.map((item) => {
+              if (item.type === 'timer') {
+                const timer = item;
+                const remaining = Math.max(0, Math.floor((timer.endTime - now) / 1000));
+                const isAlerting = alertingTimerIds.has(timer.id);
+                const progress = remaining / timer.duration;
+                const isAdjusting = adjustingId === timer.id;
 
-      {/* Unified list */}
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {items.map((item) => {
-          if (item.type === 'timer') {
-            const timer = item;
-            const remaining = Math.max(0, Math.floor((timer.endTime - now) / 1000));
-            const isAlerting = alertingTimerIds.has(timer.id);
-            const progress = remaining / timer.duration;
-            const isAdjusting = adjustingId === timer.id;
-
-            return (
-              <div key={timer.id} className="space-y-1">
-                <div
-                  onWheel={(e) => {
-                    if (!isAlerting) {
-                      e.preventDefault();
-                      adjustTime(timer.id, e.deltaY < 0 ? 60 : -60);
-                    }
-                  }}
-                  className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-red-500 text-white animate-pulse' : 'bg-neutral-200/50 dark:bg-neutral-700/50'}`}
-                >
-                  {isAlerting ? (
-                    <Bell className="w-4 h-4 animate-bounce flex-shrink-0" />
-                  ) : (
-                    <div className="w-4 h-4 flex-shrink-0">
-                      <svg className="w-4 h-4 -rotate-90">
-                        <circle
-                          cx="8"
-                          cy="8"
-                          r="6"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          opacity="0.3"
-                        />
-                        <circle
-                          cx="8"
-                          cy="8"
-                          r="6"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeDasharray={`${progress * 37.7} 37.7`}
-                        />
-                      </svg>
-                    </div>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    {editingId === timer.id ? (
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        onBlur={saveEdit}
-                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                        className="w-full bg-transparent border-b border-white/50 text-xs outline-none"
-                        autoFocus
-                      />
-                    ) : (
-                      <button
-                        onClick={() => startEditing(timer)}
-                        className="text-xs hover:underline text-left truncate w-full"
-                      >
-                        {timer.name}
-                      </button>
-                    )}
+                return (
+                  <div key={timer.id} className="space-y-1">
                     <div
-                      className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+                      onWheel={(e) => {
+                        if (!isAlerting) {
+                          e.preventDefault();
+                          adjustTime(timer.id, e.deltaY < 0 ? 60 : -60);
+                        }
+                      }}
+                      onClick={isAlerting ? () => deleteItem(timer.id) : undefined}
+                      className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-red-500 text-white animate-pulse cursor-pointer' : 'bg-neutral-200/50 dark:bg-neutral-700/50'}`}
                     >
-                      {isAlerting ? "Time's up!" : formatTime(remaining)}
+                      {isAlerting ? (
+                        <Bell className="w-4 h-4 animate-bounce flex-shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 flex-shrink-0">
+                          <svg className="w-4 h-4 -rotate-90">
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="6"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              opacity="0.3"
+                            />
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="6"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeDasharray={`${progress * 37.7} 37.7`}
+                            />
+                          </svg>
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        {editingId === timer.id ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                              className="flex-1 min-w-0 px-1 py-0.5 bg-white dark:bg-neutral-600 border border-neutral-300 dark:border-neutral-500 rounded text-xs text-neutral-900 dark:text-white outline-none"
+                              autoFocus
+                            />
+                            <button
+                              onClick={saveEdit}
+                              className="p-1 bg-green-600 hover:bg-green-500 rounded text-white"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => startEditing(timer)}
+                            className="text-xs hover:underline text-left truncate w-full text-neutral-700 dark:text-neutral-200"
+                          >
+                            {timer.name}
+                          </button>
+                        )}
+                        <div
+                          className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+                        >
+                          {isAlerting ? "Time's up!" : formatTime(remaining)}
+                        </div>
+                      </div>
+
+                      {!isAlerting && (
+                        <button
+                          onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
+                          className={`p-1 rounded ${isAdjusting ? 'bg-blue-600 text-white' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                        >
+                          <TimerIcon className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
+                        className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                        title={isAlerting ? 'Dismiss' : 'Cancel'}
+                      >
+                        {isAlerting ? (
+                          <BellOff className="w-3 h-3" />
+                        ) : (
+                          <Trash2 className="w-3 h-3" />
+                        )}
+                      </button>
                     </div>
+
+                    {isAdjusting && (
+                      <div className="relative z-20 flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
+                        <button
+                          onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
+                          className="p-1.5 bg-neutral-500 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-500 rounded text-white"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
+                          <Roller
+                            items={ADJUST_MINUTES}
+                            value={adjustMinutes}
+                            onChange={setAdjustMinutes}
+                            format={(v) => `${v}m`}
+                          />
+                        </div>
+                        <button
+                          onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
+                          className="p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => setAdjustingId(null)}
+                          className="p-1.5 bg-neutral-400 hover:bg-neutral-300 dark:bg-neutral-500 dark:hover:bg-neutral-400 rounded text-white"
+                          title="Cancel"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
+                );
+              } else {
+                const sw = item;
+                const elapsedMs = getStopwatchElapsed(sw);
+                const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
-                  {!isAlerting && (
-                    <button
-                      onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                      className={`p-1 rounded ${isAdjusting ? 'bg-blue-600 text-white' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
-                    >
-                      <TimerIcon className="w-3 h-3" />
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
-                    className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
-                    title={isAlerting ? 'Dismiss' : 'Cancel'}
+                return (
+                  <div
+                    key={sw.id}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50"
                   >
-                    {isAlerting ? <BellOff className="w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
-                  </button>
-                </div>
-
-                {isAdjusting && (
-                  <div className="flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
-                    <button
-                      onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
-                      className="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
-                      <Roller
-                        items={ADJUST_MINUTES}
-                        value={adjustMinutes}
-                        onChange={setAdjustMinutes}
-                        format={(v) => `${v}m`}
-                      />
-                    </div>
-                    <button
-                      onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
-                      className="p-1.5 bg-green-600 hover:bg-green-500 rounded text-white"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          } else {
-            const sw = item;
-            const elapsedMs = getStopwatchElapsed(sw);
-            const elapsedSeconds = Math.floor(elapsedMs / 1000);
-
-            return (
-              <div
-                key={sw.id}
-                className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50"
-              >
-                <Clock
-                  className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`}
-                />
-
-                <div className="flex-1 min-w-0">
-                  {editingId === sw.id ? (
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                      className="w-full bg-transparent border-b border-neutral-400 text-xs outline-none"
-                      autoFocus
+                    <Clock
+                      className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`}
                     />
-                  ) : (
+
+                    <div className="flex-1 min-w-0">
+                      {editingId === sw.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                            className="flex-1 min-w-0 px-1 py-0.5 bg-white dark:bg-neutral-600 border border-neutral-300 dark:border-neutral-500 rounded text-xs text-neutral-900 dark:text-white outline-none"
+                            autoFocus
+                          />
+                          <button
+                            onClick={saveEdit}
+                            className="p-1 bg-green-600 hover:bg-green-500 rounded text-white"
+                          >
+                            <Check className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => startEditing(sw)}
+                          className="text-xs hover:underline text-left truncate w-full text-neutral-700 dark:text-neutral-200"
+                        >
+                          {sw.name}
+                        </button>
+                      )}
+                      <div className="text-sm font-mono text-neutral-600 dark:text-neutral-300">
+                        {formatTime(elapsedSeconds)}
+                      </div>
+                    </div>
+
                     <button
-                      onClick={() => startEditing(sw)}
-                      className="text-xs hover:underline text-left truncate w-full"
+                      onClick={() => toggleStopwatch(sw.id)}
+                      className={`p-1 rounded ${sw.running ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-green-600 hover:bg-green-500'} text-white`}
+                      title={sw.running ? 'Pause' : 'Resume'}
                     >
-                      {sw.name}
+                      {sw.running ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                     </button>
-                  )}
-                  <div className="text-sm font-mono text-neutral-600 dark:text-neutral-300">
-                    {formatTime(elapsedSeconds)}
+
+                    <button
+                      onClick={() => setDeleteId(sw.id)}
+                      className="p-1 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
-                </div>
-
-                <button
-                  onClick={() => toggleStopwatch(sw.id)}
-                  className={`p-1 rounded ${sw.running ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-green-600 hover:bg-green-500'} text-white`}
-                  title={sw.running ? 'Pause' : 'Resume'}
-                >
-                  {sw.running ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                </button>
-
-                <button
-                  onClick={() => setDeleteId(sw.id)}
-                  className="p-1 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-            );
-          }
-        })}
-      </div>
+                );
+              }
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       <ConfirmModal

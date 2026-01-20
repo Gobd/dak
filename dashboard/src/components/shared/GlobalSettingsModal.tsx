@@ -79,6 +79,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const voiceModel = globalSettings?.voiceModel ?? 'small';
   const ttsVoice = globalSettings?.ttsVoice ?? 'amy';
   const voiceResponseMode = globalSettings?.voiceResponseMode ?? 'both';
+  const maxRecordingDuration = globalSettings?.maxRecordingDuration ?? 10;
 
   // Reset relay URL input when modal opens
   useEffect(() => {
@@ -644,6 +645,30 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               </select>
               <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                 How to show responses from commands like weather and climate check
+              </p>
+
+              {/* Max Recording Duration */}
+              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+                Max Recording Duration
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="5"
+                  max="30"
+                  step="1"
+                  value={maxRecordingDuration}
+                  onChange={(e) =>
+                    updateGlobalSettings({ maxRecordingDuration: parseInt(e.target.value, 10) })
+                  }
+                  className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <span className="text-sm text-neutral-600 dark:text-neutral-300 w-12 text-right">
+                  {maxRecordingDuration}s
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Max time for PTT and wake word recording (5-30 seconds)
               </p>
 
               <details className="mt-3">

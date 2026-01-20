@@ -1,9 +1,22 @@
 import { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, AlertCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
-import type { PanelConfig } from '../../types';
+import type { WidgetComponentProps } from './index';
+
+async function checkRelayHealth(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${url}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 interface SensorData {
   available: boolean;
@@ -40,10 +53,21 @@ interface DevicesResponse {
 
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 
-export default function Climate({ dark }: { panel: PanelConfig; dark: boolean }) {
+export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
   const [showSettings, setShowSettings] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Check relay health
+  const { data: relayUp } = useQuery({
+    queryKey: ['relay-health', relayUrl],
+    queryFn: () => checkRelayHealth(relayUrl!),
+    enabled: !!relayUrl,
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
+
+  const relayOffline = relayUrl && relayUp === false;
 
   // Derive Zigbee2MQTT URL from relay URL
   const getZigbeeUrl = () => {
@@ -58,7 +82,7 @@ export default function Climate({ dark }: { panel: PanelConfig; dark: boolean })
   };
   const zigbeeUrl = getZigbeeUrl();
 
-  // Fetch sensor data
+  // Fetch sensor data (skip if relay is offline)
   const { data, isLoading, error } = useWidgetQuery<ClimateData>(
     ['climate', relayUrl],
     async () => {
@@ -66,10 +90,10 @@ export default function Climate({ dark }: { panel: PanelConfig; dark: boolean })
       if (!res.ok) throw new Error('Failed to fetch');
       return res.json();
     },
-    { refetchInterval: 60_000, enabled: !!relayUrl }
+    { refetchInterval: 60_000, enabled: !!relayUrl && relayUp !== false }
   );
 
-  // Fetch available devices (only when settings open)
+  // Fetch available devices (only when settings open and relay is up)
   const { data: devicesData, refetch: refetchDevices } = useWidgetQuery<DevicesResponse>(
     ['climate-devices', relayUrl],
     async () => {
@@ -77,7 +101,7 @@ export default function Climate({ dark }: { panel: PanelConfig; dark: boolean })
       if (!res.ok) throw new Error('Failed to fetch devices');
       return res.json();
     },
-    { enabled: !!relayUrl && showSettings, staleTime: 10_000 }
+    { enabled: !!relayUrl && showSettings && relayUp !== false, staleTime: 10_000 }
   );
 
   const devices = devicesData?.devices ?? [];
@@ -176,13 +200,17 @@ export default function Climate({ dark }: { panel: PanelConfig; dark: boolean })
   return (
     <div
       className={`w-full h-full flex flex-col items-center justify-center px-3 py-2 text-sm ${
-        dark ? 'bg-black text-white' : 'bg-white text-neutral-900'
+        dark ? 'text-white' : 'text-neutral-900'
       }`}
     >
       {/* Row 1: Sensors + Settings */}
       <div className="flex items-center gap-3 w-full justify-center">
         {!relayUrl ? (
           <span className="text-neutral-500">Configure relay</span>
+        ) : relayOffline ? (
+          <span className="text-neutral-500 flex items-center gap-1">
+            <AlertCircle size={12} className="text-red-500" /> Relay offline
+          </span>
         ) : isLoading ? (
           <span className="text-neutral-500">Loading...</span>
         ) : error ? (

@@ -5,29 +5,42 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, MicOff, Settings } from 'lucide-react';
-import { Modal, Button, Roller } from '@dak/ui';
+import { Mic, AlertCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { useVoiceResponseStore } from '../../stores/voice-response-store';
-import type { WidgetComponentProps } from './index';
+const DEFAULT_MAX_DURATION = 10; // seconds
 
-const MAX_DURATION_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30];
-
-interface PttConfig {
-  maxDuration: number; // seconds
+async function checkRelayHealth(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${url}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
-export default function Ptt({ panel, dark }: WidgetComponentProps) {
+export default function Ptt() {
   const relayUrl = getRelayUrl();
+  const maxDuration =
+    useConfigStore((s) => s.globalSettings?.maxRecordingDuration) ?? DEFAULT_MAX_DURATION;
   const [isRecording, setIsRecording] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getWidgetData = useConfigStore((s) => s.getWidgetData);
-  const updateWidgetData = useConfigStore((s) => s.updateWidgetData);
+  // Check relay health
+  const { data: relayUp } = useQuery({
+    queryKey: ['relay-health', relayUrl],
+    queryFn: () => checkRelayHealth(relayUrl!),
+    enabled: !!relayUrl,
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
+
   const showResponse = useVoiceResponseStore((s) => s.showResponse);
-  const config = getWidgetData<PttConfig>(panel.id) ?? { maxDuration: 6 };
 
   const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -119,12 +132,12 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
 
         setIsRecording(true);
         startTimeRef.current = Date.now();
-        setTimeLeft(config.maxDuration);
+        setTimeLeft(maxDuration);
 
         // Start countdown timer
         timerRef.current = setInterval(() => {
           const elapsed = (Date.now() - startTimeRef.current) / 1000;
-          const remaining = Math.max(0, config.maxDuration - elapsed);
+          const remaining = Math.max(0, maxDuration - elapsed);
           setTimeLeft(Math.ceil(remaining));
 
           if (remaining <= 0) {
@@ -171,7 +184,7 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
       setError(message);
       stopRecording();
     }
-  }, [relayUrl, config.maxDuration, stopRecording, showResponse]);
+  }, [relayUrl, maxDuration, stopRecording, showResponse]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -180,40 +193,26 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
     };
   }, [stopRecording]);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    if (!isRecording) {
+  const handleClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
       startRecording();
     }
   };
 
-  const handlePointerUp = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-  };
-
-  const updateConfig = (updates: Partial<PttConfig>) => {
-    updateWidgetData(panel.id, { ...config, ...updates });
-  };
+  const relayOffline = relayUrl && relayUp === false;
 
   return (
-    <div
-      className={`h-full flex flex-col items-center justify-center p-2 ${
-        dark ? 'bg-black text-white' : 'bg-white text-neutral-900'
-      }`}
-    >
+    <div className="h-full flex flex-col items-center justify-center p-2">
       {/* Main PTT button */}
       <button
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        disabled={!relayUrl}
-        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all touch-none select-none ${
+        onClick={handleClick}
+        disabled={!relayUrl || relayOffline}
+        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all ${
           isRecording
             ? 'bg-red-500 scale-110 shadow-lg shadow-red-500/50'
-            : relayUrl
+            : relayUrl && !relayOffline
               ? 'bg-blue-600 hover:bg-blue-500 active:scale-95'
               : 'bg-neutral-400 cursor-not-allowed'
         }`}
@@ -221,7 +220,12 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
         {isRecording ? (
           <Mic className="w-8 h-8 text-white animate-pulse" />
         ) : (
-          <MicOff className="w-8 h-8 text-white" />
+          <Mic className="w-8 h-8 text-white" />
+        )}
+
+        {/* Relay offline indicator */}
+        {relayOffline && (
+          <AlertCircle size={14} className="absolute -top-1 -right-1 text-red-500" />
         )}
 
         {/* Countdown ring */}
@@ -243,68 +247,22 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
               fill="none"
               stroke="white"
               strokeWidth="3"
-              strokeDasharray={`${(timeLeft / config.maxDuration) * 188.5} 188.5`}
+              strokeDasharray={`${(timeLeft / maxDuration) * 188.5} 188.5`}
             />
           </svg>
         )}
       </button>
 
-      {/* Status text */}
-      <div className="mt-2 text-xs text-center">
-        {error ? (
-          <span className="text-red-500">{error}</span>
-        ) : isRecording ? (
-          <span className="text-red-500">{timeLeft}s</span>
-        ) : !relayUrl ? (
-          <span className="text-neutral-500">No relay</span>
-        ) : (
-          <span className="text-neutral-500">Hold to talk</span>
-        )}
-      </div>
-
-      {/* Settings button */}
-      <button
-        onClick={() => setShowSettings(true)}
-        className={`absolute top-2 right-2 p-1 rounded transition-colors ${
-          dark ? 'hover:bg-neutral-700' : 'hover:bg-neutral-200'
-        }`}
-        title="Settings"
-      >
-        <Settings size={12} className="text-neutral-400" />
-      </button>
-
-      {/* Settings Modal */}
-      <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
-        title="Push-to-Talk Settings"
-        actions={
-          <Button onClick={() => setShowSettings(false)} variant="primary">
-            Close
-          </Button>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-            >
-              Max Recording Duration
-            </label>
-            <div className={`${dark ? 'bg-neutral-700' : 'bg-neutral-100'} rounded`}>
-              <Roller
-                items={MAX_DURATION_OPTIONS}
-                value={config.maxDuration}
-                onChange={(v) => updateConfig({ maxDuration: v })}
-                format={(v) => `${v} seconds`}
-              />
-            </div>
-            <p className={`text-xs mt-1 ${dark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Recording stops automatically after this time
-            </p>
-          </div>
+      {/* Status text - only show errors or countdown */}
+      {(error || isRecording) && (
+        <div className="mt-2 text-xs text-center">
+          {error ? (
+            <span className="text-red-500">{error}</span>
+          ) : (
+            <span className="text-red-500">{timeLeft}s</span>
+          )}
         </div>
-      </Modal>
+      )}
     </div>
   );
 }
