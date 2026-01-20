@@ -1,0 +1,17 @@
+[Unit]
+Description=Zigbee2MQTT
+After=network.target mosquitto.service
+Requires=mosquitto.service
+ConditionPathExistsGlob=/dev/ttyUSB*
+ConditionPathExistsGlob=|/dev/ttyACM*
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=/opt/zigbee2mqtt
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

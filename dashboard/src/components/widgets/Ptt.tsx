@@ -1,12 +1,14 @@
 /**
  * Push-to-Talk widget - single button for voice input.
- * Streams audio to relay server while button is held.
+ * Streams raw PCM audio to relay server while button is held.
+ * Uses AudioWorklet for audio processing (no deprecated APIs).
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, Settings } from 'lucide-react';
 import { Modal, Button, Roller } from '@dak/ui';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
+import { useVoiceResponseStore } from '../../stores/voice-response-store';
 import type { WidgetComponentProps } from './index';
 
 const MAX_DURATION_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30];
@@ -24,10 +26,12 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
 
   const getWidgetData = useConfigStore((s) => s.getWidgetData);
   const updateWidgetData = useConfigStore((s) => s.updateWidgetData);
+  const showResponse = useVoiceResponseStore((s) => s.showResponse);
   const config = getWidgetData<PttConfig>(panel.id) ?? { maxDuration: 6 };
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -38,12 +42,20 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
       timerRef.current = null;
     }
 
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send('STOP');
+      wsRef.current.close();
+    }
+    wsRef.current = null;
+
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect();
+      workletNodeRef.current = null;
     }
 
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.close();
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
     }
 
     if (streamRef.current) {
@@ -67,7 +79,6 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -75,25 +86,37 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
       });
       streamRef.current = stream;
 
+      // Create audio context
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+
+      // Load AudioWorklet processor
+      await audioContext.audioWorklet.addModule('/audio-processor.js');
+
       // Connect WebSocket to relay
       const wsUrl = relayUrl.replace(/^http/, 'ws') + '/voice/stream';
       const ws = new WebSocket(wsUrl);
+      ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
 
       ws.onopen = () => {
-        // Start MediaRecorder
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'audio/webm;codecs=opus',
-        });
-        mediaRecorderRef.current = mediaRecorder;
+        // Create audio processing chain
+        const source = audioContext.createMediaStreamSource(stream);
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-            ws.send(event.data);
+        // Create AudioWorklet node
+        const workletNode = new AudioWorkletNode(audioContext, 'audio-processor');
+        workletNodeRef.current = workletNode;
+
+        // Receive processed PCM from worklet and send to WebSocket
+        workletNode.port.onmessage = (e) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(e.data);
           }
         };
 
-        mediaRecorder.start(100); // Send chunks every 100ms
+        // Connect: mic -> worklet
+        source.connect(workletNode);
+
         setIsRecording(true);
         startTimeRef.current = Date.now();
         setTimeLeft(config.maxDuration);
@@ -114,13 +137,21 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
         // Handle response from voice server
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'result' && data.text) {
-            // Dispatch voice command event
-            window.dispatchEvent(
-              new CustomEvent('voice-command', {
-                detail: { text: data.text, confidence: data.confidence },
-              })
-            );
+          if (data.type === 'result') {
+            // Stop recording when we get a result
+            stopRecording();
+            if (data.text) {
+              window.dispatchEvent(
+                new CustomEvent('voice-command', {
+                  detail: { text: data.text, command: data.command, result: data.result },
+                })
+              );
+            }
+            // Show response modal if result has speak text
+            const speakText = data.result?.speak || data.result?.message;
+            if (speakText) {
+              showResponse(speakText, data.command);
+            }
           }
         } catch {
           // Ignore parse errors
@@ -133,15 +164,14 @@ export default function Ptt({ panel, dark }: WidgetComponentProps) {
       };
 
       ws.onclose = () => {
-        if (isRecording) {
-          stopRecording();
-        }
+        stopRecording();
       };
-    } catch {
-      setError('Microphone access denied');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Microphone access denied';
+      setError(message);
       stopRecording();
     }
-  }, [relayUrl, config.maxDuration, stopRecording, isRecording]);
+  }, [relayUrl, config.maxDuration, stopRecording, showResponse]);
 
   // Cleanup on unmount
   useEffect(() => {

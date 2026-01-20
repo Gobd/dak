@@ -88,40 +88,23 @@ bash ~/dashboard/scripts/install-keyboard.sh || echo "Warning: install-keyboard.
 
 echo "=== Configuring Chromium policies ==="
 sudo mkdir -p /etc/chromium/policies/managed
-sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null << EOF
-{
-  "AutofillAddressEnabled": false,
-  "AutofillCreditCardEnabled": false,
-  "PasswordManagerEnabled": false,
-  "AudioCaptureAllowed": true,
-  "AudioCaptureAllowedUrls": ["$DASHBOARD_ORIGIN"],
-  "InsecurePrivateNetworkRequestsAllowed": true,
-  "InsecurePrivateNetworkRequestsAllowedForUrls": ["$DASHBOARD_ORIGIN"],
-  "LocalNetworkAccessAllowedForUrls": ["$DASHBOARD_ORIGIN"]
-}
-EOF
+sed "s|__DASHBOARD_ORIGIN__|$DASHBOARD_ORIGIN|g" \
+  ~/dashboard/scripts/chromium-kiosk.json \
+  | sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null
 
 echo "=== Adding kiosk user to required groups ==="
 sudo usermod -a -G tty,video,i2c kiosk 2>/dev/null || sudo usermod -a -G tty,video kiosk
 
 echo "=== Setting up auto-login and kiosk service ==="
 sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
-sudo tee /etc/systemd/system/getty@tty1.service.d/autologin.conf > /dev/null << 'EOF'
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
-EOF
+sudo cp ~/dashboard/scripts/autologin.conf /etc/systemd/system/getty@tty1.service.d/
 
 echo "=== Installing kiosk startup script ==="
 cp ~/dashboard/scripts/kiosk.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
 echo "=== Setting up auto-start on login ==="
-cat > ~/.bash_profile << 'EOF'
-if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" = "1" ]; then
-  exec ~/.kiosk.sh
-fi
-EOF
+cp ~/dashboard/scripts/bash_profile ~/.bash_profile
 
 echo "=== Setting nano as default editor ==="
 grep -q 'EDITOR=nano' ~/.bashrc || echo 'export EDITOR=nano' >> ~/.bashrc
@@ -183,44 +166,18 @@ fi
 SERIAL_PORT=$(find /dev -maxdepth 1 \( -name 'ttyUSB*' -o -name 'ttyACM*' \) 2>/dev/null | head -1)
 SERIAL_PORT="${SERIAL_PORT:-/dev/ttyUSB0}"
 
+# Copy and configure zigbee2mqtt config
 mkdir -p /opt/zigbee2mqtt/data
-cat > /opt/zigbee2mqtt/data/configuration.yaml << EOF
-homeassistant: false
-permit_join: false
-mqtt:
-  base_topic: zigbee2mqtt
-  server: mqtt://localhost
-serial:
-  port: $SERIAL_PORT
-frontend:
-  port: 8080
-advanced:
-  log_level: warn
-  network_key: GENERATE
-EOF
+sed "s|__SERIAL_PORT__|$SERIAL_PORT|g" \
+  ~/dashboard/services/zigbee2mqtt/configuration.yaml \
+  > /opt/zigbee2mqtt/data/configuration.yaml
 
 sudo usermod -a -G dialout "$USER"
 
-# Service only starts if USB dongle is present
-sudo tee /etc/systemd/system/zigbee2mqtt.service > /dev/null << EOF
-[Unit]
-Description=Zigbee2MQTT
-After=network.target mosquitto.service
-Requires=mosquitto.service
-ConditionPathExistsGlob=/dev/ttyUSB*
-ConditionPathExistsGlob=|/dev/ttyACM*
-
-[Service]
-Type=simple
-User=$USER
-WorkingDirectory=/opt/zigbee2mqtt
-ExecStart=/usr/bin/npm start
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
+# Copy and configure systemd service
+sed "s|__USER__|$USER|g" \
+  ~/dashboard/services/zigbee2mqtt/zigbee2mqtt.service \
+  | sudo tee /etc/systemd/system/zigbee2mqtt.service > /dev/null
 
 sudo systemctl daemon-reload
 sudo systemctl enable zigbee2mqtt
@@ -244,19 +201,10 @@ if [ -d ~/dashboard/services/home-relay ]; then
   cd ~/dashboard/services/home-relay
   uv sync --group voice
 
-  echo "Downloading Vosk speech model..."
-  MODELS_DIR=~/dashboard/services/home-relay/models
-  mkdir -p "$MODELS_DIR"
-  if [ ! -d "$MODELS_DIR/vosk-model-small-en-us" ]; then
-    curl -L --progress-bar -o /tmp/vosk-model.zip \
-      https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip
-    unzip -q /tmp/vosk-model.zip -d "$MODELS_DIR"
-    mv "$MODELS_DIR/vosk-model-small-en-us-0.15" "$MODELS_DIR/vosk-model-small-en-us"
-    rm /tmp/vosk-model.zip
-    echo "Vosk model installed"
-  else
-    echo "Vosk model already exists"
-  fi
+  # Create directories (models/voices downloaded via Settings UI)
+  mkdir -p ~/dashboard/services/home-relay/models
+  mkdir -p ~/dashboard/services/home-relay/voices
+  mkdir -p ~/dashboard/services/home-relay/piper
 
   echo "Creating feedback sounds..."
   SOUNDS_DIR=~/dashboard/services/home-relay/sounds
@@ -281,7 +229,10 @@ if [ -d ~/dashboard/services/home-relay ]; then
   sudo systemctl daemon-reload
   sudo systemctl enable voice-control
   sudo systemctl start voice-control
-  echo "Voice control installed. Enable in dashboard: Settings > Voice Control"
+  echo "Voice control installed."
+  echo "  1. Enable in Settings > Voice Control"
+  echo "  2. Download a speech model"
+  echo "  3. (Optional) Download a TTS voice for spoken responses"
 else
   echo "Skipping voice control (services/home-relay not found)"
 fi

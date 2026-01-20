@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useConfigStore } from './stores/config-store';
 import { useVoiceCommandRelay } from './hooks/useVoiceCommandRelay';
 import { Screen } from './components/layout/Screen';
+import { VoiceResponseToast } from './components/shared/VoiceResponseToast';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +83,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Screen />
+      <VoiceResponseToast />
     </QueryClientProvider>
   );
 }

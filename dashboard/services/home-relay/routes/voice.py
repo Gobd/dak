@@ -82,15 +82,3 @@ def subscribe():
             "X-Accel-Buffering": "no",
         },
     )
-
-
-@bp.route("/test", methods=["POST"])
-def test_command():
-    """Test endpoint - simulates a voice command."""
-    test_cmd = {
-        "type": "add-to-list",
-        "item": "test item",
-        "list": "groceries",
-    }
-    broadcast_command(test_cmd)
-    return jsonify({"success": True, "sent": test_cmd})

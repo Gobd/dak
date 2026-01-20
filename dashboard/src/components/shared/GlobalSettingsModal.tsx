@@ -10,6 +10,7 @@ import {
   Volume2,
   Plus,
   Minus,
+  Download,
 } from 'lucide-react';
 import {
   useConfigStore,
@@ -19,7 +20,15 @@ import {
 } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import type { ThemeMode, WakeWord } from '../../types';
+import type {
+  ThemeMode,
+  WakeWord,
+  VoskModel,
+  VoskModelInfo,
+  TtsVoice,
+  TtsVoiceInfo,
+  VoiceResponseMode,
+} from '../../types';
 import { formatLocation } from '../../hooks/useLocation';
 
 const WAKE_WORD_OPTIONS: { value: WakeWord; label: string }[] = [
@@ -27,6 +36,13 @@ const WAKE_WORD_OPTIONS: { value: WakeWord; label: string }[] = [
   { value: 'alexa', label: 'Alexa' },
   { value: 'hey_mycroft', label: 'Hey Mycroft' },
   { value: 'hey_rhasspy', label: 'Hey Rhasspy' },
+];
+
+const RESPONSE_MODE_OPTIONS: { value: VoiceResponseMode; label: string; description: string }[] = [
+  { value: 'both', label: 'Both', description: 'Speak and show popup' },
+  { value: 'tts', label: 'TTS Only', description: 'Speak response (requires Piper)' },
+  { value: 'modal', label: 'Popup Only', description: 'Show text popup' },
+  { value: 'none', label: 'None', description: 'No response feedback' },
 ];
 
 interface GlobalSettingsModalProps {
@@ -49,6 +65,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [volume, setVolume] = useState(50);
   const [volumeLoading, setVolumeLoading] = useState(false);
+  const [voiceModels, setVoiceModels] = useState<VoskModelInfo[]>([]);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [ttsVoices, setTtsVoices] = useState<TtsVoiceInfo[]>([]);
+  const [ttsDownloadProgress, setTtsDownloadProgress] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentTheme = globalSettings?.theme ?? 'dark';
@@ -56,6 +76,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const hideCursor = globalSettings?.hideCursor ?? false;
   const voiceEnabled = globalSettings?.voiceEnabled ?? false;
   const wakeWord = globalSettings?.wakeWord ?? 'hey_jarvis';
+  const voiceModel = globalSettings?.voiceModel ?? 'small';
+  const ttsVoice = globalSettings?.ttsVoice ?? 'amy';
+  const voiceResponseMode = globalSettings?.voiceResponseMode ?? 'both';
 
   // Reset relay URL input when modal opens
   useEffect(() => {
@@ -83,6 +106,163 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
       }
     }
   }, [open]);
+
+  // Fetch voice models and TTS voices when modal opens and voice is enabled
+  useEffect(() => {
+    if (open && voiceEnabled) {
+      const relayUrl = getRelayUrl();
+      if (relayUrl) {
+        fetch(`${relayUrl}/voice/models`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data)) {
+              setVoiceModels(data);
+            }
+          })
+          .catch(() => {
+            // Ignore errors
+          });
+        fetch(`${relayUrl}/voice/tts/voices`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data)) {
+              setTtsVoices(data);
+            }
+          })
+          .catch(() => {
+            // Ignore errors
+          });
+      }
+    }
+  }, [open, voiceEnabled]);
+
+  // Download a voice model
+  const downloadModel = useCallback(async (modelId: VoskModel) => {
+    const relayUrl = getRelayUrl();
+    if (!relayUrl) return;
+
+    setDownloadProgress(0);
+
+    try {
+      const response = await fetch(`${relayUrl}/voice/models/${modelId}/download`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        setDownloadProgress(null);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        setDownloadProgress(null);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.progress !== undefined) {
+                setDownloadProgress(data.progress);
+              }
+              if (data.status === 'complete') {
+                setDownloadProgress(null);
+                // Refresh models list
+                const res = await fetch(`${relayUrl}/voice/models`);
+                const models = await res.json();
+                if (Array.isArray(models)) {
+                  setVoiceModels(models);
+                }
+              }
+              if (data.status === 'error') {
+                setDownloadProgress(null);
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          }
+        }
+      }
+    } catch {
+      setDownloadProgress(null);
+    }
+  }, []);
+
+  // Download a TTS voice
+  const downloadTtsVoice = useCallback(async (voiceId: TtsVoice) => {
+    const relayUrl = getRelayUrl();
+    if (!relayUrl) return;
+
+    setTtsDownloadProgress(0);
+
+    try {
+      const response = await fetch(`${relayUrl}/voice/tts/voices/${voiceId}/download`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        setTtsDownloadProgress(null);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        setTtsDownloadProgress(null);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.progress !== undefined) {
+                setTtsDownloadProgress(data.progress);
+              }
+              if (data.status === 'complete') {
+                setTtsDownloadProgress(null);
+                // Refresh voices list
+                const res = await fetch(`${relayUrl}/voice/tts/voices`);
+                const voices = await res.json();
+                if (Array.isArray(voices)) {
+                  setTtsVoices(voices);
+                }
+              }
+              if (data.status === 'error') {
+                setTtsDownloadProgress(null);
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          }
+        }
+      }
+    } catch {
+      setTtsDownloadProgress(null);
+    }
+  }, []);
 
   // Play test sound at current volume
   const playTestSound = useCallback(() => {
@@ -313,12 +493,164 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                 Say the wake word, then your command (e.g., "add milk to groceries")
               </p>
+
+              {/* Speech Model Selector */}
+              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+                Speech Model
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={voiceModel}
+                  onChange={(e) => updateGlobalSettings({ voiceModel: e.target.value as VoskModel })}
+                  className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                             bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  {voiceModels.length > 0 ? (
+                    voiceModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.size}) {m.downloaded ? '✓' : ''}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="small">Standard (40MB)</option>
+                      <option value="medium">Better (128MB)</option>
+                      <option value="large">Best (1.8GB)</option>
+                    </>
+                  )}
+                </select>
+                {(() => {
+                  const selectedModel = voiceModels.find((m) => m.id === voiceModel);
+                  const isDownloaded = selectedModel?.downloaded ?? false;
+                  const isDownloading = downloadProgress !== null;
+
+                  if (isDownloaded) {
+                    return (
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                        <CheckCircle size={16} />
+                      </div>
+                    );
+                  }
+
+                  if (isDownloading) {
+                    return (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 min-w-[80px]">
+                        <Loader2 size={16} className="animate-spin" />
+                        <span className="text-xs">{downloadProgress}%</span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      onClick={() => downloadModel(voiceModel)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-sm"
+                    >
+                      <Download size={16} />
+                      Download
+                    </button>
+                  );
+                })()}
+              </div>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Larger models are more accurate but slower. Download required before use.
+              </p>
+
+              {/* TTS Voice Selector */}
+              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+                TTS Voice (for spoken responses)
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={ttsVoice}
+                  onChange={(e) => updateGlobalSettings({ ttsVoice: e.target.value as TtsVoice })}
+                  className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                             bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  {ttsVoices.length > 0 ? (
+                    ttsVoices.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name} - {v.description} ({v.size}) {v.downloaded ? '✓' : ''}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="amy">Amy - Female, clear</option>
+                      <option value="danny">Danny - Male, casual</option>
+                      <option value="lessac">Lessac - Male, professional</option>
+                      <option value="ryan">Ryan - Male, warm</option>
+                    </>
+                  )}
+                </select>
+                {(() => {
+                  const selectedVoice = ttsVoices.find((v) => v.id === ttsVoice);
+                  const isDownloaded = selectedVoice?.downloaded ?? false;
+                  const isDownloading = ttsDownloadProgress !== null;
+
+                  if (isDownloaded) {
+                    return (
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                        <CheckCircle size={16} />
+                      </div>
+                    );
+                  }
+
+                  if (isDownloading) {
+                    return (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 min-w-[80px]">
+                        <Loader2 size={16} className="animate-spin" />
+                        <span className="text-xs">{ttsDownloadProgress}%</span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      onClick={() => downloadTtsVoice(ttsVoice)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-sm"
+                    >
+                      <Download size={16} />
+                      Download
+                    </button>
+                  );
+                })()}
+              </div>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Voice used for spoken responses (e.g., climate check). Requires Piper on kiosk.
+              </p>
+
+              {/* Response Mode Selector */}
+              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+                Response Mode
+              </label>
+              <select
+                value={voiceResponseMode}
+                onChange={(e) =>
+                  updateGlobalSettings({ voiceResponseMode: e.target.value as VoiceResponseMode })
+                }
+                className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                           bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                           focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                {RESPONSE_MODE_OPTIONS.map(({ value, label, description }) => (
+                  <option key={value} value={value}>
+                    {label} — {description}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                How to show responses from commands like weather and climate check
+              </p>
+
               <details className="mt-3">
                 <summary className="text-xs text-blue-500 cursor-pointer hover:text-blue-400">
                   View available commands
                 </summary>
                 <ul className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 space-y-1 pl-2">
                   <li>"add [item] to [list]" — add to groceries, shopping, etc.</li>
+                  <li>"what's the weather" — indoor temp + today's high/low</li>
                   <li>"is it warmer/colder outside" — compare indoor/outdoor temp</li>
                   <li>"turn on/off [device]" — control Kasa devices</li>
                   <li>"set [X] minute timer [called Y]" — start a timer</li>

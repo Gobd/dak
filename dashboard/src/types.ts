@@ -102,6 +102,37 @@ export type ThemeMode = 'dark' | 'light' | 'system';
 // Wake word options (built-in, no training needed)
 export type WakeWord = 'hey_jarvis' | 'alexa' | 'hey_mycroft' | 'hey_rhasspy';
 
+// Vosk speech model options
+export type VoskModel = 'small' | 'medium' | 'large';
+
+// Vosk model metadata (returned from backend)
+export interface VoskModelInfo {
+  id: VoskModel;
+  name: string;
+  size: string;
+  description: string;
+  downloaded: boolean;
+  downloading?: boolean;
+  progress?: number; // 0-100 during download
+}
+
+// Piper TTS voice options
+export type TtsVoice = 'amy' | 'danny' | 'lessac' | 'ryan';
+
+// Voice response mode - how to show command responses
+export type VoiceResponseMode = 'tts' | 'modal' | 'both' | 'none';
+
+// Piper voice metadata (returned from backend)
+export interface TtsVoiceInfo {
+  id: TtsVoice;
+  name: string;
+  description: string;
+  size: string;
+  downloaded: boolean;
+  downloading?: boolean;
+  progress?: number; // 0-100 during download
+}
+
 // Global settings
 export interface GlobalSettings {
   theme: ThemeMode;
@@ -111,6 +142,9 @@ export interface GlobalSettings {
   // Voice control
   voiceEnabled?: boolean;
   wakeWord?: WakeWord;
+  voiceModel?: VoskModel;
+  ttsVoice?: TtsVoice;
+  voiceResponseMode?: VoiceResponseMode;
 }
 
 // Dashboard configuration

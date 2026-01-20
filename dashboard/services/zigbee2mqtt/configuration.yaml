@@ -1,0 +1,15 @@
+# Zigbee2MQTT configuration
+# Serial port is set by kiosk-setup.sh based on detected dongle
+
+homeassistant: false
+permit_join: false
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://localhost
+serial:
+  port: __SERIAL_PORT__
+frontend:
+  port: 8080
+advanced:
+  log_level: warn
+  network_key: GENERATE

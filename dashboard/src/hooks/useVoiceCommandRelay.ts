@@ -3,8 +3,9 @@
  * and forwards them to the notes-app iframe via postMessage.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { getRelayUrl } from '../stores/config-store';
+import { useVoiceResponseStore } from '../stores/voice-response-store';
 
 // Target origins for postMessage (notes-app URLs)
 const NOTES_APP_ORIGINS = [
@@ -28,39 +29,53 @@ interface VoiceCommand {
   [key: string]: unknown;
 }
 
-function handleCommand(command: VoiceCommand) {
-  console.log('[voice-relay] Received command:', command);
-
-  // Timer commands are handled by the Timer widget
-  if (command.type === 'timer' || command.type === 'stop-timer') {
-    window.dispatchEvent(new CustomEvent('voice-timer', { detail: command }));
-    return;
-  }
-
-  // List commands go to notes-app iframe
-  if (command.type === 'add-to-list') {
-    const iframe = findNotesAppIframe();
-    if (!iframe?.contentWindow) {
-      console.log('[voice-relay] Notes app iframe not found');
-      return;
-    }
-
-    // Try each origin (we don't know which one the iframe is using)
-    for (const origin of NOTES_APP_ORIGINS) {
-      try {
-        iframe.contentWindow.postMessage(command, origin);
-      } catch {
-        // Origin mismatch, try next
-      }
-    }
-    console.log('[voice-relay] Forwarded command to notes-app');
-  }
-}
-
 export function useVoiceCommandRelay() {
+  const showResponse = useVoiceResponseStore((s) => s.showResponse);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
+
+  const handleCommand = useCallback(
+    (command: VoiceCommand) => {
+      console.log('[voice-relay] Received command:', command);
+
+      // Voice result - show in modal
+      if (command.type === 'voice-result') {
+        const text = command.text as string;
+        const cmdName = command.command as string | undefined;
+        if (text) {
+          showResponse(text, cmdName);
+        }
+        return;
+      }
+
+      // Timer commands are handled by the Timer widget
+      if (command.type === 'timer' || command.type === 'stop-timer' || command.type === 'adjust-timer') {
+        window.dispatchEvent(new CustomEvent('voice-timer', { detail: command }));
+        return;
+      }
+
+      // List commands go to notes-app iframe
+      if (command.type === 'add-to-list') {
+        const iframe = findNotesAppIframe();
+        if (!iframe?.contentWindow) {
+          console.log('[voice-relay] Notes app iframe not found');
+          return;
+        }
+
+        // Try each origin (we don't know which one the iframe is using)
+        for (const origin of NOTES_APP_ORIGINS) {
+          try {
+            iframe.contentWindow.postMessage(command, origin);
+          } catch {
+            // Origin mismatch, try next
+          }
+        }
+        console.log('[voice-relay] Forwarded command to notes-app');
+      }
+    },
+    [showResponse]
+  );
 
   useEffect(() => {
     const relayUrl = getRelayUrl();
@@ -112,5 +127,5 @@ export function useVoiceCommandRelay() {
         eventSourceRef.current.close();
       }
     };
-  }, []);
+  }, [handleCommand]);
 }
