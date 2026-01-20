@@ -5,7 +5,6 @@ Provides both REST and WebSocket interfaces for speech-to-text.
 
 import json
 import logging
-import subprocess
 import time
 from pathlib import Path
 
@@ -16,7 +15,6 @@ bp = Blueprint("transcribe", __name__, url_prefix="/voice")
 
 # Vosk model setup
 MODELS_DIR = Path(__file__).parent.parent / "models"
-SOUNDS_DIR = Path(__file__).parent.parent / "sounds"
 
 # Model directory names by ID
 MODEL_DIRS = {
@@ -101,18 +99,9 @@ def _transcribe_audio(audio_data: bytes, sample_rate: int = 16000) -> str:
 
 def _play_sound(sound_name: str):
     """Play a feedback sound (non-blocking)."""
-    sounds = {
-        "wake": SOUNDS_DIR / "wake.wav",
-        "success": SOUNDS_DIR / "success.wav",
-        "error": SOUNDS_DIR / "error.wav",
-    }
-    path = sounds.get(sound_name)
-    if path and path.exists():
-        subprocess.Popen(
-            ["aplay", "-q", str(path)],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    from sounds import play_sound
+
+    play_sound(sound_name)
 
 
 @bp.route("/transcribe", methods=["POST"])

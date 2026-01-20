@@ -162,17 +162,15 @@ if [ ! -d /opt/zigbee2mqtt ]; then
   cd /opt/zigbee2mqtt && npm ci
 fi
 
-# Detect serial port or use default
-SERIAL_PORT=$(find /dev -maxdepth 1 \( -name 'ttyUSB*' -o -name 'ttyACM*' \) 2>/dev/null | head -1)
-SERIAL_PORT="${SERIAL_PORT:-/dev/ttyUSB0}"
-
-# Copy and configure zigbee2mqtt config
+# Copy zigbee2mqtt config (uses auto-detect for serial port)
 mkdir -p /opt/zigbee2mqtt/data
-sed "s|__SERIAL_PORT__|$SERIAL_PORT|g" \
-  ~/dashboard/services/zigbee2mqtt/configuration.yaml \
-  > /opt/zigbee2mqtt/data/configuration.yaml
+cp ~/dashboard/services/zigbee2mqtt/configuration.yaml /opt/zigbee2mqtt/data/configuration.yaml
 
 sudo usermod -a -G dialout "$USER"
+
+# Install udev rule to auto-start service when dongle plugged in
+sudo cp ~/dashboard/services/zigbee2mqtt/99-zigbee.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
 
 # Copy and configure systemd service
 sed "s|__USER__|$USER|g" \
@@ -182,9 +180,9 @@ sed "s|__USER__|$USER|g" \
 sudo systemctl daemon-reload
 sudo systemctl enable zigbee2mqtt
 
-if ls /dev/ttyUSB* /dev/ttyACM* &>/dev/null; then
-  echo "Zigbee dongle detected at $SERIAL_PORT - starting service"
-  sudo systemctl start zigbee2mqtt
+# Service has ConditionPathExistsGlob - will only run if dongle present
+sudo systemctl start zigbee2mqtt || true
+if systemctl is-active --quiet zigbee2mqtt; then
   echo "Zigbee2MQTT running. Web UI at http://localhost:8080"
 else
   echo "No Zigbee dongle detected - service will start when plugged in"
@@ -244,16 +242,11 @@ echo "  - Home relay (Kasa, WoL, brightness)"
 echo "  - Voice control (enable in Settings > Voice Control)"
 echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
 echo ""
-if ls /dev/ttyUSB* /dev/ttyACM* &>/dev/null; then
-  echo "Zigbee dongle detected! After reboot:"
-  echo "  1. Open http://$(hostname).home.arpa:8080"
-  echo "  2. Enable permit_join in Settings"
-  echo "  3. Hold sensor button 5s to pair"
-  echo "  4. Name devices 'indoor_climate' and 'outdoor_climate'"
-else
-  echo "No Zigbee dongle detected."
-  echo "To add climate sensors later: plug in dongle and reboot."
-fi
+echo "To pair Zigbee sensors:"
+echo "  1. Plug in Zigbee dongle (service auto-starts)"
+echo "  2. Open http://$(hostname).home.arpa:8080"
+echo "  3. Enable permit_join in Settings"
+echo "  4. Hold sensor button 5s to pair"
 echo ""
 echo "Rebooting in 5 seconds..."
 sleep 5

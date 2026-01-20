@@ -35,7 +35,6 @@ All scripts are in `scripts/`. Run from your Mac unless noted.
 | ------------------------------------------- | --------------------------------------------- |
 | `deploy.sh <user@host>`                     | Sync files and run setup on kiosk             |
 | `deploy.sh <user@host> --no-setup`          | Sync files, deps, and restart (skip setup)    |
-| `zigbee-setup.sh <user@host>`               | Install Zigbee2MQTT for climate sensors       |
 | `install-keyboard.sh [version] [user@host]` | Install Chrome virtual keyboard extension     |
 | `clear-cache.sh`                            | Clear browser cache and config (run on kiosk) |
 
@@ -127,7 +126,7 @@ Enable voice control in Settings (gear icon) and choose a wake word. Say the wak
 - Scroll wheel over timer → add/subtract 1 minute
 - X button → cancel timer or dismiss alarm
 
-Requires ReSpeaker mic array and voice-setup.sh on the kiosk.
+Requires a USB microphone. Voice control is installed automatically by `kiosk-setup.sh`.
 
 ## Keyboard Shortcuts
 

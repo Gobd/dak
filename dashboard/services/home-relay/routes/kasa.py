@@ -2,6 +2,9 @@
 
 import asyncio
 import contextlib
+import threading
+from collections.abc import Coroutine
+from typing import TypeVar
 
 from flask import Blueprint, jsonify, request
 from kasa import Discover
@@ -11,12 +14,42 @@ bp = Blueprint("kasa", __name__, url_prefix="/kasa")
 # Cache for discovered devices (refreshed on each discover call)
 _device_cache = {}
 
+# Shared event loop for async operations (avoids creating new loop per request)
+_loop: asyncio.AbstractEventLoop | None = None
+_loop_thread: threading.Thread | None = None
+
+T = TypeVar("T")
+
+
+def _get_event_loop() -> asyncio.AbstractEventLoop:
+    """Get or create the shared event loop running in a background thread."""
+    global _loop, _loop_thread
+
+    if _loop is None or not _loop.is_running():
+        _loop = asyncio.new_event_loop()
+
+        def run_loop():
+            asyncio.set_event_loop(_loop)
+            _loop.run_forever()
+
+        _loop_thread = threading.Thread(target=run_loop, daemon=True)
+        _loop_thread.start()
+
+    return _loop
+
+
+def run_async(coro: Coroutine[None, None, T]) -> T:
+    """Run an async coroutine in the shared event loop."""
+    loop = _get_event_loop()
+    future = asyncio.run_coroutine_threadsafe(coro, loop)
+    return future.result(timeout=30)
+
 
 @bp.route("/discover", methods=["GET", "POST"])
 def discover():
     """Discover Kasa devices on the network."""
     try:
-        devices = asyncio.run(_discover_devices())
+        devices = run_async(_discover_devices())
         return jsonify(devices)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -68,7 +101,7 @@ def toggle():
         return jsonify({"error": "ip required"}), 400
 
     try:
-        result = asyncio.run(_toggle_device(ip))
+        result = run_async(_toggle_device(ip))
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -108,7 +141,7 @@ def toggle_by_name():
         return jsonify({"error": "device name required"}), 400
 
     try:
-        result = asyncio.run(_toggle_device_by_name(name, state=state))
+        result = run_async(_toggle_device_by_name(name, state=state))
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -166,7 +199,7 @@ def status():
         return jsonify({"error": "ip required"}), 400
 
     try:
-        result = asyncio.run(_get_status(ip))
+        result = run_async(_get_status(ip))
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

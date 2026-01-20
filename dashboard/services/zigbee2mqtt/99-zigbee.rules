@@ -1,0 +1,3 @@
+# Start zigbee2mqtt when Zigbee USB dongle is plugged in
+ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", TAG+="systemd", ENV{SYSTEMD_WANTS}="zigbee2mqtt.service"
+ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", TAG+="systemd", ENV{SYSTEMD_WANTS}="zigbee2mqtt.service"

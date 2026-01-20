@@ -12,13 +12,13 @@ Configuration is fetched from home-relay (Settings > Voice Control in dashboard 
 
 import logging
 import struct
-import subprocess
 import time
-from pathlib import Path
 
 import httpx
 import pyaudio
 from openwakeword.model import Model as WakeWordModel
+
+from sounds import play_sound
 
 # Logging setup
 logging.basicConfig(
@@ -33,26 +33,6 @@ CHUNK_SIZE = 1280  # 80ms chunks for wake word
 COMMAND_DURATION = 4  # Seconds to record after wake word
 HOME_RELAY_URL = "http://localhost:5111"
 WAKE_THRESHOLD = 0.5  # Confidence threshold for wake word detection
-
-# Paths
-BASE_DIR = Path(__file__).parent
-SOUNDS_DIR = BASE_DIR / "sounds"
-
-
-def play_sound(sound_name: str):
-    """Play a feedback sound (non-blocking)."""
-    sounds = {
-        "wake": SOUNDS_DIR / "wake.wav",
-        "success": SOUNDS_DIR / "success.wav",
-        "error": SOUNDS_DIR / "error.wav",
-    }
-    path = sounds.get(sound_name)
-    if path and path.exists():
-        subprocess.Popen(
-            ["aplay", "-q", str(path)],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
 
 
 # =============================================================================
