@@ -42,6 +42,10 @@ jobs:
         if: steps.changes.outputs.python == 'true'
         run: uv run ruff format --check .
 
+      - name: Type check
+        if: steps.changes.outputs.python == 'true'
+        run: uv run pyright
+
       - uses: pnpm/action-setup@v4
         if: steps.changes.outputs.python == 'true'
 

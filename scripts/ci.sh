@@ -26,6 +26,10 @@ echo "==> Running ruff format..."
 (cd dashboard/services/home-relay && uv run ruff format .)
 
 echo ""
+echo "==> Running pyright..."
+(cd dashboard/services/home-relay && uv run pyright)
+
+echo ""
 echo "==> Regenerating API client..."
 (cd dashboard && pnpm gen:api)
 

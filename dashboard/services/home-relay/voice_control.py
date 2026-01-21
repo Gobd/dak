@@ -15,8 +15,8 @@ import struct
 import time
 
 import httpx
-import pyaudio
-from openwakeword.model import Model as WakeWordModel
+import pyaudio  # type: ignore[import-not-found]
+from openwakeword.model import Model as WakeWordModel  # type: ignore[import-not-found]
 
 from sounds import play_sound
 
@@ -128,6 +128,8 @@ class VoiceControl:
 
         while self.running:
             try:
+                assert self.stream is not None
+                assert self.wake_model is not None
                 audio_chunk = self.stream.read(CHUNK_SIZE, exception_on_overflow=False)
 
                 # Convert to array for wake word detection
@@ -149,6 +151,7 @@ class VoiceControl:
     def _handle_command(self):
         """Record and send audio to relay for transcription and execution."""
         logger.info("Recording command for %d seconds...", COMMAND_DURATION)
+        assert self.stream is not None
 
         # Record raw PCM audio
         frames = []

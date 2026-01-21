@@ -189,7 +189,7 @@ async def auto():
     )
 
     current = _get_current()
-    if current == target:
+    if current is not None and current == target:
         return AutoBrightnessResponse(changed=False, level=current)
 
     result = _set_level(target)

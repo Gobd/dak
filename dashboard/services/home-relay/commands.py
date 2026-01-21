@@ -1,7 +1,9 @@
 """Voice command definitions - shared between relay and voice_control service."""
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import httpx
 
@@ -11,8 +13,8 @@ class VoiceCommand:
     """A registered voice command."""
 
     name: str
-    patterns: list[re.Pattern]
-    handler: callable
+    patterns: list[re.Pattern[str]]
+    handler: Callable[[dict[str, Any]], dict[str, Any]]
     help_text: str
     examples: list[str]
 

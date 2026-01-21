@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.9.0"]
+dev = ["ruff>=0.9.0", "pyright>=1.1.390"]
 voice = ["openwakeword>=0.6.0", "pyaudio>=0.2.14"]
 
 [tool.ruff]
@@ -65,4 +65,9 @@ ignore = [
   "SIM117", # Nested with statements
   "SIM102", # Nested if statements (readable as-is)
   "SIM105", # contextlib.suppress (try/except/pass is clearer)
+  "B009", # getattr with constant (needed to satisfy pyright for legacy APIs)
 ]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

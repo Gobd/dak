@@ -41,7 +41,7 @@ def _check_vosk_available() -> bool:
     global _vosk_available
     if _vosk_available is None:
         try:
-            import vosk  # noqa: F401
+            import vosk  # noqa: F401  # type: ignore[import-not-found]
 
             _vosk_available = True
         except ImportError:
@@ -69,7 +69,7 @@ def _get_vosk_model(model_id: str = "small"):
         logger.warning("Vosk model '%s' not found at %s", model_id, model_path)
         return None
 
-    from vosk import Model as VoskModel
+    from vosk import Model as VoskModel  # type: ignore[import-not-found]
 
     logger.info("Loading Vosk model '%s' from %s...", model_id, model_path)
     _vosk_model = VoskModel(str(model_path))
@@ -97,7 +97,7 @@ def _transcribe_audio(audio_data: bytes, sample_rate: int = 16000) -> str:
     if not model:
         return ""
 
-    from vosk import KaldiRecognizer
+    from vosk import KaldiRecognizer  # type: ignore[import-not-found]
 
     recognizer = KaldiRecognizer(model, sample_rate)
     recognizer.AcceptWaveform(audio_data)
@@ -247,7 +247,7 @@ async def stream_transcribe(websocket: WebSocket):
         await websocket.close()
         return
 
-    from vosk import KaldiRecognizer
+    from vosk import KaldiRecognizer  # type: ignore[import-not-found]
 
     # Use 16kHz for Vosk - client sends raw PCM at this rate
     recognizer = KaldiRecognizer(model, 16000)

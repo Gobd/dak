@@ -40,11 +40,12 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
     global _loop, _loop_thread
 
     if _loop is None or not _loop.is_running():
-        _loop = asyncio.new_event_loop()
+        loop = asyncio.new_event_loop()
+        _loop = loop
 
         def run_loop():
-            asyncio.set_event_loop(_loop)
-            _loop.run_forever()
+            asyncio.set_event_loop(loop)
+            loop.run_forever()
 
         _loop_thread = threading.Thread(target=run_loop, daemon=True)
         _loop_thread.start()
@@ -85,10 +86,7 @@ def _get_device_features(dev: Device) -> list[str]:
     """Get list of supported features."""
     if not hasattr(dev, "modules"):
         return []
-    return [
-        module_type.name.lower() if hasattr(module_type, "name") else str(module_type)
-        for module_type in dev.modules
-    ]
+    return [str(module_type).lower() for module_type in dev.modules]
 
 
 def _get_on_since(dev: Device) -> str | None:
@@ -144,10 +142,12 @@ async def _get_emeter_data(dev: Device) -> tuple[float | None, float | None]:
         energy_today = getattr(energy, "consumption_today", None)
     elif hasattr(dev, "emeter_realtime"):
         with contextlib.suppress(Exception):
-            realtime = await dev.get_emeter_realtime()
+            get_realtime = getattr(dev, "get_emeter_realtime")
+            realtime = await get_realtime()
             power = realtime.get("power") or realtime.get("power_mw", 0) / 1000
         with contextlib.suppress(Exception):
-            daily = await dev.get_emeter_daily()
+            get_daily = getattr(dev, "get_emeter_daily")
+            daily = await get_daily()
             today = datetime.now().day
             energy_today = daily.get(today, 0)
 
@@ -243,6 +243,8 @@ async def toggle_device(ip: str) -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            return {"error": f"Device not found at {ip}"}
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -323,6 +325,8 @@ async def get_device_status(ip: str) -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            return {"error": f"Device not found at {ip}"}
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -345,6 +349,8 @@ async def set_brightness(ip: str, brightness: int) -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            return {"error": f"Device not found at {ip}"}
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -355,7 +361,8 @@ async def set_brightness(ip: str, brightness: int) -> dict:
         light = dev.modules[Module.Light]
         await light.set_brightness(brightness)
     elif hasattr(dev, "set_brightness"):
-        await dev.set_brightness(brightness)
+        set_brightness_fn = getattr(dev, "set_brightness")
+        await set_brightness_fn(brightness)
     else:
         raise ValueError("Device does not support brightness control")
 
@@ -382,6 +389,8 @@ async def set_countdown(ip: str, minutes: int, action: str = "off") -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            return {"error": f"Device not found at {ip}"}
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -451,7 +460,8 @@ async def set_countdown(ip: str, minutes: int, action: str = "off") -> dict:
     # Final fallback: try legacy set_countdown method
     if not enabled and hasattr(dev, "set_countdown"):
         try:
-            await dev.set_countdown(delay_seconds, action == "on")
+            set_countdown_fn = getattr(dev, "set_countdown")
+            await set_countdown_fn(delay_seconds, action == "on")
             enabled = True
         except Exception as e:
             logger.warning("Failed to set countdown via legacy method: %s", e)
@@ -482,6 +492,8 @@ async def get_schedule_rules(ip: str) -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            return {"error": f"Device not found at {ip}"}
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -501,7 +513,7 @@ async def get_schedule_rules(ip: str) -> dict:
 
                     # sact is an Action enum or int: TurnOn=1, TurnOff=0
                     sact = getattr(rule, "sact", None)
-                    if hasattr(sact, "value"):
+                    if sact is not None and hasattr(sact, "value"):
                         action = "on" if sact.value == 1 else "off"
                     else:
                         action = "on" if sact == 1 else "off"
@@ -544,6 +556,8 @@ async def add_schedule_rule(ip: str, action: str, time: str, days: list[str]) ->
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            raise ValueError(f"Device not found at {ip}")
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
@@ -608,14 +622,15 @@ async def update_schedule_rule(
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            raise ValueError(f"Device not found at {ip}")
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
         await dev.update()
 
     # RuleModule doesn't expose edit_rule, so we must use raw protocol
-    has_schedule = hasattr(dev, "modules") and Module.IotSchedule in dev.modules
-    if not has_schedule:
+    if not hasattr(dev, "modules") or Module.IotSchedule not in dev.modules:
         raise ValueError("Device does not support schedules")
 
     schedule = dev.modules[Module.IotSchedule]
@@ -634,7 +649,7 @@ async def update_schedule_rule(
                 existing_rule = r
                 current_enable = getattr(r, "enable", 1)
                 current_sact = getattr(r, "sact", None)
-                if hasattr(current_sact, "value"):
+                if current_sact is not None and hasattr(current_sact, "value"):
                     current_sact = current_sact.value
                 current_smin = getattr(r, "smin", 0) or 0
                 current_wday = getattr(r, "wday", []) or []
@@ -684,13 +699,14 @@ async def delete_schedule_rule(ip: str, rule_id: str) -> dict:
         dev = _device_cache[ip]
     else:
         dev = await Discover.discover_single(ip)
+        if dev is None:
+            raise ValueError(f"Device not found at {ip}")
         _device_cache[ip] = dev
 
     with contextlib.suppress(Exception):
         await dev.update()
 
-    has_schedule = hasattr(dev, "modules") and Module.IotSchedule in dev.modules
-    if not has_schedule:
+    if not hasattr(dev, "modules") or Module.IotSchedule not in dev.modules:
         raise ValueError("Device does not support schedules")
 
     schedule = dev.modules[Module.IotSchedule]

@@ -190,8 +190,9 @@ def speak(text: str) -> bool:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        process.stdin.write(text.encode())
-        process.stdin.close()
+        if process.stdin:
+            process.stdin.write(text.encode())
+            process.stdin.close()
         aplay.wait()
         return True
     except Exception:

@@ -291,16 +291,17 @@ def start_mqtt():
     global mqtt_client
     load_config()
 
-    mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_disconnect = on_disconnect
-    mqtt_client.on_message = on_message
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)  # type: ignore[attr-defined]
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_message = on_message
+    mqtt_client = client
 
     def loop():
         while True:
             try:
-                mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
-                mqtt_client.loop_forever()
+                client.connect(MQTT_HOST, MQTT_PORT, 60)
+                client.loop_forever()
             except Exception as e:
                 logger.warning("MQTT reconnecting: %s", e)
                 time.sleep(5)
@@ -403,7 +404,7 @@ def rename_device(old_name: str, new_name: str) -> dict:
 
 def remove_device(device: str, force: bool = False) -> dict:
     """Remove a Zigbee device from the network."""
-    payload = {"id": device}
+    payload: dict[str, str | bool] = {"id": device}
     if force:
         payload["force"] = True
 
@@ -424,7 +425,7 @@ def remove_device(device: str, force: bool = False) -> dict:
 
 def permit_join(enable: bool, duration: int = 120) -> dict:
     """Enable or disable device pairing mode."""
-    payload = {"value": enable}
+    payload: dict[str, bool | int] = {"value": enable}
     if enable and duration:
         payload["time"] = duration
 

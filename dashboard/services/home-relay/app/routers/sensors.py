@@ -73,15 +73,22 @@ async def outdoor():
     return sensor_response("outdoor")
 
 
+def _parse_sensor_response(data: dict) -> SensorReadingResponse | SensorUnavailableResponse:
+    """Parse sensor response dict into the appropriate Pydantic model."""
+    if data.get("available"):
+        return SensorReadingResponse(**data)
+    return SensorUnavailableResponse(**data)
+
+
 @router.get("/all", response_model=AllSensorsResponse)
 async def all_sensors():
     """Get all sensor readings with comparison."""
-    ind = sensor_response("indoor")
-    out = sensor_response("outdoor")
+    ind_data = sensor_response("indoor")
+    out_data = sensor_response("outdoor")
 
     comparison = None
-    if ind.get("available") and out.get("available"):
-        diff = out["feels_like"] - ind["feels_like"]
+    if ind_data.get("available") and out_data.get("available"):
+        diff = out_data["feels_like"] - ind_data["feels_like"]
         comparison = SensorComparison(
             outside_feels_cooler=diff < -0.5,
             outside_feels_warmer=diff > 0.5,
@@ -89,8 +96,8 @@ async def all_sensors():
         )
 
     return AllSensorsResponse(
-        indoor=ind,
-        outdoor=out,
+        indoor=_parse_sensor_response(ind_data),
+        outdoor=_parse_sensor_response(out_data),
         comparison=comparison,
         config=SensorConfig(**sensor_config),
     )
