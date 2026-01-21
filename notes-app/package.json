@@ -12,11 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
-    "analyze": "ANALYZE=true pnpm build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
     "@dak/ui": "workspace:*",
@@ -39,7 +35,6 @@
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
     "@eslint/js": "catalog:",
-    "@playwright/test": "^1.57.0",
     "@tailwindcss/vite": "catalog:vite",
     "@types/node": "catalog:",
     "@types/react": "catalog:vite",
@@ -55,7 +50,6 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:vite",
     "vite": "catalog:vite",
-    "vite-plugin-pwa": "catalog:vite",
-    "vitest": "^4.0.16"
+    "vite-plugin-pwa": "catalog:vite"
   }
 }
