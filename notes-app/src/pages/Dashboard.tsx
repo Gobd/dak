@@ -325,7 +325,10 @@ export function Dashboard() {
   if (!isDesktop) {
     if (currentNote && !showSidebar) {
       return (
-        <div className="flex-1 min-h-screen" style={{ backgroundColor: colors.bg }}>
+        <div
+          className="h-screen flex flex-col overflow-hidden"
+          style={{ backgroundColor: colors.bg }}
+        >
           <NoteEditor
             key={currentNote.id}
             note={currentNote}
@@ -498,7 +501,7 @@ export function Dashboard() {
 
   // Desktop: side-by-side layout
   return (
-    <div className="flex min-h-screen relative" style={{ backgroundColor: colors.bg }}>
+    <div className="flex h-screen overflow-hidden relative" style={{ backgroundColor: colors.bg }}>
       {/* Backdrop to close menus when clicking/tapping outside */}
       {(showSortMenu || showCreateMenu) && (
         <div
@@ -525,7 +528,10 @@ export function Dashboard() {
 
       {/* Notes List Sidebar (collapsible) */}
       {showNotesSidebar && (
-        <div className="w-72 border-r flex flex-col z-10" style={{ borderColor: colors.border }}>
+        <div
+          className="w-72 border-r flex flex-col min-h-0 z-10"
+          style={{ borderColor: colors.border }}
+        >
           {/* Notes Header */}
           {isSelectionMode ? (
             <div
@@ -774,7 +780,7 @@ export function Dashboard() {
         )}
 
         {currentNote ? (
-          <div className="flex-1">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <NoteEditor
               key={currentNote.id}
               note={currentNote}
