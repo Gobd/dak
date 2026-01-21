@@ -1,11 +1,10 @@
-import { useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
-import { useTheme, useThemeColors } from '../hooks/useThemeColors';
 import './tiptap-styles.css';
 
 export interface RichNoteEditorRef {
@@ -33,8 +32,6 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     { content, onUpdate, maxLength = 50000, placeholder = 'Start writing...' },
     ref
   ) {
-    const colors = useThemeColors();
-    const { isDark } = useTheme();
     const lastContentRef = useRef(content);
     const isInitPhaseRef = useRef(true);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,25 +168,8 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
       [editor]
     );
 
-    // Set CSS custom properties for theme colors
-    const setThemeColors = useCallback(() => {
-      const root = document.documentElement;
-      root.style.setProperty('--editor-text-color', colors.text);
-      root.style.setProperty('--editor-bg-color', colors.bg);
-      root.style.setProperty('--editor-placeholder-color', colors.inputPlaceholder);
-      root.style.setProperty('--editor-primary-color', colors.primary);
-      root.style.setProperty('--editor-muted-color', colors.textMuted);
-    }, [colors]);
-
-    useEffect(() => {
-      setThemeColors();
-    }, [setThemeColors]);
-
     return (
-      <div
-        className={`flex-1 min-h-0 overflow-auto editor-scroll-container ${isDark ? 'dark-mode' : ''}`}
-        style={{ backgroundColor: colors.bg }}
-      >
+      <div className="flex-1 min-h-0 overflow-auto editor-scroll-container bg-white dark:bg-zinc-950">
         <EditorContent editor={editor} className="tiptap-editor h-full" />
       </div>
     );

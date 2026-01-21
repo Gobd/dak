@@ -1,14 +1,12 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { PasswordRequirements } from '../components/ui/password-requirements';
 import { isPasswordValid } from '../lib/password-validation';
 
 export function ResetPassword() {
-  const colors = useThemeColors();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,27 +41,22 @@ export function ResetPassword() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: colors.bg }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2" style={{ color: colors.text }}>
+        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
           Reset Password
         </h1>
-        <p className="text-center mb-8" style={{ color: colors.textMuted }}>
-          Enter your new password
-        </p>
+        <p className="text-center mb-8 text-zinc-500">Enter your new password</p>
 
         <div className="mb-4">
           <Input
             label="New Password"
             value={password}
-            onChangeText={setPassword}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter new password"
             type="password"
             autoComplete="new-password"
-            onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+            onKeyDown={(e) => e.key === 'Enter' && confirmPasswordRef.current?.focus()}
           />
           <PasswordRequirements password={password} />
         </div>
@@ -73,16 +66,16 @@ export function ResetPassword() {
             ref={confirmPasswordRef}
             label="Confirm Password"
             value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your password"
             type="password"
             autoComplete="new-password"
             error={error}
-            onSubmitEditing={handleResetPassword}
+            onKeyDown={(e) => e.key === 'Enter' && handleResetPassword()}
           />
         </div>
 
-        <Button onPress={handleResetPassword} loading={isLoading} className="w-full">
+        <Button onClick={handleResetPassword} loading={isLoading} className="w-full">
           Reset Password
         </Button>
       </div>

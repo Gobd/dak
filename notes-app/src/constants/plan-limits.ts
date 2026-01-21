@@ -31,15 +31,3 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
 export function getPlanLimits(plan: Plan): PlanLimits {
   return PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
 }
-
-export function canUseFeature(plan: Plan, feature: 'liveSync' | 'sharing'): boolean {
-  const limits = getPlanLimits(plan);
-  switch (feature) {
-    case 'liveSync':
-      return limits.hasLiveSync;
-    case 'sharing':
-      return limits.maxSharedUsers > 0;
-    default:
-      return false;
-  }
-}

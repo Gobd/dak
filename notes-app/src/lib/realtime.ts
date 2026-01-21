@@ -407,7 +407,7 @@ async function notifySharedUsers(noteId: string, event: SyncEvent) {
 }
 
 /**
- * Unsubscribe from all sync events
+ * Unsubscribe from all sync events (call on signout)
  */
 export function unsubscribeFromSync() {
   stopHeartbeat();

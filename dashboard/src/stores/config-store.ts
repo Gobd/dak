@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type {
   DashboardConfig,
-  ScreenConfig,
   PanelConfig,
   DriveTimeConfig,
   CalendarConfig,
@@ -559,16 +558,3 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', cleanupSSE);
   window.addEventListener('pagehide', cleanupSSE);
 }
-
-// Selector for current screen
-export const useCurrentScreen = (): ScreenConfig => {
-  const screens = useConfigStore((state) => state.screens);
-  const activeScreenIndex = useConfigStore((state) => state.activeScreenIndex);
-  return screens[activeScreenIndex] ?? screens[0];
-};
-
-// Selector for current panels
-export const useCurrentPanels = (): PanelConfig[] => {
-  const screen = useCurrentScreen();
-  return screen?.panels ?? [];
-};

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type SortBy = 'updated' | 'created' | 'title';
+type SortBy = 'updated' | 'created' | 'title';
 
 interface ViewStore {
   showPrivate: boolean;

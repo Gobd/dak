@@ -35,13 +35,3 @@ export function getNoteTitle(content: string | null, maxLength = 100): string {
   if (firstLine.length <= maxLength) return firstLine;
   return firstLine.slice(0, maxLength) + '...';
 }
-
-// Get preview text (skip first line which is the title)
-export function getNotePreview(content: string | null, maxLength = 150): string {
-  if (!content) return '';
-  const lines = content.split('\n');
-  const previewLines = lines.slice(1).join('\n').trim();
-  if (!previewLines) return '';
-  if (previewLines.length <= maxLength) return previewLines;
-  return previewLines.slice(0, maxLength) + '...';
-}

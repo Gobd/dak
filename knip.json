@@ -1,0 +1,32 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreBinaries": ["sleep", "open", "uv", "gen:api:check"],
+  "rules": {
+    "unresolved": "off",
+    "duplicates": "off"
+  },
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.{sh,ts,js}"]
+    },
+    "climate-display": {},
+    "dashboard": {
+      "ignore": ["src/api/generated/**", "public/**"]
+    },
+    "family-chores": {},
+    "functions": {
+      "entry": ["api/**/*.js"],
+      "project": ["api/**/*.js"]
+    },
+    "health-tracker": {},
+    "kasa-controller": {},
+    "notes-app": {},
+    "packages/kasa-client": {},
+    "packages/ui": {},
+    "packages/vite-shared-react": {
+      "ignoreDependencies": ["react", "react-dom", "vite"],
+      "ignore": ["fonts/**"]
+    }
+  },
+  "ignoreDependencies": ["globals"]
+}

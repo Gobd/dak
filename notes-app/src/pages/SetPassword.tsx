@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
@@ -9,7 +8,6 @@ import { PasswordRequirements } from '../components/ui/password-requirements';
 import { isPasswordValid } from '../lib/password-validation';
 
 export function SetPassword() {
-  const colors = useThemeColors();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -56,27 +54,22 @@ export function SetPassword() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: colors.bg }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2" style={{ color: colors.text }}>
+        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
           Set Your Password
         </h1>
-        <p className="text-center mb-8" style={{ color: colors.textMuted }}>
-          Choose a strong password for your account
-        </p>
+        <p className="text-center mb-8 text-zinc-500">Choose a strong password for your account</p>
 
         <div className="mb-4">
           <Input
             label="Password"
             value={password}
-            onChangeText={setPassword}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter password"
             type="password"
             autoComplete="new-password"
-            onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+            onKeyDown={(e) => e.key === 'Enter' && confirmPasswordRef.current?.focus()}
           />
           <PasswordRequirements password={password} />
         </div>
@@ -86,16 +79,16 @@ export function SetPassword() {
             ref={confirmPasswordRef}
             label="Confirm Password"
             value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your password"
             type="password"
             autoComplete="new-password"
             error={error}
-            onSubmitEditing={handleSetPassword}
+            onKeyDown={(e) => e.key === 'Enter' && handleSetPassword()}
           />
         </div>
 
-        <Button onPress={handleSetPassword} loading={isLoading} className="w-full">
+        <Button onClick={handleSetPassword} loading={isLoading} className="w-full">
           Set Password
         </Button>
       </div>

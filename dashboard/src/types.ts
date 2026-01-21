@@ -175,19 +175,6 @@ export const DEFAULT_CONFIG: DashboardConfig = {
   dark: true,
 };
 
-// Widget props passed to all widgets
-export interface WidgetProps {
-  panel: PanelConfig;
-  dark: boolean;
-  isEditMode: boolean;
-}
-
-// SSE event types
-export interface SSEEvent {
-  type: string;
-  data?: unknown;
-}
-
 // Duration parsing utility type
 export type DurationUnit = 's' | 'm' | 'h' | 'd';
 
@@ -208,17 +195,6 @@ export function parseDuration(duration?: string): number | null {
   };
 
   return value * multipliers[unit];
-}
-
-// Format duration for display
-export function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-
-  if (hours > 0) return `${hours}h ${minutes % 60}m`;
-  if (minutes > 0) return `${minutes}m`;
-  return `${seconds}s`;
 }
 
 // Generate unique ID

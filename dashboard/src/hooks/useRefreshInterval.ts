@@ -55,24 +55,6 @@ export function useRefreshInterval(
 }
 
 /**
- * Hook for one-time delayed execution
- */
-export function useTimeout(callback: () => void, delay: number | null): void {
-  const callbackRef = useRef(callback);
-
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-
-  useEffect(() => {
-    if (delay === null) return;
-
-    const id = setTimeout(() => callbackRef.current(), delay);
-    return () => clearTimeout(id);
-  }, [delay]);
-}
-
-/**
  * Hook for synced clock updates (updates on second/minute boundaries)
  */
 export function useSyncedClock(callback: () => void, showSeconds: boolean): void {

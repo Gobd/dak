@@ -6,13 +6,15 @@
     "lint": "oxlint --fix",
     "format:check": "oxfmt --check",
     "format": "oxfmt --write",
+    "knip": "knip",
     "typecheck": "pnpm -r typecheck",
     "build:react-vendor": "pnpm --filter @dak/vite-shared-react build:vendor",
     "build": "pnpm build:react-vendor && pnpm -r build",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
+    "check": "pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck && pnpm build",
     "build:pages": "./scripts/build-pages.sh"
   },
   "devDependencies": {
+    "knip": "^5.82.1",
     "oxfmt": "^0",
     "oxlint": "^1"
   },

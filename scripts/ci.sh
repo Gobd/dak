@@ -14,6 +14,10 @@ echo "==> Formatting (oxfmt --write)..."
 pnpm format
 
 echo ""
+echo "==> Running knip (unused code detection)..."
+pnpm knip
+
+echo ""
 echo "==> Syncing Python dependencies..."
 (cd dashboard/services/home-relay && uv sync --group dev)
 

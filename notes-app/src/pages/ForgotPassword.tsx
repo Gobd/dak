@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 export function ForgotPassword() {
-  const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -35,20 +33,15 @@ export function ForgotPassword() {
 
   if (success) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6"
-        style={{ backgroundColor: colors.bg }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-bold text-center mb-4" style={{ color: colors.text }}>
+          <h1 className="text-3xl font-bold text-center mb-4 text-zinc-950 dark:text-white">
             Check your email
           </h1>
-          <p className="text-center mb-8" style={{ color: colors.textMuted }}>
+          <p className="text-center mb-8 text-zinc-500">
             We sent a password reset link to
             <br />
-            <span className="font-medium" style={{ color: colors.text }}>
-              {email}
-            </span>
+            <span className="font-medium text-zinc-950 dark:text-white">{email}</span>
           </p>
           <Link to="/login">
             <Button variant="secondary" className="w-full">
@@ -61,38 +54,33 @@ export function ForgotPassword() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: colors.bg }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2" style={{ color: colors.text }}>
+        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
           Forgot Password
         </h1>
-        <p className="text-center mb-8" style={{ color: colors.textMuted }}>
-          Enter your email to receive a reset link
-        </p>
+        <p className="text-center mb-8 text-zinc-500">Enter your email to receive a reset link</p>
 
         <div className="mb-6">
           <Input
             label="Email"
             value={email}
-            onChangeText={setEmail}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             type="email"
             autoComplete="email"
             error={error}
-            onSubmitEditing={handleSendReset}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendReset()}
           />
         </div>
 
         <div className="mb-4">
-          <Button onPress={handleSendReset} loading={isLoading} className="w-full">
+          <Button onClick={handleSendReset} loading={isLoading} className="w-full">
             Send Reset Link
           </Button>
         </div>
 
-        <p className="text-center" style={{ color: colors.primary }}>
+        <p className="text-center text-amber-500 dark:text-amber-400">
           <Link to="/login" className="font-medium">
             Back to Sign In
           </Link>
