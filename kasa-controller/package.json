@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:relay": "concurrently -n vite,relay -c blue,green \"vite\" \"uv run --directory ../dashboard/services/home-relay python relay.py\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -22,6 +23,7 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "concurrently": "catalog:",
     "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "@tailwindcss/vite": "catalog:vite",
