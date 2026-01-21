@@ -10,3 +10,4 @@ secrets.local.js
 
 # Build analysis
 stats.html
+package-lock.json
