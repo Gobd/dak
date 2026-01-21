@@ -1,0 +1,830 @@
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowUpDown,
+  ChevronDown,
+  Lock,
+  PanelLeft,
+  PanelLeftClose,
+  Plus,
+  RefreshCw,
+  Square,
+  SquareCheck,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { DesktopSidebar } from '../components/DesktopSidebar';
+import { MobileHeader } from '../components/MobileHeader';
+import { NoteEditor } from '../components/NoteEditor';
+import { NotesList } from '../components/NotesList';
+import { SearchBar } from '../components/SearchBar';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useAuthStore } from '../stores/auth-store';
+import { useNotesStore } from '../stores/notes-store';
+import { useTagsStore } from '../stores/tags-store';
+import { useToastStore } from '../stores/toast-store';
+import { useUserStore } from '../stores/user-store';
+import { useViewStore } from '../stores/view-store';
+import { getNoteTitle } from '../types/note';
+
+export function Dashboard() {
+  const { user, signOut } = useAuthStore();
+  const colors = useThemeColors();
+  const { showPrivate, toggleShowPrivate, sortBy, setSortBy } = useViewStore();
+  const {
+    notes,
+    currentNote,
+    isLoading,
+    fetchNotes,
+    createNote,
+    updateNote,
+    setCurrentNote,
+    trashNote,
+  } = useNotesStore();
+
+  const {
+    tags,
+    fetchTags,
+    fetchAllNoteTags,
+    createTag,
+    noteTagsMap,
+    addTagToNote,
+    removeTagFromNote,
+  } = useTagsStore();
+
+  const { planLimits, fetchProfile } = useUserStore();
+  const { showToast } = useToastStore();
+
+  // Use window width for responsive layout
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const isDesktop = windowWidth >= 768;
+
+  // Enable realtime sync across devices (only for paid plans)
+  useRealtimeSync(user?.id, planLimits.hasLiveSync);
+
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showNavSidebar, setShowNavSidebar] = useState(true);
+  const [showNotesSidebar, setShowNotesSidebar] = useState(true);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMobileTagsMenu, setShowMobileTagsMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Selection mode for bulk delete
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Fetch notes, tags, and profile on mount
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotes(user.id);
+      fetchTags(user.id);
+      fetchAllNoteTags(user.id);
+      fetchProfile(user.id);
+    }
+  }, [user?.id, fetchNotes, fetchTags, fetchAllNoteTags, fetchProfile]);
+
+  // Get tags for current note (reactive)
+  const currentNoteId = currentNote?.id;
+  const currentNoteTags = useMemo(() => {
+    if (!currentNoteId) return [];
+    const tagIds = noteTagsMap[currentNoteId] || [];
+    return tags.filter((t) => tagIds.includes(t.id));
+  }, [currentNoteId, noteTagsMap, tags]);
+
+  // Calculate tag counts for sidebar (only from active notes)
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const activeNoteIds = new Set(notes.map((n) => n.id));
+    Object.entries(noteTagsMap).forEach(([noteId, tagIds]) => {
+      // Only count tags from notes that are in the active notes list
+      if (activeNoteIds.has(noteId)) {
+        tagIds.forEach((tagId) => {
+          counts[tagId] = (counts[tagId] || 0) + 1;
+        });
+      }
+    });
+    return counts;
+  }, [noteTagsMap, notes]);
+
+  // Filter notes by tag and search query, sort pinned first
+  const filteredNotes = useMemo(() => {
+    let filtered = notes;
+
+    // Filter out private notes when showPrivate is false
+    if (!showPrivate) {
+      filtered = filtered.filter((n) => !n.is_private);
+    }
+
+    // Filter by tag
+    if (selectedTagId) {
+      const noteIdsWithTag = new Set<string>();
+      Object.entries(noteTagsMap).forEach(([noteId, tagIds]) => {
+        if (tagIds.includes(selectedTagId)) {
+          noteIdsWithTag.add(noteId);
+        }
+      });
+      filtered = filtered.filter((n) => noteIdsWithTag.has(n.id));
+    }
+
+    // Filter by search query (content and tags)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((n) => {
+        const contentMatch = n.content?.toLowerCase().includes(query);
+        const noteTagIds = noteTagsMap[n.id] || [];
+        const tagMatch = noteTagIds.some((tagId) => {
+          const tag = tags.find((t) => t.id === tagId);
+          return tag?.name.toLowerCase().includes(query);
+        });
+        return contentMatch || tagMatch;
+      });
+    }
+
+    // Sort: pinned first, then by selected sort option
+    return [...filtered].sort((a, b) => {
+      // Pinned always first
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+
+      // Then apply selected sort
+      switch (sortBy) {
+        case 'title': {
+          const titleA = getNoteTitle(a.content).toLowerCase();
+          const titleB = getNoteTitle(b.content).toLowerCase();
+          return titleA.localeCompare(titleB);
+        }
+        case 'created':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'updated':
+        default:
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      }
+    });
+  }, [notes, selectedTagId, noteTagsMap, tags, searchQuery, sortBy, showPrivate]);
+
+  // Auto-select first note when notes load and no note is selected
+  useEffect(() => {
+    if (!isLoading && !currentNote && filteredNotes.length > 0) {
+      setCurrentNote(filteredNotes[0]);
+    }
+  }, [isLoading, currentNote, filteredNotes, setCurrentNote]);
+
+  // Determine empty state type
+  const emptyStateType = useMemo(() => {
+    if (searchQuery.trim()) return 'search' as const;
+    if (selectedTagId) return 'tag' as const;
+    return 'default' as const;
+  }, [searchQuery, selectedTagId]);
+
+  const handleCreateNote = async (isPrivate: boolean = false) => {
+    if (!user?.id) return;
+    setShowCreateMenu(false);
+    await createNote(user.id, isPrivate);
+    // On mobile, navigate to the new note by hiding sidebar
+    if (!isDesktop) {
+      setShowSidebar(false);
+    }
+  };
+
+  const handleCreateTag = async (name: string, color?: string) => {
+    if (!user?.id) return;
+    const randomColors = [
+      '#ef4444',
+      '#f97316',
+      '#eab308',
+      '#22c55e',
+      '#14b8a6',
+      '#3b82f6',
+      '#8b5cf6',
+      '#ec4899',
+    ];
+    const newTag = await createTag({
+      user_id: user.id,
+      name,
+      color: color || randomColors[Math.floor(Math.random() * randomColors.length)],
+    });
+    return newTag;
+  };
+
+  const handleCreateAndAddTag = async (name: string) => {
+    if (!user?.id || !currentNote) return;
+    const newTag = await handleCreateTag(name);
+    if (newTag) {
+      await addTagToNote(currentNote.id, newTag.id);
+    }
+  };
+
+  const handleTrashNote = () => {
+    if (!user?.id || !currentNote) return;
+
+    // Only the owner can trash a note
+    if (currentNote.user_id !== user.id) {
+      showToast('You can only delete notes you own.', 'error');
+      return;
+    }
+
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmTrash = async () => {
+    if (!user?.id || !currentNote) return;
+
+    await trashNote(currentNote.id, user.id);
+    setShowDeleteConfirm(false);
+    setCurrentNote(null);
+    // On mobile, return to list view
+    if (!isDesktop) {
+      setShowSidebar(true);
+    }
+  };
+
+  // Selection mode handlers
+  const enterSelectionMode = () => {
+    setIsSelectionMode(true);
+    setSelectedNoteIds(new Set());
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedNoteIds(new Set());
+  };
+
+  const toggleNoteSelection = (noteId: string) => {
+    setSelectedNoteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(noteId)) {
+        next.delete(noteId);
+      } else {
+        next.add(noteId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    // Get only user-owned notes that can be deleted
+    const ownedNoteIds = filteredNotes.filter((n) => n.user_id === user?.id).map((n) => n.id);
+    const allSelected = ownedNoteIds.every((id) => selectedNoteIds.has(id));
+    if (allSelected) {
+      setSelectedNoteIds(new Set());
+    } else {
+      setSelectedNoteIds(new Set(ownedNoteIds));
+    }
+  };
+
+  const handleBulkTrash = async () => {
+    if (!user?.id || selectedNoteIds.size === 0) return;
+
+    // Trash all selected notes
+    for (const noteId of selectedNoteIds) {
+      await trashNote(noteId, user.id);
+    }
+
+    setShowBulkDeleteConfirm(false);
+    exitSelectionMode();
+    setCurrentNote(null);
+  };
+
+  // Check if all owned notes are selected
+  const ownedNoteIds = filteredNotes.filter((n) => n.user_id === user?.id).map((n) => n.id);
+  const allOwnedSelected =
+    ownedNoteIds.length > 0 && ownedNoteIds.every((id) => selectedNoteIds.has(id));
+
+  const handleSelectNote = (note: typeof currentNote) => {
+    setCurrentNote(note);
+    setShowCreateMenu(false);
+    setShowMobileMenu(false);
+    if (!isDesktop) {
+      setShowSidebar(false);
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentNote(null);
+    setShowSidebar(true);
+  };
+
+  if (isLoading && notes.length === 0) {
+    return <LoadingSpinner fullScreen />;
+  }
+
+  // Mobile: show either list or editor
+  if (!isDesktop) {
+    if (currentNote && !showSidebar) {
+      return (
+        <div className="flex-1 min-h-screen" style={{ backgroundColor: colors.bg }}>
+          <NoteEditor
+            key={currentNote.id}
+            note={currentNote}
+            onUpdate={(updates) => updateNote(currentNote.id, updates)}
+            onBack={handleBack}
+            onTrash={handleTrashNote}
+            tags={tags}
+            noteTags={currentNoteTags}
+            onAddTag={(tagId) => addTagToNote(currentNote.id, tagId)}
+            onRemoveTag={(tagId) => removeTagFromNote(currentNote.id, tagId)}
+            onCreateTag={handleCreateAndAddTag}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: colors.bg }}>
+        {/* Backdrop to close menus when tapping outside */}
+        {(showMobileMenu || showSortMenu || showCreateMenu) && (
+          <div
+            onClick={() => {
+              setShowMobileMenu(false);
+              setShowMobileTagsMenu(false);
+              setShowSortMenu(false);
+              setShowCreateMenu(false);
+            }}
+            className="absolute inset-0 z-[5]"
+          />
+        )}
+        {/* Mobile Header */}
+        <MobileHeader
+          colors={colors}
+          isSelectionMode={isSelectionMode}
+          allOwnedSelected={allOwnedSelected}
+          selectedNoteIds={selectedNoteIds}
+          toggleSelectAll={toggleSelectAll}
+          onBulkDelete={() => setShowBulkDeleteConfirm(true)}
+          exitSelectionMode={exitSelectionMode}
+          enterSelectionMode={enterSelectionMode}
+          showPrivate={showPrivate}
+          toggleShowPrivate={toggleShowPrivate}
+          showCreateMenu={showCreateMenu}
+          setShowCreateMenu={setShowCreateMenu}
+          onCreateNote={handleCreateNote}
+          showMobileMenu={showMobileMenu}
+          setShowMobileMenu={setShowMobileMenu}
+          tags={tags}
+          selectedTagId={selectedTagId}
+          setSelectedTagId={setSelectedTagId}
+          tagCounts={tagCounts}
+          showMobileTagsMenu={showMobileTagsMenu}
+          setShowMobileTagsMenu={setShowMobileTagsMenu}
+          onLogout={() => setShowLogoutConfirm(true)}
+        />
+        {/* Mobile Search */}
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        {/* Active Tag Filter */}
+        {selectedTagId && (
+          <button
+            onClick={() => setSelectedTagId(null)}
+            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start"
+            style={{ backgroundColor: colors.bgTertiary }}
+          >
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || colors.primary,
+              }}
+            />
+            <span className="text-sm" style={{ color: colors.text }}>
+              {tags.find((t) => t.id === selectedTagId)?.name}
+            </span>
+            <span className="text-sm ml-0.5" style={{ color: colors.textMuted }}>
+              ×
+            </span>
+          </button>
+        )}
+        {/* Mobile Sort Options */}
+        <div className="px-4 py-2 border-b" style={{ borderColor: colors.border }}>
+          <button
+            onClick={() => setShowSortMenu(!showSortMenu)}
+            className="flex items-center gap-1"
+          >
+            <ArrowUpDown size={14} color={colors.iconMuted} />
+            <span className="text-xs" style={{ color: colors.textMuted }}>
+              {sortBy === 'updated'
+                ? 'Last updated'
+                : sortBy === 'created'
+                  ? 'Date created'
+                  : 'Title'}
+            </span>
+          </button>
+          {showSortMenu && (
+            <div
+              className="mt-2 rounded-lg overflow-hidden"
+              style={{ backgroundColor: colors.bgTertiary }}
+            >
+              {(['updated', 'created', 'title'] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => {
+                    setSortBy(option);
+                    setShowSortMenu(false);
+                  }}
+                  className="w-full px-3 py-2 text-left"
+                  style={{
+                    backgroundColor: sortBy === option ? colors.bgHover : 'transparent',
+                  }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: sortBy === option ? colors.text : colors.textTertiary }}
+                  >
+                    {option === 'updated'
+                      ? 'Last updated'
+                      : option === 'created'
+                        ? 'Date created'
+                        : 'Title (A-Z)'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <NotesList
+          notes={filteredNotes}
+          selectedNoteId={currentNote?.id || null}
+          onSelectNote={handleSelectNote}
+          emptyStateType={emptyStateType}
+          searchQuery={searchQuery}
+          selectionMode={isSelectionMode}
+          selectedIds={selectedNoteIds}
+          onToggleSelect={toggleNoteSelection}
+          currentUserId={user?.id}
+        />
+        <ConfirmDialog
+          visible={showLogoutConfirm}
+          title="Log out"
+          message="Are you sure you want to log out?"
+          confirmText="Log out"
+          destructive
+          onConfirm={() => {
+            setShowLogoutConfirm(false);
+            signOut();
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+        <ConfirmDialog
+          visible={showDeleteConfirm}
+          title="Delete note?"
+          message="This will move the note to trash."
+          confirmText="Delete"
+          destructive
+          onConfirm={handleConfirmTrash}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+        <ConfirmDialog
+          visible={showBulkDeleteConfirm}
+          title={`Delete ${selectedNoteIds.size} notes?`}
+          message={`This will move ${selectedNoteIds.size} note${selectedNoteIds.size === 1 ? '' : 's'} to trash.`}
+          confirmText="Delete"
+          destructive
+          onConfirm={handleBulkTrash}
+          onCancel={() => setShowBulkDeleteConfirm(false)}
+        />
+      </div>
+    );
+  }
+
+  // Desktop: side-by-side layout
+  return (
+    <div className="flex min-h-screen relative" style={{ backgroundColor: colors.bg }}>
+      {/* Backdrop to close menus when clicking/tapping outside */}
+      {(showSortMenu || showCreateMenu) && (
+        <div
+          onClick={() => {
+            setShowSortMenu(false);
+            setShowCreateMenu(false);
+          }}
+          className="absolute inset-0 z-[5]"
+        />
+      )}
+      {/* Navigation Sidebar (collapsible) */}
+      {showNavSidebar && (
+        <DesktopSidebar
+          colors={colors}
+          onClose={() => setShowNavSidebar(false)}
+          tags={tags}
+          selectedTagId={selectedTagId}
+          onSelectTag={setSelectedTagId}
+          tagCounts={tagCounts}
+          userEmail={user?.email}
+          onLogout={() => setShowLogoutConfirm(true)}
+        />
+      )}
+
+      {/* Notes List Sidebar (collapsible) */}
+      {showNotesSidebar && (
+        <div className="w-72 border-r flex flex-col z-10" style={{ borderColor: colors.border }}>
+          {/* Notes Header */}
+          {isSelectionMode ? (
+            <div
+              className="flex items-center justify-between px-4 py-[7px] border-b z-10"
+              style={{ borderColor: colors.border, backgroundColor: colors.bgSecondary }}
+            >
+              <button onClick={toggleSelectAll} className="flex items-center gap-2">
+                {allOwnedSelected ? (
+                  <SquareCheck size={18} color={colors.primary} />
+                ) : (
+                  <Square size={18} color={colors.iconMuted} />
+                )}
+                <span className="text-sm" style={{ color: colors.text }}>
+                  All
+                </span>
+              </button>
+              <span className="text-sm font-medium" style={{ color: colors.text }}>
+                {selectedNoteIds.size} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
+                  className="px-3 py-1.5 rounded-md text-sm font-medium"
+                  style={{
+                    backgroundColor: selectedNoteIds.size > 0 ? colors.error : colors.border,
+                    color: selectedNoteIds.size > 0 ? '#fff' : colors.textMuted,
+                  }}
+                >
+                  Delete
+                </button>
+                <button onClick={exitSelectionMode} className="p-1">
+                  <X size={18} color={colors.icon} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="flex items-center justify-between px-4 py-[7px] border-b z-10"
+              style={{ borderColor: colors.border }}
+            >
+              {!showNavSidebar && (
+                <button onClick={() => setShowNavSidebar(true)} className="p-1 mr-2">
+                  <PanelLeft size={18} color={colors.iconMuted} />
+                </button>
+              )}
+              {selectedTagId ? (
+                <span className="text-base font-medium flex-1" style={{ color: colors.text }}>
+                  {tags.find((t) => t.id === selectedTagId)?.name || 'Notes'}
+                </span>
+              ) : (
+                <button
+                  onClick={toggleShowPrivate}
+                  className="flex items-center flex-1 gap-1 py-1 pr-2"
+                >
+                  {!showPrivate && <Lock size={14} color={colors.primary} />}
+                  <span className="text-base font-medium" style={{ color: colors.text }}>
+                    {showPrivate ? 'All Notes' : 'Public'}
+                  </span>
+                  <ChevronDown size={16} color={colors.textMuted} />
+                </button>
+              )}
+              <button onClick={enterSelectionMode} className="p-1.5 mr-1 shrink-0">
+                <SquareCheck size={18} color={colors.iconMuted} />
+              </button>
+              <div className="relative z-10">
+                <button
+                  onClick={() => {
+                    // In public-only mode, just create a public note directly
+                    if (!showPrivate) {
+                      handleCreateNote(false);
+                    } else {
+                      setShowCreateMenu(!showCreateMenu);
+                    }
+                  }}
+                  className="p-1.5 rounded-md mr-2"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  <Plus size={18} color={colors.primaryText} />
+                </button>
+                {showCreateMenu && showPrivate && (
+                  <div
+                    className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100]"
+                    style={{
+                      backgroundColor: colors.bgSecondary,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <button
+                      onClick={() => handleCreateNote(false)}
+                      className="flex items-center gap-2 w-full p-3 border-b"
+                      style={{ borderColor: colors.border }}
+                    >
+                      <Plus size={16} color={colors.icon} />
+                      <span className="text-sm" style={{ color: colors.text }}>
+                        New Note
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => handleCreateNote(true)}
+                      className="flex items-center gap-2 w-full p-3"
+                    >
+                      <Lock size={16} color={colors.icon} />
+                      <span className="text-sm" style={{ color: colors.text }}>
+                        Private Note
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setShowNotesSidebar(false)} className="p-1">
+                <PanelLeftClose size={18} color={colors.iconMuted} />
+              </button>
+            </div>
+          )}
+
+          {/* Desktop Search */}
+          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+
+          {/* Active Tag Filter */}
+          {selectedTagId && (
+            <button
+              onClick={() => setSelectedTagId(null)}
+              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start"
+              style={{ backgroundColor: colors.bgTertiary }}
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{
+                  backgroundColor:
+                    tags.find((t) => t.id === selectedTagId)?.color || colors.primary,
+                }}
+              />
+              <span className="text-sm" style={{ color: colors.text }}>
+                {tags.find((t) => t.id === selectedTagId)?.name}
+              </span>
+              <span className="text-sm ml-0.5" style={{ color: colors.textMuted }}>
+                ×
+              </span>
+            </button>
+          )}
+
+          {/* Sort Options */}
+          <div className="px-4 py-2 border-b" style={{ borderColor: colors.border }}>
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="flex items-center gap-1"
+            >
+              <ArrowUpDown size={14} color={colors.iconMuted} />
+              <span className="text-xs" style={{ color: colors.textMuted }}>
+                {sortBy === 'updated'
+                  ? 'Last updated'
+                  : sortBy === 'created'
+                    ? 'Date created'
+                    : 'Title'}
+              </span>
+            </button>
+            {showSortMenu && (
+              <div
+                className="mt-2 rounded-lg overflow-hidden"
+                style={{ backgroundColor: colors.bgTertiary }}
+              >
+                {(['updated', 'created', 'title'] as const).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setSortBy(option);
+                      setShowSortMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left"
+                    style={{
+                      backgroundColor: sortBy === option ? colors.bgHover : 'transparent',
+                    }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: sortBy === option ? colors.text : colors.textTertiary }}
+                    >
+                      {option === 'updated'
+                        ? 'Last updated'
+                        : option === 'created'
+                          ? 'Date created'
+                          : 'Title (A-Z)'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Notes List */}
+          <NotesList
+            notes={filteredNotes}
+            selectedNoteId={currentNote?.id || null}
+            onSelectNote={handleSelectNote}
+            emptyStateType={emptyStateType}
+            searchQuery={searchQuery}
+            selectionMode={isSelectionMode}
+            selectedIds={selectedNoteIds}
+            onToggleSelect={toggleNoteSelection}
+            currentUserId={user?.id}
+          />
+        </div>
+      )}
+
+      {/* Editor Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Always show header when sidebars are collapsed */}
+        {(!showNavSidebar || !showNotesSidebar) && (
+          <div
+            className="flex items-center justify-between px-4 py-2 border-b"
+            style={{ borderColor: colors.border }}
+          >
+            <div className="flex items-center gap-2">
+              {!showNavSidebar && (
+                <button
+                  onClick={() => setShowNavSidebar(true)}
+                  className="p-1.5 rounded"
+                  style={{ backgroundColor: colors.bgTertiary }}
+                >
+                  <PanelLeft size={18} color={colors.iconMuted} />
+                </button>
+              )}
+              {!showNotesSidebar && (
+                <button
+                  onClick={() => setShowNotesSidebar(true)}
+                  className="p-1.5 rounded"
+                  style={{ backgroundColor: colors.bgTertiary }}
+                >
+                  <PanelLeft size={18} color={colors.icon} />
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {!showNavSidebar && (
+                <button onClick={() => window.location.reload()} className="p-2">
+                  <RefreshCw size={18} color={colors.iconMuted} />
+                </button>
+              )}
+              {currentNote && (
+                <button onClick={handleTrashNote} className="p-2">
+                  <Trash2 size={18} color={colors.iconMuted} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentNote ? (
+          <div className="flex-1">
+            <NoteEditor
+              key={currentNote.id}
+              note={currentNote}
+              onUpdate={(updates) => updateNote(currentNote.id, updates)}
+              onTrash={handleTrashNote}
+              tags={tags}
+              noteTags={currentNoteTags}
+              onAddTag={(tagId) => addTagToNote(currentNote.id, tagId)}
+              onRemoveTag={(tagId) => removeTagFromNote(currentNote.id, tagId)}
+              onCreateTag={handleCreateAndAddTag}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <span style={{ color: colors.textMuted }} className="text-base">
+              Select a note or create a new one
+            </span>
+          </div>
+        )}
+      </div>
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmText="Log out"
+        destructive
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          signOut();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete note?"
+        message="This will move the note to trash."
+        confirmText="Delete"
+        destructive
+        onConfirm={handleConfirmTrash}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+      <ConfirmDialog
+        visible={showBulkDeleteConfirm}
+        title={`Delete ${selectedNoteIds.size} notes?`}
+        message={`This will move ${selectedNoteIds.size} note${selectedNoteIds.size === 1 ? '' : 's'} to trash.`}
+        confirmText="Delete"
+        destructive
+        onConfirm={handleBulkTrash}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
+      />
+    </div>
+  );
+}

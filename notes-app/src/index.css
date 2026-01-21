@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+@source "../../packages/ui/src/**/*.tsx";
+
+@theme {
+  --default-font-family: 'Open Sans', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    font-synthesis: weight;
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+button,
+[role='button'],
+a,
+select,
+input[type='checkbox'],
+input[type='radio'],
+input[type='submit'],
+input[type='button'] {
+  cursor: pointer !important;
+}
+
+body {
+  @apply bg-white text-zinc-900 min-h-screen dark:bg-black dark:text-white;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  overflow: hidden;
+  height: 100%;
+}
+
+html {
+  overflow: hidden;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Shared utilities from UI package */
+@import '../../packages/ui/src/utilities.css';
