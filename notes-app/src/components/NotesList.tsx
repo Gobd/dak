@@ -1,4 +1,4 @@
-import { FileText, Search, Hash, RefreshCw } from 'lucide-react';
+import { FileText, Search, Hash } from 'lucide-react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { NoteListItem } from './NoteListItem';
 import type { Note } from '../types/note';
@@ -7,8 +7,6 @@ interface NotesListProps {
   notes: Note[];
   selectedNoteId: string | null;
   onSelectNote: (note: Note) => void;
-  onRefresh: () => void;
-  isRefreshing: boolean;
   emptyStateType?: 'default' | 'search' | 'tag';
   searchQuery?: string;
   // Selection mode props
@@ -22,8 +20,6 @@ export function NotesList({
   notes,
   selectedNoteId,
   onSelectNote,
-  onRefresh,
-  isRefreshing,
   emptyStateType = 'default',
   searchQuery,
   selectionMode = false,
@@ -77,23 +73,6 @@ export function NotesList({
 
   return (
     <div className="flex-1 overflow-auto pb-[300px]">
-      {/* Refresh button for web */}
-      <div className="flex justify-center py-2">
-        {isRefreshing ? (
-          <div
-            className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: colors.primary, borderTopColor: 'transparent' }}
-          />
-        ) : (
-          <button
-            onClick={onRefresh}
-            className="p-1.5 rounded hover:opacity-70"
-            title="Refresh notes"
-          >
-            <RefreshCw size={16} color={colors.iconMuted} />
-          </button>
-        )}
-      </div>
       {notes.map((note) => (
         <NoteListItem
           key={note.id}

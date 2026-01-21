@@ -72,7 +72,6 @@ export function Dashboard() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showNavSidebar, setShowNavSidebar] = useState(true);
   const [showNotesSidebar, setShowNotesSidebar] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -189,13 +188,6 @@ export function Dashboard() {
     if (selectedTagId) return 'tag' as const;
     return 'default' as const;
   }, [searchQuery, selectedTagId]);
-
-  const handleRefresh = async () => {
-    if (!user?.id) return;
-    setIsRefreshing(true);
-    await fetchNotes(user.id);
-    setIsRefreshing(false);
-  };
 
   const handleCreateNote = async (isPrivate: boolean = false) => {
     if (!user?.id) return;
@@ -463,8 +455,6 @@ export function Dashboard() {
           notes={filteredNotes}
           selectedNoteId={currentNote?.id || null}
           onSelectNote={handleSelectNote}
-          onRefresh={handleRefresh}
-          isRefreshing={isRefreshing}
           emptyStateType={emptyStateType}
           searchQuery={searchQuery}
           selectionMode={isSelectionMode}
@@ -730,8 +720,6 @@ export function Dashboard() {
             notes={filteredNotes}
             selectedNoteId={currentNote?.id || null}
             onSelectNote={handleSelectNote}
-            onRefresh={handleRefresh}
-            isRefreshing={isRefreshing}
             emptyStateType={emptyStateType}
             searchQuery={searchQuery}
             selectionMode={isSelectionMode}

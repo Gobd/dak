@@ -64,10 +64,16 @@
 }
 
 /* Lists */
-.tiptap-editor .tiptap ul,
+.tiptap-editor .tiptap ul {
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  list-style-type: disc;
+}
+
 .tiptap-editor .tiptap ol {
   padding-left: 1.5rem;
   margin-bottom: 0.5rem;
+  list-style-type: decimal;
 }
 
 .tiptap-editor .tiptap li {

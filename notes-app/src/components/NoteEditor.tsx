@@ -103,20 +103,22 @@ export function NoteEditor({
   };
 
   const handleDeleteCheckedTasks = () => {
-    if (!note.content) return;
-    const lines = note.content.split('\n');
+    const markdown = editorRef.current?.getMarkdown() || '';
+    if (!markdown) return;
+    const lines = markdown.split('\n');
     const filtered = lines.filter((line) => !line.match(/^(\s*[-*]?\s*)?\[x\]/i));
     const newContent = filtered.join('\n');
-    if (newContent !== note.content) {
-      onUpdate({ content: newContent });
+    if (newContent !== markdown) {
+      editorRef.current?.setMarkdown(newContent);
     }
   };
 
   const handleUncheckAll = () => {
-    if (!note.content) return;
-    const newContent = note.content.replace(/\[x\]/gi, '[ ]');
-    if (newContent !== note.content) {
-      onUpdate({ content: newContent });
+    const markdown = editorRef.current?.getMarkdown() || '';
+    if (!markdown) return;
+    const newContent = markdown.replace(/\[x\]/gi, '[ ]');
+    if (newContent !== markdown) {
+      editorRef.current?.setMarkdown(newContent);
     }
   };
 
@@ -127,7 +129,7 @@ export function NoteEditor({
     <div className="flex-1 flex flex-col" style={{ backgroundColor: colors.bg }}>
       {/* Toolbar */}
       <div className="border-b py-2 relative z-10" style={{ borderBottomColor: colors.border }}>
-        <div className="flex items-center gap-2 px-4 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-2 px-4 flex-wrap">
           {/* Back Button (narrow view) */}
           {onBack && (
             <button
@@ -307,7 +309,7 @@ export function NoteEditor({
                   onClick={() => setShowHeadingDropdown(false)}
                 />
                 <div
-                  className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100]"
+                  className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[120px]"
                   style={{
                     backgroundColor: colors.bgSecondary,
                     borderColor: colors.border,

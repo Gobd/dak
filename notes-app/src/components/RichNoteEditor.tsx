@@ -14,6 +14,8 @@ export interface RichNoteEditorRef {
   toggleHeading: (level: 1 | 2 | 3) => void;
   setEditable: (editable: boolean) => void;
   blur: () => void;
+  getMarkdown: () => string;
+  setMarkdown: (markdown: string) => void;
 }
 
 interface RichNoteEditorProps {
@@ -36,6 +38,12 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     const lastContentRef = useRef(content);
     const isInitPhaseRef = useRef(true);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const onUpdateRef = useRef(onUpdate);
+
+    // Keep ref updated with latest callback
+    useEffect(() => {
+      onUpdateRef.current = onUpdate;
+    }, [onUpdate]);
 
     const editor = useEditor({
       extensions: [
@@ -75,8 +83,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }
 
         debounceTimerRef.current = setTimeout(() => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const markdown = (editor as any).storage.markdown.getMarkdown();
+          const markdown = editor.getMarkdown();
           if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
             lastContentRef.current = markdown;
             onUpdate(markdown);
@@ -118,14 +125,22 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
       }
     }, [editor, content]);
 
-    // Cleanup debounce timer on unmount
+    // Flush pending changes and cleanup on unmount
     useEffect(() => {
+      const editorInstance = editor;
       return () => {
         if (debounceTimerRef.current) {
           clearTimeout(debounceTimerRef.current);
         }
+        // Flush any pending changes before unmount
+        if (editorInstance && !isInitPhaseRef.current) {
+          const markdown = editorInstance.getMarkdown?.();
+          if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
+            onUpdateRef.current(markdown);
+          }
+        }
       };
-    }, []);
+    }, [editor, maxLength]);
 
     // Expose editor methods via ref
     useImperativeHandle(
@@ -141,6 +156,17 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
           }
         },
         blur: () => editor?.commands.blur(),
+        getMarkdown: () => {
+          if (!editor) return '';
+          return editor.getMarkdown() || '';
+        },
+        setMarkdown: (markdown: string) => {
+          if (!editor) return;
+          lastContentRef.current = markdown;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (editor as any).commands.setContent(markdown, { contentType: 'markdown' });
+          onUpdateRef.current(markdown);
+        },
       }),
       [editor]
     );
