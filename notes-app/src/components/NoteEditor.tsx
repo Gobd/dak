@@ -126,7 +126,10 @@ export function NoteEditor({
   const availableTags = tags.filter((t) => !noteTags.some((nt) => nt.id === t.id));
 
   return (
-    <div className="flex-1 flex flex-col" style={{ backgroundColor: colors.bg }}>
+    <div
+      className="flex-1 flex flex-col min-h-0 overflow-hidden"
+      style={{ backgroundColor: colors.bg }}
+    >
       {/* Toolbar */}
       <div className="border-b py-2 relative z-10" style={{ borderBottomColor: colors.border }}>
         <div className="flex items-center gap-2 px-4 flex-wrap">

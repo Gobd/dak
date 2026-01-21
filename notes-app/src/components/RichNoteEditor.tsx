@@ -187,7 +187,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
 
     return (
       <div
-        className={`flex-1 overflow-auto ${isDark ? 'dark-mode' : ''}`}
+        className={`flex-1 min-h-0 overflow-auto editor-scroll-container ${isDark ? 'dark-mode' : ''}`}
         style={{ backgroundColor: colors.bg }}
       >
         <EditorContent editor={editor} className="tiptap-editor h-full" />

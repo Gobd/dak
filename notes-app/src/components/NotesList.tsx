@@ -72,7 +72,7 @@ export function NotesList({
   }
 
   return (
-    <div className="flex-1 overflow-auto pb-[300px]">
+    <div className="flex-1 overflow-auto">
       {notes.map((note) => (
         <NoteListItem
           key={note.id}
