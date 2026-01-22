@@ -35,7 +35,7 @@ echo "==> Running pyright..."
 
 echo ""
 echo "==> Regenerating API client..."
-(pnpm gen:api)
+pnpm gen:api
 
 echo ""
 echo "==> Type checking..."
