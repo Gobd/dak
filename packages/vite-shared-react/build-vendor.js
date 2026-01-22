@@ -116,19 +116,36 @@ const zustandMwFileName = writeBundle(
   zustandMwHash
 );
 
-// Fetch use-sync-external-store (used by @tiptap/react, etc.)
+// Fetch use-sync-external-store shim (used by @tiptap/react, etc.)
 // The ESM version uses React's built-in useSyncExternalStore, avoiding CJS require()
-console.log('Fetching use-sync-external-store from esm.sh...');
+console.log('Fetching use-sync-external-store/shim from esm.sh...');
 const syncStore = await fetchBundle(
-  `https://esm.sh/use-sync-external-store@1.4.0/es2024/use-sync-external-store.bundle.mjs`,
+  `https://esm.sh/use-sync-external-store@1.4.0/es2024/shim.bundle.mjs`,
   [rewriteReact]
 );
 const syncStoreHash = createHash('md5').update(syncStore.code).digest('hex').slice(0, 8);
 const syncStoreFileName = writeBundle(
-  'use-sync-external-store',
+  'use-sync-external-store-shim',
   syncStore.code,
   syncStore.map,
   syncStoreHash
+);
+
+// Fetch use-sync-external-store/shim/with-selector
+console.log('Fetching use-sync-external-store/shim/with-selector from esm.sh...');
+const syncStoreSelector = await fetchBundle(
+  `https://esm.sh/use-sync-external-store@1.4.0/es2024/shim/with-selector.bundle.mjs`,
+  [rewriteReact]
+);
+const syncStoreSelectorHash = createHash('md5')
+  .update(syncStoreSelector.code)
+  .digest('hex')
+  .slice(0, 8);
+const syncStoreSelectorFileName = writeBundle(
+  'use-sync-external-store-shim-with-selector',
+  syncStoreSelector.code,
+  syncStoreSelector.map,
+  syncStoreSelectorHash
 );
 
 // Copy fonts to dist
@@ -145,8 +162,13 @@ const manifest = {
   'react-dom/client': `/_shared/${clientFileName}`,
   zustand: `/_shared/${zustandFileName}`,
   'zustand/middleware': `/_shared/${zustandMwFileName}`,
+  // use-sync-external-store - all the paths tiptap and others might use
   'use-sync-external-store': `/_shared/${syncStoreFileName}`,
   'use-sync-external-store/shim': `/_shared/${syncStoreFileName}`,
+  'use-sync-external-store/shim/index': `/_shared/${syncStoreFileName}`,
+  'use-sync-external-store/shim/index.js': `/_shared/${syncStoreFileName}`,
+  'use-sync-external-store/shim/with-selector': `/_shared/${syncStoreSelectorFileName}`,
+  'use-sync-external-store/shim/with-selector.js': `/_shared/${syncStoreSelectorFileName}`,
   fonts: '/_shared/fonts.css',
 };
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -168,6 +190,9 @@ console.log(
   `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
 );
 console.log(
-  `  use-sync-external-store: ${syncStoreFileName} (${(syncStore.code.length / 1024).toFixed(1)} KB)${syncStore.map ? ' +map' : ''}`
+  `  use-sync-external-store/shim: ${syncStoreFileName} (${(syncStore.code.length / 1024).toFixed(1)} KB)${syncStore.map ? ' +map' : ''}`
+);
+console.log(
+  `  use-sync-external-store/shim/with-selector: ${syncStoreSelectorFileName} (${(syncStoreSelector.code.length / 1024).toFixed(1)} KB)${syncStoreSelector.map ? ' +map' : ''}`
 );
 console.log(`  fonts: ${fontFiles.join(', ')}`);
