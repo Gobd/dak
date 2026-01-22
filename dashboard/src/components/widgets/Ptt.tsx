@@ -9,15 +9,15 @@ import { Mic, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { useVoiceResponseStore } from '../../stores/voice-response-store';
+import { client, healthHealthGet } from '@dak/api-client';
+
 const DEFAULT_MAX_DURATION = 10; // seconds
 
 async function checkRelayHealth(url: string): Promise<boolean> {
   try {
-    const res = await fetch(`${url}/health`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(3000),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: url });
+    await healthHealthGet({ throwOnError: true });
+    return true;
   } catch {
     return false;
   }

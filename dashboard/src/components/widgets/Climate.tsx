@@ -4,64 +4,43 @@ import { useQuery } from '@tanstack/react-query';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
+import {
+  client,
+  healthHealthGet,
+  allSensorsSensorsAllGet,
+  devicesSensorsDevicesGet,
+  type AllSensorsResponse,
+  type DevicesResponse,
+  type SensorReadingResponse,
+} from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 import type { ClimateConfig } from '../../types';
 
-async function checkRelayHealth(url: string): Promise<boolean> {
+async function checkRelayHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${url}/health`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(3000),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    await healthHealthGet({ throwOnError: true });
+    return true;
   } catch {
     return false;
   }
 }
 
-interface SensorData {
-  available: boolean;
-  temperature: number;
-  humidity: number;
-  feels_like: number;
-  temperature_trend: 'rising' | 'falling' | 'steady';
-  humidity_trend: 'rising' | 'falling' | 'steady';
-  battery: number;
-  error?: string;
-}
-
-interface ClimateData {
-  indoor: SensorData;
-  outdoor: SensorData;
-  comparison: {
-    outside_feels_cooler: boolean;
-    outside_feels_warmer: boolean;
-    difference: number;
-  } | null;
-}
-
-interface DeviceInfo {
-  friendly_name: string;
-  model: string;
-  description: string;
-}
-
-interface DevicesResponse {
-  devices: DeviceInfo[];
-}
-
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
+
+const DEFAULT_ZIGBEE_URL = 'http://zigbee2mqtt.bkemper.me';
 
 export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
   const [showSettings, setShowSettings] = useState(false);
   const climateConfig = useConfigStore((s) => s.climate);
   const updateClimate = useConfigStore((s) => s.updateClimate);
+  const zigbeeUrl = useConfigStore((s) => s.globalSettings?.zigbeeUrl) ?? DEFAULT_ZIGBEE_URL;
 
   // Check relay health
   const { data: relayUp } = useQuery({
     queryKey: ['relay-health', relayUrl],
-    queryFn: () => checkRelayHealth(relayUrl!),
+    queryFn: checkRelayHealth,
     enabled: !!relayUrl,
     refetchInterval: 300_000,
     staleTime: 60_000,
@@ -69,26 +48,13 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
   const relayOffline = relayUrl && relayUp === false;
 
-  // Derive Zigbee2MQTT URL from relay URL
-  const getZigbeeUrl = () => {
-    if (!relayUrl) return null;
-    try {
-      const url = new URL(relayUrl);
-      url.port = '8080';
-      return url.toString();
-    } catch {
-      return null;
-    }
-  };
-  const zigbeeUrl = getZigbeeUrl();
-
   // Fetch sensor data (skip if relay is offline)
-  const { data, isLoading, error } = useWidgetQuery<ClimateData>(
+  const { data, isLoading, error } = useWidgetQuery<AllSensorsResponse>(
     ['climate', relayUrl],
     async () => {
-      const res = await fetch(`${relayUrl}/sensors/all`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
+      client.setConfig({ baseUrl: getRelayUrl() });
+      const result = await allSensorsSensorsAllGet({ throwOnError: true });
+      return result.data;
     },
     { refresh: '5m', enabled: !!relayUrl && relayUp !== false }
   );
@@ -97,9 +63,9 @@ export default function Climate({ dark }: WidgetComponentProps) {
   const { data: devicesData } = useWidgetQuery<DevicesResponse>(
     ['climate-devices', relayUrl],
     async () => {
-      const res = await fetch(`${relayUrl}/sensors/devices`);
-      if (!res.ok) throw new Error('Failed to fetch devices');
-      return res.json();
+      client.setConfig({ baseUrl: getRelayUrl() });
+      const result = await devicesSensorsDevicesGet({ throwOnError: true });
+      return result.data;
     },
     { enabled: !!relayUrl && showSettings && relayUp !== false, staleTime: 10_000 }
   );
@@ -135,15 +101,16 @@ export default function Climate({ dark }: WidgetComponentProps) {
   const recommendation = getRecommendation();
 
   // Compact sensor display
-  const renderSensor = (icon: string, sensor: SensorData | undefined) => {
+  const renderSensor = (icon: string, sensor: AllSensorsResponse['indoor'] | undefined) => {
     if (!sensor?.available) {
       return <span className="text-neutral-500">{icon} --</span>;
     }
-    const tTemp = TREND_ICON[sensor.temperature_trend];
-    const tHum = TREND_ICON[sensor.humidity_trend];
+    const s = sensor as SensorReadingResponse;
+    const tTemp = TREND_ICON[s.temperature_trend];
+    const tHum = TREND_ICON[s.humidity_trend];
     return (
       <span>
-        {icon} {Math.round(sensor.temperature)}°{tTemp} {Math.round(sensor.humidity)}%{tHum}
+        {icon} {Math.round(s.temperature)}°{tTemp} {Math.round(s.humidity)}%{tHum}
       </span>
     );
   };

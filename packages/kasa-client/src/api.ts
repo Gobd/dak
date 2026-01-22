@@ -1,10 +1,22 @@
-import type {
-  KasaDevice,
-  ScheduleResponse,
-  ToggleResponse,
-  BrightnessResponse,
-  CountdownResponse,
-} from './types';
+import {
+  client,
+  healthHealthGet,
+  discoverKasaDiscoverPost,
+  statusKasaStatusGet,
+  toggleKasaTogglePost,
+  toggleByNameKasaToggleByNamePost,
+  brightnessKasaBrightnessPost,
+  countdownKasaCountdownPost,
+  scheduleKasaScheduleGet,
+  addScheduleKasaSchedulePost,
+  updateScheduleKasaSchedulePut,
+  deleteScheduleKasaScheduleDelete,
+  type KasaDevice,
+  type ScheduleResponse,
+  type ToggleResponse,
+  type BrightnessResponse,
+  type CountdownResponse,
+} from '@dak/api-client';
 
 /**
  * Create a Kasa API client for a specific relay URL
@@ -12,16 +24,18 @@ import type {
 export function createKasaClient(relayUrl: string) {
   const baseUrl = relayUrl.endsWith('/') ? relayUrl.slice(0, -1) : relayUrl;
 
+  function configureClient() {
+    client.setConfig({ baseUrl });
+  }
+
   /**
    * Check if the relay is healthy/reachable
    */
   async function checkHealth(): Promise<boolean> {
     try {
-      const res = await fetch(`${baseUrl}/health`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      return res.ok;
+      configureClient();
+      await healthHealthGet({ throwOnError: true });
+      return true;
     } catch {
       return false;
     }
@@ -31,39 +45,27 @@ export function createKasaClient(relayUrl: string) {
    * Discover all Kasa devices on the network
    */
   async function discoverDevices(): Promise<KasaDevice[]> {
-    const res = await fetch(`${baseUrl}/kasa/discover`, {
-      method: 'POST',
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to discover devices: ${res.status}`);
-    }
-    return res.json();
+    configureClient();
+    const result = await discoverKasaDiscoverPost({ throwOnError: true });
+    return result.data;
   }
 
   /**
    * Get status of a specific device
    */
   async function getDeviceStatus(ip: string): Promise<ToggleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/status?ip=${encodeURIComponent(ip)}`);
-    if (!res.ok) {
-      throw new Error(`Failed to get device status: ${res.status}`);
-    }
-    return res.json();
+    configureClient();
+    const result = await statusKasaStatusGet({ query: { ip }, throwOnError: true });
+    return result.data;
   }
 
   /**
    * Toggle a device on/off
    */
   async function toggleDevice(ip: string): Promise<ToggleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/toggle`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip }),
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to toggle device: ${res.status}`);
-    }
-    return res.json();
+    configureClient();
+    const result = await toggleKasaTogglePost({ body: { ip }, throwOnError: true });
+    return result.data;
   }
 
   /**
@@ -73,15 +75,12 @@ export function createKasaClient(relayUrl: string) {
     name: string,
     state?: boolean
   ): Promise<ToggleResponse | { error: string }> {
-    const res = await fetch(`${baseUrl}/kasa/toggle-by-name`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, state }),
+    configureClient();
+    const result = await toggleByNameKasaToggleByNamePost({
+      body: { name, state: state ?? null },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to toggle device by name: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   /**
@@ -91,15 +90,12 @@ export function createKasaClient(relayUrl: string) {
     if (brightness < 0 || brightness > 100) {
       throw new Error('Brightness must be between 0 and 100');
     }
-    const res = await fetch(`${baseUrl}/kasa/brightness`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, brightness }),
+    configureClient();
+    const result = await brightnessKasaBrightnessPost({
+      body: { ip, brightness },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to set brightness: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   /**
@@ -113,15 +109,12 @@ export function createKasaClient(relayUrl: string) {
     if (minutes < 1) {
       throw new Error('Minutes must be at least 1');
     }
-    const res = await fetch(`${baseUrl}/kasa/countdown`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, minutes, action }),
+    configureClient();
+    const result = await countdownKasaCountdownPost({
+      body: { ip, minutes, action },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to set countdown: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   /**
@@ -129,15 +122,12 @@ export function createKasaClient(relayUrl: string) {
    * For child devices (multi-plugs), pass the child_id
    */
   async function getSchedule(ip: string, childId?: string | null): Promise<ScheduleResponse> {
-    let url = `${baseUrl}/kasa/schedule?ip=${encodeURIComponent(ip)}`;
-    if (childId) {
-      url += `&child_id=${encodeURIComponent(childId)}`;
-    }
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Failed to get schedule: ${res.status}`);
-    }
-    return res.json();
+    configureClient();
+    const result = await scheduleKasaScheduleGet({
+      query: { ip, child_id: childId ?? undefined },
+      throwOnError: true,
+    });
+    return result.data;
   }
 
   /**
@@ -149,15 +139,12 @@ export function createKasaClient(relayUrl: string) {
     time: string,
     days: string[]
   ): Promise<ScheduleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/schedule`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, action, time, days }),
+    configureClient();
+    const result = await addScheduleKasaSchedulePost({
+      body: { ip, action, time, days },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to add schedule rule: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   /**
@@ -173,30 +160,24 @@ export function createKasaClient(relayUrl: string) {
       days?: string[];
     }
   ): Promise<ScheduleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/schedule`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, rule_id: ruleId, ...updates }),
+    configureClient();
+    const result = await updateScheduleKasaSchedulePut({
+      body: { ip, rule_id: ruleId, ...updates },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to update schedule rule: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   /**
    * Delete a schedule rule
    */
   async function deleteScheduleRule(ip: string, ruleId: string): Promise<ScheduleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/schedule`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, rule_id: ruleId }),
+    configureClient();
+    const result = await deleteScheduleKasaScheduleDelete({
+      body: { ip, rule_id: ruleId },
+      throwOnError: true,
     });
-    if (!res.ok) {
-      throw new Error(`Failed to delete schedule rule: ${res.status}`);
-    }
-    return res.json();
+    return result.data;
   }
 
   return {

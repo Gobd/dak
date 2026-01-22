@@ -1,0 +1,18 @@
+{
+  "name": "@dak/api-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck",
+    "gen:api": "cd ../../dashboard/services/home-relay && uv run python -c \"from app.main import app; import json; print(json.dumps(app.openapi()))\" > /tmp/openapi.json && cd ../../../packages/api-client && npx @hey-api/openapi-ts -i /tmp/openapi.json -o src/generated -c @hey-api/client-fetch"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.90.4",
+    "typescript": "catalog:"
+  }
+}

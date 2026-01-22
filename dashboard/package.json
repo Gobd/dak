@@ -12,10 +12,11 @@
     "typecheck": "tsc --noEmit",
     "check": "pnpm lint:sh && pnpm typecheck && pnpm build",
     "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'",
-    "gen:api": "cd services/home-relay && uv run python -c \"from app.main import app; import json; print(json.dumps(app.openapi()))\" > /tmp/openapi.json && cd ../.. && npx @hey-api/openapi-ts -i /tmp/openapi.json -o src/api/generated -c @hey-api/client-fetch",
-    "gen:api:check": "pnpm gen:api && git diff --exit-code src/api/generated || (echo 'Error: Generated API client is out of sync. Run pnpm gen:api and commit.' && exit 1)"
+    "gen:api": "pnpm --filter @dak/api-client gen:api",
+    "gen:api:check": "pnpm gen:api && git diff --exit-code ../packages/api-client/src/generated || (echo 'Error: Generated API client is out of sync. Run pnpm gen:api and commit.' && exit 1)"
   },
   "dependencies": {
+    "@dak/api-client": "workspace:*",
     "@dak/kasa-client": "workspace:*",
     "@dak/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
@@ -26,7 +27,6 @@
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@hey-api/openapi-ts": "^0.90.4",
     "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

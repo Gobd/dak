@@ -3,6 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, ConfirmModal } from '@dak/ui';
+import {
+  client,
+  healthHealthGet,
+  pingWolPingGet,
+  wakeWolWakePost,
+  lookupMacWolMacGet,
+} from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
 interface WolDevice {
@@ -18,12 +25,9 @@ interface WolData {
 
 async function pingDevice(ip: string): Promise<boolean> {
   try {
-    const res = await fetch(`${getRelayUrl()}/wol/ping?ip=${encodeURIComponent(ip)}`, {
-      method: 'GET',
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return data.online === true;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    const result = await pingWolPingGet({ query: { ip } });
+    return result.data?.online === true;
   } catch {
     return false;
   }
@@ -31,12 +35,9 @@ async function pingDevice(ip: string): Promise<boolean> {
 
 async function wakeDevice(mac: string): Promise<boolean> {
   try {
-    const res = await fetch(`${getRelayUrl()}/wol/wake`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mac }),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    await wakeWolWakePost({ body: { mac }, throwOnError: true });
+    return true;
   } catch {
     return false;
   }
@@ -44,12 +45,9 @@ async function wakeDevice(mac: string): Promise<boolean> {
 
 async function getMacFromIp(ip: string): Promise<string | null> {
   try {
-    const res = await fetch(`${getRelayUrl()}/wol/mac?ip=${encodeURIComponent(ip)}`, {
-      method: 'GET',
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.mac || null;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    const result = await lookupMacWolMacGet({ query: { ip } });
+    return result.data?.mac || null;
   } catch {
     return null;
   }
@@ -57,11 +55,9 @@ async function getMacFromIp(ip: string): Promise<string | null> {
 
 async function checkRelayHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${getRelayUrl()}/health`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(3000),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    await healthHealthGet({ throwOnError: true });
+    return true;
   } catch {
     return false;
   }

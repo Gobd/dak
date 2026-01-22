@@ -444,7 +444,7 @@ export default function DeviceList() {
         <div className="text-sm text-slate-500 space-y-1">
           <div>Model: {selectedDevice.model}</div>
           <div>IP: {selectedDevice.ip}</div>
-          {selectedDevice.features.length > 0 && (
+          {selectedDevice.features && selectedDevice.features.length > 0 && (
             <div>Features: {selectedDevice.features.join(', ')}</div>
           )}
         </div>
@@ -654,7 +654,7 @@ export default function DeviceList() {
                     {formatDuration(device.on_since)}
                   </span>
                 )}
-                {device.has_emeter && device.power_watts !== null && device.on && (
+                {device.has_emeter && device.power_watts != null && device.on && (
                   <span className="flex items-center gap-1 text-yellow-400">
                     <Zap className="w-3 h-3" />
                     {device.power_watts.toFixed(1)}W

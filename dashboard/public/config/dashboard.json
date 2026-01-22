@@ -68,6 +68,15 @@
           "height": 6
         },
         {
+          "id": "panel-adguard",
+          "widget": "adguard",
+          "x": 74,
+          "y": 7,
+          "width": 5,
+          "height": 6,
+          "refresh": "10s"
+        },
+        {
           "id": "panel-brightness",
           "widget": "brightness",
           "x": 79,

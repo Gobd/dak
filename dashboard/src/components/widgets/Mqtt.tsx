@@ -3,68 +3,45 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Radio, RefreshCw, AlertCircle, Pencil, Trash2, Plus, X, Check } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
+import {
+  client,
+  listDevicesMqttDevicesGet,
+  setPermitJoinMqttPermitJoinPost,
+  renameDeviceMqttDevicesRenamePost,
+  removeDeviceMqttDevicesRemovePost,
+  type DeviceListResponse,
+  type ZigbeeDevice,
+} from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
-interface ZigbeeDevice {
-  friendly_name: string;
-  ieee_address: string;
-  type: 'Coordinator' | 'Router' | 'EndDevice';
-  network_address: number;
-  model: string | null;
-  vendor: string | null;
-  description: string | null;
-  power_source: string | null;
-  supported: boolean;
-  interviewing: boolean;
-  interview_completed: boolean;
-}
-
-interface DeviceListResponse {
-  devices: ZigbeeDevice[];
-  permit_join: boolean;
-  permit_join_timeout: number | null;
-}
-
 async function fetchDevices(): Promise<DeviceListResponse> {
-  const res = await fetch(`${getRelayUrl()}/mqtt/devices`);
-  if (!res.ok) throw new Error('Failed to fetch devices');
-  return res.json();
+  client.setConfig({ baseUrl: getRelayUrl() });
+  const result = await listDevicesMqttDevicesGet({ throwOnError: true });
+  return result.data;
 }
 
 async function setPermitJoin(enable: boolean, time: number = 120): Promise<void> {
-  const res = await fetch(`${getRelayUrl()}/mqtt/permit-join`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ enable, time }),
+  client.setConfig({ baseUrl: getRelayUrl() });
+  await setPermitJoinMqttPermitJoinPost({
+    body: { enable, time },
+    throwOnError: true,
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Failed to set permit join');
-  }
 }
 
 async function renameDevice(oldName: string, newName: string): Promise<void> {
-  const res = await fetch(`${getRelayUrl()}/mqtt/devices/rename`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ old_name: oldName, new_name: newName }),
+  client.setConfig({ baseUrl: getRelayUrl() });
+  await renameDeviceMqttDevicesRenamePost({
+    body: { old_name: oldName, new_name: newName },
+    throwOnError: true,
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Failed to rename device');
-  }
 }
 
 async function removeDevice(device: string, force: boolean = false): Promise<void> {
-  const res = await fetch(`${getRelayUrl()}/mqtt/devices/remove`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ device, force }),
+  client.setConfig({ baseUrl: getRelayUrl() });
+  await removeDeviceMqttDevicesRemovePost({
+    body: { device, force },
+    throwOnError: true,
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || 'Failed to remove device');
-  }
 }
 
 export default function Mqtt({ dark }: WidgetComponentProps) {

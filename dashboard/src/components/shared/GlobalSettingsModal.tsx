@@ -62,6 +62,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
   const [locationQuery, setLocationQuery] = useState('');
   const [relayUrlInput, setRelayUrlInput] = useState('');
+  const [zigbeeUrlInput, setZigbeeUrlInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [volume, setVolume] = useState(50);
   const [volumeLoading, setVolumeLoading] = useState(false);
@@ -85,9 +86,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   useEffect(() => {
     if (open) {
       setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
+      setZigbeeUrlInput(globalSettings?.zigbeeUrl ?? 'http://zigbee2mqtt.bkemper.me');
       setRelayStatus('idle');
     }
-  }, [open, globalSettings?.relayUrl]);
+  }, [open, globalSettings?.relayUrl, globalSettings?.zigbeeUrl]);
 
   // Fetch current volume when modal opens
   useEffect(() => {
@@ -314,6 +316,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     updateGlobalSettings({ relayUrl: relayUrlInput });
     setRelayUrl(relayUrlInput);
     setRelayStatus('idle');
+  }
+
+  function handleSaveZigbee() {
+    updateGlobalSettings({ zigbeeUrl: zigbeeUrlInput });
   }
 
   function handleThemeChange(theme: ThemeMode) {
@@ -704,7 +710,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 setRelayUrlInput(e.target.value);
                 setRelayStatus('idle');
               }}
-              placeholder="kiosk.home.arpa:5111"
+              placeholder="kiosk-relay.bkemper.me"
               className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
                          bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -734,6 +740,36 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
           </div>
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Home-relay server for Kasa, WoL, brightness, and config sync
+          </p>
+        </div>
+
+        {/* Zigbee2MQTT URL */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Zigbee2MQTT URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={zigbeeUrlInput}
+              onChange={(e) => setZigbeeUrlInput(e.target.value)}
+              placeholder="http://zigbee2mqtt.bkemper.me"
+              className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                         bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Button
+              onClick={handleSaveZigbee}
+              variant="primary"
+              disabled={
+                zigbeeUrlInput === (globalSettings?.zigbeeUrl ?? 'http://zigbee2mqtt.bkemper.me')
+              }
+            >
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Zigbee2MQTT web interface for climate sensors
           </p>
         </div>
       </div>
