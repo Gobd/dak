@@ -13,9 +13,7 @@ export function sharedReact() {
   let isBuild = false;
 
   try {
-    manifest = JSON.parse(
-      readFileSync(join(__dirname, 'dist/manifest.json'), 'utf-8')
-    );
+    manifest = JSON.parse(readFileSync(join(__dirname, 'dist/manifest.json'), 'utf-8'));
   } catch {
     // Manifest not found - plugin will be inactive
     manifest = null;

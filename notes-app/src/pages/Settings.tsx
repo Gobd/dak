@@ -20,7 +20,6 @@ import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
-import { useTheme, useThemeColors } from '../hooks/useThemeColors';
 import { notesApi } from '../lib/api/notes';
 import { sharesApi } from '../lib/api/shares';
 import { exportNotesAsZip } from '../lib/export-notes';
@@ -29,12 +28,13 @@ import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
 import { useSharesStore } from '../stores/shares-store';
 import { useTagsStore } from '../stores/tags-store';
+import { useThemeStore } from '../stores/theme-store';
 import { useToastStore } from '../stores/toast-store';
 import { useUserStore } from '../stores/user-store';
 
 export function Settings() {
-  const colors = useThemeColors();
-  const { toggleTheme, isDark } = useTheme();
+  const { theme, toggleTheme } = useThemeStore();
+  const isDark = theme === 'dark';
   const { user } = useAuthStore();
   const { profile, planLimits, fetchProfile, updateDisplayName, updatePlan } = useUserStore();
   const {
@@ -316,65 +316,50 @@ export function Settings() {
   const atNoteLimit = planLimits.maxNotes !== null && noteCount >= planLimits.maxNotes;
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
+    <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950">
       {/* Header */}
-      <div className="flex items-center px-4 py-3 border-b" style={{ borderColor: colors.border }}>
+      <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
         <Link to="/" className="p-2 -ml-2">
-          <ArrowLeft size={20} color={colors.icon} />
+          <ArrowLeft size={20} className="text-zinc-500" />
         </Link>
-        <span className="text-lg font-semibold ml-2" style={{ color: colors.text }}>
-          Settings
-        </span>
+        <span className="text-lg font-semibold ml-2 text-zinc-950 dark:text-white">Settings</span>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
         {/* Appearance Section */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold mb-3" style={{ color: colors.text }}>
-            Appearance
-          </h2>
+          <h2 className="text-base font-semibold mb-3 text-zinc-950 dark:text-white">Appearance</h2>
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center justify-between rounded-lg p-4"
-            style={{ backgroundColor: colors.bgSecondary }}
+            className="w-full flex items-center justify-between rounded-lg p-4 bg-zinc-100 dark:bg-zinc-800"
           >
             <div className="flex items-center gap-3">
               {isDark ? (
-                <Moon size={20} color={colors.icon} />
+                <Moon size={20} className="text-zinc-500" />
               ) : (
-                <Sun size={20} color={colors.icon} />
+                <Sun size={20} className="text-zinc-500" />
               )}
-              <span style={{ color: colors.text }} className="text-base">
+              <span className="text-base text-zinc-950 dark:text-white">
                 {isDark ? 'Dark mode' : 'Light mode'}
               </span>
             </div>
-            <span className="text-sm" style={{ color: colors.textMuted }}>
-              Tap to switch
-            </span>
+            <span className="text-sm text-zinc-500">Tap to switch</span>
           </button>
         </div>
 
         {/* Profile Section */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold mb-3" style={{ color: colors.text }}>
-            Profile
-          </h2>
+          <h2 className="text-base font-semibold mb-3 text-zinc-950 dark:text-white">Profile</h2>
 
           {/* Email (read-only) */}
-          <div className="rounded-lg p-3 mb-2" style={{ backgroundColor: colors.bgSecondary }}>
-            <span className="block text-xs mb-1" style={{ color: colors.textMuted }}>
-              Email
-            </span>
-            <span className="block text-base" style={{ color: colors.text }}>
-              {user?.email}
-            </span>
+          <div className="rounded-lg p-3 mb-2 bg-zinc-100 dark:bg-zinc-800">
+            <span className="block text-xs mb-1 text-zinc-500">Email</span>
+            <span className="block text-base text-zinc-950 dark:text-white">{user?.email}</span>
           </div>
 
           {/* Display Name (editable) */}
-          <div className="rounded-lg p-3" style={{ backgroundColor: colors.bgSecondary }}>
-            <span className="block text-xs mb-1" style={{ color: colors.textMuted }}>
-              Display Name
-            </span>
+          <div className="rounded-lg p-3 bg-zinc-100 dark:bg-zinc-800">
+            <span className="block text-xs mb-1 text-zinc-500">Display Name</span>
             {isEditingName ? (
               <div className="flex items-center gap-2">
                 <input
@@ -384,22 +369,17 @@ export function Settings() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
                   placeholder="Enter your name"
                   autoFocus
-                  className="flex-1 rounded-md px-2.5 py-2 text-base outline-none"
-                  style={{
-                    backgroundColor: colors.bgTertiary,
-                    color: colors.text,
-                  }}
+                  className="flex-1 rounded-md px-2.5 py-2 text-base outline-none bg-zinc-200 dark:bg-zinc-900 text-zinc-950 dark:text-white"
                 />
                 <button
                   onClick={handleSaveDisplayName}
                   disabled={isSavingName}
-                  className="p-2 rounded-md"
-                  style={{ backgroundColor: colors.primary }}
+                  className="p-2 rounded-md bg-amber-500 dark:bg-amber-400"
                 >
                   {isSavingName ? (
                     <LoadingSpinner size="small" />
                   ) : (
-                    <Check size={18} color={colors.primaryText} />
+                    <Check size={18} className="text-black" />
                   )}
                 </button>
                 <button
@@ -409,7 +389,7 @@ export function Settings() {
                   }}
                   className="p-2"
                 >
-                  <X size={18} color={colors.iconMuted} />
+                  <X size={18} className="text-zinc-400" />
                 </button>
               </div>
             ) : (
@@ -417,10 +397,10 @@ export function Settings() {
                 onClick={() => setIsEditingName(true)}
                 className="w-full flex items-center justify-between"
               >
-                <span className="text-base" style={{ color: colors.text }}>
+                <span className="text-base text-zinc-950 dark:text-white">
                   {profile?.display_name || 'Not set'}
                 </span>
-                <User size={16} color={colors.iconMuted} />
+                <User size={16} className="text-zinc-400" />
               </button>
             )}
           </div>
@@ -428,51 +408,35 @@ export function Settings() {
 
         {/* Plan Section */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold mb-3" style={{ color: colors.text }}>
-            Your Plan
-          </h2>
+          <h2 className="text-base font-semibold mb-3 text-zinc-950 dark:text-white">Your Plan</h2>
 
           <button
             onClick={() => setShowPlanPicker(!showPlanPicker)}
-            className="w-full flex items-center justify-between rounded-lg p-4"
-            style={{ backgroundColor: colors.bgSecondary }}
+            className="w-full flex items-center justify-between rounded-lg p-4 bg-zinc-100 dark:bg-zinc-800"
           >
             <div>
-              <span
-                className="block text-lg font-semibold capitalize"
-                style={{ color: colors.text }}
-              >
+              <span className="block text-lg font-semibold capitalize text-zinc-950 dark:text-white">
                 {profile?.plan || 'free'}
               </span>
-              <span className="block text-sm mt-1" style={{ color: colors.textMuted }}>
-                Tap to change (testing only)
-              </span>
+              <span className="block text-sm mt-1 text-zinc-500">Tap to change (testing only)</span>
             </div>
-            <ChevronDown size={20} color={colors.iconMuted} />
+            <ChevronDown size={20} className="text-zinc-400" />
           </button>
 
           {showPlanPicker && (
-            <div
-              className="rounded-lg mt-2 overflow-hidden"
-              style={{ backgroundColor: colors.bgTertiary }}
-            >
+            <div className="rounded-lg mt-2 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
               {(['free', 'starter', 'family'] as Plan[]).map((plan) => (
                 <button
                   key={plan}
                   onClick={() => handleChangePlan(plan)}
-                  className="w-full p-4 text-left border-b last:border-b-0"
-                  style={{
-                    backgroundColor: profile?.plan === plan ? colors.bgHover : 'transparent',
-                    borderColor: colors.border,
-                  }}
+                  className={`w-full p-4 text-left border-b last:border-b-0 border-zinc-200 dark:border-zinc-800 ${
+                    profile?.plan === plan ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+                  }`}
                 >
-                  <span
-                    className="block text-base font-medium capitalize"
-                    style={{ color: colors.text }}
-                  >
+                  <span className="block text-base font-medium capitalize text-zinc-950 dark:text-white">
                     {plan}
                   </span>
-                  <span className="block text-sm mt-1" style={{ color: colors.textMuted }}>
+                  <span className="block text-sm mt-1 text-zinc-500">
                     {PLAN_LIMITS[plan].maxNotes === null ? 'Unlimited' : PLAN_LIMITS[plan].maxNotes}{' '}
                     notes •{' '}
                     {PLAN_LIMITS[plan].maxSharedUsers === 0
@@ -488,21 +452,26 @@ export function Settings() {
           {/* Plan Limits */}
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2">
-              <FileText size={16} color={colors.iconMuted} />
-              <span className="text-sm" style={{ color: colors.textMuted }}>
+              <FileText size={16} className="text-zinc-400" />
+              <span className="text-sm text-zinc-500">
                 Notes: {noteCount} / {planLimits.maxNotes ?? '∞'}
-                {atNoteLimit && <span style={{ color: colors.error }}> (limit reached)</span>}
+                {atNoteLimit && <span className="text-red-500"> (limit reached)</span>}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Users size={16} color={colors.iconMuted} />
-              <span className="text-sm" style={{ color: colors.textMuted }}>
+              <Users size={16} className="text-zinc-400" />
+              <span className="text-sm text-zinc-500">
                 Sharing with: {uniqueShareCount} / {planLimits.maxSharedUsers} people
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Zap size={16} color={planLimits.hasLiveSync ? colors.primary : colors.iconMuted} />
-              <span className="text-sm" style={{ color: colors.textMuted }}>
+              <Zap
+                size={16}
+                className={
+                  planLimits.hasLiveSync ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-400'
+                }
+              />
+              <span className="text-sm text-zinc-500">
                 Live sync: {planLimits.hasLiveSync ? 'Enabled' : 'Disabled'}
               </span>
             </div>
@@ -511,16 +480,16 @@ export function Settings() {
 
         {/* Default Share List */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold mb-1" style={{ color: colors.text }}>
+          <h2 className="text-base font-semibold mb-1 text-zinc-950 dark:text-white">
             Auto-Share List
           </h2>
-          <p className="text-sm mb-3" style={{ color: colors.textMuted }}>
+          <p className="text-sm mb-3 text-zinc-500">
             New notes (except private) are automatically shared with these people.
           </p>
 
           {planLimits.maxSharedUsers === 0 ? (
-            <div className="rounded-lg p-4" style={{ backgroundColor: colors.bgSecondary }}>
-              <p className="text-sm text-center" style={{ color: colors.textMuted }}>
+            <div className="rounded-lg p-4 bg-zinc-100 dark:bg-zinc-800">
+              <p className="text-sm text-center text-zinc-500">
                 Upgrade to Starter or Family to share notes
               </p>
             </div>
@@ -534,54 +503,44 @@ export function Settings() {
                   onChange={(e) => setNewEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddDefaultShare()}
                   placeholder="Email address"
-                  className="flex-1 rounded-lg px-3 py-2.5 text-base outline-none"
-                  style={{
-                    backgroundColor: colors.bgSecondary,
-                    color: colors.text,
-                  }}
+                  className="flex-1 rounded-lg px-3 py-2.5 text-base outline-none bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white"
                 />
                 <button
                   onClick={handleAddDefaultShare}
                   disabled={isAddingShare || !newEmail.trim()}
-                  className="px-4 rounded-lg flex items-center justify-center"
-                  style={{
-                    backgroundColor: newEmail.trim() ? colors.primary : colors.bgTertiary,
-                  }}
+                  className={`px-4 rounded-lg flex items-center justify-center ${
+                    newEmail.trim()
+                      ? 'bg-amber-500 dark:bg-amber-400'
+                      : 'bg-zinc-100 dark:bg-zinc-900'
+                  }`}
                 >
                   {isAddingShare ? (
                     <LoadingSpinner size="small" />
                   ) : (
-                    <Plus
-                      size={20}
-                      color={newEmail.trim() ? colors.primaryText : colors.iconMuted}
-                    />
+                    <Plus size={20} className={newEmail.trim() ? 'text-black' : 'text-zinc-400'} />
                   )}
                 </button>
               </div>
 
               {/* Share list */}
               {defaultShares.length === 0 ? (
-                <div className="rounded-lg p-4" style={{ backgroundColor: colors.bgSecondary }}>
-                  <p className="text-sm text-center" style={{ color: colors.textMuted }}>
+                <div className="rounded-lg p-4 bg-zinc-100 dark:bg-zinc-800">
+                  <p className="text-sm text-center text-zinc-500">
                     No one in your auto-share list yet
                   </p>
                 </div>
               ) : (
-                <div
-                  className="rounded-lg overflow-hidden"
-                  style={{ backgroundColor: colors.bgSecondary }}
-                >
+                <div className="rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                   {defaultShares.map((share) => (
                     <div
                       key={share.id}
-                      className="flex items-center justify-between p-3 border-b last:border-b-0"
-                      style={{ borderColor: colors.border }}
+                      className="flex items-center justify-between p-3 border-b last:border-b-0 border-zinc-200 dark:border-zinc-700"
                     >
-                      <span className="text-base flex-1" style={{ color: colors.text }}>
+                      <span className="text-base flex-1 text-zinc-950 dark:text-white">
                         {share.shared_with_email}
                       </span>
                       <button onClick={() => handleRemoveShare(share.id)} className="p-2 -mr-2">
-                        <X size={18} color={colors.iconMuted} />
+                        <X size={18} className="text-zinc-400" />
                       </button>
                     </div>
                   ))}
@@ -593,10 +552,8 @@ export function Settings() {
 
         {/* Data Export/Import Section */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold mb-1" style={{ color: colors.text }}>
-            Data
-          </h2>
-          <p className="text-sm mb-3" style={{ color: colors.textMuted }}>
+          <h2 className="text-base font-semibold mb-1 text-zinc-950 dark:text-white">Data</h2>
+          <p className="text-sm mb-3 text-zinc-500">
             Export or import your notes as markdown files.
           </p>
 
@@ -604,15 +561,14 @@ export function Settings() {
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3"
-              style={{ backgroundColor: colors.bgSecondary }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-zinc-100 dark:bg-zinc-800"
             >
               {isExporting ? (
                 <LoadingSpinner size="small" />
               ) : (
                 <>
-                  <Download size={18} color={colors.primary} />
-                  <span className="text-base font-medium" style={{ color: colors.text }}>
+                  <Download size={18} className="text-amber-500 dark:text-amber-400" />
+                  <span className="text-base font-medium text-zinc-950 dark:text-white">
                     Export All
                   </span>
                 </>
@@ -622,15 +578,14 @@ export function Settings() {
             <button
               onClick={handleImport}
               disabled={isImporting}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3"
-              style={{ backgroundColor: colors.bgSecondary }}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-zinc-100 dark:bg-zinc-800"
             >
               {isImporting ? (
                 <LoadingSpinner size="small" />
               ) : (
                 <>
-                  <Upload size={18} color={colors.primary} />
-                  <span className="text-base font-medium" style={{ color: colors.text }}>
+                  <Upload size={18} className="text-amber-500 dark:text-amber-400" />
+                  <span className="text-base font-medium text-zinc-950 dark:text-white">
                     Import
                   </span>
                 </>
@@ -643,13 +598,10 @@ export function Settings() {
         <div className="mb-6">
           <Link
             to="/about"
-            className="flex items-center justify-between rounded-lg p-4"
-            style={{ backgroundColor: colors.bgSecondary }}
+            className="flex items-center justify-between rounded-lg p-4 bg-zinc-100 dark:bg-zinc-800"
           >
-            <span className="text-base" style={{ color: colors.text }}>
-              About
-            </span>
-            <ChevronRight size={20} color={colors.iconMuted} />
+            <span className="text-base text-zinc-950 dark:text-white">About</span>
+            <ChevronRight size={20} className="text-zinc-400" />
           </Link>
         </div>
       </div>

@@ -20,7 +20,6 @@ import { SearchBar } from '../components/SearchBar';
 import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
 import { useTagsStore } from '../stores/tags-store';
@@ -31,7 +30,6 @@ import { getNoteTitle } from '../types/note';
 
 export function Dashboard() {
   const { user, signOut } = useAuthStore();
-  const colors = useThemeColors();
   const { showPrivate, toggleShowPrivate, sortBy, setSortBy } = useViewStore();
   const {
     notes,
@@ -325,10 +323,7 @@ export function Dashboard() {
   if (!isDesktop) {
     if (currentNote && !showSidebar) {
       return (
-        <div
-          className="h-screen flex flex-col overflow-hidden"
-          style={{ backgroundColor: colors.bg }}
-        >
+        <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-zinc-950">
           <NoteEditor
             key={currentNote.id}
             note={currentNote}
@@ -346,7 +341,7 @@ export function Dashboard() {
     }
 
     return (
-      <div className="flex flex-col min-h-screen relative" style={{ backgroundColor: colors.bg }}>
+      <div className="flex flex-col min-h-screen relative bg-white dark:bg-zinc-950">
         {/* Backdrop to close menus when tapping outside */}
         {(showMobileMenu || showSortMenu || showCreateMenu) && (
           <div
@@ -361,7 +356,6 @@ export function Dashboard() {
         )}
         {/* Mobile Header */}
         <MobileHeader
-          colors={colors}
           isSelectionMode={isSelectionMode}
           allOwnedSelected={allOwnedSelected}
           selectedNoteIds={selectedNoteIds}
@@ -385,36 +379,33 @@ export function Dashboard() {
           onLogout={() => setShowLogoutConfirm(true)}
         />
         {/* Mobile Search */}
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
         {/* Active Tag Filter */}
         {selectedTagId && (
           <button
             onClick={() => setSelectedTagId(null)}
-            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start"
-            style={{ backgroundColor: colors.bgTertiary }}
+            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-zinc-100 dark:bg-zinc-900"
           >
             <div
               className="w-2 h-2 rounded-full"
               style={{
-                backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || colors.primary,
+                backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
               }}
             />
-            <span className="text-sm" style={{ color: colors.text }}>
+            <span className="text-sm text-zinc-950 dark:text-white">
               {tags.find((t) => t.id === selectedTagId)?.name}
             </span>
-            <span className="text-sm ml-0.5" style={{ color: colors.textMuted }}>
-              ×
-            </span>
+            <span className="text-sm ml-0.5 text-zinc-500">×</span>
           </button>
         )}
         {/* Mobile Sort Options */}
-        <div className="px-4 py-2 border-b" style={{ borderColor: colors.border }}>
+        <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
           <button
             onClick={() => setShowSortMenu(!showSortMenu)}
             className="flex items-center gap-1"
           >
-            <ArrowUpDown size={14} color={colors.iconMuted} />
-            <span className="text-xs" style={{ color: colors.textMuted }}>
+            <ArrowUpDown size={14} className="text-zinc-400" />
+            <span className="text-xs text-zinc-500">
               {sortBy === 'updated'
                 ? 'Last updated'
                 : sortBy === 'created'
@@ -423,10 +414,7 @@ export function Dashboard() {
             </span>
           </button>
           {showSortMenu && (
-            <div
-              className="mt-2 rounded-lg overflow-hidden"
-              style={{ backgroundColor: colors.bgTertiary }}
-            >
+            <div className="mt-2 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900">
               {(['updated', 'created', 'title'] as const).map((option) => (
                 <button
                   key={option}
@@ -434,14 +422,14 @@ export function Dashboard() {
                     setSortBy(option);
                     setShowSortMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left"
-                  style={{
-                    backgroundColor: sortBy === option ? colors.bgHover : 'transparent',
-                  }}
+                  className={`w-full px-3 py-2 text-left ${
+                    sortBy === option ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+                  }`}
                 >
                   <span
-                    className="text-sm"
-                    style={{ color: sortBy === option ? colors.text : colors.textTertiary }}
+                    className={`text-sm ${
+                      sortBy === option ? 'text-zinc-950 dark:text-white' : 'text-zinc-500'
+                    }`}
                   >
                     {option === 'updated'
                       ? 'Last updated'
@@ -501,7 +489,7 @@ export function Dashboard() {
 
   // Desktop: side-by-side layout
   return (
-    <div className="flex h-screen overflow-hidden relative" style={{ backgroundColor: colors.bg }}>
+    <div className="flex h-screen overflow-hidden relative bg-white dark:bg-zinc-950">
       {/* Backdrop to close menus when clicking/tapping outside */}
       {(showSortMenu || showCreateMenu) && (
         <div
@@ -515,7 +503,6 @@ export function Dashboard() {
       {/* Navigation Sidebar (collapsible) */}
       {showNavSidebar && (
         <DesktopSidebar
-          colors={colors}
           onClose={() => setShowNavSidebar(false)}
           tags={tags}
           selectedTagId={selectedTagId}
@@ -528,57 +515,46 @@ export function Dashboard() {
 
       {/* Notes List Sidebar (collapsible) */}
       {showNotesSidebar && (
-        <div
-          className="w-72 border-r flex flex-col min-h-0 z-10"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="w-72 border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0 z-10">
           {/* Notes Header */}
           {isSelectionMode ? (
-            <div
-              className="flex items-center justify-between px-4 py-[7px] border-b z-10"
-              style={{ borderColor: colors.border, backgroundColor: colors.bgSecondary }}
-            >
+            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
               <button onClick={toggleSelectAll} className="flex items-center gap-2">
                 {allOwnedSelected ? (
-                  <SquareCheck size={18} color={colors.primary} />
+                  <SquareCheck size={18} className="text-amber-500 dark:text-amber-400" />
                 ) : (
-                  <Square size={18} color={colors.iconMuted} />
+                  <Square size={18} className="text-zinc-400" />
                 )}
-                <span className="text-sm" style={{ color: colors.text }}>
-                  All
-                </span>
+                <span className="text-sm text-zinc-950 dark:text-white">All</span>
               </button>
-              <span className="text-sm font-medium" style={{ color: colors.text }}>
+              <span className="text-sm font-medium text-zinc-950 dark:text-white">
                 {selectedNoteIds.size} selected
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
-                  className="px-3 py-1.5 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: selectedNoteIds.size > 0 ? colors.error : colors.border,
-                    color: selectedNoteIds.size > 0 ? '#fff' : colors.textMuted,
-                  }}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium ${
+                    selectedNoteIds.size > 0
+                      ? 'bg-red-500 text-white'
+                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'
+                  }`}
                 >
                   Delete
                 </button>
                 <button onClick={exitSelectionMode} className="p-1">
-                  <X size={18} color={colors.icon} />
+                  <X size={18} className="text-zinc-500" />
                 </button>
               </div>
             </div>
           ) : (
-            <div
-              className="flex items-center justify-between px-4 py-[7px] border-b z-10"
-              style={{ borderColor: colors.border }}
-            >
+            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-zinc-200 dark:border-zinc-800">
               {!showNavSidebar && (
                 <button onClick={() => setShowNavSidebar(true)} className="p-1 mr-2">
-                  <PanelLeft size={18} color={colors.iconMuted} />
+                  <PanelLeft size={18} className="text-zinc-400" />
                 </button>
               )}
               {selectedTagId ? (
-                <span className="text-base font-medium flex-1" style={{ color: colors.text }}>
+                <span className="text-base font-medium flex-1 text-zinc-950 dark:text-white">
                   {tags.find((t) => t.id === selectedTagId)?.name || 'Notes'}
                 </span>
               ) : (
@@ -586,15 +562,17 @@ export function Dashboard() {
                   onClick={toggleShowPrivate}
                   className="flex items-center flex-1 gap-1 py-1 pr-2"
                 >
-                  {!showPrivate && <Lock size={14} color={colors.primary} />}
-                  <span className="text-base font-medium" style={{ color: colors.text }}>
+                  {!showPrivate && (
+                    <Lock size={14} className="text-amber-500 dark:text-amber-400" />
+                  )}
+                  <span className="text-base font-medium text-zinc-950 dark:text-white">
                     {showPrivate ? 'All Notes' : 'Public'}
                   </span>
-                  <ChevronDown size={16} color={colors.textMuted} />
+                  <ChevronDown size={16} className="text-zinc-500" />
                 </button>
               )}
               <button onClick={enterSelectionMode} className="p-1.5 mr-1 shrink-0">
-                <SquareCheck size={18} color={colors.iconMuted} />
+                <SquareCheck size={18} className="text-zinc-400" />
               </button>
               <div className="relative z-10">
                 <button
@@ -606,81 +584,65 @@ export function Dashboard() {
                       setShowCreateMenu(!showCreateMenu);
                     }
                   }}
-                  className="p-1.5 rounded-md mr-2"
-                  style={{ backgroundColor: colors.primary }}
+                  className="p-1.5 rounded-md mr-2 bg-amber-500 dark:bg-amber-400"
                 >
-                  <Plus size={18} color={colors.primaryText} />
+                  <Plus size={18} className="text-black" />
                 </button>
                 {showCreateMenu && showPrivate && (
-                  <div
-                    className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100]"
-                    style={{
-                      backgroundColor: colors.bgSecondary,
-                      borderColor: colors.border,
-                    }}
-                  >
+                  <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
                     <button
                       onClick={() => handleCreateNote(false)}
-                      className="flex items-center gap-2 w-full p-3 border-b"
-                      style={{ borderColor: colors.border }}
+                      className="flex items-center gap-2 w-full p-3 border-b border-zinc-200 dark:border-zinc-700"
                     >
-                      <Plus size={16} color={colors.icon} />
-                      <span className="text-sm" style={{ color: colors.text }}>
-                        New Note
-                      </span>
+                      <Plus size={16} className="text-zinc-500" />
+                      <span className="text-sm text-zinc-950 dark:text-white">New Note</span>
                     </button>
                     <button
                       onClick={() => handleCreateNote(true)}
                       className="flex items-center gap-2 w-full p-3"
                     >
-                      <Lock size={16} color={colors.icon} />
-                      <span className="text-sm" style={{ color: colors.text }}>
-                        Private Note
-                      </span>
+                      <Lock size={16} className="text-zinc-500" />
+                      <span className="text-sm text-zinc-950 dark:text-white">Private Note</span>
                     </button>
                   </div>
                 )}
               </div>
               <button onClick={() => setShowNotesSidebar(false)} className="p-1">
-                <PanelLeftClose size={18} color={colors.iconMuted} />
+                <PanelLeftClose size={18} className="text-zinc-400" />
               </button>
             </div>
           )}
 
           {/* Desktop Search */}
-          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
           {/* Active Tag Filter */}
           {selectedTagId && (
             <button
               onClick={() => setSelectedTagId(null)}
-              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start"
-              style={{ backgroundColor: colors.bgTertiary }}
+              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-zinc-100 dark:bg-zinc-900"
             >
               <div
                 className="w-2 h-2 rounded-full"
                 style={{
-                  backgroundColor:
-                    tags.find((t) => t.id === selectedTagId)?.color || colors.primary,
+                  backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
                 }}
               />
-              <span className="text-sm" style={{ color: colors.text }}>
+              <span className="text-sm text-zinc-950 dark:text-white">
                 {tags.find((t) => t.id === selectedTagId)?.name}
               </span>
-              <span className="text-sm ml-0.5" style={{ color: colors.textMuted }}>
-                ×
-              </span>
+              <span className="text-sm ml-0.5 text-zinc-500">×</span>
             </button>
           )}
 
           {/* Sort Options */}
-          <div className="px-4 py-2 border-b" style={{ borderColor: colors.border }}>
+          <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
               className="flex items-center gap-1"
             >
-              <ArrowUpDown size={14} color={colors.iconMuted} />
-              <span className="text-xs" style={{ color: colors.textMuted }}>
+              <ArrowUpDown size={14} className="text-zinc-400" />
+              <span className="text-xs text-zinc-500">
                 {sortBy === 'updated'
                   ? 'Last updated'
                   : sortBy === 'created'
@@ -689,10 +651,7 @@ export function Dashboard() {
               </span>
             </button>
             {showSortMenu && (
-              <div
-                className="mt-2 rounded-lg overflow-hidden"
-                style={{ backgroundColor: colors.bgTertiary }}
-              >
+              <div className="mt-2 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                 {(['updated', 'created', 'title'] as const).map((option) => (
                   <button
                     key={option}
@@ -700,14 +659,14 @@ export function Dashboard() {
                       setSortBy(option);
                       setShowSortMenu(false);
                     }}
-                    className="w-full px-3 py-2 text-left"
-                    style={{
-                      backgroundColor: sortBy === option ? colors.bgHover : 'transparent',
-                    }}
+                    className={`w-full px-3 py-2 text-left ${
+                      sortBy === option ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+                    }`}
                   >
                     <span
-                      className="text-sm"
-                      style={{ color: sortBy === option ? colors.text : colors.textTertiary }}
+                      className={`text-sm ${
+                        sortBy === option ? 'text-zinc-950 dark:text-white' : 'text-zinc-500'
+                      }`}
                     >
                       {option === 'updated'
                         ? 'Last updated'
@@ -740,39 +699,34 @@ export function Dashboard() {
       <div className="flex-1 flex flex-col">
         {/* Always show header when sidebars are collapsed */}
         {(!showNavSidebar || !showNotesSidebar) && (
-          <div
-            className="flex items-center justify-between px-4 py-2 border-b"
-            style={{ borderColor: colors.border }}
-          >
+          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
                 <button
                   onClick={() => setShowNavSidebar(true)}
-                  className="p-1.5 rounded"
-                  style={{ backgroundColor: colors.bgTertiary }}
+                  className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-900"
                 >
-                  <PanelLeft size={18} color={colors.iconMuted} />
+                  <PanelLeft size={18} className="text-zinc-400" />
                 </button>
               )}
               {!showNotesSidebar && (
                 <button
                   onClick={() => setShowNotesSidebar(true)}
-                  className="p-1.5 rounded"
-                  style={{ backgroundColor: colors.bgTertiary }}
+                  className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-900"
                 >
-                  <PanelLeft size={18} color={colors.icon} />
+                  <PanelLeft size={18} className="text-zinc-500" />
                 </button>
               )}
             </div>
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
                 <button onClick={() => window.location.reload()} className="p-2">
-                  <RefreshCw size={18} color={colors.iconMuted} />
+                  <RefreshCw size={18} className="text-zinc-400" />
                 </button>
               )}
               {currentNote && (
                 <button onClick={handleTrashNote} className="p-2">
-                  <Trash2 size={18} color={colors.iconMuted} />
+                  <Trash2 size={18} className="text-zinc-400" />
                 </button>
               )}
             </div>
@@ -795,9 +749,7 @@ export function Dashboard() {
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <span style={{ color: colors.textMuted }} className="text-base">
-              Select a note or create a new one
-            </span>
+            <span className="text-base text-zinc-500">Select a note or create a new one</span>
           </div>
         )}
       </div>

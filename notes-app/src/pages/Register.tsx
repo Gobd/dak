@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 export function Register() {
-  const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -35,22 +33,17 @@ export function Register() {
 
   if (success) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6"
-        style={{ backgroundColor: colors.bg }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-bold text-center mb-4" style={{ color: colors.text }}>
+          <h1 className="text-3xl font-bold text-center mb-4 text-zinc-950 dark:text-white">
             Check your email
           </h1>
-          <p className="text-center mb-8" style={{ color: colors.textMuted }}>
+          <p className="text-center mb-8 text-zinc-500">
             We sent a verification link to
             <br />
-            <span className="font-medium" style={{ color: colors.text }}>
-              {email}
-            </span>
+            <span className="font-medium text-zinc-950 dark:text-white">{email}</span>
           </p>
-          <p className="text-center text-sm" style={{ color: colors.textTertiary }}>
+          <p className="text-center text-sm text-zinc-500">
             Click the link in the email to verify your account and set your password.
           </p>
         </div>
@@ -59,40 +52,35 @@ export function Register() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: colors.bg }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2" style={{ color: colors.text }}>
+        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
           Create Account
         </h1>
-        <p className="text-center mb-8" style={{ color: colors.textMuted }}>
-          Enter your email to get started
-        </p>
+        <p className="text-center mb-8 text-zinc-500">Enter your email to get started</p>
 
         <div className="mb-6">
           <Input
             label="Email"
             value={email}
-            onChangeText={setEmail}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             type="email"
             autoComplete="email"
             error={error}
-            onSubmitEditing={handleRegister}
+            onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
           />
         </div>
 
         <div className="mb-4">
-          <Button onPress={handleRegister} loading={isLoading} className="w-full">
+          <Button onClick={handleRegister} loading={isLoading} className="w-full">
             Create Account
           </Button>
         </div>
 
-        <p className="text-center" style={{ color: colors.textMuted }}>
+        <p className="text-center text-zinc-500">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium" style={{ color: colors.primary }}>
+          <Link to="/login" className="font-medium text-amber-500 dark:text-amber-400">
             Sign In
           </Link>
         </p>

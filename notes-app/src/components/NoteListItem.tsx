@@ -1,14 +1,12 @@
 import { Pin, Lock, Users, CircleUser, SquareCheck, Square } from 'lucide-react';
-import { useThemeColors } from '../hooks/useThemeColors';
 import type { Note } from '../types/note';
 import { getNoteTitle } from '../types/note';
 
 interface NoteListItemProps {
   note: Note;
   isSelected: boolean;
-  onPress: () => void;
+  onClick: () => void;
   searchQuery?: string;
-  // Selection mode props
   selectionMode?: boolean;
   isChecked?: boolean;
   canSelect?: boolean;
@@ -18,10 +16,9 @@ interface HighlightedTextProps {
   text: string;
   query: string;
   className?: string;
-  highlightColor: string;
 }
 
-function HighlightedText({ text, query, className, highlightColor }: HighlightedTextProps) {
+function HighlightedText({ text, query, className }: HighlightedTextProps) {
   if (!query.trim()) {
     return <span className={`truncate ${className || ''}`}>{text}</span>;
   }
@@ -48,7 +45,7 @@ function HighlightedText({ text, query, className, highlightColor }: Highlighted
     <span className={`truncate ${className || ''}`}>
       {parts.map((part, i) =>
         part.highlight ? (
-          <span key={i} style={{ backgroundColor: highlightColor }}>
+          <span key={i} className="bg-yellow-200 dark:bg-yellow-300/50">
             {part.text}
           </span>
         ) : (
@@ -93,59 +90,49 @@ function formatRelativeTime(dateString: string): string {
 export function NoteListItem({
   note,
   isSelected,
-  onPress,
+  onClick,
   searchQuery,
   selectionMode = false,
   isChecked = false,
   canSelect = true,
 }: NoteListItemProps) {
-  const colors = useThemeColors();
   const title = getNoteTitle(note.content);
   const query = searchQuery?.trim() || '';
-
-  // Check if this note is shared with me (has owner_email = not my note)
   const isSharedWithMe = !!note.owner_email;
 
   return (
     <button
-      onClick={onPress}
-      className="w-full text-left px-4 py-3 border-b transition-colors"
-      style={{
-        borderBottomColor: colors.border,
-        backgroundColor: isSelected && !selectionMode ? colors.bgSelected : 'transparent',
-        opacity: selectionMode && !canSelect ? 0.5 : 1,
-      }}
+      onClick={onClick}
+      className={`w-full text-left px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 transition-colors ${
+        isSelected && !selectionMode ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+      } ${selectionMode && !canSelect ? 'opacity-50' : ''}`}
     >
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center flex-1 min-w-0 mr-2">
           {selectionMode && canSelect && (
             <span className="mr-2 flex-shrink-0">
               {isChecked ? (
-                <SquareCheck size={18} color={colors.primary} />
+                <SquareCheck size={18} className="text-amber-500" />
               ) : (
-                <Square size={18} color={colors.iconMuted} />
+                <Square size={18} className="text-zinc-500" />
               )}
             </span>
           )}
-          {note.pinned && <Pin size={12} color={colors.primary} className="mr-1 flex-shrink-0" />}
+          {note.pinned && <Pin size={12} className="mr-1 flex-shrink-0 text-amber-500" />}
           {isSharedWithMe ? (
-            // Note shared with me - show person icon
-            <CircleUser size={12} color={colors.info || '#3b82f6'} className="mr-1 flex-shrink-0" />
+            <CircleUser size={12} className="mr-1 flex-shrink-0 text-blue-500" />
           ) : note.is_private ? (
-            // My private note
-            <Lock size={12} color={colors.textMuted} className="mr-1 flex-shrink-0" />
+            <Lock size={12} className="mr-1 flex-shrink-0 text-zinc-500" />
           ) : (
-            // My shared note
-            <Users size={12} color={colors.textMuted} className="mr-1 flex-shrink-0" />
+            <Users size={12} className="mr-1 flex-shrink-0 text-zinc-500" />
           )}
           <HighlightedText
             text={title}
             query={query}
-            className="font-medium text-base flex-1 min-w-0"
-            highlightColor={colors.searchHighlight || '#fef08a'}
+            className="font-medium text-base flex-1 min-w-0 text-zinc-950 dark:text-white"
           />
         </div>
-        <span className="text-xs flex-shrink-0" style={{ color: colors.textMuted }}>
+        <span className="text-xs flex-shrink-0 text-zinc-500">
           {formatRelativeTime(note.updated_at)}
         </span>
       </div>

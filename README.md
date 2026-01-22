@@ -2,13 +2,13 @@
 
 ## Live Apps
 
-| App | URL | Stack |
-|-----|-----|-------|
-| Dashboard | https://dak.bkemper.me/dashboard/ | Vite + React + Tailwind |
-| Family Chores | https://dak.bkemper.me/family-chores/ | Vite + React + Tailwind |
-| Health Tracker | https://dak.bkemper.me/health-tracker/ | Vite + React + Tailwind |
+| App             | URL                                     | Stack                   |
+| --------------- | --------------------------------------- | ----------------------- |
+| Dashboard       | https://dak.bkemper.me/dashboard/       | Vite + React + Tailwind |
+| Family Chores   | https://dak.bkemper.me/family-chores/   | Vite + React + Tailwind |
+| Health Tracker  | https://dak.bkemper.me/health-tracker/  | Vite + React + Tailwind |
 | Kasa Controller | https://dak.bkemper.me/kasa-controller/ | Vite + React + Tailwind |
-| Notes App | https://dak.bkemper.me/notes-app/ | Expo + React Native Web |
+| Notes App       | https://dak.bkemper.me/notes-app/       | Expo + React Native Web |
 
 All apps use TypeScript, Zustand for state, and Supabase for backend.
 

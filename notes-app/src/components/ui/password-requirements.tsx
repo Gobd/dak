@@ -1,5 +1,4 @@
 import { Check, X } from 'lucide-react';
-import { useThemeColors } from '../../hooks/useThemeColors';
 import { validatePassword } from '../../lib/password-validation';
 
 interface PasswordRequirementsProps {
@@ -7,7 +6,6 @@ interface PasswordRequirementsProps {
 }
 
 export function PasswordRequirements({ password }: PasswordRequirementsProps) {
-  const colors = useThemeColors();
   const validation = validatePassword(password);
 
   const requirements = [
@@ -23,14 +21,11 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
       {requirements.map((req, index) => (
         <div key={index} className="flex items-center gap-1.5">
           {req.met ? (
-            <Check size={14} color={colors.success} />
+            <Check size={14} className="text-green-500" />
           ) : (
-            <X size={14} color={colors.textMuted} />
+            <X size={14} className="text-zinc-500" />
           )}
-          <span
-            className="text-[13px]"
-            style={{ color: req.met ? colors.success : colors.textMuted }}
-          >
+          <span className={`text-[13px] ${req.met ? 'text-green-500' : 'text-zinc-500'}`}>
             {req.label}
           </span>
         </div>

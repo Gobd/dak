@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { unsubscribeFromSync } from '../lib/realtime';
 
 // Production web URL - used for all email redirects
 const PRODUCTION_URL = 'https://notes-app-e20.pages.dev';
@@ -94,6 +95,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   signOut: async () => {
     set({ isLoading: true });
     try {
+      unsubscribeFromSync();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       set({ user: null, session: null });

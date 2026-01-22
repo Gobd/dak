@@ -4,6 +4,7 @@ import { Car, X, Settings, Plus, Trash2 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { Modal, Button, ConfirmModal, TimePickerCompact, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
+import { formatLocation } from '../../hooks/useLocation';
 import type { DriveTimeRoute } from '../../types';
 
 // API endpoints
@@ -709,7 +710,15 @@ interface RouteAlternative {
 }
 
 function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormModalProps) {
+  const globalSettings = useConfigStore((s) => s.globalSettings);
+  const defaultLocation = globalSettings?.defaultLocation;
+
+  // Build location options including global default if available
   const locationKeys = Object.keys(locations);
+  const defaultLocationName = defaultLocation
+    ? formatLocation(defaultLocation.city, defaultLocation.state)
+    : undefined;
+  const hasDefaultInLocations = defaultLocationName && locationKeys.includes(defaultLocationName);
   const isEdit = !!route;
 
   // Initialize form from route prop (component is keyed by route, so this resets on route change)
@@ -736,10 +745,16 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
   // Get the actual addresses for origin/destination
   const getOriginAddr = () => {
     if (form.origin === '__new__') return form.newOriginAddr;
+    if (form.origin === '__default__' && defaultLocation) {
+      return defaultLocation.query || `${defaultLocation.lat},${defaultLocation.lon}`;
+    }
     return locations[form.origin] ?? '';
   };
   const getDestAddr = () => {
     if (form.destination === '__new__') return form.newDestAddr;
+    if (form.destination === '__default__' && defaultLocation) {
+      return defaultLocation.query || `${defaultLocation.lat},${defaultLocation.lon}`;
+    }
     return locations[form.destination] ?? '';
   };
 
@@ -793,6 +808,22 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
     let origin = form.origin;
     let destination = form.destination;
     const newLocations = { ...locations };
+
+    // Handle global default location for origin
+    if (origin === '__default__' && defaultLocation) {
+      const name = formatLocation(defaultLocation.city, defaultLocation.state);
+      origin = name;
+      newLocations[origin] =
+        defaultLocation.query || `${defaultLocation.lat},${defaultLocation.lon}`;
+    }
+
+    // Handle global default location for destination
+    if (destination === '__default__' && defaultLocation) {
+      const name = formatLocation(defaultLocation.city, defaultLocation.state);
+      destination = name;
+      newLocations[destination] =
+        defaultLocation.query || `${defaultLocation.lat},${defaultLocation.lon}`;
+    }
 
     // Handle new origin
     if (origin === '__new__') {
@@ -861,6 +892,11 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
             className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
           >
             <option value="">Select location...</option>
+            {defaultLocation && !hasDefaultInLocations && (
+              <option value="__default__">
+                {formatLocation(defaultLocation.city, defaultLocation.state)} (Global)
+              </option>
+            )}
             {locationKeys.map((k) => (
               <option key={k} value={k}>
                 {k}
@@ -895,6 +931,11 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
             className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
           >
             <option value="">Select location...</option>
+            {defaultLocation && !hasDefaultInLocations && (
+              <option value="__default__">
+                {formatLocation(defaultLocation.city, defaultLocation.state)} (Global)
+              </option>
+            )}
             {locationKeys.map((k) => (
               <option key={k} value={k}>
                 {k}

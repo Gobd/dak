@@ -1,31 +1,17 @@
 import { forwardRef, type ReactNode, type ButtonHTMLAttributes } from 'react';
-import { useThemeColors } from '../../hooks/useThemeColors';
 
-interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
-  onPress?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  variant?: 'primary' | 'secondary' | 'ghost';
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
   children: ReactNode;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    {
-      onPress,
-      onClick,
-      disabled = false,
-      loading = false,
-      variant = 'primary',
-      size = 'md',
-      children,
-      className,
-      ...props
-    },
+    { variant = 'primary', size = 'md', loading = false, disabled, children, className, ...props },
     ref
   ) => {
-    const colors = useThemeColors();
     const isDisabled = disabled || loading;
 
     const sizeClasses = {
@@ -34,54 +20,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       lg: 'px-6 py-4 text-lg',
     };
 
-    const getBackgroundColor = () => {
-      switch (variant) {
-        case 'primary':
-          return colors.primary;
-        case 'secondary':
-          return colors.bgTertiary;
-        case 'ghost':
-          return 'transparent';
-        default:
-          return colors.primary;
-      }
-    };
-
-    const getTextColor = () => {
-      switch (variant) {
-        case 'primary':
-          return colors.primaryText;
-        case 'secondary':
-          return colors.text;
-        case 'ghost':
-          return colors.primary;
-        default:
-          return colors.primaryText;
-      }
+    const variantClasses = {
+      primary:
+        'bg-amber-500 dark:bg-amber-400 text-black hover:bg-amber-600 dark:hover:bg-amber-500',
+      secondary:
+        'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-700',
+      ghost:
+        'bg-transparent text-amber-600 dark:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+      danger: 'bg-red-600 text-white hover:bg-red-700',
     };
 
     return (
       <button
         ref={ref}
-        onClick={onPress || onClick}
         disabled={isDisabled}
-        className={`rounded-lg flex items-center justify-center font-semibold transition-opacity ${sizeClasses[size]} ${className || ''}`}
-        style={{
-          backgroundColor: getBackgroundColor(),
-          color: getTextColor(),
-          opacity: isDisabled ? 0.5 : 1,
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-        }}
+        className={`rounded-lg flex items-center justify-center font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className || ''}`}
         {...props}
       >
         {loading ? (
-          <div
-            className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-            style={{
-              borderColor: variant === 'ghost' ? colors.primary : colors.primaryText,
-              borderTopColor: 'transparent',
-            }}
-          />
+          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : (
           children
         )}

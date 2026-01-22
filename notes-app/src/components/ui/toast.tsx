@@ -1,5 +1,4 @@
 import { X, Check, TriangleAlert } from 'lucide-react';
-import { useThemeColors } from '../../hooks/useThemeColors';
 import { useToastStore, type ToastType } from '../../stores/toast-store';
 import type { LucideIcon } from 'lucide-react';
 
@@ -9,8 +8,19 @@ const icons: Record<ToastType, LucideIcon> = {
   info: Check,
 };
 
+const iconColors: Record<ToastType, string> = {
+  success: 'text-green-500',
+  error: 'text-red-500',
+  info: 'text-blue-500',
+};
+
+const borderColors: Record<ToastType, string> = {
+  success: 'border-l-green-500',
+  error: 'border-l-red-500',
+  info: 'border-l-blue-500',
+};
+
 export function ToastContainer() {
-  const colors = useThemeColors();
   const { toasts, hideToast } = useToastStore();
 
   if (toasts.length === 0) return null;
@@ -19,32 +29,19 @@ export function ToastContainer() {
     <div className="fixed top-[60px] right-4 flex flex-col items-end z-[9999] pointer-events-none">
       {toasts.map((toast) => {
         const Icon = icons[toast.type];
-        const iconColor =
-          toast.type === 'success'
-            ? colors.success || '#22c55e'
-            : toast.type === 'error'
-              ? colors.error
-              : colors.info || '#3b82f6';
 
         return (
           <div
             key={toast.id}
-            className="flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto"
-            style={{
-              backgroundColor: colors.bgSecondary,
-              borderLeftWidth: 3,
-              borderLeftColor: iconColor,
-            }}
+            className={`flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto bg-zinc-100 dark:bg-zinc-900 border-l-[3px] ${borderColors[toast.type]}`}
           >
-            <Icon size={18} color={iconColor} className="mr-2.5 flex-shrink-0" />
-            <span className="flex-1 text-sm" style={{ color: colors.text }}>
-              {toast.message}
-            </span>
+            <Icon size={18} className={`mr-2.5 flex-shrink-0 ${iconColors[toast.type]}`} />
+            <span className="flex-1 text-sm text-zinc-950 dark:text-white">{toast.message}</span>
             <button
               onClick={() => hideToast(toast.id)}
-              className="p-1 ml-2 hover:opacity-70 transition-opacity"
+              className="p-1 ml-2 hover:opacity-70 transition-opacity text-zinc-500"
             >
-              <X size={16} color={colors.iconMuted} />
+              <X size={16} />
             </button>
           </div>
         );

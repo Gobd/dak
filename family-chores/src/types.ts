@@ -24,13 +24,6 @@ export interface Chore {
   created_at: string;
 }
 
-export interface ChoreAssignment {
-  id: string;
-  chore_id: string;
-  member_id: string;
-  created_at: string;
-}
-
 export interface ChoreWithAssignments extends Chore {
   assignments: Array<{
     id: string;

@@ -12,7 +12,8 @@ export type WidgetType =
   | 'iframe'
   | 'climate'
   | 'timer'
-  | 'ptt';
+  | 'ptt'
+  | 'mqtt';
 
 // Panel configuration
 export interface PanelConfig {
@@ -41,6 +42,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   climate: { width: 20, height: 8, refresh: '1m' },
   timer: { width: 6, height: 6 },
   ptt: { width: 6, height: 6 },
+  mqtt: { width: 10, height: 10, refresh: '10s' },
 };
 
 // Screen configuration
@@ -90,10 +92,19 @@ export interface BrightnessConfig {
   enabled?: boolean;
   lat?: number;
   lon?: number;
+  city?: string;
+  state?: string;
   locationName?: string;
   dayBrightness?: number;
   nightBrightness?: number;
   transitionMins?: number;
+}
+
+// Climate sensor configuration
+export interface ClimateConfig {
+  indoor?: string; // Zigbee2MQTT device friendly_name
+  outdoor?: string;
+  unit?: 'C' | 'F'; // Temperature unit (default: C)
 }
 
 // Theme mode for global settings
@@ -155,6 +166,7 @@ export interface DashboardConfig {
   dark: boolean;
   driveTime?: DriveTimeConfig;
   calendar?: CalendarConfig;
+  climate?: ClimateConfig;
   locations?: Record<string, LocationConfig>;
   defaultLocation?: LocationConfig;
   brightness?: BrightnessConfig;
@@ -170,19 +182,6 @@ export const DEFAULT_CONFIG: DashboardConfig = {
   activeScreenIndex: 0,
   dark: true,
 };
-
-// Widget props passed to all widgets
-export interface WidgetProps {
-  panel: PanelConfig;
-  dark: boolean;
-  isEditMode: boolean;
-}
-
-// SSE event types
-export interface SSEEvent {
-  type: string;
-  data?: unknown;
-}
 
 // Duration parsing utility type
 export type DurationUnit = 's' | 'm' | 'h' | 'd';
@@ -204,17 +203,6 @@ export function parseDuration(duration?: string): number | null {
   };
 
   return value * multipliers[unit];
-}
-
-// Format duration for display
-export function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-
-  if (hours > 0) return `${hours}h ${minutes % 60}m`;
-  if (minutes > 0) return `${minutes}m`;
-  return `${seconds}s`;
 }
 
 // Generate unique ID

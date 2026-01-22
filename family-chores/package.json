@@ -1,16 +1,13 @@
 {
   "name": "family-chores",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "format:check": "prettier --check .",
-    "format": "prettier --write .",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build",
+    "check": "pnpm typecheck && pnpm build",
     "preview": "vite preview",
     "analyze": "ANALYZE=true vite build"
   },
@@ -25,23 +22,17 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "catalog:",
+    "@dak/vite-shared-react": "workspace:*",
     "@tailwindcss/vite": "catalog:vite",
     "@types/node": "catalog:",
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",
     "@vitejs/plugin-react": "catalog:vite",
-    "eslint": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:vite",
     "globals": "catalog:",
-    "tailwindcss": "catalog:vite",
-    "prettier": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:vite",
     "rollup-plugin-visualizer": "catalog:vite",
+    "tailwindcss": "catalog:vite",
+    "typescript": "catalog:",
     "vite": "catalog:vite",
-    "vite-plugin-pwa": "catalog:vite",
-    "@dak/vite-shared-react": "workspace:*"
+    "vite-plugin-pwa": "catalog:vite"
   }
 }

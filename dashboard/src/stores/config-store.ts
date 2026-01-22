@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type {
   DashboardConfig,
-  ScreenConfig,
   PanelConfig,
   DriveTimeConfig,
   CalendarConfig,
+  ClimateConfig,
   LocationConfig,
   BrightnessConfig,
   GlobalSettings,
@@ -81,6 +81,7 @@ function getPersistedConfig(state: DashboardConfig): DashboardConfig {
     dark: state.dark,
     driveTime: state.driveTime,
     calendar: state.calendar,
+    climate: state.climate,
     brightness: state.brightness,
     locations: state.locations,
     widgetData: state.widgetData,
@@ -96,6 +97,7 @@ function applyPersistedConfig(config: DashboardConfig): Partial<DashboardConfig>
     dark: config.dark ?? true,
     driveTime: config.driveTime,
     calendar: config.calendar,
+    climate: config.climate,
     brightness: config.brightness,
     locations: config.locations,
     widgetData: config.widgetData,
@@ -131,6 +133,7 @@ interface ConfigState extends DashboardConfig {
   // Config sections
   updateDriveTime: (config: DriveTimeConfig) => void;
   updateCalendar: (config: CalendarConfig) => void;
+  updateClimate: (config: ClimateConfig) => void;
   updateBrightness: (config: BrightnessConfig) => void;
   updateLocation: (widgetId: string, location: LocationConfig) => void;
   getLocation: (widgetId: string) => LocationConfig | undefined;
@@ -260,6 +263,11 @@ export const useConfigStore = create<ConfigState>()(
         updateCalendar: (config) =>
           set((state) => ({
             calendar: { ...state.calendar, ...config },
+          })),
+
+        updateClimate: (config) =>
+          set((state) => ({
+            climate: { ...state.climate, ...config },
           })),
 
         updateBrightness: (config) =>
@@ -436,6 +444,7 @@ useConfigStore.subscribe(
     dark: state.dark,
     driveTime: state.driveTime,
     calendar: state.calendar,
+    climate: state.climate,
     brightness: state.brightness,
     locations: state.locations,
     widgetData: state.widgetData,
@@ -559,16 +568,3 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', cleanupSSE);
   window.addEventListener('pagehide', cleanupSSE);
 }
-
-// Selector for current screen
-export const useCurrentScreen = (): ScreenConfig => {
-  const screens = useConfigStore((state) => state.screens);
-  const activeScreenIndex = useConfigStore((state) => state.activeScreenIndex);
-  return screens[activeScreenIndex] ?? screens[0];
-};
-
-// Selector for current panels
-export const useCurrentPanels = (): PanelConfig[] => {
-  const screen = useCurrentScreen();
-  return screen?.panels ?? [];
-};

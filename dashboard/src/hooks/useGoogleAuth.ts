@@ -290,5 +290,10 @@ export async function fetchCalendarApi<T>(
     throw new Error(error.error?.message || `API error: ${response.status}`);
   }
 
+  // Handle 204 No Content (e.g., DELETE responses)
+  if (response.status === 204) {
+    return {} as T;
+  }
+
   return response.json();
 }

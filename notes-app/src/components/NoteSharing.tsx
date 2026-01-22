@@ -3,7 +3,6 @@ import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { LoadingSpinner } from './ui/loading-spinner';
 import { ConfirmDialog } from './ui/confirm-dialog';
 import { useToastStore } from '../stores/toast-store';
@@ -15,7 +14,6 @@ interface NoteSharingProps {
 }
 
 export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
-  const colors = useThemeColors();
   const { user } = useAuthStore();
   const { planLimits } = useUserStore();
   const { showToast } = useToastStore();
@@ -97,24 +95,21 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
     const hasEmail = !!note.owner_email && note.owner_name;
 
     return (
-      <div className="px-4 py-3 border-t" style={{ borderTopColor: colors.border }}>
+      <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
-          <Users size={16} color={colors.info || '#3b82f6'} />
+          <Users size={16} className="text-blue-500" />
           <div className="flex-1">
-            <p className="text-sm" style={{ color: colors.textMuted }}>
+            <p className="text-sm text-zinc-500">
               Shared with you by{' '}
               <button
                 onClick={hasEmail ? () => setShowOwnerEmail(!showOwnerEmail) : undefined}
-                className="font-medium"
-                style={{ color: colors.info || '#3b82f6' }}
+                className="font-medium text-blue-500"
               >
                 {ownerDisplay}
               </button>
             </p>
             {showOwnerEmail && hasEmail && (
-              <p className="text-xs mt-0.5" style={{ color: colors.textMuted }}>
-                {note.owner_email}
-              </p>
+              <p className="text-xs mt-0.5 text-zinc-500">{note.owner_email}</p>
             )}
           </div>
         </div>
@@ -123,16 +118,16 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
   }
 
   return (
-    <div className="border-t" style={{ borderTopColor: colors.border }}>
+    <div className="border-t border-zinc-200 dark:border-zinc-800">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           {note.is_private ? (
-            <Lock size={16} color={colors.iconMuted} />
+            <Lock size={16} className="text-zinc-400" />
           ) : (
-            <Globe size={16} color={colors.primary} />
+            <Globe size={16} className="text-amber-500 dark:text-amber-400" />
           )}
-          <span className="text-sm font-medium" style={{ color: colors.text }}>
+          <span className="text-sm font-medium text-zinc-950 dark:text-white">
             {note.is_private ? 'Private Note' : 'Shared Note'}
           </span>
         </div>
@@ -140,8 +135,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
         {onTogglePrivate && (
           <button
             onClick={() => onTogglePrivate(!note.is_private)}
-            className="px-3 py-1.5 rounded-md text-[13px]"
-            style={{ backgroundColor: colors.bgTertiary, color: colors.textTertiary }}
+            className="px-3 py-1.5 rounded-md text-[13px] bg-zinc-100 dark:bg-zinc-900 text-zinc-500"
           >
             {note.is_private ? 'Make Shared' : 'Make Private'}
           </button>
@@ -152,17 +146,13 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
       {!note.is_private && (
         <div className="px-4 pb-3">
           {!canShare ? (
-            <p className="text-[13px]" style={{ color: colors.textMuted }}>
-              Upgrade to share notes with others
-            </p>
+            <p className="text-[13px] text-zinc-500">Upgrade to share notes with others</p>
           ) : (
             <>
               {/* Existing shares */}
               {shares.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-xs mb-1.5" style={{ color: colors.textMuted }}>
-                    Shared with:
-                  </p>
+                  <p className="text-xs mb-1.5 text-zinc-500">Shared with:</p>
                   {shares.map((share) => {
                     const showName = share.display_name && share.display_name !== share.email;
                     const isExpanded = expandedUserId === share.user_id;
@@ -170,8 +160,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                     return (
                       <div
                         key={share.user_id}
-                        className="flex items-center justify-between py-2 border-b"
-                        style={{ borderBottomColor: colors.border }}
+                        className="flex items-center justify-between py-2 border-b border-zinc-200 dark:border-zinc-800"
                       >
                         <button
                           onClick={
@@ -181,14 +170,11 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                           }
                           className="flex-1 text-left"
                         >
-                          <span className="text-sm" style={{ color: colors.text }}>
+                          <span className="text-sm text-zinc-950 dark:text-white">
                             {share.display_name || share.email}
                           </span>
                           {isExpanded && showName && (
-                            <span
-                              className="block text-xs mt-0.5"
-                              style={{ color: colors.textMuted }}
-                            >
+                            <span className="block text-xs mt-0.5 text-zinc-500">
                               {share.email}
                             </span>
                           )}
@@ -197,7 +183,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                           onClick={() => handleRemoveShare(share.user_id, share.email)}
                           className="p-2 hover:opacity-70"
                         >
-                          <X size={16} color={colors.iconMuted} />
+                          <X size={16} className="text-zinc-400" />
                         </button>
                       </div>
                     );
@@ -214,21 +200,17 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="Email address"
                     autoFocus
-                    className="flex-1 px-2.5 py-2 rounded-md text-sm outline-none"
-                    style={{
-                      backgroundColor: colors.bgSecondary,
-                      color: colors.text,
-                    }}
+                    className="flex-1 px-2.5 py-2 rounded-md text-sm outline-none bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white placeholder:text-zinc-400"
                     onKeyDown={(e) => e.key === 'Enter' && handleAddShare()}
                   />
                   <button
                     onClick={handleAddShare}
                     disabled={isAdding || !newEmail.trim()}
-                    className="px-3 rounded-md text-sm flex items-center justify-center"
-                    style={{
-                      backgroundColor: newEmail.trim() ? colors.primary : colors.bgTertiary,
-                      color: newEmail.trim() ? colors.primaryText : colors.iconMuted,
-                    }}
+                    className={`px-3 rounded-md text-sm flex items-center justify-center ${
+                      newEmail.trim()
+                        ? 'bg-amber-500 dark:bg-amber-400 text-black'
+                        : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-400'
+                    }`}
                   >
                     {isAdding ? <LoadingSpinner size="small" /> : 'Add'}
                   </button>
@@ -239,23 +221,21 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                     }}
                     className="p-2 hover:opacity-70"
                   >
-                    <X size={18} color={colors.iconMuted} />
+                    <X size={18} className="text-zinc-400" />
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="flex items-center gap-1.5 hover:opacity-70"
+                  className="flex items-center gap-1.5 hover:opacity-70 text-amber-500 dark:text-amber-400"
                 >
-                  <Plus size={16} color={colors.primary} />
-                  <span className="text-sm" style={{ color: colors.primary }}>
-                    Share with someone
-                  </span>
+                  <Plus size={16} />
+                  <span className="text-sm">Share with someone</span>
                 </button>
               )}
 
               {/* Share count */}
-              <p className="text-xs mt-2" style={{ color: colors.textMuted }}>
+              <p className="text-xs mt-2 text-zinc-500">
                 Sharing with {uniqueShareCount} / {planLimits.maxSharedUsers} people total
               </p>
             </>

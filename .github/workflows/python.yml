@@ -41,3 +41,26 @@ jobs:
       - name: Format
         if: steps.changes.outputs.python == 'true'
         run: uv run ruff format --check .
+
+      - name: Type check
+        if: steps.changes.outputs.python == 'true'
+        run: uv run pyright
+
+      - uses: pnpm/action-setup@v4
+        if: steps.changes.outputs.python == 'true'
+
+      - uses: actions/setup-node@v6
+        if: steps.changes.outputs.python == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install Node dependencies
+        if: steps.changes.outputs.python == 'true'
+        working-directory: dashboard
+        run: pnpm install --frozen-lockfile
+
+      - name: Check generated API client
+        if: steps.changes.outputs.python == 'true'
+        working-directory: dashboard
+        run: pnpm gen:api:check

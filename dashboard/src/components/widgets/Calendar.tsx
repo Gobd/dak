@@ -1,5 +1,14 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Settings, RefreshCw, LogOut } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Plus,
+  Settings,
+  RefreshCw,
+  LogOut,
+} from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval, useSyncedClock } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
@@ -145,6 +154,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
   const showTime = panel.args?.showTime === true;
   const showSeconds = panel.args?.showSeconds === true;
+  const headerHeight = (panel.args?.headerHeight as number) ?? 0; // Extra height in pixels for header
 
   // Google OAuth
   const {
@@ -252,6 +262,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
         try {
           // Build query params - use sync token if available AND we have cached events, otherwise full fetch
+          const isFullFetch = !syncToken;
           const params: Record<string, string> = syncToken
             ? { syncToken }
             : {
@@ -262,6 +273,21 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 singleEvents: 'true',
                 maxResults: '250',
               };
+
+          // For full fetch, clear existing events for this calendar ONLY in the fetched time range
+          // This preserves events from other date ranges the user has navigated to
+          if (isFullFetch) {
+            const fetchTimeMin = new Date(gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const fetchTimeMax = new Date(
+              gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000
+            );
+            updatedEvents = updatedEvents.filter((e) => {
+              if (e.calendarId !== cal.id) return true;
+              // Keep events outside the fetched time range
+              const eventStart = new Date(e.start.dateTime || e.start.date || '');
+              return eventStart < fetchTimeMin || eventStart > fetchTimeMax;
+            });
+          }
 
           const eventsResponse = await fetchCalendarApi<{
             items?: Array<{
@@ -294,6 +320,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
             // Add event if not cancelled/deleted
             if (event.status !== 'cancelled' && event.start && event.end) {
+              // Debug: log if event has dateTime vs date
+              if (event.start.date && !event.start.dateTime) {
+                console.debug(
+                  `Event "${event.summary}" is all-day (has date: ${event.start.date})`
+                );
+              } else if (event.start.dateTime) {
+                console.debug(`Event "${event.summary}" has time: ${event.start.dateTime}`);
+              }
+
               updatedEvents.push({
                 id: event.id,
                 calendarId: cal.id,
@@ -327,7 +362,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     }
   }, [isSignedIn, accessToken, gridStartDate, weeksToShow, hiddenCalendarIds]);
 
-  // Load events when signed in (only on auth change, not on every loadEvents change)
+  // Load events when signed in or when grid date changes
   const loadEventsRef = useRef(loadEvents);
   useEffect(() => {
     loadEventsRef.current = loadEvents;
@@ -337,7 +372,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     if (isSignedIn && accessToken) {
       loadEventsRef.current();
     }
-  }, [isSignedIn, accessToken]);
+  }, [isSignedIn, accessToken, gridStartDate]);
 
   // Auto-refresh events
   useRefreshInterval(loadEvents, '5m', { immediate: false });
@@ -419,6 +454,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       if (newEvent.description.trim()) {
         eventBody.description = newEvent.description.trim();
       }
+
+      console.debug('Creating event:', eventBody);
 
       await fetchCalendarApi(
         `/calendars/${encodeURIComponent(targetCalendarId)}/events`,
@@ -516,8 +553,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       if (editForm.allDay) {
-        const endDate = new Date(eventDate!);
-        endDate.setDate(endDate.getDate() + 1);
+        // Parse date as local (not UTC) to avoid timezone issues
+        const [year, month, day] = eventDate!.split('-').map(Number);
+        const endDate = new Date(year, month - 1, day + 1);
         eventBody = {
           summary: editForm.summary.trim(),
           start: { date: eventDate! },
@@ -605,6 +643,18 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   function handleNextWeek() {
     const newDate = new Date(gridStartDate);
     newDate.setDate(newDate.getDate() + 7);
+    setGridStartDate(newDate);
+  }
+
+  function handlePrevYear() {
+    const newDate = new Date(gridStartDate);
+    newDate.setFullYear(newDate.getFullYear() - 1);
+    setGridStartDate(newDate);
+  }
+
+  function handleNextYear() {
+    const newDate = new Date(gridStartDate);
+    newDate.setFullYear(newDate.getFullYear() + 1);
     setGridStartDate(newDate);
   }
 
@@ -702,9 +752,23 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-700">
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b border-neutral-700"
+        style={headerHeight > 0 ? { minHeight: `${headerHeight}px` } : undefined}
+      >
         <div className="flex items-center gap-1">
-          <button onClick={handlePrevWeek} className="p-1 rounded hover:bg-neutral-700/50">
+          <button
+            onClick={handlePrevYear}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Previous year"
+          >
+            <ChevronsLeft size={16} />
+          </button>
+          <button
+            onClick={handlePrevWeek}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Previous week"
+          >
             <ChevronLeft size={16} />
           </button>
           <button
@@ -716,8 +780,19 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           >
             {dateRange}
           </button>
-          <button onClick={handleNextWeek} className="p-1 rounded hover:bg-neutral-700/50">
+          <button
+            onClick={handleNextWeek}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Next week"
+          >
             <ChevronRight size={16} />
+          </button>
+          <button
+            onClick={handleNextYear}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Next year"
+          >
+            <ChevronsRight size={16} />
           </button>
           <button
             onClick={handleToday}

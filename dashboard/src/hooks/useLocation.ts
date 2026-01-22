@@ -7,15 +7,7 @@ const isLocalDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
-const API_BASE = isLocalDev ? `${APP_URL}/api/location` : '/api/location';
 const MAPS_API_BASE = isLocalDev ? `${APP_URL}/api/maps` : '/api/maps';
-
-interface GeocodeResult {
-  lat: number;
-  lon: number;
-  city?: string;
-  state?: string;
-}
 
 export interface PlacePrediction {
   description: string;
@@ -27,42 +19,6 @@ interface PlaceDetails {
   lon: number;
   city?: string;
   state?: string;
-}
-
-/**
- * Geocode an address to coordinates
- */
-export async function geocodeAddress(query: string): Promise<GeocodeResult | null> {
-  try {
-    const response = await fetch(`${API_BASE}/geocode?${new URLSearchParams({ q: query })}`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Reverse geocode coordinates to city/state
- */
-export async function reverseGeocode(
-  lat: number,
-  lon: number
-): Promise<{ city?: string; state?: string } | null> {
-  try {
-    const response = await fetch(
-      `${API_BASE}/reverse?${new URLSearchParams({
-        lat: lat.toString(),
-        lon: lon.toString(),
-      })}`
-    );
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data;
-  } catch {
-    return null;
-  }
 }
 
 /**

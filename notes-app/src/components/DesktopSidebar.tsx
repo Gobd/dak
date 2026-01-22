@@ -4,26 +4,16 @@ import { TagsSidebarSection } from './TagChips';
 import type { Tag } from '../types/tag';
 
 interface DesktopSidebarProps {
-  colors: {
-    border: string;
-    text: string;
-    textTertiary: string;
-    iconMuted: string;
-  };
-  // Visibility
   onClose: () => void;
-  // Tags
   tags: Tag[];
   selectedTagId: string | null;
   onSelectTag: (id: string | null) => void;
   tagCounts: Record<string, number>;
-  // User
   userEmail?: string;
   onLogout: () => void;
 }
 
 export function DesktopSidebar({
-  colors,
   onClose,
   tags,
   selectedTagId,
@@ -35,17 +25,12 @@ export function DesktopSidebar({
   const navigate = useNavigate();
 
   return (
-    <div className="w-56 flex flex-col border-r" style={{ borderRightColor: colors.border }}>
+    <div className="w-56 flex flex-col border-r border-zinc-200 dark:border-zinc-800">
       {/* Nav Header */}
-      <div
-        className="flex items-center justify-between px-4 py-2 border-b"
-        style={{ borderBottomColor: colors.border }}
-      >
-        <span className="text-lg font-semibold" style={{ color: colors.text }}>
-          SimpleNotes
-        </span>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
+        <span className="text-lg font-semibold text-zinc-950 dark:text-white">SimpleNotes</span>
         <button onClick={onClose} className="p-1 hover:opacity-70">
-          <PanelLeftClose size={18} color={colors.iconMuted} />
+          <PanelLeftClose size={18} className="text-zinc-400" />
         </button>
       </div>
 
@@ -60,42 +45,34 @@ export function DesktopSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="border-t p-3" style={{ borderTopColor: colors.border }}>
+      <div className="border-t border-zinc-200 dark:border-zinc-800 p-3">
         <button
           onClick={() => window.location.reload()}
           className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
         >
-          <RefreshCw size={16} color={colors.iconMuted} />
-          <span className="text-sm" style={{ color: colors.textTertiary }}>
-            Refresh
-          </span>
+          <RefreshCw size={16} className="text-zinc-400" />
+          <span className="text-sm text-zinc-500">Refresh</span>
         </button>
         <button
           onClick={() => navigate('/settings')}
           className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
         >
-          <Settings size={16} color={colors.iconMuted} />
-          <span className="text-sm" style={{ color: colors.textTertiary }}>
-            Settings
-          </span>
+          <Settings size={16} className="text-zinc-400" />
+          <span className="text-sm text-zinc-500">Settings</span>
         </button>
         <button
           onClick={() => navigate('/trash')}
           className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
         >
-          <Trash2 size={16} color={colors.iconMuted} />
-          <span className="text-sm" style={{ color: colors.textTertiary }}>
-            Trash
-          </span>
+          <Trash2 size={16} className="text-zinc-400" />
+          <span className="text-sm text-zinc-500">Trash</span>
         </button>
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
         >
-          <LogOut size={16} color={colors.iconMuted} />
-          <span className="text-sm truncate" style={{ color: colors.textTertiary }}>
-            {userEmail}
-          </span>
+          <LogOut size={16} className="text-zinc-400" />
+          <span className="text-sm truncate text-zinc-500">{userEmail}</span>
         </button>
       </div>
     </div>

@@ -1,12 +1,10 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 export function Login() {
-  const colors = useThemeColors();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,27 +34,22 @@ export function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: colors.bg }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2" style={{ color: colors.text }}>
+        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
           Welcome Back
         </h1>
-        <p className="text-center mb-8" style={{ color: colors.textMuted }}>
-          Sign in to your account
-        </p>
+        <p className="text-center mb-8 text-zinc-500">Sign in to your account</p>
 
         <div className="mb-4">
           <Input
             label="Email"
             value={email}
-            onChangeText={setEmail}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             type="email"
             autoComplete="email"
-            onSubmitEditing={() => passwordRef.current?.focus()}
+            onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
           />
         </div>
 
@@ -65,32 +58,31 @@ export function Login() {
             ref={passwordRef}
             label="Password"
             value={password}
-            onChangeText={setPassword}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Your password"
             type="password"
             autoComplete="current-password"
             error={error}
-            onSubmitEditing={handleSignIn}
+            onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
           />
         </div>
 
         <Link
           to="/forgot-password"
-          className="block text-right text-sm mb-6"
-          style={{ color: colors.primary }}
+          className="block text-right text-sm mb-6 text-amber-500 dark:text-amber-400"
         >
           Forgot password?
         </Link>
 
         <div className="mb-4">
-          <Button onPress={handleSignIn} loading={isLoading} className="w-full">
+          <Button onClick={handleSignIn} loading={isLoading} className="w-full">
             Sign In
           </Button>
         </div>
 
-        <p className="text-center" style={{ color: colors.textMuted }}>
+        <p className="text-center text-zinc-500">
           Don't have an account?{' '}
-          <Link to="/register" className="font-medium" style={{ color: colors.primary }}>
+          <Link to="/register" className="font-medium text-amber-500 dark:text-amber-400">
             Create Account
           </Link>
         </p>

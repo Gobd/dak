@@ -8,10 +8,15 @@
   min-height: 100%;
   padding: 1rem;
   outline: none;
-  color: var(--editor-text-color, #fff);
-  background-color: var(--editor-bg-color, #000);
+  color: #09090b;
+  background-color: #ffffff;
   font-size: 1rem;
   line-height: 1.6;
+}
+
+.dark .tiptap-editor .tiptap {
+  color: #ffffff;
+  background-color: #09090b;
 }
 
 .tiptap-editor .tiptap:focus {
@@ -22,9 +27,13 @@
 .tiptap-editor .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: var(--editor-placeholder-color, #71717a);
+  color: #a1a1aa;
   pointer-events: none;
   height: 0;
+}
+
+.dark .tiptap-editor .tiptap p.is-editor-empty:first-child::before {
+  color: #71717a;
 }
 
 /* Headings */
@@ -58,9 +67,13 @@
 
 /* Links */
 .tiptap-editor .tiptap a {
-  color: var(--editor-primary-color, #fbbf24);
+  color: #f59e0b;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.dark .tiptap-editor .tiptap a {
+  color: #fbbf24;
 }
 
 /* Lists */
@@ -105,37 +118,41 @@
   width: 1rem;
   height: 1rem;
   cursor: pointer;
-  accent-color: var(--editor-primary-color, #fbbf24);
+  accent-color: #f59e0b;
+}
+
+.dark .tiptap-editor .tiptap ul[data-type='taskList'] input[type='checkbox'] {
+  accent-color: #fbbf24;
 }
 
 /* Completed tasks */
 .tiptap-editor .tiptap ul[data-type='taskList'] li[data-checked='true'] > div {
   text-decoration: line-through;
-  color: var(--editor-muted-color, #71717a);
+  color: #71717a;
 }
 
 /* Code */
 .tiptap-editor .tiptap code {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
   border-radius: 0.25rem;
   padding: 0.125rem 0.375rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.875em;
 }
 
-.dark-mode .tiptap-editor .tiptap code {
+.dark .tiptap-editor .tiptap code {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
 .tiptap-editor .tiptap pre {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
   overflow-x: auto;
 }
 
-.dark-mode .tiptap-editor .tiptap pre {
+.dark .tiptap-editor .tiptap pre {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -147,18 +164,26 @@
 
 /* Blockquote */
 .tiptap-editor .tiptap blockquote {
-  border-left: 3px solid var(--editor-primary-color, #fbbf24);
+  border-left: 3px solid #f59e0b;
   padding-left: 1rem;
   margin-left: 0;
   margin-bottom: 0.5rem;
-  color: var(--editor-muted-color, #71717a);
+  color: #71717a;
+}
+
+.dark .tiptap-editor .tiptap blockquote {
+  border-left-color: #fbbf24;
 }
 
 /* Horizontal rule */
 .tiptap-editor .tiptap hr {
   border: none;
-  border-top: 1px solid var(--editor-muted-color, #71717a);
+  border-top: 1px solid #d4d4d8;
   margin: 1rem 0;
+}
+
+.dark .tiptap-editor .tiptap hr {
+  border-top-color: #3f3f46;
 }
 
 /* Selection */
@@ -180,7 +205,7 @@
   border-radius: 4px;
 }
 
-.editor-scroll-container.dark-mode::-webkit-scrollbar-thumb {
+.dark .editor-scroll-container::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -188,6 +213,6 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
-.editor-scroll-container.dark-mode::-webkit-scrollbar-thumb:hover {
+.dark .editor-scroll-container::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.45);
 }

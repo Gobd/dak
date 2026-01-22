@@ -1,17 +1,14 @@
 {
   "name": "@dak/ui",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "format:check": "prettier --check .",
-    "format": "prettier --write .",
-    "check": "pnpm lint && pnpm format:check && pnpm typecheck"
+    "check": "pnpm typecheck"
   },
   "dependencies": {
     "@ncdai/react-wheel-picker": "^1.1.0",
@@ -23,14 +20,9 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "@eslint/js": "catalog:",
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",
-    "eslint": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:",
-    "typescript-eslint": "catalog:vite"
+    "typescript": "catalog:"
   }
 }
