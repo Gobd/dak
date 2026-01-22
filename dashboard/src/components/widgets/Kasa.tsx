@@ -215,13 +215,6 @@ export default function Kasa({ dark }: WidgetComponentProps) {
         {isLoading && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
-        {!hasError && !isLoading && devices.length > 0 && (
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
-          >
-            {devices.length}
-          </span>
-        )}
       </button>
 
       {/* Main Modal - Device List */}

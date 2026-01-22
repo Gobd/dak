@@ -110,7 +110,7 @@ export const pingWolPingGet = <ThrowOnError extends boolean = false>(options: Op
 /**
  * Lookup Mac
  *
- * Get MAC address for an IP via ARP table (device must be on same network).
+ * Get MAC address for an IP/hostname via ARP table (device must be on same network).
  */
 export const lookupMacWolMacGet = <ThrowOnError extends boolean = false>(options: Options<LookupMacWolMacGetData, ThrowOnError>) => (options.client ?? client).get<LookupMacWolMacGetResponses, LookupMacWolMacGetErrors, ThrowOnError>({ url: '/wol/mac', ...options });
 

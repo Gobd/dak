@@ -28,7 +28,7 @@ async function checkRelayHealth(): Promise<boolean> {
 
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 
-const DEFAULT_ZIGBEE_URL = 'http://zigbee2mqtt.bkemper.me';
+const DEFAULT_ZIGBEE_URL = 'https://zigbee2mqtt.bkemper.me';
 
 export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
@@ -100,18 +100,30 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
   const recommendation = getRecommendation();
 
-  // Compact sensor display
-  const renderSensor = (icon: string, sensor: AllSensorsResponse['indoor'] | undefined) => {
+  // Compact sensor display - returns [icon, temp, humidity] for grid alignment
+  const renderSensorRow = (icon: string, sensor: AllSensorsResponse['indoor'] | undefined) => {
     if (!sensor?.available) {
-      return <span className="text-neutral-500">{icon} --</span>;
+      return (
+        <div className="contents">
+          <span>{icon}</span>
+          <span className="text-neutral-500">--</span>
+          <span className="text-neutral-500">--</span>
+        </div>
+      );
     }
     const s = sensor as SensorReadingResponse;
     const tTemp = TREND_ICON[s.temperature_trend];
     const tHum = TREND_ICON[s.humidity_trend];
     return (
-      <span>
-        {icon} {Math.round(s.temperature)}°{tTemp} {Math.round(s.humidity)}%{tHum}
-      </span>
+      <div className="contents">
+        <span>{icon}</span>
+        <span>
+          {Math.round(s.temperature)}°{tTemp}
+        </span>
+        <span className="text-neutral-500">
+          {Math.round(s.humidity)}%{tHum}
+        </span>
+      </div>
     );
   };
 
@@ -155,8 +167,8 @@ export default function Climate({ dark }: WidgetComponentProps) {
         dark ? 'text-white' : 'text-neutral-900'
       }`}
     >
-      {/* Row 1: Sensors + Settings */}
-      <div className="flex items-center gap-3 w-full justify-center">
+      {/* Sensors display */}
+      <div className="flex items-center gap-4">
         {!relayUrl ? (
           <span className="text-neutral-500">Configure relay</span>
         ) : relayOffline ? (
@@ -170,14 +182,14 @@ export default function Climate({ dark }: WidgetComponentProps) {
         ) : sensorsConnected === 0 ? (
           <span className="text-neutral-500">No sensors</span>
         ) : (
-          <>
-            {renderSensor('🏠', data?.indoor)}
-            {renderSensor('🌳', data?.outdoor)}
-          </>
+          <div className="grid grid-cols-[auto_auto_auto] gap-x-2 gap-y-0.5 items-center">
+            {renderSensorRow('🏠', data?.indoor)}
+            {renderSensorRow('🌳', data?.outdoor)}
+          </div>
         )}
         <button
           onClick={() => setShowSettings(true)}
-          className={`p-1 rounded transition-colors ${
+          className={`p-1 rounded transition-colors ml-2 ${
             dark ? 'hover:bg-neutral-700' : 'hover:bg-neutral-200'
           }`}
           title="Settings"

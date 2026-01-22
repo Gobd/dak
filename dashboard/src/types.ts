@@ -40,7 +40,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
-  climate: { width: 20, height: 8, refresh: '1m' },
+  climate: { width: 12, height: 12, refresh: '1m' },
   timer: { width: 6, height: 6 },
   ptt: { width: 6, height: 6 },
   mqtt: { width: 10, height: 10, refresh: '10s' },

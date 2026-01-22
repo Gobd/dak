@@ -1,10 +1,20 @@
 """Wake-on-LAN endpoints."""
 
+import socket
 import subprocess
 
 from fastapi import APIRouter, HTTPException, Query
 from getmac import get_mac_address
 from wakeonlan import send_magic_packet
+
+
+def resolve_host(host: str) -> str:
+    """Resolve hostname to IP address. Returns the input if already an IP."""
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        return host  # Return as-is, let downstream handle the error
+
 
 from app.models.wol import (
     MacLookupErrorResponse,
@@ -32,8 +42,9 @@ async def wake(req: WakeRequest):
 async def ping(ip: str = Query(...)):
     """Check if a host is online via ping."""
     try:
+        resolved_ip = resolve_host(ip)
         result = subprocess.run(
-            ["ping", "-c", "1", "-W", "1", ip],
+            ["ping", "-c", "1", "-W", "1", resolved_ip],
             capture_output=True,
             timeout=3,
         )
@@ -49,17 +60,20 @@ async def ping(ip: str = Query(...)):
     responses={404: {"model": MacLookupErrorResponse}, 500: {"model": MacLookupErrorResponse}},
 )
 async def lookup_mac(ip: str = Query(...)):
-    """Get MAC address for an IP via ARP table (device must be on same network)."""
+    """Get MAC address for an IP/hostname via ARP table (device must be on same network)."""
     try:
+        # Resolve hostname to IP if needed
+        resolved_ip = resolve_host(ip)
+
         # Ping first to populate ARP cache
         subprocess.run(
-            ["ping", "-c", "1", "-W", "1", ip],
+            ["ping", "-c", "1", "-W", "1", resolved_ip],
             capture_output=True,
             timeout=3,
         )
 
         # Use getmac library (cross-platform)
-        mac = get_mac_address(ip=ip)
+        mac = get_mac_address(ip=resolved_ip)
 
         if mac and mac != "00:00:00:00:00:00":
             mac = mac.upper()

@@ -14,10 +14,10 @@ import { DEFAULT_CONFIG, generateId } from '../types';
 
 // API endpoint for home-relay config
 // Priority: URL param > globalSettings > default
-const DEFAULT_RELAY_URL = 'http://kiosk-relay.bkemper.me';
+const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 function normalizeRelayUrl(url: string): string {
-  return url.startsWith('http') ? url : `http://${url}`;
+  return url.startsWith('http') ? url : `https://${url}`;
 }
 
 function getRelayUrlFromParams(): string | null {

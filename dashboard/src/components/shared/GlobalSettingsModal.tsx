@@ -64,6 +64,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const [relayUrlInput, setRelayUrlInput] = useState('');
   const [zigbeeUrlInput, setZigbeeUrlInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [zigbeeStatus, setZigbeeStatus] = useState<'idle' | 'testing' | 'success' | 'error'>(
+    'idle'
+  );
   const [volume, setVolume] = useState(50);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [voiceModels, setVoiceModels] = useState<VoskModelInfo[]>([]);
@@ -86,8 +89,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   useEffect(() => {
     if (open) {
       setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
-      setZigbeeUrlInput(globalSettings?.zigbeeUrl ?? 'http://zigbee2mqtt.bkemper.me');
+      setZigbeeUrlInput(globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me');
       setRelayStatus('idle');
+      setZigbeeStatus('idle');
     }
   }, [open, globalSettings?.relayUrl, globalSettings?.zigbeeUrl]);
 
@@ -318,8 +322,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     setRelayStatus('idle');
   }
 
+  async function handleTestZigbee() {
+    setZigbeeStatus('testing');
+    try {
+      const url = zigbeeUrlInput.startsWith('http') ? zigbeeUrlInput : `https://${zigbeeUrlInput}`;
+      await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+      // no-cors means we can't read the response, but if it doesn't throw, the server is reachable
+      setZigbeeStatus('success');
+    } catch {
+      setZigbeeStatus('error');
+    }
+  }
+
   function handleSaveZigbee() {
     updateGlobalSettings({ zigbeeUrl: zigbeeUrlInput });
+    setZigbeeStatus('idle');
   }
 
   function handleThemeChange(theme: ThemeMode) {
@@ -752,17 +769,35 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             <input
               type="text"
               value={zigbeeUrlInput}
-              onChange={(e) => setZigbeeUrlInput(e.target.value)}
-              placeholder="http://zigbee2mqtt.bkemper.me"
+              onChange={(e) => {
+                setZigbeeUrlInput(e.target.value);
+                setZigbeeStatus('idle');
+              }}
+              placeholder="https://zigbee2mqtt.bkemper.me"
               className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
                          bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <Button
+              onClick={handleTestZigbee}
+              variant="default"
+              disabled={zigbeeStatus === 'testing'}
+            >
+              {zigbeeStatus === 'testing' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : zigbeeStatus === 'success' ? (
+                <CheckCircle size={18} className="text-green-500" />
+              ) : zigbeeStatus === 'error' ? (
+                <XCircle size={18} className="text-red-500" />
+              ) : (
+                'Test'
+              )}
+            </Button>
+            <Button
               onClick={handleSaveZigbee}
               variant="primary"
               disabled={
-                zigbeeUrlInput === (globalSettings?.zigbeeUrl ?? 'http://zigbee2mqtt.bkemper.me')
+                zigbeeUrlInput === (globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me')
               }
             >
               Save

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings, RefreshCw, AlertCircle, Check } from 'lucide-react';
+import { Shield, ShieldOff, Settings, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import {
@@ -27,7 +27,6 @@ const DURATION_OPTIONS = [
   { label: '30 min', value: 30 * 60 * 1000 },
   { label: '1 hour', value: 60 * 60 * 1000 },
   { label: '2 hours', value: 2 * 60 * 60 * 1000 },
-  { label: 'Custom', value: -1 },
 ];
 
 async function fetchStatus(config: AdguardConfig): Promise<AdguardStatus> {
@@ -68,9 +67,8 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
   const isConfigured = !!(config.url && config.username && config.password);
 
   const [showSettings, setShowSettings] = useState(false);
-  const [showDisableMenu, setShowDisableMenu] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [settingsForm, setSettingsForm] = useState(config);
-  const [customMinutes, setCustomMinutes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,8 +126,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
       setProtection(config, enabled, duration),
     onSuccess: () => {
       setError(null);
-      setShowDisableMenu(false);
-      setCustomMinutes('');
+      setShowMenu(false);
       queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed'),
@@ -143,17 +140,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
   }
 
   function handleDisable(durationMs: number) {
-    if (durationMs === -1) {
-      // Custom - parse minutes
-      const mins = parseInt(customMinutes, 10);
-      if (isNaN(mins) || mins <= 0) {
-        setError('Enter valid minutes');
-        return;
-      }
-      protectionMutation.mutate({ enabled: false, duration: mins * 60 * 1000 });
-    } else {
-      protectionMutation.mutate({ enabled: false, duration: durationMs });
-    }
+    protectionMutation.mutate({ enabled: false, duration: durationMs });
   }
 
   function handleEnable() {
@@ -230,41 +217,24 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
     <div className="w-full h-full flex items-center justify-center relative">
       {/* Main button */}
       <button
-        onClick={() => {
-          if (protectionEnabled) {
-            setShowDisableMenu(true);
-          } else {
-            handleEnable();
-          }
-        }}
+        onClick={() => setShowMenu(true)}
         disabled={isPending}
-        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
-        title={
-          protectionEnabled
-            ? 'Protection enabled - click to disable'
-            : 'Protection disabled - click to enable'
-        }
+        className="relative p-2"
+        title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
       >
         {protectionEnabled ? (
           <Shield size={24} className="text-green-500" />
         ) : (
           <ShieldOff size={24} className="text-red-500" />
         )}
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
-        )}
-        {isPending && (
+        {(isLoading || isPending) && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
       </button>
 
-      {/* Countdown badge */}
+      {/* Countdown text */}
       {!protectionEnabled && countdown && (
-        <span
-          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap ${
-            dark ? 'bg-red-900/50 text-red-300' : 'bg-red-100 text-red-700'
-          }`}
-        >
+        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-neutral-500 whitespace-nowrap">
           {countdown}
         </span>
       )}
@@ -283,24 +253,29 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
         <Settings size={12} className="text-neutral-500" />
       </button>
 
-      {/* Disable duration menu */}
+      {/* Control menu */}
       <Modal
-        open={showDisableMenu}
+        open={showMenu}
         onClose={() => {
-          setShowDisableMenu(false);
-          setCustomMinutes('');
+          setShowMenu(false);
           setError(null);
         }}
-        title="Disable Protection"
+        title={protectionEnabled ? 'Disable Protection' : 'Protection Disabled'}
         actions={
-          <Button
-            onClick={() => {
-              setShowDisableMenu(false);
-              setCustomMinutes('');
-            }}
-          >
-            Cancel
-          </Button>
+          <>
+            <button
+              onClick={() => {
+                setShowMenu(false);
+                setSettingsForm(config);
+                setShowSettings(true);
+              }}
+              className="p-2 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              title="Settings"
+            >
+              <Settings size={16} className="text-neutral-500" />
+            </button>
+            <Button onClick={() => setShowMenu(false)}>Cancel</Button>
+          </>
         }
       >
         <div className="space-y-2">
@@ -310,39 +285,32 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
             </div>
           )}
 
-          {DURATION_OPTIONS.map((opt) => (
-            <div key={opt.value}>
-              {opt.value === -1 ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    placeholder="Minutes"
-                    value={customMinutes}
-                    onChange={(e) => setCustomMinutes(e.target.value)}
-                    className={`flex-1 px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
-                    min="1"
-                  />
-                  <Button
-                    onClick={() => handleDisable(-1)}
-                    disabled={isPending || !customMinutes}
-                    variant="primary"
-                  >
-                    <Check size={14} />
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => handleDisable(opt.value)}
-                  disabled={isPending}
-                  className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                    dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              )}
+          {protectionEnabled ? (
+            DURATION_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleDisable(opt.value)}
+                disabled={isPending}
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))
+          ) : (
+            <div className="space-y-3">
+              {countdown && <p className="text-sm text-neutral-500">Re-enables in {countdown}</p>}
+              <Button
+                onClick={handleEnable}
+                disabled={isPending}
+                variant="primary"
+                className="w-full"
+              >
+                Turn On Now
+              </Button>
             </div>
-          ))}
+          )}
         </div>
       </Modal>
 

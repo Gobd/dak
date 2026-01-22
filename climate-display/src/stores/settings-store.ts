@@ -6,7 +6,7 @@ interface SettingsState {
   setRelayUrl: (url: string) => void;
 }
 
-const DEFAULT_RELAY_URL = 'http://kiosk-relay.bkemper.me';
+const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
