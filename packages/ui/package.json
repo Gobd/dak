@@ -22,7 +22,6 @@
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "globals": "catalog:",
     "typescript": "catalog:"
   }
 }

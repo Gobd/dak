@@ -30,6 +30,5 @@
       "ignoreDependencies": ["react", "react-dom", "zustand", "vite"],
       "ignore": ["fonts/**"]
     }
-  },
-  "ignoreDependencies": ["globals"]
+  }
 }
