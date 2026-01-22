@@ -135,9 +135,19 @@ const manifest = {
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 console.log('Built shared vendor bundles:');
-console.log(`  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`);
-console.log(`  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`);
-console.log(`  react-dom/client: ${clientFileName} (${(client.code.length / 1024).toFixed(1)} KB)${client.map ? ' +map' : ''}`);
-console.log(`  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`);
-console.log(`  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`);
+console.log(
+  `  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`
+);
+console.log(
+  `  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`
+);
+console.log(
+  `  react-dom/client: ${clientFileName} (${(client.code.length / 1024).toFixed(1)} KB)${client.map ? ' +map' : ''}`
+);
+console.log(
+  `  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`
+);
+console.log(
+  `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
+);
 console.log(`  fonts: ${fontFiles.join(', ')}`);
