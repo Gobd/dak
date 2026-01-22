@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignoreBinaries": ["sleep", "open", "uv", "gen:api:check"],
+  "ignoreBinaries": ["sleep", "open", "uv"],
   "rules": {
     "unresolved": "off",
     "duplicates": "off"
@@ -22,7 +22,7 @@
     "kasa-controller": {},
     "notes-app": {},
     "packages/api-client": {
-      "ignore": ["src/generated/**"]
+      "ignore": ["src/generated/**", "openapi-ts.config.ts"]
     },
     "packages/kasa-client": {},
     "packages/ui": {},

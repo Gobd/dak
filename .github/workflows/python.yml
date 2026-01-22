@@ -57,10 +57,10 @@ jobs:
 
       - name: Install Node dependencies
         if: steps.changes.outputs.python == 'true'
-        working-directory: dashboard
+        working-directory: .
         run: pnpm install --frozen-lockfile
 
       - name: Check generated API client
         if: steps.changes.outputs.python == 'true'
-        working-directory: dashboard
+        working-directory: .
         run: pnpm gen:api:check
