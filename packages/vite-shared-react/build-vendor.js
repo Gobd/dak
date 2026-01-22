@@ -68,6 +68,7 @@ function writeBundle(name, code, map, hash) {
 // Common transforms
 const rewriteReact = (code) => code.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
 const rewriteReactDom = (code) => code.replace(/from\s*"\/react-dom@[^"]+"/g, 'from "react-dom"');
+const rewriteZustand = (code) => code.replace(/from\s*"\/zustand@[^"]+"/g, 'from "zustand"');
 
 // Fetch React
 console.log('Fetching React from esm.sh...');
@@ -101,6 +102,20 @@ const zustand = await fetchBundle(
 const zustandHash = createHash('md5').update(zustand.code).digest('hex').slice(0, 8);
 const zustandFileName = writeBundle('zustand', zustand.code, zustand.map, zustandHash);
 
+// Fetch Zustand/middleware
+console.log('Fetching Zustand/middleware from esm.sh...');
+const zustandMw = await fetchBundle(
+  `https://esm.sh/zustand@${zustandVersion}/es2024/middleware.bundle.mjs`,
+  [rewriteReact, rewriteZustand]
+);
+const zustandMwHash = createHash('md5').update(zustandMw.code).digest('hex').slice(0, 8);
+const zustandMwFileName = writeBundle(
+  'zustand-middleware',
+  zustandMw.code,
+  zustandMw.map,
+  zustandMwHash
+);
+
 // Copy fonts to dist
 const fontsDir = join(__dirname, 'fonts');
 const fontFiles = readdirSync(fontsDir);
@@ -114,6 +129,7 @@ const manifest = {
   'react-dom': `/_shared/${domFileName}`,
   'react-dom/client': `/_shared/${clientFileName}`,
   zustand: `/_shared/${zustandFileName}`,
+  'zustand/middleware': `/_shared/${zustandMwFileName}`,
   fonts: '/_shared/fonts.css',
 };
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -130,5 +146,8 @@ console.log(
 );
 console.log(
   `  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`
+);
+console.log(
+  `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
 );
 console.log(`  fonts: ${fontFiles.join(', ')}`);
