@@ -32,6 +32,7 @@ export default defineConfig(({ command, mode }) => {
     plugins,
     build: {
       outDir: 'dist',
+      sourcemap: true,
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
