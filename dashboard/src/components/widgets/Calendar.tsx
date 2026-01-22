@@ -17,9 +17,15 @@ import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync
 const SYNC_TOKENS_KEY = 'calendar-sync-tokens';
+const FETCHED_RANGES_KEY = 'calendar-fetched-ranges';
 
 interface SyncTokens {
   [calendarId: string]: string;
+}
+
+interface FetchedRange {
+  min: number; // timestamp
+  max: number; // timestamp
 }
 
 function getSyncTokens(): SyncTokens {
@@ -45,6 +51,44 @@ function clearSyncToken(calendarId: string): void {
     const tokens = getSyncTokens();
     delete tokens[calendarId];
     localStorage.setItem(SYNC_TOKENS_KEY, JSON.stringify(tokens));
+  } catch {
+    // Ignore
+  }
+}
+
+function getFetchedRange(calendarId: string): FetchedRange | null {
+  try {
+    const ranges = JSON.parse(localStorage.getItem(FETCHED_RANGES_KEY) || '{}');
+    return ranges[calendarId] || null;
+  } catch {
+    return null;
+  }
+}
+
+function saveFetchedRange(calendarId: string, min: number, max: number): void {
+  try {
+    const ranges = JSON.parse(localStorage.getItem(FETCHED_RANGES_KEY) || '{}');
+    const existing = ranges[calendarId];
+    // Expand the range if we already have one
+    if (existing) {
+      ranges[calendarId] = {
+        min: Math.min(existing.min, min),
+        max: Math.max(existing.max, max),
+      };
+    } else {
+      ranges[calendarId] = { min, max };
+    }
+    localStorage.setItem(FETCHED_RANGES_KEY, JSON.stringify(ranges));
+  } catch {
+    // Ignore
+  }
+}
+
+function clearFetchedRange(calendarId: string): void {
+  try {
+    const ranges = JSON.parse(localStorage.getItem(FETCHED_RANGES_KEY) || '{}');
+    delete ranges[calendarId];
+    localStorage.setItem(FETCHED_RANGES_KEY, JSON.stringify(ranges));
   } catch {
     // Ignore
   }
@@ -154,7 +198,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
   const showTime = panel.args?.showTime === true;
   const showSeconds = panel.args?.showSeconds === true;
-  const headerHeight = (panel.args?.headerHeight as number) ?? 0; // Extra height in pixels for header
+  const headerHeight = calendarConfig?.headerHeight ?? 0; // Extra height in pixels for header section
 
   // Google OAuth
   const {
@@ -257,19 +301,35 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         const hasEventsForCalendar = updatedEvents.some((e) => e.calendarId === cal.id);
         if (syncToken && !hasEventsForCalendar) {
           clearSyncToken(cal.id);
+          clearFetchedRange(cal.id);
           syncToken = undefined;
         }
 
+        // Calculate the time range we need to display
+        const viewTimeMin = gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000;
+        const viewTimeMax = gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000;
+
+        // Check if we've already fetched events for this range
+        const fetchedRange = getFetchedRange(cal.id);
+        const needsRangeFetch = !fetchedRange || viewTimeMin < fetchedRange.min || viewTimeMax > fetchedRange.max;
+
+        // If we have a sync token but navigated outside the fetched range, we need a full fetch for the new range
+        if (syncToken && needsRangeFetch) {
+          console.log(`Navigated outside fetched range for ${cal.summary}, fetching new range`);
+          // Don't clear sync token - we'll do a time-bounded fetch for the new range
+          // and keep using sync token for incremental updates
+        }
+
         try {
-          // Build query params - use sync token if available AND we have cached events, otherwise full fetch
-          const isFullFetch = !syncToken;
-          const params: Record<string, string> = syncToken
+          // Build query params
+          // Use sync token ONLY if we don't need a new range fetch
+          const useSyncToken = syncToken && !needsRangeFetch;
+          const isFullFetch = !useSyncToken;
+          const params: Record<string, string> = useSyncToken
             ? { syncToken }
             : {
-                timeMin: new Date(gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                timeMax: new Date(
-                  gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000
-                ).toISOString(),
+                timeMin: new Date(viewTimeMin).toISOString(),
+                timeMax: new Date(viewTimeMax).toISOString(),
                 singleEvents: 'true',
                 maxResults: '250',
               };
@@ -277,10 +337,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           // For full fetch, clear existing events for this calendar ONLY in the fetched time range
           // This preserves events from other date ranges the user has navigated to
           if (isFullFetch) {
-            const fetchTimeMin = new Date(gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const fetchTimeMax = new Date(
-              gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000
-            );
+            const fetchTimeMin = new Date(viewTimeMin);
+            const fetchTimeMax = new Date(viewTimeMax);
             updatedEvents = updatedEvents.filter((e) => {
               if (e.calendarId !== cal.id) return true;
               // Keep events outside the fetched time range
@@ -306,9 +364,13 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
             accessToken
           );
 
-          // Save the new sync token
+          // Save the new sync token and update fetched range
           if (eventsResponse.nextSyncToken) {
             saveSyncToken(cal.id, eventsResponse.nextSyncToken);
+          }
+          // Save the fetched range (expands existing range if any)
+          if (isFullFetch) {
+            saveFetchedRange(cal.id, viewTimeMin, viewTimeMax);
           }
 
           // Process events - handle additions, updates, and deletions
@@ -348,6 +410,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           if (err instanceof Error && err.message.includes('410')) {
             console.log(`Sync token expired for ${cal.summary}, will do full sync`);
             clearSyncToken(cal.id);
+            clearFetchedRange(cal.id);
           } else {
             console.warn(`Failed to fetch events from calendar: ${cal.summary}`, err);
           }
@@ -466,8 +529,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         }
       );
 
-      // Clear sync token for this calendar to force refresh
+      // Clear sync token and fetched range for this calendar to force refresh
       clearSyncToken(targetCalendarId);
+      clearFetchedRange(targetCalendarId);
 
       // Refresh events
       loadEventsRef.current();
@@ -583,6 +647,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       );
 
       clearSyncToken(editingEvent.calendarId);
+      clearFetchedRange(editingEvent.calendarId);
       loadEventsRef.current();
       setEditingEvent(null);
       setRecurringChoice(null);
@@ -622,6 +687,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       );
 
       clearSyncToken(event.calendarId);
+      clearFetchedRange(event.calendarId);
       loadEventsRef.current();
       setDeleteConfirm(null);
       setRecurringChoice(null);
@@ -646,15 +712,15 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     setGridStartDate(newDate);
   }
 
-  function handlePrevYear() {
+  function handlePrevMonth() {
     const newDate = new Date(gridStartDate);
-    newDate.setFullYear(newDate.getFullYear() - 1);
+    newDate.setMonth(newDate.getMonth() - 1);
     setGridStartDate(newDate);
   }
 
-  function handleNextYear() {
+  function handleNextMonth() {
     const newDate = new Date(gridStartDate);
-    newDate.setFullYear(newDate.getFullYear() + 1);
+    newDate.setMonth(newDate.getMonth() + 1);
     setGridStartDate(newDate);
   }
 
@@ -753,23 +819,26 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-3 py-2 border-b border-neutral-700"
+        className="flex items-start justify-between px-3 py-2 border-b border-neutral-700"
         style={headerHeight > 0 ? { minHeight: `${headerHeight}px` } : undefined}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
+          {/* Month navigation - separated with gap */}
           <button
-            onClick={handlePrevYear}
-            className="p-1 rounded hover:bg-neutral-700/50"
-            title="Previous year"
+            onClick={handlePrevMonth}
+            className="p-2 rounded hover:bg-neutral-700/50"
+            title="Previous month"
           >
-            <ChevronsLeft size={16} />
+            <ChevronsLeft size={18} />
           </button>
+          <div className="w-2" /> {/* Spacer between month and week buttons */}
+          {/* Week navigation */}
           <button
             onClick={handlePrevWeek}
-            className="p-1 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-neutral-700/50"
             title="Previous week"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={18} />
           </button>
           <button
             onClick={() => setShowJumpToDate(true)}
@@ -782,21 +851,22 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           </button>
           <button
             onClick={handleNextWeek}
-            className="p-1 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-neutral-700/50"
             title="Next week"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </button>
+          <div className="w-2" /> {/* Spacer between week and month buttons */}
           <button
-            onClick={handleNextYear}
-            className="p-1 rounded hover:bg-neutral-700/50"
-            title="Next year"
+            onClick={handleNextMonth}
+            className="p-2 rounded hover:bg-neutral-700/50"
+            title="Next month"
           >
-            <ChevronsRight size={16} />
+            <ChevronsRight size={18} />
           </button>
           <button
             onClick={handleToday}
-            className={`ml-1 px-2 py-1 text-xs rounded ${
+            className={`ml-2 px-2 py-1 text-xs rounded ${
               todayInView ? 'bg-blue-600 text-white' : 'hover:bg-neutral-700/50'
             }`}
           >
@@ -804,9 +874,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3">
           {showTime && (
-            <span className="text-sm text-neutral-400 mr-2">
+            <span className="text-sm text-neutral-400">
               {currentTime.toLocaleTimeString([], {
                 hour: 'numeric',
                 minute: '2-digit',
@@ -816,20 +886,20 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           )}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-1 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-neutral-700/50"
             title="Settings"
           >
-            <Settings size={14} />
+            <Settings size={16} />
           </button>
           <button
             onClick={() => {
               setSelectedDate(new Date());
               setShowAddEvent(true);
             }}
-            className="p-1 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-neutral-700/50"
             title="Add event"
           >
-            <Plus size={14} />
+            <Plus size={16} />
           </button>
         </div>
       </div>
@@ -963,6 +1033,25 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 List
               </button>
             </div>
+          </div>
+
+          {/* Header height */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Header Height: {headerHeight}px
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="200"
+              step="10"
+              value={headerHeight}
+              onChange={(e) => updateCalendar({ headerHeight: parseInt(e.target.value, 10) })}
+              className="w-full"
+            />
+            <p className="text-xs text-neutral-500 mt-1">
+              Extra space in header for overlaying other widgets
+            </p>
           </div>
 
           {/* Calendars */}

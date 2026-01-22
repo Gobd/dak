@@ -34,36 +34,54 @@
           "refresh": "5m"
         },
         {
-          "id": "panel-kasa",
-          "widget": "kasa",
-          "x": 73,
-          "y": 1,
-          "width": 5,
-          "height": 4
-        },
-        {
-          "id": "panel-wol",
-          "widget": "wol",
-          "x": 78,
-          "y": 1,
-          "width": 5,
-          "height": 4
-        },
-        {
-          "id": "panel-brightness",
-          "widget": "brightness",
-          "x": 83,
-          "y": 1,
-          "width": 5,
-          "height": 4
+          "id": "panel-climate",
+          "widget": "climate",
+          "x": 60,
+          "y": 2,
+          "width": 14,
+          "height": 10,
+          "refresh": "1m"
         },
         {
           "id": "panel-drive-time",
           "widget": "drive-time",
-          "x": 95,
-          "y": 36,
-          "width": 4,
-          "height": 5
+          "x": 74,
+          "y": 1,
+          "width": 5,
+          "height": 6,
+          "refresh": "5m"
+        },
+        {
+          "id": "panel-kasa",
+          "widget": "kasa",
+          "x": 79,
+          "y": 1,
+          "width": 5,
+          "height": 6
+        },
+        {
+          "id": "panel-wol",
+          "widget": "wol",
+          "x": 84,
+          "y": 1,
+          "width": 5,
+          "height": 6
+        },
+        {
+          "id": "panel-brightness",
+          "widget": "brightness",
+          "x": 79,
+          "y": 7,
+          "width": 5,
+          "height": 6
+        },
+        {
+          "id": "panel-timer",
+          "widget": "timer",
+          "x": 84,
+          "y": 7,
+          "width": 5,
+          "height": 6
         }
       ]
     },
@@ -126,5 +144,8 @@
   "driveTime": {
     "locations": {},
     "routes": []
+  },
+  "calendar": {
+    "headerHeight": 100
   }
 }
