@@ -548,6 +548,9 @@ importers:
       react-dom:
         specifier: catalog:vite
         version: 19.2.3(react@19.2.3)
+      zustand:
+        specifier: 'catalog:'
+        version: 5.0.10(@types/react@19.2.9)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
 
 packages:
 

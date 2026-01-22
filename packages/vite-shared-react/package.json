@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "react": "catalog:vite",
-    "react-dom": "catalog:vite"
+    "react-dom": "catalog:vite",
+    "zustand": "catalog:"
   }
 }
