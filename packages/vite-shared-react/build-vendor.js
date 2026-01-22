@@ -28,6 +28,17 @@ const reactHash = createHash('md5').update(reactCode).digest('hex').slice(0, 8);
 const reactFileName = `react-${reactHash}.js`;
 writeFileSync(join(outDir, reactFileName), reactCode);
 
+// Fetch ReactDOM ESM bundle from esm.sh (for createPortal, flushSync, etc.)
+console.log('Fetching ReactDOM from esm.sh...');
+const domRes = await fetch(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`);
+if (!domRes.ok) throw new Error(`Failed to fetch react-dom: ${domRes.status}`);
+let domCode = await domRes.text();
+domCode = domCode.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
+
+const domHash = createHash('md5').update(domCode).digest('hex').slice(0, 8);
+const domFileName = `react-dom-${domHash}.js`;
+writeFileSync(join(outDir, domFileName), domCode);
+
 // Fetch ReactDOM/client ESM bundle from esm.sh
 console.log('Fetching ReactDOM/client from esm.sh...');
 const clientRes = await fetch(`https://esm.sh/react-dom@${version}/es2024/client.bundle.mjs`);
@@ -36,6 +47,7 @@ let clientCode = await clientRes.text();
 
 // esm.sh bundles hardcode "/react@x.x.x/..." paths - rewrite to bare "react" for our import map
 clientCode = clientCode.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
+clientCode = clientCode.replace(/from\s*"\/react-dom@[^"]+"/g, 'from "react-dom"');
 
 const clientHash = createHash('md5').update(clientCode).digest('hex').slice(0, 8);
 const clientFileName = `react-dom-client-${clientHash}.js`;
@@ -51,6 +63,7 @@ for (const file of fontFiles) {
 // Write manifest
 const manifest = {
   react: `/_shared/${reactFileName}`,
+  'react-dom': `/_shared/${domFileName}`,
   'react-dom/client': `/_shared/${clientFileName}`,
   fonts: '/_shared/fonts.css',
 };
@@ -58,5 +71,6 @@ writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 console.log('Built shared React vendor:');
 console.log(`  react: ${reactFileName} (${(reactCode.length / 1024).toFixed(1)} KB)`);
+console.log(`  react-dom: ${domFileName} (${(domCode.length / 1024).toFixed(1)} KB)`);
 console.log(`  react-dom/client: ${clientFileName} (${(clientCode.length / 1024).toFixed(1)} KB)`);
 console.log(`  fonts: ${fontFiles.join(', ')}`);

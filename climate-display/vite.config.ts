@@ -50,4 +50,7 @@ export default defineConfig({
   server: {
     port: 5178,
   },
+  build: {
+    sourcemap: true,
+  },
 });

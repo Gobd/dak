@@ -11,6 +11,9 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
   },
+  build: {
+    sourcemap: true,
+  },
   plugins: [
     react(),
     tailwindcss(),
