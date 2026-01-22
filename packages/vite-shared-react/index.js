@@ -4,42 +4,38 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Load manifest once at module load time
+let manifest = null;
+try {
+  manifest = JSON.parse(readFileSync(join(__dirname, 'dist/manifest.json'), 'utf-8'));
+} catch {
+  // Manifest not found - plugin will be inactive
+}
+
 /**
- * Vite plugin that externalizes React and injects import map for shared vendor bundle.
+ * Get the list of external module IDs from the manifest.
+ * Pass this to esmExternalRequirePlugin({ external: getExternalIds() }).
+ * Excludes non-JS entries like 'fonts'.
+ */
+export function getExternalIds() {
+  if (!manifest) return [];
+  return Object.keys(manifest).filter((key) => key !== 'fonts');
+}
+
+/**
+ * Vite plugin that injects import map for shared vendor bundles.
+ * Use with esmExternalRequirePlugin for externalization.
  * Only activates in production builds - dev mode uses normal bundling.
  */
 export function sharedReact() {
-  let manifest;
   let isBuild = false;
-
-  try {
-    manifest = JSON.parse(readFileSync(join(__dirname, 'dist/manifest.json'), 'utf-8'));
-  } catch {
-    // Manifest not found - plugin will be inactive
-    manifest = null;
-  }
 
   return {
     name: 'shared-react',
 
     config(_, { command }) {
       isBuild = command === 'build';
-
-      // Only externalize in production builds when manifest exists
-      if (!isBuild || !manifest) {
-        return {};
-      }
-
-      return {
-        build: {
-          rollupOptions: {
-            external: Object.keys(manifest),
-            output: {
-              manualChunks: undefined,
-            },
-          },
-        },
-      };
+      return {};
     },
 
     transformIndexHtml(html) {

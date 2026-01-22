@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
-import { sharedReact } from '@dak/vite-shared-react';
+import { sharedReact, getExternalIds } from '@dak/vite-shared-react';
 import type { PluginOption } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: '/notes-app/',
   server: {
     port: 5179,
@@ -16,12 +16,13 @@ export default defineConfig({
     sourcemap: true,
   },
   plugins: [
+    // Use esmExternalRequirePlugin to handle externalization and CJS require() transforms
+    // This properly handles deps like use-sync-external-store that use require('react')
+    command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
     react(),
     tailwindcss(),
+    // sharedReact injects the import map; externalization handled by esmExternalRequirePlugin
     sharedReact(),
-    // Convert CJS require() to ESM import for externalized react
-    // Needed for use-sync-external-store (used by @tiptap/react) which only ships CJS
-    esmExternalRequirePlugin({ external: ['react'] }),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -62,4 +63,4 @@ export default defineConfig({
         template: 'treemap',
       }),
   ].filter(Boolean) as PluginOption[],
-});
+}));

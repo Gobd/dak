@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig, esmExternalRequirePlugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
-import { sharedReact } from '@dak/vite-shared-react';
+import { sharedReact, getExternalIds } from '@dak/vite-shared-react';
 import type { PluginOption } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: '/health-tracker/',
   server: {
     port: 5173,
@@ -16,6 +16,7 @@ export default defineConfig({
     sourcemap: true,
   },
   plugins: [
+    command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
     react(),
     tailwindcss(),
     sharedReact(),
@@ -59,4 +60,4 @@ export default defineConfig({
         template: 'treemap',
       }),
   ].filter(Boolean) as PluginOption[],
-});
+}));
