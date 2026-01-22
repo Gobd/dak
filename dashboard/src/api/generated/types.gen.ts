@@ -1915,6 +1915,10 @@ export type ScheduleKasaScheduleGetData = {
          * Ip
          */
         ip: string;
+        /**
+         * Child Id
+         */
+        child_id?: string | null;
     };
     url: '/kasa/schedule';
 };

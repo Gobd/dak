@@ -693,7 +693,7 @@ def _parse_schedule_rules(raw_rules: list) -> list[dict]:
     for rule in raw_rules:
         try:
             # Handle both dict (raw protocol) and object (module) formats
-            def get_val(key, default=None):
+            def get_val(key, default=None, rule=rule):
                 if isinstance(rule, dict):
                     return rule.get(key, default)
                 return getattr(rule, key, default)
@@ -783,10 +783,12 @@ async def get_schedule_rules(ip: str, *, child_id: str | None = None) -> dict:
     if child_id and hasattr(dev, "protocol"):
         try:
             query_child_id = child_id.split("_")[-1] if "_" in child_id else child_id
-            result = await dev.protocol.query({
-                "context": {"child_ids": [query_child_id]},
-                "schedule": {"get_rules": {}},
-            })
+            result = await dev.protocol.query(
+                {
+                    "context": {"child_ids": [query_child_id]},
+                    "schedule": {"get_rules": {}},
+                }
+            )
             raw_rules = result.get("schedule", {}).get("get_rules", {}).get("rule_list", [])
             rules = _parse_schedule_rules(raw_rules)
 
