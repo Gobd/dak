@@ -10,9 +10,11 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import paho.mqtt.client as mqtt
+
+from app.services.config_service import load_config as load_dashboard_config
+from app.services.config_service import save_config as save_dashboard_config
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,6 @@ MQTT_HOST = "localhost"
 MQTT_PORT = 1883
 HISTORY_SIZE = 60  # Several hours of history
 TREND_WINDOW = 6  # ~30-60 min of readings for trend
-CONFIG_FILE = Path(__file__).parent.parent.parent / "sensor_config.json"
 
 
 @dataclass
@@ -46,7 +47,7 @@ sensors: dict[str, SensorData] = {
 available_devices: list[dict] = []  # Climate sensors from Zigbee2MQTT
 all_devices: list[dict] = []  # All devices from Zigbee2MQTT
 bridge_info: dict = {}  # Bridge state (permit_join, version, etc.)
-sensor_config: dict[str, str] = {"indoor": "", "outdoor": ""}  # friendly_name -> role
+sensor_config: dict[str, str] = {"indoor": "", "outdoor": "", "unit": "C"}  # C or F
 mqtt_client: mqtt.Client | None = None
 mqtt_connected = False
 subscribed_topics: set[str] = set()
@@ -65,23 +66,47 @@ def _generate_transaction_id() -> str:
 
 
 def load_config():
-    """Load sensor config from file."""
+    """Load sensor config from dashboard config and update MQTT subscriptions if needed."""
     global sensor_config
-    if CONFIG_FILE.exists():
-        try:
-            sensor_config = json.loads(CONFIG_FILE.read_text())
-            logger.info("Loaded sensor config: %s", sensor_config)
-        except Exception:
-            logger.exception("Failed to load sensor config")
+    try:
+        dashboard = load_dashboard_config()
+        climate = dashboard.get("climate", {})
+        old_indoor = sensor_config.get("indoor", "")
+        old_outdoor = sensor_config.get("outdoor", "")
+
+        sensor_config = {
+            "indoor": climate.get("indoor", ""),
+            "outdoor": climate.get("outdoor", ""),
+            "unit": climate.get("unit", "C"),
+        }
+
+        # Update MQTT subscriptions if sensor assignments changed
+        if old_indoor != sensor_config["indoor"] or old_outdoor != sensor_config["outdoor"]:
+            logger.info("Sensor config changed, updating subscriptions")
+            update_subscriptions()
+
+    except Exception:
+        logger.exception("Failed to load sensor config")
 
 
 def save_config():
-    """Save sensor config to file."""
+    """Save sensor config to dashboard config."""
     try:
-        CONFIG_FILE.write_text(json.dumps(sensor_config, indent=2))
+        dashboard = load_dashboard_config()
+        dashboard["climate"] = {
+            "indoor": sensor_config.get("indoor", ""),
+            "outdoor": sensor_config.get("outdoor", ""),
+            "unit": sensor_config.get("unit", "C"),
+        }
+        save_dashboard_config(dashboard)
         logger.info("Saved sensor config: %s", sensor_config)
     except Exception:
         logger.exception("Failed to save sensor config")
+
+
+def c_to_f(temp_c: float) -> float:
+    """Convert Celsius to Fahrenheit."""
+    return temp_c * 9 / 5 + 32
 
 
 def feels_like(temp_c: float, humidity: float) -> float:
@@ -298,13 +323,17 @@ def start_mqtt():
     mqtt_client = client
 
     def loop():
+        logged_failure = False
         while True:
             try:
                 client.connect(MQTT_HOST, MQTT_PORT, 60)
+                logged_failure = False  # Reset on successful connect
                 client.loop_forever()
             except Exception as e:
-                logger.warning("MQTT reconnecting: %s", e)
-                time.sleep(5)
+                if not logged_failure:
+                    logger.info("MQTT not available (%s), will retry silently", e)
+                    logged_failure = True
+                time.sleep(30)  # Longer retry interval when MQTT is down
 
     threading.Thread(target=loop, daemon=True).start()
     logger.info("Started MQTT client thread")
@@ -318,11 +347,19 @@ def sensor_response(key: str) -> dict:
     if c.timestamp == 0:
         return {"available": False, "error": "No data yet"}
 
+    temp = c.temperature
+    fl = feels_like(c.temperature, c.humidity)
+
+    # Convert to Fahrenheit if configured
+    if sensor_config.get("unit", "C") == "F":
+        temp = c_to_f(temp)
+        fl = c_to_f(fl)
+
     return {
         "available": True,
-        "temperature": round(c.temperature, 1),
+        "temperature": round(temp, 1),
         "humidity": round(c.humidity, 1),
-        "feels_like": round(feels_like(c.temperature, c.humidity), 1),
+        "feels_like": round(fl, 1),
         "temperature_trend": get_trend(c.temperature, s.history, "temperature"),
         "humidity_trend": get_trend(c.humidity, s.history, "humidity"),
         "battery": c.battery,
@@ -330,7 +367,9 @@ def sensor_response(key: str) -> dict:
     }
 
 
-def set_sensor_config(indoor: str | None = None, outdoor: str | None = None) -> dict:
+def set_sensor_config(
+    indoor: str | None = None, outdoor: str | None = None, unit: str | None = None
+) -> dict:
     """Update sensor configuration."""
     global sensor_config
 
@@ -342,6 +381,9 @@ def set_sensor_config(indoor: str | None = None, outdoor: str | None = None) -> 
     if outdoor is not None:
         sensor_config["outdoor"] = outdoor or ""
         sensors["outdoor"] = SensorData()
+
+    if unit is not None and unit in ("C", "F"):
+        sensor_config["unit"] = unit
 
     save_config()
     update_subscriptions()

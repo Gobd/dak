@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Settings, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
-import { getRelayUrl } from '../../stores/config-store';
+import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
+import type { ClimateConfig } from '../../types';
 
 async function checkRelayHealth(url: string): Promise<boolean> {
   try {
@@ -37,7 +38,6 @@ interface ClimateData {
     outside_feels_warmer: boolean;
     difference: number;
   } | null;
-  config: { indoor: string; outdoor: string };
 }
 
 interface DeviceInfo {
@@ -48,7 +48,6 @@ interface DeviceInfo {
 
 interface DevicesResponse {
   devices: DeviceInfo[];
-  config: { indoor: string; outdoor: string };
 }
 
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
@@ -56,7 +55,8 @@ const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
   const [showSettings, setShowSettings] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const climateConfig = useConfigStore((s) => s.climate);
+  const updateClimate = useConfigStore((s) => s.updateClimate);
 
   // Check relay health
   const { data: relayUp } = useQuery({
@@ -94,7 +94,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
   );
 
   // Fetch available devices (only when settings open and relay is up)
-  const { data: devicesData, refetch: refetchDevices } = useWidgetQuery<DevicesResponse>(
+  const { data: devicesData } = useWidgetQuery<DevicesResponse>(
     ['climate-devices', relayUrl],
     async () => {
       const res = await fetch(`${relayUrl}/sensors/devices`);
@@ -105,28 +105,14 @@ export default function Climate({ dark }: WidgetComponentProps) {
   );
 
   const devices = devicesData?.devices ?? [];
-  const currentConfig = devicesData?.config ?? data?.config ?? { indoor: '', outdoor: '' };
 
   const sensorsConnected = data
     ? (data.indoor?.available ? 1 : 0) + (data.outdoor?.available ? 1 : 0)
     : 0;
 
-  // Save sensor config
-  const saveSensorConfig = async (role: 'indoor' | 'outdoor', deviceName: string) => {
-    if (!relayUrl) return;
-    setSaving(true);
-    try {
-      await fetch(`${relayUrl}/sensors/config`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [role]: deviceName }),
-      });
-      refetchDevices();
-    } catch (e) {
-      console.error('Failed to save sensor config:', e);
-    } finally {
-      setSaving(false);
-    }
+  // Save sensor config via config store
+  const saveSensorConfig = (updates: Partial<ClimateConfig>) => {
+    updateClimate(updates);
   };
 
   // Get recommendation
@@ -165,7 +151,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
   // Sensor dropdown
   const renderSensorSelect = (role: 'indoor' | 'outdoor', label: string) => {
     const otherRole = role === 'indoor' ? 'outdoor' : 'indoor';
-    const otherSelected = currentConfig[otherRole];
+    const otherSelected = climateConfig?.[otherRole];
     // Filter out the device selected for the other role
     const availableDevices = devices.filter((d) => d.friendly_name !== otherSelected);
 
@@ -177,9 +163,8 @@ export default function Climate({ dark }: WidgetComponentProps) {
           {label}
         </label>
         <select
-          value={currentConfig[role] || ''}
-          onChange={(e) => saveSensorConfig(role, e.target.value)}
-          disabled={saving}
+          value={climateConfig?.[role] || ''}
+          onChange={(e) => saveSensorConfig({ [role]: e.target.value })}
           className={`w-full px-3 py-2 rounded text-sm ${
             dark
               ? 'bg-neutral-700 text-neutral-200 border-neutral-600'
@@ -265,6 +250,32 @@ export default function Climate({ dark }: WidgetComponentProps) {
             </div>
           )}
 
+          {/* Temperature Unit */}
+          <div>
+            <label
+              className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
+            >
+              Temperature Unit
+            </label>
+            <div className="flex gap-2">
+              {(['C', 'F'] as const).map((unit) => (
+                <button
+                  key={unit}
+                  onClick={() => saveSensorConfig({ unit })}
+                  className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                    (climateConfig?.unit ?? 'C') === unit
+                      ? 'bg-blue-600 text-white'
+                      : dark
+                        ? 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+                        : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                  }`}
+                >
+                  °{unit}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Connection Status */}
           <div>
             <label
@@ -279,7 +290,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
                 <span className="text-yellow-500">
                   ⚠ Only {data?.indoor?.available ? 'indoor' : 'outdoor'} receiving data
                 </span>
-              ) : currentConfig.indoor || currentConfig.outdoor ? (
+              ) : climateConfig?.indoor || climateConfig?.outdoor ? (
                 <span className="text-yellow-500">⚠ Waiting for sensor data...</span>
               ) : (
                 <span className="text-neutral-500">Select sensors above</span>

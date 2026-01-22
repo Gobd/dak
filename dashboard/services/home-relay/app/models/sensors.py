@@ -1,15 +1,12 @@
-"""Pydantic models for sensor endpoints."""
+"""Pydantic models for sensor endpoints.
+
+Note: Climate config (indoor, outdoor, unit) is managed via the main /config endpoint,
+not the sensors API. These models are for sensor data responses only.
+"""
 
 from typing import Literal
 
 from pydantic import BaseModel
-
-
-class SensorConfig(BaseModel):
-    """Sensor configuration."""
-
-    indoor: str = ""
-    outdoor: str = ""
 
 
 class SensorDevice(BaseModel):
@@ -24,27 +21,12 @@ class DevicesResponse(BaseModel):
     """List of available sensor devices."""
 
     devices: list[SensorDevice]
-    config: SensorConfig
 
 
 class MqttStatusResponse(BaseModel):
     """MQTT connection status."""
 
     mqtt_connected: bool
-
-
-class SensorConfigRequest(BaseModel):
-    """Set sensor config request."""
-
-    indoor: str | None = None
-    outdoor: str | None = None
-
-
-class SensorConfigResponse(BaseModel):
-    """Set sensor config response."""
-
-    success: bool
-    config: SensorConfig
 
 
 class SensorReadingResponse(BaseModel):
@@ -81,4 +63,3 @@ class AllSensorsResponse(BaseModel):
     indoor: SensorReadingResponse | SensorUnavailableResponse
     outdoor: SensorReadingResponse | SensorUnavailableResponse
     comparison: SensorComparison | None = None
-    config: SensorConfig

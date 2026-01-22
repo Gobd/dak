@@ -15,6 +15,14 @@ export interface KasaDevice {
   power_watts: number | null;
   energy_today_kwh: number | null;
   features: string[];
+  // Multi-plug/child device support
+  child_id: string | null;
+  // Active countdown timer
+  countdown_remaining: number | null; // seconds remaining
+  countdown_action: 'on' | 'off' | null; // what happens when countdown ends
+  // Next scheduled action
+  next_action: 'on' | 'off' | null; // next scheduled action
+  next_action_at: string | null; // "sunrise", "sunset", or "HH:MM"
 }
 
 /**
@@ -24,8 +32,9 @@ export interface ScheduleRule {
   id: string;
   enabled: boolean;
   action: 'on' | 'off';
-  time: string; // HH:MM format
+  time: string; // HH:MM format or "sunrise"/"sunset"
   days: string[]; // ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+  offset_mins?: number; // Offset from sunrise/sunset in minutes
 }
 
 /**
@@ -118,4 +127,30 @@ export function formatDuration(isoString: string): string {
   const days = Math.floor(hours / 24);
   const remainingHours = hours % 24;
   return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+}
+
+/**
+ * Format countdown remaining seconds to human-readable string
+ */
+export function formatCountdown(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+  return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
+}
+
+/**
+ * Format schedule time for display, handling sunrise/sunset
+ */
+export function formatScheduleTime(rule: ScheduleRule): string {
+  if (rule.time === 'sunrise' || rule.time === 'sunset') {
+    const base = rule.time === 'sunrise' ? 'Sunrise' : 'Sunset';
+    if (rule.offset_mins && rule.offset_mins > 0) {
+      return `${base} +${rule.offset_mins}m`;
+    }
+    return base;
+  }
+  return rule.time;
 }

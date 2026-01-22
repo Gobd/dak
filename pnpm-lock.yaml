@@ -185,6 +185,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: catalog:vite
         version: 5.1.2(vite@8.0.0-beta.8(@types/node@24.10.9)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
+      concurrently:
+        specifier: 'catalog:'
+        version: 9.2.1
       globals:
         specifier: 'catalog:'
         version: 17.0.0

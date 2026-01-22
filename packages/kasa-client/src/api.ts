@@ -126,9 +126,14 @@ export function createKasaClient(relayUrl: string) {
 
   /**
    * Get schedule rules for a device
+   * For child devices (multi-plugs), pass the child_id
    */
-  async function getSchedule(ip: string): Promise<ScheduleResponse> {
-    const res = await fetch(`${baseUrl}/kasa/schedule?ip=${encodeURIComponent(ip)}`);
+  async function getSchedule(ip: string, childId?: string | null): Promise<ScheduleResponse> {
+    let url = `${baseUrl}/kasa/schedule?ip=${encodeURIComponent(ip)}`;
+    if (childId) {
+      url += `&child_id=${encodeURIComponent(childId)}`;
+    }
+    const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Failed to get schedule: ${res.status}`);
     }

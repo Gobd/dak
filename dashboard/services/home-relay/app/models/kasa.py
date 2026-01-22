@@ -19,6 +19,11 @@ class KasaDevice(BaseModel):
     power_watts: float | None = None  # Current power draw
     energy_today_kwh: float | None = None  # Energy used today
     features: list[str] = []  # List of supported features
+    child_id: str | None = None  # Child device ID for multi-plug devices
+    countdown_remaining: int | None = None  # Seconds remaining on active countdown
+    countdown_action: str | None = None  # "on" or "off" - what happens when countdown ends
+    next_action: str | None = None  # "on" or "off" - next scheduled action
+    next_action_at: str | None = None  # When: "sunset", "sunrise", or "HH:MM"
 
 
 class ToggleRequest(BaseModel):
@@ -97,8 +102,9 @@ class ScheduleRule(BaseModel):
     id: str
     enabled: bool
     action: str  # "on" or "off"
-    time: str  # HH:MM
+    time: str  # HH:MM or "sunrise"/"sunset"
     days: list[str]  # ["mon", "tue", etc.]
+    offset_mins: int | None = None  # Offset from sunrise/sunset in minutes (negative=before)
 
 
 class ScheduleResponse(BaseModel):

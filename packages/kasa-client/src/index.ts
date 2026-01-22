@@ -9,7 +9,15 @@ export type {
   Day,
 } from './types';
 
-export { DAYS, DAY_LABELS, hasBrightness, hasEnergyMonitor, formatDuration } from './types';
+export {
+  DAYS,
+  DAY_LABELS,
+  hasBrightness,
+  hasEnergyMonitor,
+  formatDuration,
+  formatCountdown,
+  formatScheduleTime,
+} from './types';
 
 // API Client
 export { createKasaClient } from './api';

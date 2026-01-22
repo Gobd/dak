@@ -117,10 +117,10 @@ async def countdown(req: CountdownRequest):
 
 
 @router.get("/schedule", response_model=ScheduleResponse)
-async def schedule(ip: str = Query(...)):
+async def schedule(ip: str = Query(...), child_id: str | None = Query(None)):
     """Get schedule rules for a device."""
     try:
-        result = run_async(get_schedule_rules(ip))
+        result = run_async(get_schedule_rules(ip, child_id=child_id))
         return ScheduleResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

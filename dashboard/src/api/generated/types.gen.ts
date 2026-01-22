@@ -43,7 +43,6 @@ export type AllSensorsResponse = {
      */
     outdoor: SensorReadingResponse | SensorUnavailableResponse;
     comparison?: SensorComparison | null;
-    config: SensorConfig;
 };
 
 /**
@@ -370,7 +369,6 @@ export type DevicesResponse = {
      * Devices
      */
     devices: Array<SensorDevice>;
-    config: SensorConfig;
 };
 
 /**
@@ -449,6 +447,26 @@ export type KasaDevice = {
      * Features
      */
     features?: Array<string>;
+    /**
+     * Child Id
+     */
+    child_id?: string | null;
+    /**
+     * Countdown Remaining
+     */
+    countdown_remaining?: number | null;
+    /**
+     * Countdown Action
+     */
+    countdown_action?: string | null;
+    /**
+     * Next Action
+     */
+    next_action?: string | null;
+    /**
+     * Next Action At
+     */
+    next_action_at?: string | null;
 };
 
 /**
@@ -665,6 +683,10 @@ export type ScheduleRule = {
      * Days
      */
     days: Array<string>;
+    /**
+     * Offset Mins
+     */
+    offset_mins?: number | null;
 };
 
 /**
@@ -685,51 +707,6 @@ export type SensorComparison = {
      * Difference
      */
     difference: number;
-};
-
-/**
- * SensorConfig
- *
- * Sensor configuration.
- */
-export type SensorConfig = {
-    /**
-     * Indoor
-     */
-    indoor?: string;
-    /**
-     * Outdoor
-     */
-    outdoor?: string;
-};
-
-/**
- * SensorConfigRequest
- *
- * Set sensor config request.
- */
-export type SensorConfigRequest = {
-    /**
-     * Indoor
-     */
-    indoor?: string | null;
-    /**
-     * Outdoor
-     */
-    outdoor?: string | null;
-};
-
-/**
- * SensorConfigResponse
- *
- * Set sensor config response.
- */
-export type SensorConfigResponse = {
-    /**
-     * Success
-     */
-    success: boolean;
-    config: SensorConfig;
 };
 
 /**
@@ -1684,31 +1661,6 @@ export type DevicesSensorsDevicesGetResponses = {
 };
 
 export type DevicesSensorsDevicesGetResponse = DevicesSensorsDevicesGetResponses[keyof DevicesSensorsDevicesGetResponses];
-
-export type ConfigSensorsConfigPostData = {
-    body: SensorConfigRequest;
-    path?: never;
-    query?: never;
-    url: '/sensors/config';
-};
-
-export type ConfigSensorsConfigPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ConfigSensorsConfigPostError = ConfigSensorsConfigPostErrors[keyof ConfigSensorsConfigPostErrors];
-
-export type ConfigSensorsConfigPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: SensorConfigResponse;
-};
-
-export type ConfigSensorsConfigPostResponse = ConfigSensorsConfigPostResponses[keyof ConfigSensorsConfigPostResponses];
 
 export type IndoorSensorsIndoorGetData = {
     body?: never;

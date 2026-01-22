@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   Power,
   RefreshCw,
   AlertCircle,
   Sun,
-  Clock,
   Zap,
   Timer,
   Calendar,
@@ -18,7 +17,8 @@ import { Modal, Button, ConfirmModal, TimePickerCompact } from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,
-  formatDuration,
+  formatCountdown,
+  formatScheduleTime,
   type KasaDevice,
   type ScheduleRule,
 } from '@dak/kasa-client';
@@ -28,9 +28,11 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const relayUrl = getRelayUrl();
   const client = useMemo(() => createKasaClient(relayUrl), [relayUrl]);
+  const prevDevicesRef = useRef<KasaDevice[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<KasaDevice | null>(null);
   const [countdownMins, setCountdownMins] = useState(30);
+  const [countdownAction, setCountdownAction] = useState<'on' | 'off'>('off');
   const [countdownStatus, setCountdownStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [mutationError, setMutationError] = useState<string | null>(null);
 
@@ -40,7 +42,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   const [deleteRule, setDeleteRule] = useState<ScheduleRule | null>(null);
   const [scheduleForm, setScheduleForm] = useState({
     action: 'on' as 'on' | 'off',
+    timeType: 'specific' as 'specific' | 'sunrise' | 'sunset',
     time: '07:00',
+    offsetMins: 0,
     days: ['mon', 'tue', 'wed', 'thu', 'fri'] as string[],
   });
 
@@ -50,15 +54,31 @@ export default function Kasa({ dark }: WidgetComponentProps) {
       try {
         const relayUp = await client.checkHealth();
         if (!relayUp) {
-          return { devices: [], error: 'Relay offline' };
+          return { devices: prevDevicesRef.current, error: 'Relay offline' };
         }
         const found = await client.discoverDevices();
         if (found.length === 0) {
-          return { devices: [], error: 'No devices found' };
+          return { devices: prevDevicesRef.current, error: 'No devices found' };
         }
-        return { devices: found, error: null };
+        // Merge: update found devices, keep stale ones that didn't respond
+        const foundMap = new Map(
+          found.map((d) => [d.child_id ? `${d.ip}:${d.child_id}` : d.ip, d])
+        );
+        const merged: KasaDevice[] = [];
+        // Keep previous devices, update with new data if available
+        for (const old of prevDevicesRef.current) {
+          const key = old.child_id ? `${old.ip}:${old.child_id}` : old.ip;
+          merged.push(foundMap.get(key) ?? old);
+          foundMap.delete(key);
+        }
+        // Add new devices not seen before
+        for (const d of foundMap.values()) {
+          merged.push(d);
+        }
+        prevDevicesRef.current = merged;
+        return { devices: merged, error: null };
       } catch {
-        return { devices: [], error: 'Failed to discover devices' };
+        return { devices: prevDevicesRef.current, error: 'Failed to discover devices' };
       }
     },
     refetchInterval: showModal ? 5_000 : 60_000,
@@ -95,11 +115,18 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   });
 
   // Schedule query - only fetch when device is selected
-  const { data: scheduleData, isLoading: scheduleLoading } = useQuery({
-    queryKey: ['kasa-schedule', relayUrl, selectedDevice?.ip],
-    queryFn: () => (selectedDevice ? client.getSchedule(selectedDevice.ip) : null),
+  // For child devices (multi-plugs), pass child_id to query with context
+  const {
+    data: scheduleData,
+    isLoading: scheduleLoading,
+    error: scheduleError,
+  } = useQuery({
+    queryKey: ['kasa-schedule', relayUrl, selectedDevice?.ip, selectedDevice?.child_id],
+    queryFn: () =>
+      selectedDevice ? client.getSchedule(selectedDevice.ip, selectedDevice.child_id) : null,
     enabled: !!selectedDevice,
     staleTime: 10000,
+    retry: false, // Don't retry on failure (device may not support schedules)
   });
 
   const scheduleMutation = useMutation({
@@ -231,7 +258,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             <div className="space-y-2">
               {devices.map((device) => (
                 <div
-                  key={device.ip}
+                  key={device.child_id ? `${device.ip}:${device.child_id}` : device.ip}
                   className={`p-3 rounded-lg transition-colors
                              ${device.on ? 'bg-green-500/20' : dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}
                 >
@@ -243,13 +270,17 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                       {device.name}
                     </button>
                     <div className="flex items-center gap-2">
-                      {/* Runtime indicator */}
-                      {device.on && device.on_since && (
-                        <span className="text-xs text-neutral-400 flex items-center gap-1">
-                          <Clock size={10} />
-                          {formatDuration(device.on_since)}
+                      {/* Countdown timer takes priority */}
+                      {device.countdown_remaining && device.countdown_remaining > 0 ? (
+                        <span className="text-xs text-blue-400">
+                          {device.countdown_action ?? 'off'} in{' '}
+                          {formatCountdown(device.countdown_remaining)}
                         </span>
-                      )}
+                      ) : device.next_action && device.next_action_at ? (
+                        <span className="text-xs text-purple-400">
+                          {device.next_action} at {device.next_action_at}
+                        </span>
+                      ) : null}
                       {/* Power usage */}
                       {device.has_emeter && device.power_watts !== null && device.on && (
                         <span className="text-xs text-yellow-400 flex items-center gap-1">
@@ -274,45 +305,6 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                       </button>
                     </div>
                   </div>
-
-                  {/* Brightness slider for dimmable devices */}
-                  {device.on && hasBrightness(device) && device.brightness !== null && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Sun size={14} className="text-yellow-400" />
-                      <input
-                        type="range"
-                        min="1"
-                        max="100"
-                        value={device.brightness}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          // Update locally immediately
-                          queryClient.setQueryData(
-                            ['kasa-devices', relayUrl],
-                            (old: { devices: KasaDevice[]; error: string | null } | undefined) => {
-                              if (!old) return old;
-                              return {
-                                ...old,
-                                devices: old.devices.map((d) =>
-                                  d.ip === device.ip ? { ...d, brightness: val } : d
-                                ),
-                              };
-                            }
-                          );
-                        }}
-                        onMouseUp={(e) => {
-                          const val = parseInt((e.target as HTMLInputElement).value, 10);
-                          brightnessMutation.mutate({ ip: device.ip, brightness: val });
-                        }}
-                        onTouchEnd={(e) => {
-                          const val = parseInt((e.target as HTMLInputElement).value, 10);
-                          brightnessMutation.mutate({ ip: device.ip, brightness: val });
-                        }}
-                        className="flex-1 h-1 rounded-lg appearance-none cursor-pointer bg-neutral-600"
-                      />
-                      <span className="text-xs text-neutral-400 w-8">{device.brightness}%</span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -362,15 +354,23 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                   {selectedDevice.on ? 'On' : 'Off'}
                 </button>
               </div>
-              {selectedDevice.on && selectedDevice.on_since && (
-                <div className="text-sm text-neutral-400 mt-1">
-                  On for {formatDuration(selectedDevice.on_since)}
+              {/* Next action info - countdown takes priority */}
+              {selectedDevice.countdown_remaining && selectedDevice.countdown_remaining > 0 ? (
+                <div className="text-sm text-blue-400 mt-1 flex items-center gap-1">
+                  <Timer size={12} />
+                  Turning {selectedDevice.countdown_action ?? 'off'} in{' '}
+                  {formatCountdown(selectedDevice.countdown_remaining)}
                 </div>
-              )}
+              ) : selectedDevice.next_action && selectedDevice.next_action_at ? (
+                <div className="text-sm text-purple-400 mt-1">
+                  {selectedDevice.next_action === 'off' ? 'Turns off' : 'Turns on'} at{' '}
+                  {selectedDevice.next_action_at}
+                </div>
+              ) : null}
             </div>
 
             {/* Brightness */}
-            {hasBrightness(selectedDevice) && selectedDevice.brightness !== null && (
+            {hasBrightness(selectedDevice) && selectedDevice.brightness != null && (
               <div className={`p-3 rounded-lg ${dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium flex items-center gap-2">
@@ -434,7 +434,33 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             {/* Countdown Timer */}
             <div className={`p-3 rounded-lg ${dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}>
               <div className="font-medium flex items-center gap-2 mb-2">
-                <Timer size={16} className="text-blue-400" /> Turn Off Timer
+                <Timer size={16} className="text-blue-400" /> Timer
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  onClick={() => setCountdownAction('off')}
+                  className={`flex-1 py-1 rounded text-sm font-medium ${
+                    countdownAction === 'off'
+                      ? 'bg-red-500 text-white'
+                      : dark
+                        ? 'bg-neutral-600 text-neutral-300'
+                        : 'bg-neutral-300 text-neutral-700'
+                  }`}
+                >
+                  Turn Off
+                </button>
+                <button
+                  onClick={() => setCountdownAction('on')}
+                  className={`flex-1 py-1 rounded text-sm font-medium ${
+                    countdownAction === 'on'
+                      ? 'bg-green-500 text-white'
+                      : dark
+                        ? 'bg-neutral-600 text-neutral-300'
+                        : 'bg-neutral-300 text-neutral-700'
+                  }`}
+                >
+                  Turn On
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -453,7 +479,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                     countdownMutation.mutate({
                       ip: selectedDevice.ip,
                       minutes: countdownMins,
-                      action: 'off',
+                      action: countdownAction,
                     })
                   }
                   disabled={countdownMutation.isPending}
@@ -467,7 +493,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
               </div>
               {countdownStatus === 'success' && (
                 <div className="text-xs text-green-400 mt-1">
-                  Timer set for {countdownMins} minutes
+                  Will turn {countdownAction} in {countdownMins} minutes
                 </div>
               )}
               {countdownStatus === 'error' && (
@@ -486,7 +512,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                     setEditingRule(null);
                     setScheduleForm({
                       action: 'on',
+                      timeType: 'specific',
                       time: '07:00',
+                      offsetMins: 0,
                       days: ['mon', 'tue', 'wed', 'thu', 'fri'],
                     });
                     setShowScheduleForm(true);
@@ -498,6 +526,10 @@ export default function Kasa({ dark }: WidgetComponentProps) {
 
               {scheduleLoading ? (
                 <div className="text-sm text-neutral-500">Loading schedules...</div>
+              ) : scheduleError ? (
+                <div className="text-sm text-red-400">
+                  Error: {scheduleError instanceof Error ? scheduleError.message : 'Failed to load'}
+                </div>
               ) : scheduleData?.rules && scheduleData.rules.length > 0 ? (
                 <div className="space-y-2">
                   {scheduleData.rules.map((rule) => (
@@ -518,7 +550,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                           >
                             {rule.action.toUpperCase()}
                           </span>
-                          <span className="font-medium">{rule.time}</span>
+                          <span className="font-medium">{formatScheduleTime(rule)}</span>
                         </div>
                         <div className="text-xs text-neutral-500 mt-0.5">
                           {rule.days
@@ -550,9 +582,13 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                         <button
                           onClick={() => {
                             setEditingRule(rule);
+                            const isSunrise = rule.time === 'sunrise';
+                            const isSunset = rule.time === 'sunset';
                             setScheduleForm({
                               action: rule.action as 'on' | 'off',
-                              time: rule.time,
+                              timeType: isSunrise ? 'sunrise' : isSunset ? 'sunset' : 'specific',
+                              time: isSunrise || isSunset ? '07:00' : rule.time,
+                              offsetMins: rule.offset_mins ?? 0,
                               days: rule.days,
                             });
                             setShowScheduleForm(true);
@@ -582,7 +618,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             <div className="text-xs text-neutral-500 space-y-1">
               <div>Model: {selectedDevice.model}</div>
               <div>IP: {selectedDevice.ip}</div>
-              {selectedDevice.features.length > 0 && (
+              {selectedDevice.features?.length > 0 && (
                 <div>Features: {selectedDevice.features.join(', ')}</div>
               )}
             </div>
@@ -612,13 +648,17 @@ export default function Kasa({ dark }: WidgetComponentProps) {
               variant="primary"
               onClick={() => {
                 if (selectedDevice) {
+                  const timeValue =
+                    scheduleForm.timeType === 'specific'
+                      ? scheduleForm.time
+                      : scheduleForm.timeType;
                   if (editingRule) {
                     scheduleMutation.mutate({
                       type: 'update',
                       ip: selectedDevice.ip,
                       ruleId: editingRule.id,
                       action: scheduleForm.action,
-                      time: scheduleForm.time,
+                      time: timeValue,
                       days: scheduleForm.days,
                     });
                   } else {
@@ -626,7 +666,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                       type: 'add',
                       ip: selectedDevice.ip,
                       action: scheduleForm.action,
-                      time: scheduleForm.time,
+                      time: timeValue,
                       days: scheduleForm.days,
                     });
                   }
@@ -671,13 +711,48 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             </div>
           </div>
 
-          {/* Time */}
+          {/* Time Type */}
           <div>
             <label className="block text-sm font-medium mb-1">Time</label>
-            <TimePickerCompact
-              value={scheduleForm.time}
-              onChange={(time) => setScheduleForm((f) => ({ ...f, time }))}
-            />
+            <div className="flex gap-2 mb-2">
+              {(['specific', 'sunrise', 'sunset'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setScheduleForm((f) => ({ ...f, timeType: type }))}
+                  className={`flex-1 py-1.5 rounded text-sm font-medium ${
+                    scheduleForm.timeType === type
+                      ? 'bg-purple-500 text-white'
+                      : dark
+                        ? 'bg-neutral-700 text-neutral-300'
+                        : 'bg-neutral-200 text-neutral-700'
+                  }`}
+                >
+                  {type === 'specific' ? 'Time' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
+            {scheduleForm.timeType === 'specific' ? (
+              <TimePickerCompact
+                value={scheduleForm.time}
+                onChange={(time) => setScheduleForm((f) => ({ ...f, time }))}
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-neutral-400">Offset:</span>
+                <input
+                  type="number"
+                  value={scheduleForm.offsetMins}
+                  onChange={(e) =>
+                    setScheduleForm((f) => ({
+                      ...f,
+                      offsetMins: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
+                  className={`w-20 px-2 py-1 rounded text-sm ${dark ? 'bg-neutral-700' : 'bg-neutral-200'}`}
+                />
+                <span className="text-sm text-neutral-400">minutes</span>
+              </div>
+            )}
           </div>
 
           {/* Days */}

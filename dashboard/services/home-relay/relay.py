@@ -12,6 +12,7 @@ if __name__ == "__main__":
         "app.main:app",
         host="0.0.0.0",
         port=5111,
-        reload=False,
-        log_level="warning",
+        reload=True,
+        log_level="info",
+        access_log=True,
     )

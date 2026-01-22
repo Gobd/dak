@@ -4,6 +4,7 @@ Controls system volume via ALSA (amixer) on Linux.
 """
 
 import logging
+import platform
 import subprocess
 
 from fastapi import APIRouter
@@ -13,9 +14,14 @@ from app.models.volume import VolumeRequest, VolumeResponse, VolumeSetResponse
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/volume", tags=["volume"])
 
+# Volume control only works on Linux with ALSA
+IS_LINUX = platform.system() == "Linux"
+
 
 def get_volume() -> int:
     """Get current system volume (0-100)."""
+    if not IS_LINUX:
+        return 50  # Not supported on macOS
     try:
         result = subprocess.run(
             ["amixer", "get", "Master"],
@@ -37,6 +43,8 @@ def get_volume() -> int:
 
 def set_volume(volume: int) -> bool:
     """Set system volume (0-100)."""
+    if not IS_LINUX:
+        return False  # Not supported on macOS
     try:
         volume = max(0, min(100, volume))
         subprocess.run(

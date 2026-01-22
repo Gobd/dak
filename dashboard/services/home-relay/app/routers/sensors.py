@@ -1,6 +1,7 @@
 """Climate sensor endpoints.
 
 Reads data from Zigbee2MQTT sensors via the MQTT service.
+Config is managed via the main /config endpoint, not here.
 """
 
 from typing import Union
@@ -12,19 +13,16 @@ from app.models.sensors import (
     DevicesResponse,
     MqttStatusResponse,
     SensorComparison,
-    SensorConfig,
-    SensorConfigRequest,
-    SensorConfigResponse,
     SensorDevice,
     SensorReadingResponse,
     SensorUnavailableResponse,
 )
 from app.services.mqtt_service import (
     available_devices,
+    load_config,
     mqtt_connected,
     sensor_config,
     sensor_response,
-    set_sensor_config,
 )
 
 router = APIRouter(prefix="/sensors", tags=["sensors"])
@@ -41,17 +39,6 @@ async def devices():
     """List available climate sensors from Zigbee2MQTT."""
     return DevicesResponse(
         devices=[SensorDevice(**d) for d in available_devices],
-        config=SensorConfig(**sensor_config),
-    )
-
-
-@router.post("/config", response_model=SensorConfigResponse)
-async def config(req: SensorConfigRequest):
-    """Set which device is indoor/outdoor."""
-    result = set_sensor_config(indoor=req.indoor, outdoor=req.outdoor)
-    return SensorConfigResponse(
-        success=result["success"],
-        config=SensorConfig(**result["config"]),
     )
 
 
@@ -61,6 +48,7 @@ async def config(req: SensorConfigRequest):
 )
 async def indoor():
     """Get indoor sensor reading."""
+    load_config()  # Reload config in case it changed via main /config endpoint
     return sensor_response("indoor")
 
 
@@ -70,6 +58,7 @@ async def indoor():
 )
 async def outdoor():
     """Get outdoor sensor reading."""
+    load_config()  # Reload config in case it changed via main /config endpoint
     return sensor_response("outdoor")
 
 
@@ -83,15 +72,18 @@ def _parse_sensor_response(data: dict) -> SensorReadingResponse | SensorUnavaila
 @router.get("/all", response_model=AllSensorsResponse)
 async def all_sensors():
     """Get all sensor readings with comparison."""
+    load_config()  # Reload config in case it changed via main /config endpoint
     ind_data = sensor_response("indoor")
     out_data = sensor_response("outdoor")
 
     comparison = None
     if ind_data.get("available") and out_data.get("available"):
         diff = out_data["feels_like"] - ind_data["feels_like"]
+        # Adjust threshold based on unit (0.5°C ≈ 1°F)
+        threshold = 1.0 if sensor_config.get("unit", "C") == "F" else 0.5
         comparison = SensorComparison(
-            outside_feels_cooler=diff < -0.5,
-            outside_feels_warmer=diff > 0.5,
+            outside_feels_cooler=diff < -threshold,
+            outside_feels_warmer=diff > threshold,
             difference=round(diff, 1),
         )
 
@@ -99,5 +91,4 @@ async def all_sensors():
         indoor=_parse_sensor_response(ind_data),
         outdoor=_parse_sensor_response(out_data),
         comparison=comparison,
-        config=SensorConfig(**sensor_config),
     )

@@ -100,6 +100,13 @@ export interface BrightnessConfig {
   transitionMins?: number;
 }
 
+// Climate sensor configuration
+export interface ClimateConfig {
+  indoor?: string; // Zigbee2MQTT device friendly_name
+  outdoor?: string;
+  unit?: 'C' | 'F'; // Temperature unit (default: C)
+}
+
 // Theme mode for global settings
 export type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -159,6 +166,7 @@ export interface DashboardConfig {
   dark: boolean;
   driveTime?: DriveTimeConfig;
   calendar?: CalendarConfig;
+  climate?: ClimateConfig;
   locations?: Record<string, LocationConfig>;
   defaultLocation?: LocationConfig;
   brightness?: BrightnessConfig;

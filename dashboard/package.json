@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:relay": "concurrently -n vite,relay -c blue,green \"vite\" \"uv run --directory services/home-relay python relay.py\"",
     "build": "tsc -b && vite build",
     "preview": "vite build --mode development && vite preview --port 8080",
     "lint:sh": "shellcheck scripts/*.sh",
@@ -31,6 +32,7 @@
     "@types/react": "catalog:vite",
     "@types/react-dom": "catalog:vite",
     "@vitejs/plugin-react": "catalog:vite",
+    "concurrently": "catalog:",
     "globals": "catalog:",
     "rollup-plugin-visualizer": "catalog:vite",
     "shellcheck": "^4.1.0",
