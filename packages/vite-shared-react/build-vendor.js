@@ -116,6 +116,21 @@ const zustandMwFileName = writeBundle(
   zustandMwHash
 );
 
+// Fetch use-sync-external-store (used by @tiptap/react, etc.)
+// The ESM version uses React's built-in useSyncExternalStore, avoiding CJS require()
+console.log('Fetching use-sync-external-store from esm.sh...');
+const syncStore = await fetchBundle(
+  `https://esm.sh/use-sync-external-store@1.4.0/es2024/use-sync-external-store.bundle.mjs`,
+  [rewriteReact]
+);
+const syncStoreHash = createHash('md5').update(syncStore.code).digest('hex').slice(0, 8);
+const syncStoreFileName = writeBundle(
+  'use-sync-external-store',
+  syncStore.code,
+  syncStore.map,
+  syncStoreHash
+);
+
 // Copy fonts to dist
 const fontsDir = join(__dirname, 'fonts');
 const fontFiles = readdirSync(fontsDir);
@@ -130,6 +145,8 @@ const manifest = {
   'react-dom/client': `/_shared/${clientFileName}`,
   zustand: `/_shared/${zustandFileName}`,
   'zustand/middleware': `/_shared/${zustandMwFileName}`,
+  'use-sync-external-store': `/_shared/${syncStoreFileName}`,
+  'use-sync-external-store/shim': `/_shared/${syncStoreFileName}`,
   fonts: '/_shared/fonts.css',
 };
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -149,5 +166,8 @@ console.log(
 );
 console.log(
   `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
+);
+console.log(
+  `  use-sync-external-store: ${syncStoreFileName} (${(syncStore.code.length / 1024).toFixed(1)} KB)${syncStore.map ? ' +map' : ''}`
 );
 console.log(`  fonts: ${fontFiles.join(', ')}`);
