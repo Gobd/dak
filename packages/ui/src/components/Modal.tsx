@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState, type ReactNode, type MouseEvent } from 'react';
-import { createPortal } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   open: boolean;
