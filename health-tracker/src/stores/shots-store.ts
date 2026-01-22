@@ -34,7 +34,7 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
     const { data, error } = await supabase
       .from('shot_schedules')
       .select('*, person:people(*)')
-      .order('next_due');
+      .order('name');
 
     if (!error && data) {
       set({ schedules: data });

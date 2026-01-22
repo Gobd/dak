@@ -1,13 +1,14 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const distDir = join(__dirname, 'dist');
 
 // Load manifest once at module load time
 let manifest = null;
 try {
-  manifest = JSON.parse(readFileSync(join(__dirname, 'dist/manifest.json'), 'utf-8'));
+  manifest = JSON.parse(readFileSync(join(distDir, 'manifest.json'), 'utf-8'));
 } catch {
   // Manifest not found - plugin will be inactive
 }
@@ -26,6 +27,7 @@ export function getExternalIds() {
  * Vite plugin that injects import map for shared vendor bundles.
  * Use with esmExternalRequirePlugin for externalization.
  * Only activates in production builds - dev mode uses normal bundling.
+ * Serves /_shared/ files during preview for local testing.
  */
 export function sharedReact() {
   let isBuild = false;
@@ -36,6 +38,35 @@ export function sharedReact() {
     config(_, { command }) {
       isBuild = command === 'build';
       return {};
+    },
+
+    // Serve /_shared/ files during preview
+    configurePreviewServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.startsWith('/_shared/')) {
+          const filename = req.url.slice('/_shared/'.length);
+          const filepath = join(distDir, filename);
+
+          if (existsSync(filepath)) {
+            const content = readFileSync(filepath);
+            const ext = filename.split('.').pop();
+            const contentType =
+              ext === 'js'
+                ? 'application/javascript'
+                : ext === 'css'
+                  ? 'text/css'
+                  : ext === 'woff2'
+                    ? 'font/woff2'
+                    : 'application/octet-stream';
+
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.end(content);
+            return;
+          }
+        }
+        next();
+      });
     },
 
     transformIndexHtml(html) {
