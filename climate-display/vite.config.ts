@@ -1,12 +1,20 @@
-import { defineConfig, type PluginOption } from 'vite';
+import { defineConfig, esmExternalRequirePlugin, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
-import { sharedReact } from '@dak/vite-shared-react';
+import { sharedReact, getExternalIds } from '@dak/vite-shared-react';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: '/climate-display/',
+  server: {
+    port: 5178,
+  },
+  build: {
+    sourcemap: true,
+  },
   plugins: [
+    command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
     react(),
     tailwindcss(),
     sharedReact(),
@@ -46,11 +54,4 @@ export default defineConfig({
       },
     }),
   ].filter(Boolean) as PluginOption[],
-  base: '/climate-display/',
-  server: {
-    port: 5178,
-  },
-  build: {
-    sourcemap: true,
-  },
-});
+}));

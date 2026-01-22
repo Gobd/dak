@@ -14,25 +14,25 @@
   "dependencies": {
     "@dak/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
-    "date-fns": "catalog:vite",
-    "lucide-react": "catalog:vite",
-    "react": "catalog:vite",
-    "react-dom": "catalog:vite",
-    "react-router-dom": "catalog:vite",
+    "date-fns": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@tailwindcss/vite": "catalog:vite",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
-    "@types/react": "catalog:vite",
-    "@types/react-dom": "catalog:vite",
-    "@vitejs/plugin-react": "catalog:vite",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "globals": "catalog:",
-    "rollup-plugin-visualizer": "catalog:vite",
-    "tailwindcss": "catalog:vite",
+    "rollup-plugin-visualizer": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:vite",
-    "vite-plugin-pwa": "catalog:vite"
+    "vite": "catalog:",
+    "vite-plugin-pwa": "catalog:"
   }
 }

@@ -76,6 +76,7 @@ export interface CalendarConfig {
   hidden?: string[];
   names?: Record<string, string>;
   view?: 'month' | 'list';
+  headerHeight?: number; // Extra height in pixels for header section (0-200)
 }
 
 // Location configuration (for weather widgets)

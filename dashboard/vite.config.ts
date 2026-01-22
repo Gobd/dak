@@ -1,15 +1,18 @@
-import { defineConfig, type PluginOption } from 'vite';
+import { defineConfig, esmExternalRequirePlugin, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { sharedReact } from '@dak/vite-shared-react';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { sharedReact, getExternalIds } from '@dak/vite-shared-react';
+import { resolve } from 'path';
 
 export default defineConfig(({ command, mode }) => {
-  const plugins: PluginOption[] = [react(), tailwindcss(), sharedReact()];
+  const isBuild = command === 'build';
+  const plugins: PluginOption[] = [
+    isBuild && esmExternalRequirePlugin({ external: getExternalIds() }),
+    react(),
+    tailwindcss(),
+    sharedReact(),
+  ];
 
   // Bundle analyzer - run with: pnpm analyze
   if (process.env.ANALYZE) {
@@ -25,18 +28,18 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     // Use /dashboard/ base only for production build, not preview
-    base: command === 'build' && mode === 'production' ? '/dashboard/' : '/',
+    base: isBuild && mode === 'production' ? '/dashboard/' : '/',
     server: {
       port: 8080,
     },
-    plugins,
+    plugins: plugins.filter(Boolean),
     build: {
       outDir: 'dist',
       sourcemap: true,
       rollupOptions: {
         input: {
-          main: resolve(__dirname, 'index.html'),
-          privacy: resolve(__dirname, 'privacy.html'),
+          main: resolve(import.meta.dirname!, 'index.html'),
+          privacy: resolve(import.meta.dirname!, 'privacy.html'),
         },
       },
     },

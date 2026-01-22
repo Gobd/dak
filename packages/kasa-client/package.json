@@ -15,15 +15,15 @@
   },
   "dependencies": {
     "@tanstack/react-query": "catalog:",
-    "react": "catalog:vite"
+    "react": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "catalog:vite",
+    "@types/react": "catalog:",
     "globals": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
     "@tanstack/react-query": "catalog:",
-    "react": "catalog:vite"
+    "react": "catalog:"
   }
 }
