@@ -28,6 +28,8 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'wol', label: 'Wake on LAN', description: 'Wake network devices' },
   { type: 'brightness', label: 'Brightness', description: 'Display brightness control' },
   { type: 'iframe', label: 'Iframe', description: 'Embed external content' },
+  { type: 'mqtt', label: 'MQTT', description: 'MQTT sensor data display' },
+  { type: 'adguard', label: 'AdGuard Home', description: 'DNS ad-blocking control' },
 ];
 
 /**

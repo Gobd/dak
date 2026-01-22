@@ -36,17 +36,17 @@
         {
           "id": "panel-climate",
           "widget": "climate",
-          "x": 60,
+          "x": 62,
           "y": 2,
-          "width": 14,
-          "height": 10,
+          "width": 12,
+          "height": 12,
           "refresh": "1m"
         },
         {
           "id": "panel-drive-time",
           "widget": "drive-time",
           "x": 74,
-          "y": 1,
+          "y": 2,
           "width": 5,
           "height": 6,
           "refresh": "5m"
@@ -55,7 +55,7 @@
           "id": "panel-kasa",
           "widget": "kasa",
           "x": 79,
-          "y": 1,
+          "y": 2,
           "width": 5,
           "height": 6
         },
@@ -63,15 +63,24 @@
           "id": "panel-wol",
           "widget": "wol",
           "x": 84,
-          "y": 1,
+          "y": 2,
           "width": 5,
           "height": 6
+        },
+        {
+          "id": "panel-adguard",
+          "widget": "adguard",
+          "x": 74,
+          "y": 8,
+          "width": 5,
+          "height": 6,
+          "refresh": "10s"
         },
         {
           "id": "panel-brightness",
           "widget": "brightness",
           "x": 79,
-          "y": 7,
+          "y": 8,
           "width": 5,
           "height": 6
         },
@@ -79,7 +88,7 @@
           "id": "panel-timer",
           "widget": "timer",
           "x": 84,
-          "y": 7,
+          "y": 8,
           "width": 5,
           "height": 6
         }
@@ -146,6 +155,6 @@
     "routes": []
   },
   "calendar": {
-    "headerHeight": 100
+    "headerHeight": 110
   }
 }

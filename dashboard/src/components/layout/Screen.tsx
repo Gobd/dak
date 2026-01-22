@@ -49,6 +49,7 @@ export function Screen() {
                   'kasa',
                   'brightness',
                   'drive-time',
+                  'adguard',
                 ];
                 const isFrameless = framelessWidgets.includes(panel.widget);
 

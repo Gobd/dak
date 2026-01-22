@@ -18,6 +18,12 @@ import {
   setRelayUrl,
   getRelayUrl,
 } from '../../stores/config-store';
+import {
+  volumeGetVolumeGet,
+  volumeSetVolumePost,
+  listModelsVoiceModelsGet,
+  listVoicesVoiceTtsVoicesGet,
+} from '@dak/api-client';
 import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
@@ -62,7 +68,11 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
   const [locationQuery, setLocationQuery] = useState('');
   const [relayUrlInput, setRelayUrlInput] = useState('');
+  const [zigbeeUrlInput, setZigbeeUrlInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [zigbeeStatus, setZigbeeStatus] = useState<'idle' | 'testing' | 'success' | 'error'>(
+    'idle'
+  );
   const [volume, setVolume] = useState(50);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [voiceModels, setVoiceModels] = useState<VoskModelInfo[]>([]);
@@ -85,20 +95,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   useEffect(() => {
     if (open) {
       setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
+      setZigbeeUrlInput(globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me');
       setRelayStatus('idle');
+      setZigbeeStatus('idle');
     }
-  }, [open, globalSettings?.relayUrl]);
+  }, [open, globalSettings?.relayUrl, globalSettings?.zigbeeUrl]);
 
   // Fetch current volume when modal opens
   useEffect(() => {
     if (open) {
       const relayUrl = getRelayUrl();
       if (relayUrl) {
-        fetch(`${relayUrl}/volume`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (typeof data.volume === 'number') {
-              setVolume(data.volume);
+        volumeGetVolumeGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (res.data && typeof res.data.volume === 'number') {
+              setVolume(res.data.volume);
             }
           })
           .catch(() => {
@@ -113,21 +124,19 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     if (open && voiceEnabled) {
       const relayUrl = getRelayUrl();
       if (relayUrl) {
-        fetch(`${relayUrl}/voice/models`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setVoiceModels(data);
+        listModelsVoiceModelsGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (Array.isArray(res.data)) {
+              setVoiceModels(res.data as VoskModelInfo[]);
             }
           })
           .catch(() => {
             // Ignore errors
           });
-        fetch(`${relayUrl}/voice/tts/voices`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setTtsVoices(data);
+        listVoicesVoiceTtsVoicesGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (Array.isArray(res.data)) {
+              setTtsVoices(res.data as TtsVoiceInfo[]);
             }
           })
           .catch(() => {
@@ -181,10 +190,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               if (data.status === 'complete') {
                 setDownloadProgress(null);
                 // Refresh models list
-                const res = await fetch(`${relayUrl}/voice/models`);
-                const models = await res.json();
-                if (Array.isArray(models)) {
-                  setVoiceModels(models);
+                const res = await listModelsVoiceModelsGet({ baseUrl: relayUrl });
+                if (Array.isArray(res.data)) {
+                  setVoiceModels(res.data as VoskModelInfo[]);
                 }
               }
               if (data.status === 'error') {
@@ -245,10 +253,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               if (data.status === 'complete') {
                 setTtsDownloadProgress(null);
                 // Refresh voices list
-                const res = await fetch(`${relayUrl}/voice/tts/voices`);
-                const voices = await res.json();
-                if (Array.isArray(voices)) {
-                  setTtsVoices(voices);
+                const res = await listVoicesVoiceTtsVoicesGet({ baseUrl: relayUrl });
+                if (Array.isArray(res.data)) {
+                  setTtsVoices(res.data as TtsVoiceInfo[]);
                 }
               }
               if (data.status === 'error') {
@@ -287,10 +294,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
       if (relayUrl) {
         setVolumeLoading(true);
         try {
-          await fetch(`${relayUrl}/volume`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ volume: clamped }),
+          await volumeSetVolumePost({
+            baseUrl: relayUrl,
+            body: { volume: clamped },
           });
           // Play test sound after setting
           setTimeout(playTestSound, 100);
@@ -314,6 +320,23 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     updateGlobalSettings({ relayUrl: relayUrlInput });
     setRelayUrl(relayUrlInput);
     setRelayStatus('idle');
+  }
+
+  async function handleTestZigbee() {
+    setZigbeeStatus('testing');
+    try {
+      const url = zigbeeUrlInput.startsWith('http') ? zigbeeUrlInput : `https://${zigbeeUrlInput}`;
+      await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+      // no-cors means we can't read the response, but if it doesn't throw, the server is reachable
+      setZigbeeStatus('success');
+    } catch {
+      setZigbeeStatus('error');
+    }
+  }
+
+  function handleSaveZigbee() {
+    updateGlobalSettings({ zigbeeUrl: zigbeeUrlInput });
+    setZigbeeStatus('idle');
   }
 
   function handleThemeChange(theme: ThemeMode) {
@@ -704,7 +727,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 setRelayUrlInput(e.target.value);
                 setRelayStatus('idle');
               }}
-              placeholder="kiosk.home.arpa:5111"
+              placeholder="kiosk-relay.bkemper.me"
               className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
                          bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
                          focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -734,6 +757,54 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
           </div>
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Home-relay server for Kasa, WoL, brightness, and config sync
+          </p>
+        </div>
+
+        {/* Zigbee2MQTT URL */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Zigbee2MQTT URL
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={zigbeeUrlInput}
+              onChange={(e) => {
+                setZigbeeUrlInput(e.target.value);
+                setZigbeeStatus('idle');
+              }}
+              placeholder="https://zigbee2mqtt.bkemper.me"
+              className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
+                         bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
+                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Button
+              onClick={handleTestZigbee}
+              variant="default"
+              disabled={zigbeeStatus === 'testing'}
+            >
+              {zigbeeStatus === 'testing' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : zigbeeStatus === 'success' ? (
+                <CheckCircle size={18} className="text-green-500" />
+              ) : zigbeeStatus === 'error' ? (
+                <XCircle size={18} className="text-red-500" />
+              ) : (
+                'Test'
+              )}
+            </Button>
+            <Button
+              onClick={handleSaveZigbee}
+              variant="primary"
+              disabled={
+                zigbeeUrlInput === (globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me')
+              }
+            >
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Zigbee2MQTT web interface for climate sensors
           </p>
         </div>
       </div>

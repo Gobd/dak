@@ -1,82 +1,12 @@
-/**
- * Kasa device information returned from discovery/status endpoints
- */
-export interface KasaDevice {
-  ip: string;
-  name: string;
-  on: boolean;
-  model: string;
-  type: string;
-  // Extended info
-  on_since: string | null;
-  brightness: number | null;
-  color_temp: number | null;
-  has_emeter: boolean;
-  power_watts: number | null;
-  energy_today_kwh: number | null;
-  features: string[];
-  // Multi-plug/child device support
-  child_id: string | null;
-  // Active countdown timer
-  countdown_remaining: number | null; // seconds remaining
-  countdown_action: 'on' | 'off' | null; // what happens when countdown ends
-  // Next scheduled action
-  next_action: 'on' | 'off' | null; // next scheduled action
-  next_action_at: string | null; // "sunrise", "sunset", or "HH:MM"
-}
-
-/**
- * A schedule rule for recurring on/off actions
- */
-export interface ScheduleRule {
-  id: string;
-  enabled: boolean;
-  action: 'on' | 'off';
-  time: string; // HH:MM format or "sunrise"/"sunset"
-  days: string[]; // ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-  offset_mins?: number; // Offset from sunrise/sunset in minutes
-}
-
-/**
- * Response from schedule endpoints
- */
-export interface ScheduleResponse {
-  ip: string;
-  name: string;
-  rules: ScheduleRule[];
-}
-
-/**
- * Response from toggle endpoint
- */
-export interface ToggleResponse {
-  ip: string;
-  on: boolean;
-  name: string;
-  on_since: string | null;
-  brightness: number | null;
-}
-
-/**
- * Response from brightness endpoint
- */
-export interface BrightnessResponse {
-  ip: string;
-  name: string;
-  brightness: number;
-  on: boolean;
-}
-
-/**
- * Response from countdown endpoint
- */
-export interface CountdownResponse {
-  ip: string;
-  name: string;
-  minutes: number;
-  action: string;
-  enabled: boolean;
-}
+// Re-export types from generated client
+export type {
+  KasaDevice,
+  ScheduleRule,
+  ScheduleResponse,
+  ToggleResponse,
+  BrightnessResponse,
+  CountdownResponse,
+} from '@dak/api-client';
 
 /**
  * Day abbreviations used in schedules
@@ -97,18 +27,21 @@ export const DAY_LABELS: Record<Day, string> = {
   sat: 'S',
 };
 
+// Import types for use in utility functions
+import type { KasaDevice, ScheduleRule } from '@dak/api-client';
+
 /**
  * Check if a device supports brightness control
  */
 export function hasBrightness(device: KasaDevice): boolean {
-  return device.brightness !== null || device.features.includes('brightness');
+  return device.brightness != null || (device.features?.includes('brightness') ?? false);
 }
 
 /**
  * Check if a device has energy monitoring
  */
 export function hasEnergyMonitor(device: KasaDevice): boolean {
-  return device.has_emeter;
+  return device.has_emeter ?? false;
 }
 
 /**

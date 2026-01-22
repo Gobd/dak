@@ -5,29 +5,20 @@ import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, NumberPickerCompact } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
+import {
+  client,
+  healthHealthGet,
+  statusBrightnessStatusGet,
+  setBrightnessBrightnessSetPost,
+  type BrightnessStatus,
+} from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
-import type { BrightnessConfig } from '../../types';
-
-interface SunTimes {
-  date: string | null;
-  sunrise: number | null;
-  sunset: number | null;
-  error?: string;
-}
-
-interface BrightnessStatus {
-  config: BrightnessConfig;
-  current: number | null;
-  sun: SunTimes;
-}
 
 async function checkRelayHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${getRelayUrl()}/health`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(3000),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    await healthHealthGet({ throwOnError: true });
+    return true;
   } catch {
     return false;
   }
@@ -35,11 +26,9 @@ async function checkRelayHealth(): Promise<boolean> {
 
 async function fetchStatus(): Promise<BrightnessStatus | null> {
   try {
-    const res = await fetch(`${getRelayUrl()}/brightness/status`, {
-      method: 'GET',
-    });
-    if (!res.ok) return null;
-    return res.json();
+    client.setConfig({ baseUrl: getRelayUrl() });
+    const result = await statusBrightnessStatusGet();
+    return result.data ?? null;
   } catch {
     return null;
   }
@@ -47,12 +36,9 @@ async function fetchStatus(): Promise<BrightnessStatus | null> {
 
 async function setBrightness(level: number): Promise<boolean> {
   try {
-    const res = await fetch(`${getRelayUrl()}/brightness/set`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level }),
-    });
-    return res.ok;
+    client.setConfig({ baseUrl: getRelayUrl() });
+    await setBrightnessBrightnessSetPost({ body: { level }, throwOnError: true });
+    return true;
   } catch {
     return false;
   }

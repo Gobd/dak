@@ -15,6 +15,7 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 # Import routers
 from app.routers import (
+    adguard,
     brightness,
     config,
     health,
@@ -95,3 +96,4 @@ app.include_router(voice.router)
 app.include_router(transcribe.router)
 app.include_router(models.router)
 app.include_router(voices.router)
+app.include_router(adguard.router)

@@ -6,6 +6,7 @@ interface ButtonProps {
   variant?: 'default' | 'primary' | 'danger';
   disabled?: boolean;
   type?: 'button' | 'submit';
+  className?: string;
 }
 
 export function Button({
@@ -14,6 +15,7 @@ export function Button({
   variant = 'default',
   disabled,
   type = 'button',
+  className = '',
 }: ButtonProps) {
   const baseClasses =
     'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
@@ -30,7 +32,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
     >
       {children}
     </button>

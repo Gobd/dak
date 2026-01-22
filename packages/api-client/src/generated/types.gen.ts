@@ -5,6 +5,54 @@ export type ClientOptions = {
 };
 
 /**
+ * AdGuardProtectionRequest
+ *
+ * Set protection state.
+ */
+export type AdGuardProtectionRequest = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Password
+     */
+    password: string;
+    /**
+     * Enabled
+     */
+    enabled: boolean;
+    /**
+     * Duration
+     */
+    duration?: number | null;
+};
+
+/**
+ * AdGuardRequest
+ *
+ * Proxy request to AdGuard Home.
+ */
+export type AdGuardRequest = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * Username
+     */
+    username: string;
+    /**
+     * Password
+     */
+    password: string;
+};
+
+/**
  * AddScheduleRequest
  *
  * Add schedule rule request.
@@ -2431,3 +2479,49 @@ export type SpeakEndpointVoiceTtsSpeakPostResponses = {
 };
 
 export type SpeakEndpointVoiceTtsSpeakPostResponse = SpeakEndpointVoiceTtsSpeakPostResponses[keyof SpeakEndpointVoiceTtsSpeakPostResponses];
+
+export type GetStatusAdguardStatusPostData = {
+    body: AdGuardRequest;
+    path?: never;
+    query?: never;
+    url: '/adguard/status';
+};
+
+export type GetStatusAdguardStatusPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetStatusAdguardStatusPostError = GetStatusAdguardStatusPostErrors[keyof GetStatusAdguardStatusPostErrors];
+
+export type GetStatusAdguardStatusPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetProtectionAdguardProtectionPostData = {
+    body: AdGuardProtectionRequest;
+    path?: never;
+    query?: never;
+    url: '/adguard/protection';
+};
+
+export type SetProtectionAdguardProtectionPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetProtectionAdguardProtectionPostError = SetProtectionAdguardProtectionPostErrors[keyof SetProtectionAdguardProtectionPostErrors];
+
+export type SetProtectionAdguardProtectionPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};

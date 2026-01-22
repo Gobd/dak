@@ -1,0 +1,3 @@
+# Mark generated API client as linguist-generated
+# This collapses diffs on GitHub and excludes from language stats
+packages/api-client/src/generated/** linguist-generated=true

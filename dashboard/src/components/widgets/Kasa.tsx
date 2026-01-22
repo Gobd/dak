@@ -215,13 +215,6 @@ export default function Kasa({ dark }: WidgetComponentProps) {
         {isLoading && (
           <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
         )}
-        {!hasError && !isLoading && devices.length > 0 && (
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
-          >
-            {devices.length}
-          </span>
-        )}
       </button>
 
       {/* Main Modal - Device List */}
@@ -282,10 +275,10 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                         </span>
                       ) : null}
                       {/* Power usage */}
-                      {device.has_emeter && device.power_watts !== null && device.on && (
+                      {device.has_emeter && device.power_watts != null && device.on && (
                         <span className="text-xs text-yellow-400 flex items-center gap-1">
                           <Zap size={10} />
-                          {device.power_watts.toFixed(1)}W
+                          {device.power_watts!.toFixed(1)}W
                         </span>
                       )}
                       <button
@@ -618,7 +611,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             <div className="text-xs text-neutral-500 space-y-1">
               <div>Model: {selectedDevice.model}</div>
               <div>IP: {selectedDevice.ip}</div>
-              {selectedDevice.features?.length > 0 && (
+              {selectedDevice.features && selectedDevice.features.length > 0 && (
                 <div>Features: {selectedDevice.features.join(', ')}</div>
               )}
             </div>

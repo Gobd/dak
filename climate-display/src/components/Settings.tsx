@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Save, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '../stores/settings-store';
 
-const DEFAULT_RELAY_URL = 'http://kiosk.home.arpa:5111';
+const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 export default function Settings() {
   const { relayUrl, setRelayUrl } = useSettingsStore();
@@ -37,7 +37,7 @@ export default function Settings() {
           type="url"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="http://kiosk.home.arpa:5111"
+          placeholder="https://kiosk-relay.bkemper.me"
           className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <p className="mt-2 text-sm text-slate-500">

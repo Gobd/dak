@@ -13,7 +13,8 @@ export type WidgetType =
   | 'climate'
   | 'timer'
   | 'ptt'
-  | 'mqtt';
+  | 'mqtt'
+  | 'adguard';
 
 // Panel configuration
 export interface PanelConfig {
@@ -39,10 +40,11 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
-  climate: { width: 20, height: 8, refresh: '1m' },
+  climate: { width: 12, height: 12, refresh: '1m' },
   timer: { width: 6, height: 6 },
   ptt: { width: 6, height: 6 },
   mqtt: { width: 10, height: 10, refresh: '10s' },
+  adguard: { width: 6, height: 6, refresh: '10s' },
 };
 
 // Screen configuration
@@ -151,6 +153,7 @@ export interface GlobalSettings {
   defaultLocation?: LocationConfig;
   hideCursor: boolean;
   relayUrl?: string;
+  zigbeeUrl?: string; // Zigbee2MQTT UI URL
   // Voice control
   voiceEnabled?: boolean;
   wakeWord?: WakeWord;

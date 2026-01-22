@@ -11,7 +11,7 @@
     },
     "climate-display": {},
     "dashboard": {
-      "ignore": ["src/api/generated/**", "public/**"]
+      "ignore": ["public/**"]
     },
     "family-chores": {},
     "functions": {
@@ -21,6 +21,9 @@
     "health-tracker": {},
     "kasa-controller": {},
     "notes-app": {},
+    "packages/api-client": {
+      "ignore": ["src/generated/**"]
+    },
     "packages/kasa-client": {},
     "packages/ui": {},
     "packages/vite-shared-react": {

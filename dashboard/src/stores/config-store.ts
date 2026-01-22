@@ -11,13 +11,14 @@ import type {
   GlobalSettings,
 } from '../types';
 import { DEFAULT_CONFIG, generateId } from '../types';
+import { healthHealthGet, getConfigConfigGet, setConfigConfigPost } from '@dak/api-client';
 
 // API endpoint for home-relay config
 // Priority: URL param > globalSettings > default
-const DEFAULT_RELAY_URL = 'http://kiosk.home.arpa:5111';
+const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 function normalizeRelayUrl(url: string): string {
-  return url.startsWith('http') ? url : `http://${url}`;
+  return url.startsWith('http') ? url : `https://${url}`;
 }
 
 function getRelayUrlFromParams(): string | null {
@@ -48,11 +49,11 @@ export function setRelayUrl(url: string) {
 export async function testRelayConnection(url?: string): Promise<boolean> {
   const testUrl = url ? normalizeRelayUrl(url) : relayUrl;
   try {
-    const res = await fetch(`${testUrl}/health`, {
-      method: 'GET',
+    const res = await healthHealthGet({
+      baseUrl: testUrl,
       signal: AbortSignal.timeout(3000),
     });
-    return res.ok;
+    return res.response?.ok ?? false;
   } catch {
     return false;
   }
@@ -356,10 +357,9 @@ export const useConfigStore = create<ConfigState>()(
           setTimeout(() => pendingSaveIds.delete(saveId), 10000);
 
           try {
-            await fetch(`${relayUrl}/config`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...config, _saveId: saveId }),
+            await setConfigConfigPost({
+              baseUrl: relayUrl,
+              body: { ...config, _saveId: saveId },
             });
           } catch {
             // Relay not running, localStorage-only is fine
@@ -370,13 +370,10 @@ export const useConfigStore = create<ConfigState>()(
         // Load from relay server
         _loadFromRelay: async () => {
           try {
-            const res = await fetch(`${relayUrl}/config`, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-            });
-            if (!res.ok) return false;
-            const config = (await res.json()) as DashboardConfig;
-            if (config.screens && Array.isArray(config.screens)) {
+            const res = await getConfigConfigGet({ baseUrl: relayUrl });
+            if (!res.response?.ok) return false;
+            const config = res.data as unknown as DashboardConfig;
+            if (config?.screens && Array.isArray(config.screens)) {
               set(applyPersistedConfig(config));
               return true;
             }
