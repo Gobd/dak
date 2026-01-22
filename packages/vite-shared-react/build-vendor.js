@@ -1,153 +1,159 @@
+import { build } from 'vite';
 import { createHash } from 'crypto';
-import { writeFileSync, mkdirSync, rmSync, copyFileSync, readdirSync } from 'fs';
-import { dirname, join } from 'path';
+import { writeFileSync, readFileSync, copyFileSync, readdirSync, rmSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, 'dist');
 
-// Get exact versions from pnpm
-const depsJson = execSync('pnpm list react zustand --json', { cwd: __dirname, encoding: 'utf-8' });
-const deps = JSON.parse(depsJson)[0].dependencies;
-const version = deps.react.version;
-const zustandVersion = deps.zustand.version;
-console.log(`Using React version: ${version}`);
-console.log(`Using Zustand version: ${zustandVersion}`);
-
 // Clean and recreate output dir
-try {
-  rmSync(outDir, { recursive: true });
-} catch {}
+rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 
-/**
- * Fetch a bundle and its sourcemap from esm.sh
- * Returns { code, map } with updated sourceMappingURL
- */
-async function fetchBundle(url, transforms = []) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
-  let code = await res.text();
-
-  // Apply transforms (e.g., rewriting import paths)
-  for (const transform of transforms) {
-    code = transform(code);
-  }
-
-  // Try to fetch sourcemap
-  let map = null;
-  const mapMatch = code.match(/\/\/# sourceMappingURL=(\S+)/);
-  if (mapMatch) {
-    const mapUrl = new URL(mapMatch[1], url).href;
-    try {
-      const mapRes = await fetch(mapUrl);
-      if (mapRes.ok) {
-        map = await mapRes.text();
-      }
-    } catch {}
-  }
-
-  return { code, map };
+// Get exports from a module dynamically
+async function getModuleExports(specifier) {
+  const mod = await import(specifier);
+  // Filter out default, internals, and invalid JS identifiers
+  return Object.keys(mod).filter(k =>
+    k !== 'default' &&
+    !k.startsWith('__') &&
+    /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
+  );
 }
 
-function writeBundle(name, code, map, hash) {
-  const fileName = `${name}-${hash}.js`;
-  const mapFileName = `${name}-${hash}.js.map`;
+// Packages that need CJS-style handling (import default, destructure exports)
+// These don't have proper ESM exports field in package.json
+const cjsPackages = new Set(['react', 'react-dom', 'react-dom/client']);
 
-  // Update sourceMappingURL to point to local file
-  if (map) {
-    code = code.replace(/\/\/# sourceMappingURL=\S+/, `//# sourceMappingURL=${mapFileName}`);
-    writeFileSync(join(outDir, mapFileName), map);
+const entries = [
+  { name: 'react', entry: 'react', external: [] },
+  { name: 'react-dom', entry: 'react-dom', external: ['react'] },
+  { name: 'react-dom-client', entry: 'react-dom/client', external: ['react', 'react-dom'] },
+  { name: 'zustand', entry: 'zustand', external: ['react'] },
+  { name: 'zustand-middleware', entry: 'zustand/middleware', external: ['react', 'zustand'] },
+];
+
+const manifest = {};
+
+for (const { name, entry, external } of entries) {
+  console.log(`Building ${name}...`);
+
+  // Create a virtual entry that re-exports everything from the package
+  const virtualEntry = `\0virtual:${name}`;
+  let entryCode;
+
+  if (cjsPackages.has(entry)) {
+    // CJS package - dynamically get exports and re-export them
+    const exports = await getModuleExports(entry);
+    entryCode = `import mod from '${entry}';\n` +
+      `export const { ${exports.join(', ')} } = mod;\n` +
+      `export default mod;`;
+  } else {
+    // ESM package - use export *
+    entryCode = `export * from '${entry}';`;
   }
 
-  writeFileSync(join(outDir, fileName), code);
-  return fileName;
+  await build({
+    configFile: false,
+    root: __dirname,
+    mode: 'production',
+    define: {
+      'process.env.NODE_ENV': '"production"',
+    },
+    plugins: [
+      {
+        name: 'virtual-entry',
+        resolveId(id) {
+          if (id === virtualEntry) return id;
+        },
+        load(id) {
+          if (id === virtualEntry) return entryCode;
+        },
+      },
+      {
+        name: 'esm-externals',
+        // Inject ESM imports for externals and rewrite __require calls to use them
+        banner() {
+          if (external.length === 0) return '';
+          return external.map(dep => {
+            const varName = `__ext_${dep.replace(/[^a-zA-Z]/g, '_')}`;
+            // CJS packages need default import, ESM packages need namespace import
+            return cjsPackages.has(dep)
+              ? `import ${varName} from '${dep}';`
+              : `import * as ${varName} from '${dep}';`;
+          }).join('\n');
+        },
+        renderChunk(code) {
+          let result = code;
+          for (const dep of external) {
+            const varName = `__ext_${dep.replace(/[^a-zA-Z]/g, '_')}`;
+            const escaped = dep.replace(/[/.]/g, '\\$&');
+            result = result.replace(new RegExp(`__require\\(["'\`]${escaped}["'\`]\\)`, 'g'), varName);
+          }
+          return result;
+        },
+      },
+    ],
+    build: {
+      outDir: 'dist',
+      emptyOutDir: false,
+      sourcemap: true,
+      minify: 'oxc',
+      rollupOptions: {
+        input: virtualEntry,
+        external,
+        output: {
+          format: 'es',
+          entryFileNames: `${name}.js`,
+          minify: {
+            mangle: true,
+            compress: true,
+          },
+        },
+        preserveEntrySignatures: 'exports-only',
+      },
+    },
+    logLevel: 'warn',
+  });
+
+  // Read the built file and add content hash
+  const filePath = join(outDir, `${name}.js`);
+  const content = readFileSync(filePath);
+  const hash = createHash('md5').update(content).digest('hex').slice(0, 8);
+  const hashedName = `${name}-${hash}.js`;
+
+  // Rename files with hash
+  const mapPath = join(outDir, `${name}.js.map`);
+  const hashedFilePath = join(outDir, hashedName);
+  const hashedMapPath = join(outDir, `${hashedName}.map`);
+
+  // Update sourceMappingURL and write
+  const updatedContent = content.toString().replace(
+    `//# sourceMappingURL=${name}.js.map`,
+    `//# sourceMappingURL=${hashedName}.map`
+  );
+  writeFileSync(hashedFilePath, updatedContent);
+  copyFileSync(mapPath, hashedMapPath);
+
+  // Remove unhashed files
+  rmSync(filePath);
+  rmSync(mapPath);
+
+  // Add to manifest with the original import specifier
+  const specifier = entry;
+  manifest[specifier] = `/_shared/${hashedName}`;
+
+  console.log(`  ${hashedName} (${(content.length / 1024).toFixed(1)} KB)`);
 }
 
-// Common transforms
-const rewriteReact = (code) => code.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
-const rewriteReactDom = (code) => code.replace(/from\s*"\/react-dom@[^"]+"/g, 'from "react-dom"');
-const rewriteZustand = (code) => code.replace(/from\s*"\/zustand@[^"]+"/g, 'from "zustand"');
-
-// Fetch React
-console.log('Fetching React from esm.sh...');
-const react = await fetchBundle(`https://esm.sh/react@${version}/es2024/react.mjs`);
-const reactHash = createHash('md5').update(react.code).digest('hex').slice(0, 8);
-const reactFileName = writeBundle('react', react.code, react.map, reactHash);
-
-// Fetch ReactDOM
-console.log('Fetching ReactDOM from esm.sh...');
-const dom = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`, [
-  rewriteReact,
-]);
-const domHash = createHash('md5').update(dom.code).digest('hex').slice(0, 8);
-const domFileName = writeBundle('react-dom', dom.code, dom.map, domHash);
-
-// Fetch ReactDOM/client
-console.log('Fetching ReactDOM/client from esm.sh...');
-const client = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/client.bundle.mjs`, [
-  rewriteReact,
-  rewriteReactDom,
-]);
-const clientHash = createHash('md5').update(client.code).digest('hex').slice(0, 8);
-const clientFileName = writeBundle('react-dom-client', client.code, client.map, clientHash);
-
-// Fetch Zustand
-console.log('Fetching Zustand from esm.sh...');
-const zustand = await fetchBundle(
-  `https://esm.sh/zustand@${zustandVersion}/es2024/zustand.bundle.mjs`,
-  [rewriteReact]
-);
-const zustandHash = createHash('md5').update(zustand.code).digest('hex').slice(0, 8);
-const zustandFileName = writeBundle('zustand', zustand.code, zustand.map, zustandHash);
-
-// Fetch Zustand/middleware
-console.log('Fetching Zustand/middleware from esm.sh...');
-const zustandMw = await fetchBundle(
-  `https://esm.sh/zustand@${zustandVersion}/es2024/middleware.bundle.mjs`,
-  [rewriteReact, rewriteZustand]
-);
-const zustandMwHash = createHash('md5').update(zustandMw.code).digest('hex').slice(0, 8);
-const zustandMwFileName = writeBundle(
-  'zustand-middleware',
-  zustandMw.code,
-  zustandMw.map,
-  zustandMwHash
-);
-
-// Copy fonts to dist
+// Copy fonts
 const fontsDir = join(__dirname, 'fonts');
-const fontFiles = readdirSync(fontsDir);
-for (const file of fontFiles) {
+for (const file of readdirSync(fontsDir)) {
   copyFileSync(join(fontsDir, file), join(outDir, file));
 }
+manifest['fonts'] = '/_shared/fonts.css';
 
 // Write manifest
-const manifest = {
-  react: `/_shared/${reactFileName}`,
-  'react-dom': `/_shared/${domFileName}`,
-  'react-dom/client': `/_shared/${clientFileName}`,
-  zustand: `/_shared/${zustandFileName}`,
-  'zustand/middleware': `/_shared/${zustandMwFileName}`,
-  fonts: '/_shared/fonts.css',
-};
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-
-console.log('Built shared vendor bundles:');
-console.log(
-  `  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`
-);
-console.log(
-  `  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`
-);
-console.log(
-  `  react-dom/client: ${clientFileName} (${(client.code.length / 1024).toFixed(1)} KB)${client.map ? ' +map' : ''}`
-);
-console.log(
-  `  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`
-);
-console.log(
-  `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
-);
-console.log(`  fonts: ${fontFiles.join(', ')}`);
+console.log('\nManifest:', manifest);
