@@ -287,134 +287,147 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       }));
       setCalendars(fetchedCalendars);
 
+      // Calculate the time range we need to display (once, shared by all calendars)
+      const viewTimeMin = gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000;
+      const viewTimeMax = gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000;
+
       // Get sync tokens
       const syncTokens = getSyncTokens();
-      let updatedEvents = [...eventsRef.current];
+      const currentEvents = [...eventsRef.current];
 
-      for (const cal of fetchedCalendars) {
-        if (hiddenCalendarIds.includes(cal.id)) continue;
+      // Fetch all calendars in parallel for faster loading
+      const calendarResults = await Promise.all(
+        fetchedCalendars
+          .filter((cal) => !hiddenCalendarIds.includes(cal.id))
+          .map(async (cal) => {
+            let syncToken: string | undefined = syncTokens[cal.id];
 
-        let syncToken: string | undefined = syncTokens[cal.id];
+            // If we have a sync token but no events for this calendar, clear it to force full fetch
+            const hasEventsForCalendar = currentEvents.some((e) => e.calendarId === cal.id);
+            if (syncToken && !hasEventsForCalendar) {
+              clearSyncToken(cal.id);
+              clearFetchedRange(cal.id);
+              syncToken = undefined;
+            }
 
-        // If we have a sync token but no events for this calendar, clear it to force full fetch
-        // This handles the case where the page was refreshed and state is empty
-        const hasEventsForCalendar = updatedEvents.some((e) => e.calendarId === cal.id);
-        if (syncToken && !hasEventsForCalendar) {
-          clearSyncToken(cal.id);
-          clearFetchedRange(cal.id);
-          syncToken = undefined;
-        }
+            // Check if we've already fetched events for this range
+            const fetchedRange = getFetchedRange(cal.id);
+            const needsRangeFetch =
+              !fetchedRange || viewTimeMin < fetchedRange.min || viewTimeMax > fetchedRange.max;
 
-        // Calculate the time range we need to display
-        const viewTimeMin = gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000;
-        const viewTimeMax = gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000;
+            // If we have a sync token but navigated outside the fetched range, we need a full fetch
+            if (syncToken && needsRangeFetch) {
+              console.log(`Navigated outside fetched range for ${cal.summary}, fetching new range`);
+            }
 
-        // Check if we've already fetched events for this range
-        const fetchedRange = getFetchedRange(cal.id);
-        const needsRangeFetch = !fetchedRange || viewTimeMin < fetchedRange.min || viewTimeMax > fetchedRange.max;
+            try {
+              // Build query params - use sync token ONLY if we don't need a new range fetch
+              const useSyncToken = syncToken && !needsRangeFetch;
+              const isFullFetch = !useSyncToken;
+              const params: Record<string, string> = useSyncToken
+                ? { syncToken: syncToken! }
+                : {
+                    timeMin: new Date(viewTimeMin).toISOString(),
+                    timeMax: new Date(viewTimeMax).toISOString(),
+                    singleEvents: 'true',
+                    maxResults: '250',
+                  };
 
-        // If we have a sync token but navigated outside the fetched range, we need a full fetch for the new range
-        if (syncToken && needsRangeFetch) {
-          console.log(`Navigated outside fetched range for ${cal.summary}, fetching new range`);
-          // Don't clear sync token - we'll do a time-bounded fetch for the new range
-          // and keep using sync token for incremental updates
-        }
+              const eventsResponse = await fetchCalendarApi<{
+                items?: Array<{
+                  id: string;
+                  status?: string;
+                  summary?: string;
+                  start?: { dateTime?: string; date?: string };
+                  end?: { dateTime?: string; date?: string };
+                  location?: string;
+                  description?: string;
+                  recurringEventId?: string;
+                }>;
+                nextSyncToken?: string;
+              }>(
+                `/calendars/${encodeURIComponent(cal.id)}/events?` + new URLSearchParams(params),
+                accessToken
+              );
 
-        try {
-          // Build query params
-          // Use sync token ONLY if we don't need a new range fetch
-          const useSyncToken = syncToken && !needsRangeFetch;
-          const isFullFetch = !useSyncToken;
-          const params: Record<string, string> = useSyncToken
-            ? { syncToken }
-            : {
-                timeMin: new Date(viewTimeMin).toISOString(),
-                timeMax: new Date(viewTimeMax).toISOString(),
-                singleEvents: 'true',
-                maxResults: '250',
-              };
-
-          // For full fetch, clear existing events for this calendar ONLY in the fetched time range
-          // This preserves events from other date ranges the user has navigated to
-          if (isFullFetch) {
-            const fetchTimeMin = new Date(viewTimeMin);
-            const fetchTimeMax = new Date(viewTimeMax);
-            updatedEvents = updatedEvents.filter((e) => {
-              if (e.calendarId !== cal.id) return true;
-              // Keep events outside the fetched time range
-              const eventStart = new Date(e.start.dateTime || e.start.date || '');
-              return eventStart < fetchTimeMin || eventStart > fetchTimeMax;
-            });
-          }
-
-          const eventsResponse = await fetchCalendarApi<{
-            items?: Array<{
-              id: string;
-              status?: string;
-              summary?: string;
-              start?: { dateTime?: string; date?: string };
-              end?: { dateTime?: string; date?: string };
-              location?: string;
-              description?: string;
-              recurringEventId?: string;
-            }>;
-            nextSyncToken?: string;
-          }>(
-            `/calendars/${encodeURIComponent(cal.id)}/events?` + new URLSearchParams(params),
-            accessToken
-          );
-
-          // Save the new sync token and update fetched range
-          if (eventsResponse.nextSyncToken) {
-            saveSyncToken(cal.id, eventsResponse.nextSyncToken);
-          }
-          // Save the fetched range (expands existing range if any)
-          if (isFullFetch) {
-            saveFetchedRange(cal.id, viewTimeMin, viewTimeMax);
-          }
-
-          // Process events - handle additions, updates, and deletions
-          for (const event of eventsResponse.items || []) {
-            // Remove existing event with same ID (will re-add if not cancelled)
-            updatedEvents = updatedEvents.filter(
-              (e) => !(e.id === event.id && e.calendarId === cal.id)
-            );
-
-            // Add event if not cancelled/deleted
-            if (event.status !== 'cancelled' && event.start && event.end) {
-              // Debug: log if event has dateTime vs date
-              if (event.start.date && !event.start.dateTime) {
-                console.debug(
-                  `Event "${event.summary}" is all-day (has date: ${event.start.date})`
-                );
-              } else if (event.start.dateTime) {
-                console.debug(`Event "${event.summary}" has time: ${event.start.dateTime}`);
+              // Save the new sync token and update fetched range
+              if (eventsResponse.nextSyncToken) {
+                saveSyncToken(cal.id, eventsResponse.nextSyncToken);
+              }
+              if (isFullFetch) {
+                saveFetchedRange(cal.id, viewTimeMin, viewTimeMax);
               }
 
-              updatedEvents.push({
-                id: event.id,
-                calendarId: cal.id,
-                summary: event.summary || '(No title)',
-                start: event.start,
-                end: event.end,
-                location: event.location,
-                description: event.description,
-                calendarColor: cal.backgroundColor,
-                calendarName: cal.summary,
-                recurringEventId: event.recurringEventId,
-              });
+              // Process events into CalendarEvent objects
+              const newEvents: CalendarEvent[] = [];
+              const removedEventIds = new Set<string>();
+
+              for (const event of eventsResponse.items || []) {
+                removedEventIds.add(event.id);
+
+                if (event.status !== 'cancelled' && event.start && event.end) {
+                  newEvents.push({
+                    id: event.id,
+                    calendarId: cal.id,
+                    summary: event.summary || '(No title)',
+                    start: event.start,
+                    end: event.end,
+                    location: event.location,
+                    description: event.description,
+                    calendarColor: cal.backgroundColor,
+                    calendarName: cal.summary,
+                    recurringEventId: event.recurringEventId,
+                  });
+                }
+              }
+
+              return { cal, isFullFetch, newEvents, removedEventIds, error: null };
+            } catch (err) {
+              // If sync token is invalid (410 Gone), clear it and we'll do full sync next time
+              if (err instanceof Error && err.message.includes('410')) {
+                console.log(`Sync token expired for ${cal.summary}, will do full sync`);
+                clearSyncToken(cal.id);
+                clearFetchedRange(cal.id);
+              } else {
+                console.warn(`Failed to fetch events from calendar: ${cal.summary}`, err);
+              }
+              return {
+                cal,
+                isFullFetch: false,
+                newEvents: [],
+                removedEventIds: new Set<string>(),
+                error: err,
+              };
             }
-          }
-        } catch (err) {
-          // If sync token is invalid (410 Gone), clear it and we'll do full sync next time
-          if (err instanceof Error && err.message.includes('410')) {
-            console.log(`Sync token expired for ${cal.summary}, will do full sync`);
-            clearSyncToken(cal.id);
-            clearFetchedRange(cal.id);
-          } else {
-            console.warn(`Failed to fetch events from calendar: ${cal.summary}`, err);
-          }
+          })
+      );
+
+      // Merge results from all calendars
+      let updatedEvents = [...currentEvents];
+      const fetchTimeMin = new Date(viewTimeMin);
+      const fetchTimeMax = new Date(viewTimeMax);
+
+      for (const result of calendarResults) {
+        if (result.error) continue;
+
+        const { cal, isFullFetch, newEvents, removedEventIds } = result;
+
+        // For full fetch, clear existing events for this calendar in the fetched time range
+        if (isFullFetch) {
+          updatedEvents = updatedEvents.filter((e) => {
+            if (e.calendarId !== cal.id) return true;
+            const eventStart = new Date(e.start.dateTime || e.start.date || '');
+            return eventStart < fetchTimeMin || eventStart > fetchTimeMax;
+          });
         }
+
+        // Remove events that were updated/deleted
+        updatedEvents = updatedEvents.filter(
+          (e) => !(e.calendarId === cal.id && removedEventIds.has(e.id))
+        );
+
+        // Add new events
+        updatedEvents.push(...newEvents);
       }
 
       setEvents(updatedEvents);
