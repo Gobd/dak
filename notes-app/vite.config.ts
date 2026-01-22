@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, esmExternalRequirePlugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -19,6 +19,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     sharedReact(),
+    // Convert CJS require() to ESM import for externalized react
+    // Needed for use-sync-external-store (used by @tiptap/react) which only ships CJS
+    esmExternalRequirePlugin({ external: ['react'] }),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
