@@ -11,3 +11,6 @@ secrets.local.js
 # Build analysis
 stats.html
 package-lock.json
+
+# Generated OpenAPI spec (source of truth is Python app)
+packages/api-client/openapi.json

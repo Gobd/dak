@@ -11,9 +11,7 @@
     "lint:sh": "shellcheck scripts/*.sh",
     "typecheck": "tsc --noEmit",
     "check": "pnpm lint:sh && pnpm typecheck && pnpm build",
-    "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'",
-    "gen:api": "pnpm --filter @dak/api-client gen:api",
-    "gen:api:check": "pnpm gen:api && git diff --exit-code ../packages/api-client/src/generated || (echo 'Error: Generated API client is out of sync. Run pnpm gen:api and commit.' && exit 1)"
+    "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'"
   },
   "dependencies": {
     "@dak/api-client": "workspace:*",

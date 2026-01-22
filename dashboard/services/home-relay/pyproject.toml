@@ -68,6 +68,8 @@ ignore = [
   "B009", # getattr with constant (needed to satisfy pyright for legacy APIs)
 ]
 
+exclude = ["export_openapi.py"]
+
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "standard"

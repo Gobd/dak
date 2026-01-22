@@ -9,7 +9,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "check": "pnpm typecheck",
-    "gen:api": "cd ../../dashboard/services/home-relay && uv run python -c \"from app.main import app; import json; print(json.dumps(app.openapi()))\" > /tmp/openapi.json && cd ../../../packages/api-client && npx @hey-api/openapi-ts -i /tmp/openapi.json -o src/generated -c @hey-api/client-fetch"
+    "gen:api": "(cd ../../dashboard/services/home-relay && uv run python export_openapi.py) > openapi.json && npx @hey-api/openapi-ts"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.90.4",
