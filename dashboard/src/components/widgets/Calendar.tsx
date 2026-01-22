@@ -1,5 +1,14 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Settings, RefreshCw, LogOut } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Plus,
+  Settings,
+  RefreshCw,
+  LogOut,
+} from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval, useSyncedClock } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
@@ -265,10 +274,19 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 maxResults: '250',
               };
 
-          // For full fetch, clear existing events for this calendar first
-          // (deleted events won't be in the response, so we need to start fresh)
+          // For full fetch, clear existing events for this calendar ONLY in the fetched time range
+          // This preserves events from other date ranges the user has navigated to
           if (isFullFetch) {
-            updatedEvents = updatedEvents.filter((e) => e.calendarId !== cal.id);
+            const fetchTimeMin = new Date(gridStartDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const fetchTimeMax = new Date(
+              gridStartDate.getTime() + (weeksToShow * 7 + 7) * 24 * 60 * 60 * 1000
+            );
+            updatedEvents = updatedEvents.filter((e) => {
+              if (e.calendarId !== cal.id) return true;
+              // Keep events outside the fetched time range
+              const eventStart = new Date(e.start.dateTime || e.start.date || '');
+              return eventStart < fetchTimeMin || eventStart > fetchTimeMax;
+            });
           }
 
           const eventsResponse = await fetchCalendarApi<{
@@ -344,7 +362,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     }
   }, [isSignedIn, accessToken, gridStartDate, weeksToShow, hiddenCalendarIds]);
 
-  // Load events when signed in (only on auth change, not on every loadEvents change)
+  // Load events when signed in or when grid date changes
   const loadEventsRef = useRef(loadEvents);
   useEffect(() => {
     loadEventsRef.current = loadEvents;
@@ -354,7 +372,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     if (isSignedIn && accessToken) {
       loadEventsRef.current();
     }
-  }, [isSignedIn, accessToken]);
+  }, [isSignedIn, accessToken, gridStartDate]);
 
   // Auto-refresh events
   useRefreshInterval(loadEvents, '5m', { immediate: false });
@@ -628,6 +646,18 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
     setGridStartDate(newDate);
   }
 
+  function handlePrevYear() {
+    const newDate = new Date(gridStartDate);
+    newDate.setFullYear(newDate.getFullYear() - 1);
+    setGridStartDate(newDate);
+  }
+
+  function handleNextYear() {
+    const newDate = new Date(gridStartDate);
+    newDate.setFullYear(newDate.getFullYear() + 1);
+    setGridStartDate(newDate);
+  }
+
   function handleToday() {
     setGridStartDate(getMostRecentWeekStart(weekStartsOn));
   }
@@ -727,7 +757,18 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         style={headerHeight > 0 ? { minHeight: `${headerHeight}px` } : undefined}
       >
         <div className="flex items-center gap-1">
-          <button onClick={handlePrevWeek} className="p-1 rounded hover:bg-neutral-700/50">
+          <button
+            onClick={handlePrevYear}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Previous year"
+          >
+            <ChevronsLeft size={16} />
+          </button>
+          <button
+            onClick={handlePrevWeek}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Previous week"
+          >
             <ChevronLeft size={16} />
           </button>
           <button
@@ -739,8 +780,19 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           >
             {dateRange}
           </button>
-          <button onClick={handleNextWeek} className="p-1 rounded hover:bg-neutral-700/50">
+          <button
+            onClick={handleNextWeek}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Next week"
+          >
             <ChevronRight size={16} />
+          </button>
+          <button
+            onClick={handleNextYear}
+            className="p-1 rounded hover:bg-neutral-700/50"
+            title="Next year"
+          >
+            <ChevronsRight size={16} />
           </button>
           <button
             onClick={handleToday}
