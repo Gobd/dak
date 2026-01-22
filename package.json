@@ -23,10 +23,5 @@
   "volta": {
     "node": "24.12.0"
   },
-  "packageManager": "pnpm@10.23.0",
-  "pnpm": {
-    "overrides": {
-      "react-refresh": "0.14.2"
-    }
-  }
+  "packageManager": "pnpm@10.23.0"
 }

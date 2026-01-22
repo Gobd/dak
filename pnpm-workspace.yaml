@@ -12,7 +12,6 @@ catalog:
   # Shared tooling
   concurrently: ^9.2.1
   typescript: ~5.9.3
-  globals: ^17.0.0
 
   # Shared runtime deps
   '@supabase/supabase-js': ^2.91.0

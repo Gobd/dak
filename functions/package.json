@@ -2,8 +2,5 @@
   "name": "functions",
   "private": true,
   "type": "module",
-  "scripts": {},
-  "devDependencies": {
-    "globals": "catalog:"
-  }
+  "scripts": {}
 }

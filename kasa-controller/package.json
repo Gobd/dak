@@ -28,7 +28,6 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "concurrently": "catalog:",
-    "globals": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
