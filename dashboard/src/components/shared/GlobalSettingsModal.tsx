@@ -18,6 +18,12 @@ import {
   setRelayUrl,
   getRelayUrl,
 } from '../../stores/config-store';
+import {
+  volumeGetVolumeGet,
+  volumeSetVolumePost,
+  listModelsVoiceModelsGet,
+  listVoicesVoiceTtsVoicesGet,
+} from '@dak/api-client';
 import { Modal, Button } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
@@ -100,11 +106,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     if (open) {
       const relayUrl = getRelayUrl();
       if (relayUrl) {
-        fetch(`${relayUrl}/volume`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (typeof data.volume === 'number') {
-              setVolume(data.volume);
+        volumeGetVolumeGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (res.data && typeof res.data.volume === 'number') {
+              setVolume(res.data.volume);
             }
           })
           .catch(() => {
@@ -119,21 +124,19 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     if (open && voiceEnabled) {
       const relayUrl = getRelayUrl();
       if (relayUrl) {
-        fetch(`${relayUrl}/voice/models`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setVoiceModels(data);
+        listModelsVoiceModelsGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (Array.isArray(res.data)) {
+              setVoiceModels(res.data as VoskModelInfo[]);
             }
           })
           .catch(() => {
             // Ignore errors
           });
-        fetch(`${relayUrl}/voice/tts/voices`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setTtsVoices(data);
+        listVoicesVoiceTtsVoicesGet({ baseUrl: relayUrl })
+          .then((res) => {
+            if (Array.isArray(res.data)) {
+              setTtsVoices(res.data as TtsVoiceInfo[]);
             }
           })
           .catch(() => {
@@ -187,10 +190,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               if (data.status === 'complete') {
                 setDownloadProgress(null);
                 // Refresh models list
-                const res = await fetch(`${relayUrl}/voice/models`);
-                const models = await res.json();
-                if (Array.isArray(models)) {
-                  setVoiceModels(models);
+                const res = await listModelsVoiceModelsGet({ baseUrl: relayUrl });
+                if (Array.isArray(res.data)) {
+                  setVoiceModels(res.data as VoskModelInfo[]);
                 }
               }
               if (data.status === 'error') {
@@ -251,10 +253,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               if (data.status === 'complete') {
                 setTtsDownloadProgress(null);
                 // Refresh voices list
-                const res = await fetch(`${relayUrl}/voice/tts/voices`);
-                const voices = await res.json();
-                if (Array.isArray(voices)) {
-                  setTtsVoices(voices);
+                const res = await listVoicesVoiceTtsVoicesGet({ baseUrl: relayUrl });
+                if (Array.isArray(res.data)) {
+                  setTtsVoices(res.data as TtsVoiceInfo[]);
                 }
               }
               if (data.status === 'error') {
@@ -293,10 +294,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
       if (relayUrl) {
         setVolumeLoading(true);
         try {
-          await fetch(`${relayUrl}/volume`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ volume: clamped }),
+          await volumeSetVolumePost({
+            baseUrl: relayUrl,
+            body: { volume: clamped },
           });
           // Play test sound after setting
           setTimeout(playTestSound, 100);
