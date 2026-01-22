@@ -77,7 +77,9 @@ const reactFileName = writeBundle('react', react.code, react.map, reactHash);
 
 // Fetch ReactDOM
 console.log('Fetching ReactDOM from esm.sh...');
-const dom = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`, [rewriteReact]);
+const dom = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`, [
+  rewriteReact,
+]);
 const domHash = createHash('md5').update(dom.code).digest('hex').slice(0, 8);
 const domFileName = writeBundle('react-dom', dom.code, dom.map, domHash);
 
@@ -92,9 +94,10 @@ const clientFileName = writeBundle('react-dom-client', client.code, client.map, 
 
 // Fetch Zustand
 console.log('Fetching Zustand from esm.sh...');
-const zustand = await fetchBundle(`https://esm.sh/zustand@${zustandVersion}/es2024/zustand.bundle.mjs`, [
-  rewriteReact,
-]);
+const zustand = await fetchBundle(
+  `https://esm.sh/zustand@${zustandVersion}/es2024/zustand.bundle.mjs`,
+  [rewriteReact]
+);
 const zustandHash = createHash('md5').update(zustand.code).digest('hex').slice(0, 8);
 const zustandFileName = writeBundle('zustand', zustand.code, zustand.map, zustandHash);
 
@@ -116,10 +119,16 @@ const manifest = {
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 console.log('Built shared vendor bundles:');
-console.log(`  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`);
-console.log(`  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`);
+console.log(
+  `  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`
+);
+console.log(
+  `  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`
+);
 console.log(
   `  react-dom/client: ${clientFileName} (${(client.code.length / 1024).toFixed(1)} KB)${client.map ? ' +map' : ''}`
 );
-console.log(`  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`);
+console.log(
+  `  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`
+);
 console.log(`  fonts: ${fontFiles.join(', ')}`);
