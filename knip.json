@@ -24,7 +24,7 @@
     "packages/kasa-client": {},
     "packages/ui": {},
     "packages/vite-shared-react": {
-      "ignoreDependencies": ["react", "react-dom", "vite"],
+      "ignoreDependencies": ["react", "react-dom", "zustand", "vite"],
       "ignore": ["fonts/**"]
     }
   },

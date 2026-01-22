@@ -7,10 +7,13 @@ import { execSync } from 'child_process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, 'dist');
 
-// Get exact React version from pnpm
-const reactVersion = execSync('pnpm list react --json', { cwd: __dirname, encoding: 'utf-8' });
-const version = JSON.parse(reactVersion)[0].dependencies.react.version;
+// Get exact versions from pnpm
+const depsJson = execSync('pnpm list react zustand --json', { cwd: __dirname, encoding: 'utf-8' });
+const deps = JSON.parse(depsJson)[0].dependencies;
+const version = deps.react.version;
+const zustandVersion = deps.zustand.version;
 console.log(`Using React version: ${version}`);
+console.log(`Using Zustand version: ${zustandVersion}`);
 
 // Clean and recreate output dir
 try {
@@ -18,40 +21,115 @@ try {
 } catch {}
 mkdirSync(outDir, { recursive: true });
 
-// Fetch React ESM bundle from esm.sh
+/**
+ * Fetch a bundle and its sourcemap from esm.sh
+ * Returns { code, map } with updated sourceMappingURL
+ */
+async function fetchBundle(url, transforms = []) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+  let code = await res.text();
+
+  // Apply transforms (e.g., rewriting import paths)
+  for (const transform of transforms) {
+    code = transform(code);
+  }
+
+  // Try to fetch sourcemap
+  let map = null;
+  const mapMatch = code.match(/\/\/# sourceMappingURL=(\S+)/);
+  if (mapMatch) {
+    const mapUrl = new URL(mapMatch[1], url).href;
+    try {
+      const mapRes = await fetch(mapUrl);
+      if (mapRes.ok) {
+        map = await mapRes.text();
+      }
+    } catch {}
+  }
+
+  return { code, map };
+}
+
+function writeBundle(name, code, map, hash) {
+  const fileName = `${name}-${hash}.js`;
+  const mapFileName = `${name}-${hash}.js.map`;
+
+  // Update sourceMappingURL to point to local file
+  if (map) {
+    code = code.replace(/\/\/# sourceMappingURL=\S+/, `//# sourceMappingURL=${mapFileName}`);
+    writeFileSync(join(outDir, mapFileName), map);
+  }
+
+  writeFileSync(join(outDir, fileName), code);
+  return fileName;
+}
+
+// Common transforms
+const rewriteReact = (code) => code.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
+const rewriteReactDom = (code) => code.replace(/from\s*"\/react-dom@[^"]+"/g, 'from "react-dom"');
+const rewriteZustand = (code) => code.replace(/from\s*"\/zustand@[^"]+"/g, 'from "zustand"');
+
+// Fetch React
 console.log('Fetching React from esm.sh...');
-const reactRes = await fetch(`https://esm.sh/react@${version}/es2024/react.mjs`);
-if (!reactRes.ok) throw new Error(`Failed to fetch react: ${reactRes.status}`);
-const reactCode = await reactRes.text();
+const react = await fetchBundle(`https://esm.sh/react@${version}/es2024/react.mjs`);
+const reactHash = createHash('md5').update(react.code).digest('hex').slice(0, 8);
+const reactFileName = writeBundle('react', react.code, react.map, reactHash);
 
-const reactHash = createHash('md5').update(reactCode).digest('hex').slice(0, 8);
-const reactFileName = `react-${reactHash}.js`;
-writeFileSync(join(outDir, reactFileName), reactCode);
-
-// Fetch ReactDOM ESM bundle from esm.sh (for createPortal, flushSync, etc.)
+// Fetch ReactDOM
 console.log('Fetching ReactDOM from esm.sh...');
-const domRes = await fetch(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`);
-if (!domRes.ok) throw new Error(`Failed to fetch react-dom: ${domRes.status}`);
-let domCode = await domRes.text();
-domCode = domCode.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
+const dom = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/react-dom.mjs`, [
+  rewriteReact,
+]);
+const domHash = createHash('md5').update(dom.code).digest('hex').slice(0, 8);
+const domFileName = writeBundle('react-dom', dom.code, dom.map, domHash);
 
-const domHash = createHash('md5').update(domCode).digest('hex').slice(0, 8);
-const domFileName = `react-dom-${domHash}.js`;
-writeFileSync(join(outDir, domFileName), domCode);
-
-// Fetch ReactDOM/client ESM bundle from esm.sh
+// Fetch ReactDOM/client
 console.log('Fetching ReactDOM/client from esm.sh...');
-const clientRes = await fetch(`https://esm.sh/react-dom@${version}/es2024/client.bundle.mjs`);
-if (!clientRes.ok) throw new Error(`Failed to fetch react-dom/client: ${clientRes.status}`);
-let clientCode = await clientRes.text();
+const client = await fetchBundle(`https://esm.sh/react-dom@${version}/es2024/client.bundle.mjs`, [
+  rewriteReact,
+  rewriteReactDom,
+]);
+const clientHash = createHash('md5').update(client.code).digest('hex').slice(0, 8);
+const clientFileName = writeBundle('react-dom-client', client.code, client.map, clientHash);
 
-// esm.sh bundles hardcode "/react@x.x.x/..." paths - rewrite to bare "react" for our import map
-clientCode = clientCode.replace(/from\s*"\/react@[^"]+"/g, 'from "react"');
-clientCode = clientCode.replace(/from\s*"\/react-dom@[^"]+"/g, 'from "react-dom"');
+// Fetch Zustand
+console.log('Fetching Zustand from esm.sh...');
+const zustand = await fetchBundle(
+  `https://esm.sh/zustand@${zustandVersion}/es2024/zustand.bundle.mjs`,
+  [rewriteReact]
+);
+const zustandHash = createHash('md5').update(zustand.code).digest('hex').slice(0, 8);
+const zustandFileName = writeBundle('zustand', zustand.code, zustand.map, zustandHash);
 
-const clientHash = createHash('md5').update(clientCode).digest('hex').slice(0, 8);
-const clientFileName = `react-dom-client-${clientHash}.js`;
-writeFileSync(join(outDir, clientFileName), clientCode);
+// Fetch Zustand/middleware
+console.log('Fetching Zustand/middleware from esm.sh...');
+const zustandMw = await fetchBundle(
+  `https://esm.sh/zustand@${zustandVersion}/es2024/middleware.bundle.mjs`,
+  [rewriteReact, rewriteZustand]
+);
+const zustandMwHash = createHash('md5').update(zustandMw.code).digest('hex').slice(0, 8);
+const zustandMwFileName = writeBundle(
+  'zustand-middleware',
+  zustandMw.code,
+  zustandMw.map,
+  zustandMwHash
+);
+
+// Fetch use-sync-external-store (used by @tiptap/react, etc.)
+// The ESM version uses React's built-in useSyncExternalStore, avoiding CJS require()
+console.log('Fetching use-sync-external-store from esm.sh...');
+const syncStore = await fetchBundle(
+  `https://esm.sh/use-sync-external-store@1.4.0/es2024/use-sync-external-store.bundle.mjs`,
+  [rewriteReact]
+);
+const syncStoreHash = createHash('md5').update(syncStore.code).digest('hex').slice(0, 8);
+const syncStoreFileName = writeBundle(
+  'use-sync-external-store',
+  syncStore.code,
+  syncStore.map,
+  syncStoreHash
+);
 
 // Copy fonts to dist
 const fontsDir = join(__dirname, 'fonts');
@@ -65,12 +143,31 @@ const manifest = {
   react: `/_shared/${reactFileName}`,
   'react-dom': `/_shared/${domFileName}`,
   'react-dom/client': `/_shared/${clientFileName}`,
+  zustand: `/_shared/${zustandFileName}`,
+  'zustand/middleware': `/_shared/${zustandMwFileName}`,
+  'use-sync-external-store': `/_shared/${syncStoreFileName}`,
+  'use-sync-external-store/shim': `/_shared/${syncStoreFileName}`,
   fonts: '/_shared/fonts.css',
 };
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
-console.log('Built shared React vendor:');
-console.log(`  react: ${reactFileName} (${(reactCode.length / 1024).toFixed(1)} KB)`);
-console.log(`  react-dom: ${domFileName} (${(domCode.length / 1024).toFixed(1)} KB)`);
-console.log(`  react-dom/client: ${clientFileName} (${(clientCode.length / 1024).toFixed(1)} KB)`);
+console.log('Built shared vendor bundles:');
+console.log(
+  `  react: ${reactFileName} (${(react.code.length / 1024).toFixed(1)} KB)${react.map ? ' +map' : ''}`
+);
+console.log(
+  `  react-dom: ${domFileName} (${(dom.code.length / 1024).toFixed(1)} KB)${dom.map ? ' +map' : ''}`
+);
+console.log(
+  `  react-dom/client: ${clientFileName} (${(client.code.length / 1024).toFixed(1)} KB)${client.map ? ' +map' : ''}`
+);
+console.log(
+  `  zustand: ${zustandFileName} (${(zustand.code.length / 1024).toFixed(1)} KB)${zustand.map ? ' +map' : ''}`
+);
+console.log(
+  `  zustand/middleware: ${zustandMwFileName} (${(zustandMw.code.length / 1024).toFixed(1)} KB)${zustandMw.map ? ' +map' : ''}`
+);
+console.log(
+  `  use-sync-external-store: ${syncStoreFileName} (${(syncStore.code.length / 1024).toFixed(1)} KB)${syncStore.map ? ' +map' : ''}`
+);
 console.log(`  fonts: ${fontFiles.join(', ')}`);
