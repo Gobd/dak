@@ -40,6 +40,11 @@
           "y": 2,
           "width": 12,
           "height": 12,
+          "anchor": "top-right",
+          "offsetX": 316,
+          "offsetY": 16,
+          "widthPx": 185,
+          "heightPx": 84,
           "refresh": "1m"
         },
         {
@@ -49,6 +54,11 @@
           "y": 2,
           "width": 5,
           "height": 6,
+          "anchor": "top-right",
+          "offsetX": 260,
+          "offsetY": 7,
+          "widthPx": 48,
+          "heightPx": 48,
           "refresh": "5m"
         },
         {
@@ -57,7 +67,12 @@
           "x": 79,
           "y": 2,
           "width": 5,
-          "height": 6
+          "height": 6,
+          "anchor": "top-right",
+          "offsetX": 204,
+          "offsetY": 7,
+          "widthPx": 48,
+          "heightPx": 48
         },
         {
           "id": "panel-wol",
@@ -65,7 +80,12 @@
           "x": 84,
           "y": 2,
           "width": 5,
-          "height": 6
+          "height": 6,
+          "anchor": "top-right",
+          "offsetX": 148,
+          "offsetY": 7,
+          "widthPx": 48,
+          "heightPx": 48
         },
         {
           "id": "panel-adguard",
@@ -74,6 +94,11 @@
           "y": 8,
           "width": 5,
           "height": 6,
+          "anchor": "top-right",
+          "offsetX": 260,
+          "offsetY": 59,
+          "widthPx": 48,
+          "heightPx": 48,
           "refresh": "10s"
         },
         {
@@ -82,7 +107,12 @@
           "x": 79,
           "y": 8,
           "width": 5,
-          "height": 6
+          "height": 6,
+          "anchor": "top-right",
+          "offsetX": 204,
+          "offsetY": 59,
+          "widthPx": 48,
+          "heightPx": 48
         },
         {
           "id": "panel-timer",
@@ -90,7 +120,12 @@
           "x": 84,
           "y": 8,
           "width": 5,
-          "height": 6
+          "height": 6,
+          "anchor": "top-right",
+          "offsetX": 148,
+          "offsetY": 59,
+          "widthPx": 48,
+          "heightPx": 48
         }
       ]
     },

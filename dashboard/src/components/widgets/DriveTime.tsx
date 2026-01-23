@@ -262,7 +262,7 @@ export default function DriveTime() {
       {/* Trigger button */}
       <button
         onClick={() => (hasRoutes ? setFloatingOpen(true) : setShowManager(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
+        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
         <Car

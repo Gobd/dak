@@ -31,8 +31,8 @@ This runs: lint, format, knip (unused code), Python checks (ruff/pyright), API c
 For quick checks during development:
 
 ```bash
-pnpm lint        # oxlint - must be 0 warnings, 0 errors
-pnpm typecheck   # TypeScript
+pnpm -w lint     # oxlint from workspace root - must be 0 warnings, 0 errors
+pnpm typecheck   # TypeScript (run from app directory)
 pnpm build       # Verify all apps build
 ```
 
@@ -92,6 +92,39 @@ Dashboard layout is stored in `stores/config-store.ts`. Default config defines:
 - `screens` - Array of screen layouts
 - `panels` - Widget instances with position, size, and args
 - `globalSettings` - App-wide settings (location, voice, etc.)
+
+### Panel Positioning
+
+Panels support two positioning modes:
+
+**Percentage mode** (default) - `x`, `y`, `width`, `height` are percentages (0-100) of the viewport. Use for background widgets that should fill/scale with the screen (calendars, iframes, full-width content).
+
+```json
+{ "widget": "calendar", "x": 30, "y": 0, "width": 70, "height": 100 }
+```
+
+**Anchored/pixel mode** - for floating widgets that need fixed sizing across different resolutions. Prevents small widgets from growing/shrinking weirdly on different screens.
+
+```json
+{
+  "widget": "climate",
+  "x": 0,
+  "y": 0,
+  "width": 10,
+  "height": 10,
+  "anchor": "top-right",
+  "offsetX": 184,
+  "offsetY": 16,
+  "widthPx": 130,
+  "heightPx": 104
+}
+```
+
+When `anchor` is set with `widthPx`/`heightPx`, pixel positioning takes precedence. The percentage values (`x`, `y`, `width`, `height`) are still required for backwards compatibility and edit mode.
+
+**Anchor options:** `top-left`, `top-right`, `bottom-left`, `bottom-right`
+
+Use percentage mode for layout widgets (calendar, notes, weather panels). Use anchored mode for small floating widgets (icon buttons, climate display, status indicators).
 
 ### Widgets
 

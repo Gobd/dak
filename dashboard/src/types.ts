@@ -16,14 +16,25 @@ export type WidgetType =
   | 'mqtt'
   | 'adguard';
 
+// Anchor positions for pixel-based positioning
+export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 // Panel configuration
 export interface PanelConfig {
   id: string;
   widget: WidgetType;
+  // Percentage-based positioning (0-100) - used for background/scaling widgets
   x: number;
   y: number;
   width: number;
   height: number;
+  // Pixel-based anchored positioning - used for floating widgets that need consistent sizing
+  // When anchor is set, these pixel values take precedence over percentages
+  anchor?: AnchorPosition;
+  offsetX?: number; // pixels from anchor edge
+  offsetY?: number; // pixels from anchor edge
+  widthPx?: number; // fixed pixel width
+  heightPx?: number; // fixed pixel height
   refresh?: string; // Duration string like "5m", "1h"
   args?: Record<string, unknown>;
 }

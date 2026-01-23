@@ -25,9 +25,62 @@ function pxToPercent(px: number, total: number): number {
   return (px / total) * 100;
 }
 
+// Calculate CSS positioning based on anchor mode or percentage mode
+function getPanelStyle(
+  panel: PanelConfig,
+  isDragging: boolean,
+  isResizing: boolean,
+  zIndex: number,
+) {
+  const baseZ = isDragging || isResizing ? 50 : zIndex;
+
+  // Anchored/pixel mode - fixed size and position from corner
+  if (panel.anchor && panel.widthPx && panel.heightPx) {
+    const style: React.CSSProperties = {
+      width: `${panel.widthPx}px`,
+      height: `${panel.heightPx}px`,
+      zIndex: baseZ,
+    };
+
+    const offsetX = panel.offsetX ?? 0;
+    const offsetY = panel.offsetY ?? 0;
+
+    switch (panel.anchor) {
+      case 'top-left':
+        style.left = `${offsetX}px`;
+        style.top = `${offsetY}px`;
+        break;
+      case 'top-right':
+        style.right = `${offsetX}px`;
+        style.top = `${offsetY}px`;
+        break;
+      case 'bottom-left':
+        style.left = `${offsetX}px`;
+        style.bottom = `${offsetY}px`;
+        break;
+      case 'bottom-right':
+        style.right = `${offsetX}px`;
+        style.bottom = `${offsetY}px`;
+        break;
+    }
+
+    return style;
+  }
+
+  // Percentage mode - scales with viewport
+  return {
+    left: `${panel.x}%`,
+    top: `${panel.y}%`,
+    width: `${panel.width}%`,
+    height: `${panel.height}%`,
+    zIndex: baseZ,
+  };
+}
+
 /**
  * Panel wrapper component - handles positioning, resizing, and edit mode controls
  * Position/size values are stored as percentages (0-100) for responsive scaling
+ * OR as pixel values when anchor mode is used for consistent sizing
  */
 export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = false }: PanelProps) {
   const movePanel = useConfigStore((s) => s.movePanel);
@@ -171,13 +224,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
                   ${frameless ? '' : 'bg-surface-raised rounded-xl shadow-lg'}
                   ${isEditMode ? 'ring-2 ring-accent/50 cursor-move' : ''}
                   ${isDragging ? 'opacity-80' : ''}`}
-      style={{
-        left: `${panel.x}%`,
-        top: `${panel.y}%`,
-        width: `${panel.width}%`,
-        height: `${panel.height}%`,
-        zIndex: isDragging || isResizing ? 50 : zIndex,
-      }}
+      style={getPanelStyle(panel, isDragging, isResizing, zIndex)}
       onMouseDown={isEditMode ? handleDragStart : undefined}
       onTouchStart={isEditMode ? handleDragStart : undefined}
     >
