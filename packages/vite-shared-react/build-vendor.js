@@ -3,6 +3,9 @@ import { createHash } from 'crypto';
 import { writeFileSync, readFileSync, copyFileSync, readdirSync, rmSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { parseSync } from 'oxc-parser';
+import { walk } from 'oxc-walker';
+import MagicString from 'magic-string';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = join(__dirname, 'dist');
@@ -15,10 +18,8 @@ mkdirSync(outDir, { recursive: true });
 async function getModuleExports(specifier) {
   const mod = await import(specifier);
   // Filter out default, internals, and invalid JS identifiers
-  return Object.keys(mod).filter(k =>
-    k !== 'default' &&
-    !k.startsWith('__') &&
-    /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
+  return Object.keys(mod).filter(
+    (k) => k !== 'default' && !k.startsWith('__') && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
   );
 }
 
@@ -46,7 +47,8 @@ for (const { name, entry, external } of entries) {
   if (cjsPackages.has(entry)) {
     // CJS package - dynamically get exports and re-export them
     const exports = await getModuleExports(entry);
-    entryCode = `import mod from '${entry}';\n` +
+    entryCode =
+      `import mod from '${entry}';\n` +
       `export const { ${exports.join(', ')} } = mod;\n` +
       `export default mod;`;
   } else {
@@ -76,22 +78,60 @@ for (const { name, entry, external } of entries) {
         // Inject ESM imports for externals and rewrite __require calls to use them
         banner() {
           if (external.length === 0) return '';
-          return external.map(dep => {
-            const varName = `__ext_${dep.replace(/[^a-zA-Z]/g, '_')}`;
-            // CJS packages need default import, ESM packages need namespace import
-            return cjsPackages.has(dep)
-              ? `import ${varName} from '${dep}';`
-              : `import * as ${varName} from '${dep}';`;
-          }).join('\n');
+          return external
+            .map((dep) => {
+              const varName = `__ext_${dep.replace(/[^a-zA-Z]/g, '_')}`;
+              // CJS packages need default import, ESM packages need namespace import
+              return cjsPackages.has(dep)
+                ? `import ${varName} from '${dep}';`
+                : `import * as ${varName} from '${dep}';`;
+            })
+            .join('\n');
         },
         renderChunk(code) {
-          let result = code;
-          for (const dep of external) {
+          if (external.length === 0) return code;
+
+          const { program: ast } = parseSync('chunk.js', code);
+          const s = new MagicString(code);
+          const replacements = [];
+
+          // Walk AST to find __require CallExpressions
+          walk(ast, {
+            enter(node) {
+              if (
+                node.type === 'CallExpression' &&
+                node.callee.type === 'Identifier' &&
+                node.callee.name === '__require' &&
+                node.arguments.length === 1
+              ) {
+                const arg = node.arguments[0];
+                let dep;
+                // Handle Literal (string) and TemplateLiteral (no expressions)
+                if (arg.type === 'Literal' && typeof arg.value === 'string') {
+                  dep = arg.value;
+                } else if (
+                  arg.type === 'TemplateLiteral' &&
+                  arg.expressions.length === 0 &&
+                  arg.quasis.length === 1
+                ) {
+                  dep = arg.quasis[0].value.cooked;
+                }
+                if (dep && external.includes(dep)) {
+                  replacements.push({ start: node.start, end: node.end, dep });
+                }
+              }
+            },
+          });
+
+          // Apply replacements in reverse order (preserve offsets)
+          for (const { start, end, dep } of replacements.reverse()) {
             const varName = `__ext_${dep.replace(/[^a-zA-Z]/g, '_')}`;
-            const escaped = dep.replace(/[/.]/g, '\\$&');
-            result = result.replace(new RegExp(`__require\\(["'\`]${escaped}["'\`]\\)`, 'g'), varName);
+            s.overwrite(start, end, varName);
           }
-          return result;
+
+          return s.hasChanged()
+            ? { code: s.toString(), map: s.generateMap({ hires: true }) }
+            : code;
         },
       },
     ],
@@ -129,10 +169,9 @@ for (const { name, entry, external } of entries) {
   const hashedMapPath = join(outDir, `${hashedName}.map`);
 
   // Update sourceMappingURL and write
-  const updatedContent = content.toString().replace(
-    `//# sourceMappingURL=${name}.js.map`,
-    `//# sourceMappingURL=${hashedName}.map`
-  );
+  const updatedContent = content
+    .toString()
+    .replace(`//# sourceMappingURL=${name}.js.map`, `//# sourceMappingURL=${hashedName}.map`);
   writeFileSync(hashedFilePath, updatedContent);
   copyFileSync(mapPath, hashedMapPath);
 

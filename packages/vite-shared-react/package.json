@@ -8,13 +8,15 @@
   "scripts": {
     "build:vendor": "node build-vendor.js"
   },
-  "devDependencies": {
-    "vite": "catalog:",
-    "vite-plugin-cjs-interop": "^2.4.0"
-  },
   "dependencies": {
     "react": "catalog:",
     "react-dom": "catalog:",
     "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "magic-string": "^0.30.21",
+    "oxc-parser": "^0.110.0",
+    "oxc-walker": "^0.7.0",
+    "vite": "catalog:"
   }
 }
