@@ -5,7 +5,7 @@ import { useSettingsStore } from '../stores/settings-store';
 const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 export default function Settings() {
-  const { relayUrl, setRelayUrl } = useSettingsStore();
+  const { relayUrl, setRelayUrl, unit, setUnit } = useSettingsStore();
   const [inputValue, setInputValue] = useState(relayUrl);
   const [saved, setSaved] = useState(false);
 
@@ -43,6 +43,25 @@ export default function Settings() {
         <p className="mt-2 text-sm text-slate-500">
           The URL of the home relay server with climate sensors.
         </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">Temperature Unit</label>
+        <div className="flex gap-2">
+          {(['C', 'F'] as const).map((u) => (
+            <button
+              key={u}
+              onClick={() => setUnit(u)}
+              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
+                unit === u
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              °{u}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-3">

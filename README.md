@@ -1,40 +1,42 @@
 # DAK Apps
 
+Browse all apps at [dak.bkemper.me](https://dak.bkemper.me).
+
 ## Live Apps
 
 | App             | URL                                     | Stack                   |
 | --------------- | --------------------------------------- | ----------------------- |
+| Climate Display | https://dak.bkemper.me/climate-display/ | Vite + React + Tailwind |
 | Dashboard       | https://dak.bkemper.me/dashboard/       | Vite + React + Tailwind |
 | Family Chores   | https://dak.bkemper.me/family-chores/   | Vite + React + Tailwind |
 | Health Tracker  | https://dak.bkemper.me/health-tracker/  | Vite + React + Tailwind |
 | Kasa Controller | https://dak.bkemper.me/kasa-controller/ | Vite + React + Tailwind |
-| Notes App       | https://dak.bkemper.me/notes-app/       | Expo + React Native Web |
+| Notes App       | https://dak.bkemper.me/notes-app/       | Vite + React + Tailwind |
 
-All apps use TypeScript, Zustand for state, and Supabase for backend.
+All apps use React, TypeScript, and Zustand for state.
 
 ## Development
 
 ```bash
-# Family Chores / Health Tracker
-cd <app> && pnpm install && pnpm dev
+# From repo root - runs all apps
+pnpm dev
 
-# Notes App (runs editor build + expo concurrently)
-cd notes-app && pnpm install && pnpm start
-
-# Dashboard
-cd dashboard && pnpm dev
+# Or run a single app
+cd <app> && pnpm dev
 ```
 
 ## Quality Checks
 
-Each app has the same commands:
+From repo root:
 
 ```bash
-pnpm lint          # ESLint
-pnpm typecheck     # TypeScript
-pnpm format:check  # Prettier
+pnpm lint          # Oxlint
+pnpm typecheck     # TypeScript (all apps)
+pnpm format:check  # Oxfmt
 pnpm format        # Auto-fix formatting
-pnpm analyze       # Bundle size analysis
+pnpm check         # Run all checks + build
+
+./scripts/ci.sh    # Run all CI checks locally with auto-fix
 ```
 
 ## Deployment

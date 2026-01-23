@@ -36,6 +36,10 @@ interface ClimateData {
 
 type View = 'climate' | 'settings';
 
+function celsiusToFahrenheit(c: number): number {
+  return (c * 9) / 5 + 32;
+}
+
 function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'steady' }) {
   if (trend === 'rising') return <TrendingUp className="w-5 h-5 text-red-400" />;
   if (trend === 'falling') return <TrendingDown className="w-5 h-5 text-blue-400" />;
@@ -46,11 +50,17 @@ function SensorCard({
   label,
   icon,
   sensor,
+  unit,
 }: {
   label: string;
   icon: string;
   sensor: SensorData | undefined;
+  unit: 'C' | 'F';
 }) {
+  const formatTemp = (temp: number) => {
+    const converted = unit === 'F' ? celsiusToFahrenheit(temp) : temp;
+    return Math.round(converted);
+  };
   if (!sensor?.available) {
     return (
       <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-6 flex flex-col items-center justify-center min-h-[200px] border border-slate-700/50">
@@ -73,7 +83,7 @@ function SensorCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Thermometer className="w-6 h-6 text-orange-400" />
-            <span className="text-4xl font-light">{Math.round(sensor.temperature)}°</span>
+            <span className="text-4xl font-light">{formatTemp(sensor.temperature)}°</span>
           </div>
           <TrendIcon trend={sensor.temperature_trend} />
         </div>
@@ -90,7 +100,7 @@ function SensorCard({
         {/* Feels like */}
         <div className="pt-3 border-t border-slate-700/50">
           <span className="text-slate-500 text-sm">
-            Feels like {Math.round(sensor.feels_like)}°
+            Feels like {formatTemp(sensor.feels_like)}°
           </span>
         </div>
 
@@ -105,11 +115,18 @@ function SensorCard({
   );
 }
 
-function ComparisonBanner({ comparison }: { comparison: ClimateData['comparison'] }) {
+function ComparisonBanner({
+  comparison,
+  unit,
+}: {
+  comparison: ClimateData['comparison'];
+  unit: 'C' | 'F';
+}) {
   if (!comparison) return null;
 
   const { outside_feels_cooler, outside_feels_warmer, difference } = comparison;
-  const absDiff = Math.abs(difference);
+  // Convert the difference if using Fahrenheit (difference is in Celsius)
+  const absDiff = Math.round(Math.abs(unit === 'F' ? (difference * 9) / 5 : difference));
 
   if (!outside_feels_cooler && !outside_feels_warmer) {
     return (
@@ -126,7 +143,6 @@ function ComparisonBanner({ comparison }: { comparison: ClimateData['comparison'
       <div className="bg-gradient-to-br from-blue-900/80 to-cyan-900/80 backdrop-blur rounded-2xl p-8 text-center border border-blue-700/30">
         <span className="text-5xl mb-3 block">❄️</span>
         <span className="text-blue-100 text-2xl font-medium">Outside is {absDiff}° cooler</span>
-        <p className="text-blue-300/70 text-sm mt-2">Good time to open windows</p>
       </div>
     );
   }
@@ -135,13 +151,13 @@ function ComparisonBanner({ comparison }: { comparison: ClimateData['comparison'
     <div className="bg-gradient-to-br from-orange-900/80 to-red-900/80 backdrop-blur rounded-2xl p-8 text-center border border-orange-700/30">
       <span className="text-5xl mb-3 block">🔥</span>
       <span className="text-orange-100 text-2xl font-medium">Outside is {absDiff}° warmer</span>
-      <p className="text-orange-300/70 text-sm mt-2">Keep windows closed</p>
     </div>
   );
 }
 
 function ClimateView() {
   const relayUrl = useSettingsStore((s) => s.relayUrl);
+  const unit = useSettingsStore((s) => s.unit);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<ClimateData>({
     queryKey: ['climate', relayUrl],
@@ -195,13 +211,13 @@ function ClimateView() {
 
       {/* Sensor cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <SensorCard label="Indoor" icon="🏠" sensor={data?.indoor} />
-        <SensorCard label="Outdoor" icon="🌳" sensor={data?.outdoor} />
+        <SensorCard label="Indoor" icon="🏠" sensor={data?.indoor} unit={unit} />
+        <SensorCard label="Outdoor" icon="🌳" sensor={data?.outdoor} unit={unit} />
       </div>
 
       {/* Comparison */}
       {data?.indoor?.available && data?.outdoor?.available && (
-        <ComparisonBanner comparison={data.comparison} />
+        <ComparisonBanner comparison={data.comparison} unit={unit} />
       )}
     </div>
   );
