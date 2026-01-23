@@ -70,7 +70,7 @@ export const useChoresStore = create<ChoresState>((set, get) => ({
         assigneeIds.map((member_id) => ({
           chore_id: newChore.id,
           member_id,
-        }))
+        })),
       );
     }
 
@@ -91,7 +91,7 @@ export const useChoresStore = create<ChoresState>((set, get) => ({
           assigneeIds.map((member_id) => ({
             chore_id: id,
             member_id,
-          }))
+          })),
         );
       }
     }

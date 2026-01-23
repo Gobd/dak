@@ -62,7 +62,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
         }
         // Merge: update found devices, keep stale ones that didn't respond
         const foundMap = new Map(
-          found.map((d) => [d.child_id ? `${d.ip}:${d.child_id}` : d.ip, d])
+          found.map((d) => [d.child_id ? `${d.ip}:${d.child_id}` : d.ip, d]),
         );
         const merged: KasaDevice[] = [];
         // Keep previous devices, update with new data if available
@@ -175,7 +175,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
           ...old,
           devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: !d.on } : d)),
         };
-      }
+      },
     );
 
     const success = await client.toggleDevice(device.ip);
@@ -189,7 +189,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             ...old,
             devices: old.devices.map((d) => (d.ip === device.ip ? { ...d, on: device.on } : d)),
           };
-        }
+        },
       );
     }
   }

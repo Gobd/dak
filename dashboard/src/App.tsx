@@ -72,7 +72,7 @@ function App() {
         updateGlobalSettings({ hideCursor: !hideCursor });
       }
     },
-    [hideCursor, updateGlobalSettings]
+    [hideCursor, updateGlobalSettings],
   );
 
   useEffect(() => {

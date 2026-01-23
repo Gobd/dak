@@ -75,7 +75,7 @@ function getSetJ(
   dec: number,
   n: number,
   M: number,
-  L: number
+  L: number,
 ): number {
   const w = hourAngle(h, phi, dec);
   const a = approxTransit(w, lw, n);
@@ -285,7 +285,7 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
   const { location, setLocation } = useLocation(
     widgetId,
     panel.args?.lat as number | undefined,
-    panel.args?.lon as number | undefined
+    panel.args?.lon as number | undefined,
   );
   const [showSettings, setShowSettings] = useState(false);
 

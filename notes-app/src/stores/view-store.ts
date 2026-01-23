@@ -27,6 +27,6 @@ export const useViewStore = create<ViewStore>()(
     }),
     {
       name: 'view-storage',
-    }
-  )
+    },
+  ),
 );

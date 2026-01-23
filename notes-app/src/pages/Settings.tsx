@@ -100,7 +100,7 @@ export function Settings() {
     if (uniqueShareCount >= planLimits.maxSharedUsers) {
       showToast(
         `Your ${profile?.plan} plan allows sharing with ${planLimits.maxSharedUsers} people. Upgrade to share with more.`,
-        'error'
+        'error',
       );
       return;
     }
@@ -181,7 +181,7 @@ export function Settings() {
         if (importedNotes.length > availableSlots) {
           showToast(
             `You can only import ${availableSlots} more notes on your current plan. Selected ${importedNotes.length} notes.`,
-            'error'
+            'error',
           );
           setIsImporting(false);
           return;

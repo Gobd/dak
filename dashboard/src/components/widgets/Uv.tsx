@@ -86,7 +86,7 @@ async function fetchUv(lat: number, lon: number): Promise<UvApiData> {
   if (cached) return cached;
 
   const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=2`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=uv_index&timezone=auto&forecast_days=2`,
   );
   if (!res.ok) throw new Error('Failed to fetch UV data');
   const data = await res.json();
@@ -138,7 +138,7 @@ function processUvData(data: UvApiData): { todayHours: HourEntry[]; tomorrowHour
 
 function findThresholdCrossings(
   hours: HourEntry[],
-  threshold: number
+  threshold: number,
 ): { riseTime: number | null; fallTime: number | null } {
   const futureHours = hours.filter((h) => !h.isPast);
   if (futureHours.length < 2) return { riseTime: null, fallTime: null };
@@ -217,13 +217,13 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
   const { location, setLocation } = useLocation(
     widgetId,
     panel.args?.lat as number | undefined,
-    panel.args?.lon as number | undefined
+    panel.args?.lon as number | undefined,
   );
 
   const [showSettings, setShowSettings] = useState(false);
   const [showLocationSettings, setShowLocationSettings] = useState(false);
   const [safeThreshold, setSafeThreshold] = useState(() =>
-    getSafeThreshold(widgetId, defaultThreshold)
+    getSafeThreshold(widgetId, defaultThreshold),
   );
   const [tempThreshold, setTempThreshold] = useState(safeThreshold);
 
@@ -237,7 +237,7 @@ export default function Uv({ panel, dark }: WidgetComponentProps) {
     {
       refresh: '30m',
       enabled: !!location,
-    }
+    },
   );
 
   if (isLoading && !uvData) {

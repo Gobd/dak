@@ -55,7 +55,7 @@ function getTrafficColor(durationMinutes: number, normalMinutes: number): string
 async function fetchDriveTime(
   origin: string,
   destination: string,
-  via: string[] = []
+  via: string[] = [],
 ): Promise<DriveData | null> {
   try {
     const endpoint = via.length ? `${API_BASE}/directions` : `${API_BASE}/distance-matrix`;
@@ -76,7 +76,7 @@ async function fetchDriveTime(
 
 async function fetchDriveData(
   activeRoutes: DriveTimeRoute[],
-  locations: Record<string, string>
+  locations: Record<string, string>,
 ): Promise<Array<{ route: DriveTimeRoute; driveData: DriveData }>> {
   if (activeRoutes.length === 0) {
     return [];
@@ -92,7 +92,7 @@ async function fetchDriveData(
       if (!driveData) return null;
 
       return { route, driveData };
-    })
+    }),
   );
 
   return results.filter((r): r is { route: DriveTimeRoute; driveData: DriveData } => r !== null);
@@ -100,7 +100,7 @@ async function fetchDriveData(
 
 // Check if any route meets its minTimeToShow threshold
 function hasRouteMeetingThreshold(
-  routeData: Array<{ route: DriveTimeRoute; driveData: DriveData }>
+  routeData: Array<{ route: DriveTimeRoute; driveData: DriveData }>,
 ): boolean {
   return routeData.some(({ route, driveData }) => {
     const durationMinutes = Math.round(driveData.durationInTrafficValue / 60);
@@ -128,7 +128,7 @@ export default function DriveTime() {
   const [floatingOpen, setFloatingOpen] = useState(false);
   const [floatingPos, setFloatingPos] = useState({ x: 100, y: 100 });
   const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(
-    null
+    null,
   );
   const hasAutoOpenedRef = useRef(false);
 
@@ -141,7 +141,7 @@ export default function DriveTime() {
   const allRouteIds = useMemo(() => routes.map((r) => getRouteId(r)).join(','), [routes]);
   const activeRouteIds = useMemo(
     () => activeRoutes.map((r) => getRouteId(r)).join(','),
-    [activeRoutes]
+    [activeRoutes],
   );
 
   // Fetch ALL routes for manual viewing
@@ -444,7 +444,7 @@ export default function DriveTime() {
                 style={{
                   color: getTrafficColor(
                     Math.round(detailRoute.driveData.durationInTrafficValue / 60),
-                    Math.round(detailRoute.driveData.durationValue / 60)
+                    Math.round(detailRoute.driveData.durationValue / 60),
                   ),
                 }}
               >
@@ -518,7 +518,7 @@ export default function DriveTime() {
                   {Math.round(
                     (detailRoute.driveData.durationInTrafficValue -
                       detailRoute.driveData.durationValue) /
-                      60
+                      60,
                   )}{' '}
                   min
                 </span>
@@ -571,7 +571,7 @@ function RouteManagerModal({
 
   function handleDeleteLocation(name: string) {
     const newLocations = Object.fromEntries(
-      Object.entries(locations).filter(([key]) => key !== name)
+      Object.entries(locations).filter(([key]) => key !== name),
     );
     onUpdateLocations(newLocations);
   }
@@ -856,7 +856,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
         label: form.label || undefined,
         minTimeToShow: form.minTimeToShow || undefined,
       },
-      hasNewLocations ? newLocations : undefined
+      hasNewLocations ? newLocations : undefined,
     );
   }
 

@@ -61,7 +61,7 @@ export function useLocation(widgetId: string, defaultLat?: number, defaultLon?: 
   // Subscribe to the specific location from store (re-renders when it changes)
   const storedLocation = useConfigStore((s) => s.locations?.[widgetId]);
   const configDefaultLocation = useConfigStore(
-    (s) => s.globalSettings?.defaultLocation ?? s.defaultLocation
+    (s) => s.globalSettings?.defaultLocation ?? s.defaultLocation,
   );
   const updateLocation = useConfigStore((s) => s.updateLocation);
 
@@ -73,7 +73,7 @@ export function useLocation(widgetId: string, defaultLat?: number, defaultLon?: 
       defaultLat !== undefined && defaultLon !== undefined
         ? { lat: defaultLat, lon: defaultLon }
         : null,
-    [defaultLat, defaultLon]
+    [defaultLat, defaultLon],
   );
   // configDefaultLocation comes from globalSettings.defaultLocation (loaded from public/config/dashboard.json)
   const location = storedLocation ?? localLocation ?? argsLocation ?? configDefaultLocation!;
@@ -84,7 +84,7 @@ export function useLocation(widgetId: string, defaultLat?: number, defaultLon?: 
       setLocalLocation(newLocation);
       updateLocation(widgetId, newLocation);
     },
-    [widgetId, updateLocation]
+    [widgetId, updateLocation],
   );
 
   return {

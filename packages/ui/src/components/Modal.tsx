@@ -122,7 +122,7 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
         posY: position?.y ?? 0,
       };
     },
-    [position]
+    [position],
   );
 
   useEffect(() => {
@@ -209,6 +209,6 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

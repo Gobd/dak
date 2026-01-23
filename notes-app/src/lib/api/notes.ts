@@ -43,7 +43,7 @@ export const notesApi = {
             display_name
           )
         )
-      `
+      `,
       )
       .eq('user_id', userId)
       .eq('is_owner', false)

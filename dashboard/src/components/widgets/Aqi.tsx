@@ -47,7 +47,7 @@ function getAqiLabel(aqi: number): string {
 
 async function fetchAqi(lat: number, lon: number): Promise<AqiApiData> {
   const res = await fetch(
-    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10&hourly=us_aqi&timezone=auto&forecast_days=2`
+    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10&hourly=us_aqi&timezone=auto&forecast_days=2`,
   );
   if (!res.ok) throw new Error('Failed to fetch AQI data');
   return res.json();
@@ -143,7 +143,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
   const { location, setLocation } = useLocation(
     widgetId,
     panel.args?.lat as number | undefined,
-    panel.args?.lon as number | undefined
+    panel.args?.lon as number | undefined,
   );
 
   const [showSettings, setShowSettings] = useState(false);
@@ -159,7 +159,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
     {
       refresh: '30m',
       enabled: !!location,
-    }
+    },
   );
 
   if (isLoading && !aqiData) {
@@ -187,7 +187,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
   const { todayHours, tomorrowHours } = processAqiData(aqiData);
 
   const currentAqi = Math.round(
-    aqiData.current?.us_aqi ?? todayHours.find((h) => !h.isPast)?.aqi ?? tomorrowHours[0]?.aqi ?? 0
+    aqiData.current?.us_aqi ?? todayHours.find((h) => !h.isPast)?.aqi ?? tomorrowHours[0]?.aqi ?? 0,
   );
   const todayMax = todayHours.length ? Math.round(Math.max(...todayHours.map((h) => h.aqi))) : 0;
   const tomorrowMax = tomorrowHours.length

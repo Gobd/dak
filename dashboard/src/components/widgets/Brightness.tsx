@@ -85,7 +85,7 @@ export default function Brightness({ dark }: WidgetComponentProps) {
             ...globalSettings.defaultLocation,
             name: formatLocation(
               globalSettings.defaultLocation.city,
-              globalSettings.defaultLocation.state
+              globalSettings.defaultLocation.state,
             ),
           }
         : undefined;

@@ -36,7 +36,7 @@ function getDarkFromQueryParam(): boolean | null {
  * ```
  */
 export function createThemeStore(
-  options: CreateThemeStoreOptions
+  options: CreateThemeStoreOptions,
 ): UseBoundStore<StoreApi<ThemeState>> {
   const { storageKey } = options;
   const queryDark = getDarkFromQueryParam();
@@ -72,8 +72,8 @@ export function createThemeStore(
             document.documentElement.classList.add('dark');
           }
         },
-      }
-    )
+      },
+    ),
   );
 
   // Apply initial dark mode class immediately (for query param case)

@@ -32,7 +32,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [showOwnerEmail, setShowOwnerEmail] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState<{ userId: string; email: string } | null>(
-    null
+    null,
   );
 
   const shares = noteShares[note.id] || [];

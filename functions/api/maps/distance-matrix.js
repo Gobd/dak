@@ -27,7 +27,7 @@ export async function onRequestPost(context) {
     });
 
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/distancematrix/json?${params}`
+      `https://maps.googleapis.com/maps/api/distancematrix/json?${params}`,
     );
 
     const data = await response.json();

@@ -50,7 +50,7 @@ function HighlightedText({ text, query, className }: HighlightedTextProps) {
           </span>
         ) : (
           <span key={i}>{part.text}</span>
-        )
+        ),
       )}
     </span>
   );

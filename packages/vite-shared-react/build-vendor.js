@@ -19,7 +19,7 @@ async function getModuleExports(specifier) {
   const mod = await import(specifier);
   // Filter out default, internals, and invalid JS identifiers
   return Object.keys(mod).filter(
-    (k) => k !== 'default' && !k.startsWith('__') && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
+    (k) => k !== 'default' && !k.startsWith('__') && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k),
   );
 }
 

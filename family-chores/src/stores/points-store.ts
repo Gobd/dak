@@ -18,7 +18,7 @@ interface PointsState {
   redeemPoints: (
     memberId: string,
     amount: number,
-    notes: string
+    notes: string,
   ) => Promise<{ success: boolean; error?: string }>;
   setPeriod: (period: Period) => void;
 }

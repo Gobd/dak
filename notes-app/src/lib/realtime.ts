@@ -108,7 +108,7 @@ function startHeartbeat(userId: string) {
       scheduleReconnect(userId);
     } else if (presenceChannelState !== 'joined' && presenceChannelState !== 'joining') {
       console.warn(
-        `[realtime] Heartbeat detected unhealthy presence channel: ${presenceChannelState}`
+        `[realtime] Heartbeat detected unhealthy presence channel: ${presenceChannelState}`,
       );
       scheduleReconnect(userId);
     }
@@ -141,7 +141,7 @@ function scheduleReconnect(userId: string) {
   // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
   const delay = Math.min(
     RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
-    RECONNECT_MAX_DELAY_MS
+    RECONNECT_MAX_DELAY_MS,
   );
   reconnectAttempts++;
 
@@ -379,7 +379,7 @@ async function notifySharedUsers(noteId: string, event: SyncEvent) {
               });
             }),
             new Promise<void>((_, reject) =>
-              setTimeout(() => reject(new Error('Subscription timeout')), SUBSCRIPTION_TIMEOUT_MS)
+              setTimeout(() => reject(new Error('Subscription timeout')), SUBSCRIPTION_TIMEOUT_MS),
             ),
           ]);
 
@@ -399,7 +399,7 @@ async function notifySharedUsers(noteId: string, event: SyncEvent) {
         } finally {
           supabase.removeChannel(channel);
         }
-      })
+      }),
     );
   } catch (err) {
     console.error('Failed to notify shared users:', err);

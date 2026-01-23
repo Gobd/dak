@@ -30,7 +30,7 @@ const DEBOUNCE_MS = 300;
 export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>(
   function RichNoteEditor(
     { content, onUpdate, maxLength = 50000, placeholder = 'Start writing...' },
-    ref
+    ref,
   ) {
     const lastContentRef = useRef(content);
     const isInitPhaseRef = useRef(true);
@@ -165,7 +165,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
           onUpdateRef.current(markdown);
         },
       }),
-      [editor]
+      [editor],
     );
 
     return (
@@ -173,5 +173,5 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         <EditorContent editor={editor} className="tiptap-editor h-full" />
       </div>
     );
-  }
+  },
 );

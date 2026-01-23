@@ -9,5 +9,5 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter basename="/health-tracker">
       <App />
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );

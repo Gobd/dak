@@ -274,7 +274,7 @@ export function useGoogleAuth(): UseGoogleAuthResult {
 export async function fetchCalendarApi<T>(
   endpoint: string,
   accessToken: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const response = await fetch(`https://www.googleapis.com/calendar/v3${endpoint}`, {
     ...options,

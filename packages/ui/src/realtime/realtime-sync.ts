@@ -246,7 +246,7 @@ export class RealtimeSync<TEvent> {
     // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
     const delay = Math.min(
       this.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts),
-      this.RECONNECT_MAX_DELAY_MS
+      this.RECONNECT_MAX_DELAY_MS,
     );
     this.reconnectAttempts++;
 

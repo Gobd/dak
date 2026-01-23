@@ -26,7 +26,7 @@ export async function onRequestGet(context) {
     });
 
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`,
     );
 
     const data = await response.json();

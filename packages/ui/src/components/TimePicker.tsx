@@ -70,7 +70,7 @@ export function TimePicker({ value, onChange, minuteStep = 5 }: TimePickerProps)
 
   // Find closest minute in our options
   const closestMinute = minutes.reduce((prev, curr) =>
-    Math.abs(curr - minute) < Math.abs(prev - minute) ? curr : prev
+    Math.abs(curr - minute) < Math.abs(prev - minute) ? curr : prev,
   );
 
   function handleHourChange(newHour: number) {

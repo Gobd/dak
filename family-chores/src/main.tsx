@@ -9,5 +9,5 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter basename="/family-chores">
       <App />
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );

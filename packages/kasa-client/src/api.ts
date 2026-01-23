@@ -73,7 +73,7 @@ export function createKasaClient(relayUrl: string) {
    */
   async function toggleDeviceByName(
     name: string,
-    state?: boolean
+    state?: boolean,
   ): Promise<ToggleResponse | { error: string }> {
     configureClient();
     const result = await toggleByNameKasaToggleByNamePost({
@@ -104,7 +104,7 @@ export function createKasaClient(relayUrl: string) {
   async function setCountdown(
     ip: string,
     minutes: number,
-    action: 'on' | 'off'
+    action: 'on' | 'off',
   ): Promise<CountdownResponse> {
     if (minutes < 1) {
       throw new Error('Minutes must be at least 1');
@@ -137,7 +137,7 @@ export function createKasaClient(relayUrl: string) {
     ip: string,
     action: 'on' | 'off',
     time: string,
-    days: string[]
+    days: string[],
   ): Promise<ScheduleResponse> {
     configureClient();
     const result = await addScheduleKasaSchedulePost({
@@ -158,7 +158,7 @@ export function createKasaClient(relayUrl: string) {
       action?: 'on' | 'off';
       time?: string;
       days?: string[];
-    }
+    },
   ): Promise<ScheduleResponse> {
     configureClient();
     const result = await updateScheduleKasaSchedulePut({

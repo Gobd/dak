@@ -37,7 +37,7 @@ export function Dashboard() {
 
   // Track if onboarding has been dismissed (read once on mount)
   const [onboardingDismissed, setOnboardingDismissed] = useState(
-    () => localStorage.getItem('onboarding_dismissed') === 'true'
+    () => localStorage.getItem('onboarding_dismissed') === 'true',
   );
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
