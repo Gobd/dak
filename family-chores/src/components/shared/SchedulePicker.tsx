@@ -165,8 +165,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
 
       {/* Goal/Habit configuration */}
       {value.type === 'goal' && (
-        <div className="space-y-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-          <p className="text-xs text-accent dark:text-accent">
+        <div className="space-y-4 p-3 bg-feature-light rounded-lg border border-feature">
+          <p className="text-xs text-accent">
             Set a target to complete this habit a certain number of times within a period.
           </p>
 

@@ -570,7 +570,7 @@ export default function Timer() {
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                              className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border dark:border-border rounded text-xs text-text outline-none"
+                              className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
                               autoFocus
                             />
                             <button
@@ -672,7 +672,7 @@ export default function Timer() {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                            className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border dark:border-border rounded text-xs text-text outline-none"
+                            className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
                             autoFocus
                           />
                           <button

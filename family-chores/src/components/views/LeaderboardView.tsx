@@ -122,7 +122,7 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
                 key={member.id}
                 className={`flex items-center gap-4 p-4 rounded-xl ${
                   isTop3 ? 'bg-surface-raised shadow-sm' : 'bg-surface'
-                } ${index === 0 ? 'ring-2 ring-yellow-400 dark:ring-yellow-600' : ''}`}
+                } ${index === 0 ? 'ring-2 ring-gold' : ''}`}
               >
                 {/* Rank */}
                 <div className="flex-shrink-0 w-8">{getRankIcon(index)}</div>

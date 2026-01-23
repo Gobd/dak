@@ -177,7 +177,7 @@ export default function Brightness() {
         {isDay ? (
           <Sun size={24} className={hasError ? 'text-text-muted' : 'text-warning'} />
         ) : (
-          <Moon size={24} className={hasError ? 'text-text-muted' : 'text-blue-300'} />
+          <Moon size={24} className={hasError ? 'text-text-muted' : 'text-accent'} />
         )}
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && (
@@ -212,7 +212,7 @@ export default function Brightness() {
                 {isDay ? (
                   <Sun size={40} className="text-warning" />
                 ) : (
-                  <Moon size={40} className="text-blue-300" />
+                  <Moon size={40} className="text-accent" />
                 )}
                 <div className="flex-1">
                   <div className="text-3xl font-light">{currentBrightness}%</div>
@@ -322,7 +322,7 @@ export default function Brightness() {
                   {/* Night brightness */}
                   <div>
                     <label className="block text-sm text-text-muted mb-1">
-                      <Moon size={14} className="inline mr-1 text-blue-300" />
+                      <Moon size={14} className="inline mr-1 text-accent" />
                       Night: {config.nightBrightness ?? 1}%
                     </label>
                     <input
@@ -336,7 +336,7 @@ export default function Brightness() {
                                  [&::-webkit-slider-thumb]:w-4
                                  [&::-webkit-slider-thumb]:h-4
                                  [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-blue-400"
+                                 [&::-webkit-slider-thumb]:bg-accent"
                     />
                   </div>
 

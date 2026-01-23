@@ -43,7 +43,7 @@ export function TaskCard({
     if (completed) return '';
     if (isSharedTask && assignees.length > 1) {
       // Race task - amber dashed border
-      return 'border-l-4 border-l-amber-400 dark:border-l-amber-500';
+      return 'border-l-4 border-l-warning';
     }
     if (assigned_member) {
       // Personal task - solid border in member's color
@@ -55,7 +55,7 @@ export function TaskCard({
   return (
     <div
       className={`flex items-center gap-3 p-3 sm:p-4 bg-surface-raised rounded-xl shadow-sm border ${
-        completed ? 'border-green-200 dark:border-green-800 bg-success-light/20' : 'border-border'
+        completed ? 'border-success bg-success-light/20' : 'border-border'
       } ${getLeftBorderStyle()}`}
       style={!completed && assigned_member ? { borderLeftColor: assigned_member.color } : undefined}
     >
@@ -65,7 +65,7 @@ export function TaskCard({
         className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
           completed
             ? 'bg-success border-success text-text'
-            : 'border-border hover:border-accent hover:bg-blue-50 dark:hover:bg-blue-900/20'
+            : 'border-border hover:border-accent hover:bg-accent-light'
         }`}
       >
         {completed && <Check size={28} strokeWidth={3} />}
@@ -97,7 +97,7 @@ export function TaskCard({
               <span
                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   isSharedTask
-                    ? 'bg-warning-light/50 text-amber-700 dark:text-amber-300'
+                    ? 'bg-warning-light/50 text-warning'
                     : 'bg-surface-sunken text-text-secondary text-text-muted'
                 }`}
               >
@@ -117,9 +117,7 @@ export function TaskCard({
             {!hidePoints && (
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  completed
-                    ? 'bg-success-light/50 text-green-700 dark:text-success'
-                    : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                  completed ? 'bg-success-light/50 text-success' : 'bg-accent-light text-accent'
                 }`}
               >
                 {points_awarded} pts

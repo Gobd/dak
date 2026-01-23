@@ -71,7 +71,7 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
                   i === currentStep
                     ? 'bg-accent'
                     : i < currentStep
-                      ? 'bg-blue-300'
+                      ? 'bg-accent/50'
                       : 'bg-surface-sunken'
                 }`}
               />
@@ -79,7 +79,7 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
           </div>
 
           {/* Icon */}
-          <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
+          <div className="w-20 h-20 mx-auto bg-accent-light rounded-full flex items-center justify-center mb-4">
             <Icon className="w-10 h-10 text-accent" />
           </div>
 

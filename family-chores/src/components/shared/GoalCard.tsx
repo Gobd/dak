@@ -44,7 +44,7 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
   return (
     <div
       className={`flex items-center gap-3 p-3 sm:p-4 bg-surface-raised rounded-xl shadow-sm border transition-all ${
-        is_complete ? 'border-green-200 dark:border-green-800 bg-success-light/20' : 'border-border'
+        is_complete ? 'border-success bg-success-light/20' : 'border-border'
       }`}
     >
       {/* Increment button */}
@@ -53,7 +53,7 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
         className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
           is_complete
             ? 'bg-success border-success text-text hover:bg-success'
-            : 'border-purple-400 dark:border-purple-500 text-accent dark:text-accent hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20'
+            : 'border-feature text-feature hover:border-feature-hover hover:bg-feature-light'
         }`}
       >
         {is_complete ? <Check size={28} strokeWidth={3} /> : <Plus size={24} />}
@@ -104,9 +104,7 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
         {!hidePoints && (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-              is_complete
-                ? 'bg-success-light/50 text-green-700 dark:text-success'
-                : 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+              is_complete ? 'bg-success-light/50 text-success' : 'bg-feature-light text-feature'
             }`}
           >
             {chore.points} pts

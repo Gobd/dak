@@ -168,7 +168,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
 
         {/* Times per day - only for daily schedule */}
         {schedule.type === 'daily' && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="p-3 bg-accent-light rounded-lg border border-accent">
             <label className="block text-sm font-medium text-text-secondary mb-2">
               Times per day
             </label>
@@ -210,7 +210,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                 onClick={() => toggleAssignee(member.id)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                   assigneeIds.includes(member.id)
-                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-accent'
+                    ? 'bg-accent-light ring-2 ring-accent'
                     : 'bg-surface-sunken hover:bg-surface-sunken'
                 }`}
               >
@@ -244,7 +244,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
             </div>
 
             {showAssignmentHelp && (
-              <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+              <div className="mb-3 p-2 bg-accent-light rounded text-xs text-accent">
                 <p className="font-medium mb-1">Race mode:</p>
                 <p className="mb-2">
                   First person to complete wins all the points. Great for motivating quick action!
@@ -260,7 +260,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                 onClick={() => setAssignmentType('anyone')}
                 className={`p-3 rounded-lg text-left transition-all ${
                   assignmentType === 'anyone'
-                    ? 'bg-warning-light/50 ring-2 ring-amber-500'
+                    ? 'bg-warning-light/50 ring-2 ring-warning'
                     : 'bg-surface-sunken hover:bg-surface'
                 }`}
               >
@@ -272,7 +272,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                 onClick={() => setAssignmentType('everyone')}
                 className={`p-3 rounded-lg text-left transition-all ${
                   assignmentType === 'everyone'
-                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-accent'
+                    ? 'bg-accent-light ring-2 ring-accent'
                     : 'bg-surface-sunken hover:bg-surface'
                 }`}
               >

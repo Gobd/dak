@@ -97,7 +97,7 @@ export function WeeklyView() {
             <div
               key={day.toISOString()}
               className={`text-center p-2 rounded-lg ${
-                isToday(day) ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-surface'
+                isToday(day) ? 'bg-accent-light' : 'bg-surface'
               }`}
             >
               <p className="text-xs text-text-muted">{format(day, 'EEE')}</p>
@@ -117,9 +117,9 @@ export function WeeklyView() {
               <button
                 key={`content-${day.toISOString()}`}
                 onClick={() => setSelectedDay(day)}
-                className={`min-h-[100px] p-2 rounded-lg border text-left transition-all hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-700 ${
+                className={`min-h-[100px] p-2 rounded-lg border text-left transition-all hover:ring-2 hover:ring-accent ${
                   isToday(day)
-                    ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10'
+                    ? 'border-accent bg-accent-light/50'
                     : 'border-border bg-surface-raised'
                 }`}
               >
@@ -140,7 +140,7 @@ export function WeeklyView() {
                           key={instance.id}
                           className={`text-xs p-1 rounded truncate ${
                             instance.completed
-                              ? 'bg-success-light/30 text-green-700 dark:text-success line-through'
+                              ? 'bg-success-light/30 text-success line-through'
                               : 'bg-surface-sunken text-text-secondary'
                           }`}
                         >
@@ -185,7 +185,7 @@ export function WeeklyView() {
                   key={instance.id}
                   className={`p-3 rounded-xl border ${
                     instance.completed
-                      ? 'bg-success-light/20 border-green-200 dark:border-green-800'
+                      ? 'bg-success-light/20 border-success'
                       : 'bg-surface-raised border-border'
                   }`}
                 >
@@ -208,7 +208,7 @@ export function WeeklyView() {
                         >
                           {chore?.name ?? 'Unknown chore'}
                         </h3>
-                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs">
+                        <span className="px-2 py-0.5 bg-accent-light text-accent rounded text-xs">
                           {instance.points_awarded ?? chore?.points ?? 0} pts
                         </span>
                       </div>

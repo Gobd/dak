@@ -460,7 +460,7 @@ export default function DriveTime() {
             {detailRoute.route.viaLabel && (
               <div className="p-3 rounded-lg bg-accent/20 border border-accent/30">
                 <div className="text-xs text-accent mb-1">Locked to</div>
-                <div className="font-medium text-blue-300">{detailRoute.route.viaLabel}</div>
+                <div className="font-medium text-accent">{detailRoute.route.viaLabel}</div>
                 <div className="text-xs text-text-muted mt-1">
                   {detailRoute.route.via?.length || 0} waypoint
                   {(detailRoute.route.via?.length || 0) !== 1 ? 's' : ''} saved
@@ -975,7 +975,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
               <div className="p-3 rounded-lg bg-accent/20 border border-accent/30">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-accent">Locked to:</span>
-                  <span className="text-sm font-medium text-blue-300">{form.viaLabel}</span>
+                  <span className="text-sm font-medium text-accent">{form.viaLabel}</span>
                 </div>
                 <p className="text-xs text-text-muted mt-1">
                   Click "Change Route" to see alternatives

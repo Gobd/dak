@@ -94,14 +94,14 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-medium text-text truncate">{chore.name}</h3>
-                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                    <span className="px-2 py-0.5 bg-accent-light text-accent rounded text-xs font-medium">
                       {chore.points} pts
                     </span>
                     {chore.assignments.length > 1 && (
                       <span
                         className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                           chore.assignment_type === 'anyone'
-                            ? 'bg-warning-light/50 text-amber-700 dark:text-amber-300'
+                            ? 'bg-warning-light/50 text-warning'
                             : 'bg-surface-sunken text-text-secondary text-text-muted'
                         }`}
                       >
@@ -159,7 +159,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                   </button>
                   <button
                     onClick={() => setAssigningId(assigningId === chore.id ? null : chore.id)}
-                    className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-accent hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    className="p-2 rounded-lg bg-accent-light text-accent hover:bg-accent-light"
                     title="Assign now"
                   >
                     <Play size={16} />

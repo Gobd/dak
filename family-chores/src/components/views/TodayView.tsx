@@ -126,7 +126,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
         <div className="space-y-6">
           {/* Shared tasks (anyone mode) */}
           {sharedInstances.length > 0 && (
-            <div className="bg-warning-light/20 rounded-2xl p-4 border border-amber-200 dark:border-amber-800">
+            <div className="bg-warning-light/20 rounded-2xl p-4 border border-warning">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">🏆</span>
                 <div>
@@ -209,9 +209,9 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
 
           {/* Daily Goals */}
           {dailyGoals.length > 0 && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800">
+            <div className="bg-feature-light rounded-2xl p-4 border border-feature">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-6 h-6 text-accent dark:text-accent" />
+                <Target className="w-6 h-6 text-accent" />
                 <div>
                   <h2 className="font-semibold text-text">Daily Goals</h2>
                   <p className="text-xs text-text-muted">Complete these goals today</p>
@@ -232,7 +232,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
 
           {/* Weekly Goals */}
           {weeklyGoals.length > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
+            <div className="bg-accent-light rounded-2xl p-4 border border-accent">
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-6 h-6 text-accent" />
                 <div>
@@ -255,9 +255,9 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
 
           {/* Monthly Goals */}
           {monthlyGoals.length > 0 && (
-            <div className="bg-teal-50 dark:bg-teal-900/20 rounded-2xl p-4 border border-teal-200 dark:border-teal-800">
+            <div className="bg-info-light rounded-2xl p-4 border border-info">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-6 h-6 text-teal-600 dark:text-info" />
+                <Target className="w-6 h-6 text-info" />
                 <div>
                   <h2 className="font-semibold text-text">This Month</h2>
                   <p className="text-xs text-text-muted">Monthly goals to achieve</p>

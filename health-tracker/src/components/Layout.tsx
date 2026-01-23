@@ -27,7 +27,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-100 text-blue-700 bg-surface-raised text-text'
+                    ? 'bg-surface-raised text-text'
                     : 'text-text-secondary hover:bg-surface-sunken'
                 }`
               }
@@ -43,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700 bg-surface-raised text-text'
+                      ? 'bg-surface-raised text-text'
                       : 'text-text-secondary hover:bg-surface-sunken'
                   }`
                 }

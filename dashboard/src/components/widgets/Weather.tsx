@@ -82,7 +82,7 @@ function getAlertSeverityColor(severity: string): string {
     case 'extreme':
       return 'bg-danger';
     case 'severe':
-      return 'bg-orange-500';
+      return 'bg-warning';
     case 'moderate':
       return 'bg-warning';
     default:

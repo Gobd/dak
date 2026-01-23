@@ -79,7 +79,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                   }}
                   className={`flex flex-col items-center p-3 rounded-xl ${
                     selectedMemberId === member.id
-                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-accent'
+                      ? 'bg-accent-light ring-2 ring-accent'
                       : 'bg-surface-raised'
                   }`}
                 >

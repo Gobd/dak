@@ -382,7 +382,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg
                            border transition-colors ${
                              currentTheme === value
-                               ? 'bg-accent border-blue-600 text-text'
+                               ? 'bg-accent border-accent text-text'
                                : 'bg-surface-sunken border-border text-text-secondary hover:bg-border'
                            }`}
               >
@@ -543,7 +543,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloaded) {
                     return (
-                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-green-700 text-success">
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-success">
                         <CheckCircle size={16} />
                       </div>
                     );
@@ -551,7 +551,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloading) {
                     return (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 text-accent min-w-[80px]">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-light text-accent min-w-[80px]">
                         <Loader2 size={16} className="animate-spin" />
                         <span className="text-xs">{downloadProgress}%</span>
                       </div>
@@ -607,7 +607,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloaded) {
                     return (
-                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-green-700 text-success">
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-success">
                         <CheckCircle size={16} />
                       </div>
                     );
@@ -615,7 +615,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloading) {
                     return (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 text-accent min-w-[80px]">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-light text-accent min-w-[80px]">
                         <Loader2 size={16} className="animate-spin" />
                         <span className="text-xs">{ttsDownloadProgress}%</span>
                       </div>

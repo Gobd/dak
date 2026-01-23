@@ -43,6 +43,18 @@
   --color-info-hover: oklch(48% 0.17 220);
   --color-info-light: oklch(95% 0.04 220);
   --color-info-dark: oklch(45% 0.12 220);
+
+  /* Feature (purple - goals, habits) */
+  --color-feature: oklch(55% 0.2 300);
+  --color-feature-hover: oklch(48% 0.22 300);
+  --color-feature-light: oklch(95% 0.05 300);
+  --color-feature-dark: oklch(45% 0.18 300);
+
+  /* Gold (achievements, highlights) */
+  --color-gold: oklch(75% 0.15 85);
+  --color-gold-hover: oklch(68% 0.17 85);
+  --color-gold-light: oklch(95% 0.06 85);
+  --color-gold-dark: oklch(55% 0.13 85);
 }
 
 /* Dark mode overrides */
@@ -90,6 +102,18 @@
   --color-info-hover: oklch(77% 0.16 220);
   --color-info-light: oklch(25% 0.06 220);
   --color-info-dark: oklch(60% 0.12 220);
+
+  /* Feature (purple) */
+  --color-feature: oklch(72% 0.18 300);
+  --color-feature-hover: oklch(78% 0.2 300);
+  --color-feature-light: oklch(25% 0.08 300);
+  --color-feature-dark: oklch(62% 0.16 300);
+
+  /* Gold (achievements) */
+  --color-gold: oklch(82% 0.15 85);
+  --color-gold-hover: oklch(88% 0.17 85);
+  --color-gold-light: oklch(28% 0.08 85);
+  --color-gold-dark: oklch(70% 0.13 85);
 }
 
 /* Tailwind integration */
@@ -137,6 +161,18 @@
   --color-info-hover: var(--color-info-hover);
   --color-info-light: var(--color-info-light);
   --color-info-dark: var(--color-info-dark);
+
+  /* Feature */
+  --color-feature: var(--color-feature);
+  --color-feature-hover: var(--color-feature-hover);
+  --color-feature-light: var(--color-feature-light);
+  --color-feature-dark: var(--color-feature-dark);
+
+  /* Gold */
+  --color-gold: var(--color-gold);
+  --color-gold-hover: var(--color-gold-hover);
+  --color-gold-light: var(--color-gold-light);
+  --color-gold-dark: var(--color-gold-dark);
 }
 
 /* Centralized dark mode variant - apps no longer define this */

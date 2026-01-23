@@ -36,7 +36,7 @@ export function TabBar({ activeView, onViewChange }: TabBarProps) {
             onClick={() => onViewChange(tab.id)}
             className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 sm:py-4 px-2 text-sm font-medium transition-colors ${
               isActive
-                ? 'text-accent border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                ? 'text-accent border-b-2 border-accent bg-accent-light'
                 : 'text-text-secondary text-text-muted hover:text-text dark:hover:text-text hover:bg-surface-raised'
             }`}
           >

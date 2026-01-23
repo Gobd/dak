@@ -358,7 +358,7 @@ export default function SunMoon({ panel }: WidgetComponentProps) {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 text-xs">
           <span className="w-12 text-right text-text-muted">Dawn</span>
-          <span className="text-pink-400 font-semibold">{formatTime(sun.dawn)}</span>
+          <span className="text-danger font-semibold">{formatTime(sun.dawn)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="w-12 text-right text-text-muted">Sunrise</span>
@@ -378,11 +378,11 @@ export default function SunMoon({ panel }: WidgetComponentProps) {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 text-xs">
           <span className="w-14 text-right text-text-muted">Moonrise</span>
-          <span className="text-violet-400 font-semibold">{formatTime(moonTimes.rise)}</span>
+          <span className="text-feature font-semibold">{formatTime(moonTimes.rise)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="w-14 text-right text-text-muted">Moonset</span>
-          <span className="text-violet-400 font-semibold">{formatTime(moonTimes.set)}</span>
+          <span className="text-feature font-semibold">{formatTime(moonTimes.set)}</span>
         </div>
       </div>
 
@@ -395,8 +395,8 @@ export default function SunMoon({ panel }: WidgetComponentProps) {
           <span
             className={`text-[10px] px-1 py-0.5 rounded font-semibold ${
               dayLengthChange >= 0
-                ? 'text-success bg-green-400/15'
-                : 'text-warning bg-orange-400/15'
+                ? 'text-success bg-success-light'
+                : 'text-warning bg-warning-light'
             }`}
           >
             {changeSign}

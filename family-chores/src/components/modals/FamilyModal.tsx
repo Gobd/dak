@@ -95,7 +95,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                       key={e}
                       onClick={() => setEmoji(e)}
                       className={`w-10 h-10 text-xl rounded-lg ${
-                        emoji === e ? 'bg-blue-100 dark:bg-blue-900' : 'bg-surface-sunken'
+                        emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
                       }`}
                     >
                       {e}
@@ -176,7 +176,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   key={e}
                   onClick={() => setEmoji(e)}
                   className={`w-10 h-10 text-xl rounded-lg ${
-                    emoji === e ? 'bg-blue-100 dark:bg-blue-900' : 'bg-surface-sunken'
+                    emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
                   }`}
                 >
                   {e}
