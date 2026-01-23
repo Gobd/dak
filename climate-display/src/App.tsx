@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Thermometer,
@@ -9,6 +9,8 @@ import {
   RefreshCw,
   Settings as SettingsIcon,
   Home,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
@@ -36,14 +38,29 @@ interface ClimateData {
 
 type View = 'climate' | 'settings';
 
+function useDarkMode() {
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('climate-dark-mode');
+    if (stored !== null) return stored === 'true';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('climate-dark-mode', String(isDark));
+  }, [isDark]);
+
+  return [isDark, setIsDark] as const;
+}
+
 function celsiusToFahrenheit(c: number): number {
   return (c * 9) / 5 + 32;
 }
 
 function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'steady' }) {
-  if (trend === 'rising') return <TrendingUp className="w-5 h-5 text-red-400" />;
-  if (trend === 'falling') return <TrendingDown className="w-5 h-5 text-blue-400" />;
-  return <Minus className="w-5 h-5 text-slate-500" />;
+  if (trend === 'rising') return <TrendingUp className="w-5 h-5 text-danger" />;
+  if (trend === 'falling') return <TrendingDown className="w-5 h-5 text-accent" />;
+  return <Minus className="w-5 h-5 text-text-muted" />;
 }
 
 function SensorCard({
@@ -63,27 +80,27 @@ function SensorCard({
   };
   if (!sensor?.available) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-6 flex flex-col items-center justify-center min-h-[200px] border border-slate-700/50">
+      <div className="bg-surface-raised rounded-2xl p-6 flex flex-col items-center justify-center min-h-[200px] border border-border">
         <span className="text-5xl mb-3">{icon}</span>
-        <span className="text-slate-400 text-lg">{label}</span>
-        <span className="text-slate-600 text-sm mt-2">No data</span>
+        <span className="text-text-secondary text-lg">{label}</span>
+        <span className="text-text-muted text-sm mt-2">No data</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-6 border border-slate-700/50">
+    <div className="bg-surface-raised rounded-2xl p-6 border border-border">
       <div className="flex items-center justify-between mb-6">
         <span className="text-4xl">{icon}</span>
-        <span className="text-slate-400 font-medium">{label}</span>
+        <span className="text-text-secondary font-medium">{label}</span>
       </div>
 
       <div className="space-y-5">
         {/* Temperature */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Thermometer className="w-6 h-6 text-orange-400" />
-            <span className="text-4xl font-light">{formatTemp(sensor.temperature)}°</span>
+            <Thermometer className="w-6 h-6 text-warning" />
+            <span className="text-4xl font-light text-text">{formatTemp(sensor.temperature)}°</span>
           </div>
           <TrendIcon trend={sensor.temperature_trend} />
         </div>
@@ -91,22 +108,22 @@ function SensorCard({
         {/* Humidity */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Droplets className="w-6 h-6 text-blue-400" />
-            <span className="text-2xl font-light">{Math.round(sensor.humidity)}%</span>
+            <Droplets className="w-6 h-6 text-accent" />
+            <span className="text-2xl font-light text-text">{Math.round(sensor.humidity)}%</span>
           </div>
           <TrendIcon trend={sensor.humidity_trend} />
         </div>
 
         {/* Feels like */}
-        <div className="pt-3 border-t border-slate-700/50">
-          <span className="text-slate-500 text-sm">
+        <div className="pt-3 border-t border-border">
+          <span className="text-text-muted text-sm">
             Feels like {formatTemp(sensor.feels_like)}°
           </span>
         </div>
 
         {/* Battery warning */}
         {sensor.battery < 20 && (
-          <div className="text-yellow-500 text-sm flex items-center gap-2">
+          <div className="text-warning text-sm flex items-center gap-2">
             <span>⚠️</span> Battery low ({sensor.battery}%)
           </div>
         )}
@@ -130,27 +147,27 @@ function ComparisonBanner({
 
   if (!outside_feels_cooler && !outside_feels_warmer) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-8 text-center border border-slate-700/50">
+      <div className="bg-surface-raised rounded-2xl p-8 text-center border border-border">
         <span className="text-4xl mb-3 block">⚖️</span>
-        <span className="text-slate-300 text-xl">About the same</span>
-        <p className="text-slate-500 text-sm mt-2">Inside and outside feel similar</p>
+        <span className="text-text-secondary text-xl">About the same</span>
+        <p className="text-text-muted text-sm mt-2">Inside and outside feel similar</p>
       </div>
     );
   }
 
   if (outside_feels_cooler) {
     return (
-      <div className="bg-gradient-to-br from-blue-900/80 to-cyan-900/80 backdrop-blur rounded-2xl p-8 text-center border border-blue-700/30">
+      <div className="bg-gradient-to-br from-blue-900/80 to-cyan-900/80 backdrop-blur rounded-2xl p-8 text-center border border-info">
         <span className="text-5xl mb-3 block">❄️</span>
-        <span className="text-blue-100 text-2xl font-medium">Outside is {absDiff}° cooler</span>
+        <span className="text-info text-2xl font-medium">Outside is {absDiff}° cooler</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-orange-900/80 to-red-900/80 backdrop-blur rounded-2xl p-8 text-center border border-orange-700/30">
+    <div className="bg-gradient-to-br from-orange-900/80 to-red-900/80 backdrop-blur rounded-2xl p-8 text-center border border-warning">
       <span className="text-5xl mb-3 block">🔥</span>
-      <span className="text-orange-100 text-2xl font-medium">Outside is {absDiff}° warmer</span>
+      <span className="text-warning text-2xl font-medium">Outside is {absDiff}° warmer</span>
     </div>
   );
 }
@@ -172,7 +189,7 @@ function ClimateView() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <RefreshCw className="w-10 h-10 animate-spin text-slate-500" />
+        <RefreshCw className="w-10 h-10 animate-spin text-text-muted" />
       </div>
     );
   }
@@ -180,13 +197,13 @@ function ClimateView() {
   if (error) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="bg-red-900/30 backdrop-blur rounded-2xl p-8 text-center border border-red-700/30 max-w-sm">
+        <div className="bg-danger-light backdrop-blur rounded-2xl p-8 text-center border border-danger/30 max-w-sm">
           <span className="text-4xl mb-3 block">⚠️</span>
-          <span className="text-red-200 text-lg">Failed to load climate data</span>
-          <p className="text-red-400/70 text-sm mt-2">Check relay URL in settings</p>
+          <span className="text-danger text-lg">Failed to load climate data</span>
+          <p className="text-danger/70 text-sm mt-2">Check relay URL in settings</p>
           <button
             onClick={() => refetch()}
-            className="mt-4 px-4 py-2 bg-red-800 hover:bg-red-700 rounded-lg text-sm"
+            className="mt-4 px-4 py-2 bg-danger-dark hover:bg-danger-hover rounded-lg text-sm"
           >
             Retry
           </button>
@@ -202,7 +219,7 @@ function ClimateView() {
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-slate-200 disabled:opacity-50 transition-colors"
+          className="p-2 rounded-lg bg-surface-raised text-text-secondary hover:bg-border hover:text-text disabled:opacity-50 transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
@@ -225,18 +242,26 @@ function ClimateView() {
 
 export default function App() {
   const [view, setView] = useState<View>('climate');
+  const [isDark, setIsDark] = useDarkMode();
 
   return (
-    <div className="min-h-dvh flex flex-col bg-gradient-to-b from-slate-900 to-slate-950">
-      <header className="bg-slate-800/50 backdrop-blur border-b border-slate-700/50 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Climate</h1>
+    <div className="min-h-dvh flex flex-col bg-surface">
+      <header className="bg-surface-raised border-b border-border px-4 py-3 flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-text">Climate</h1>
         <nav className="flex gap-2">
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="p-2 rounded-lg bg-surface-sunken text-text-secondary hover:bg-border transition-colors"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
           <button
             onClick={() => setView('climate')}
             className={`p-2 rounded-lg transition-colors ${
               view === 'climate'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
+                ? 'bg-accent text-text'
+                : 'bg-surface-sunken text-text-secondary hover:bg-border'
             }`}
             aria-label="Climate"
           >
@@ -246,8 +271,8 @@ export default function App() {
             onClick={() => setView('settings')}
             className={`p-2 rounded-lg transition-colors ${
               view === 'settings'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
+                ? 'bg-accent text-text'
+                : 'bg-surface-sunken text-text-secondary hover:bg-border'
             }`}
             aria-label="Settings"
           >

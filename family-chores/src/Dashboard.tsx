@@ -135,7 +135,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-black">
+    <div className="min-h-screen flex flex-col bg-surface">
       {/* Tab bar */}
       <TabBar activeView={activeView} onViewChange={setActiveView} />
 

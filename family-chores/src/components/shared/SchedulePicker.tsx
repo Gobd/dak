@@ -51,9 +51,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
     <div className="space-y-4">
       {/* Schedule type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-          Repeats
-        </label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">Repeats</label>
         <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'daily', label: 'Daily' },
@@ -69,8 +67,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
               onClick={() => handleTypeChange(option.value as ScheduleConfig['type'])}
               className={`px-3 py-2 rounded-lg text-sm font-medium ${
                 value.type === option.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                  ? 'bg-accent text-text'
+                  : 'bg-surface-sunken text-text-secondary'
               }`}
             >
               {option.label}
@@ -82,7 +80,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
       {/* Interval days */}
       {value.type === 'every_x_days' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Every how many days?
           </label>
           <div className="flex items-center gap-3">
@@ -94,7 +92,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                   intervalDays: Math.max(1, (value.intervalDays ?? 2) - 1),
                 })
               }
-              className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-neutral-700 text-xl font-medium"
+              className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium"
             >
               −
             </button>
@@ -109,11 +107,11 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                   intervalDays: Math.min(30, (value.intervalDays ?? 2) + 1),
                 })
               }
-              className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-neutral-700 text-xl font-medium"
+              className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium"
             >
               +
             </button>
-            <span className="text-gray-500 dark:text-neutral-400">days</span>
+            <span className="text-text-muted">days</span>
           </div>
         </div>
       )}
@@ -121,7 +119,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
       {/* Weekly days */}
       {value.type === 'weekly' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             On which days?
           </label>
           <div className="flex gap-1 flex-wrap">
@@ -132,8 +130,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                 onClick={() => toggleWeeklyDay(day.value)}
                 className={`w-11 h-11 rounded-lg text-sm font-medium ${
                   (value.weeklyDays ?? []).includes(day.value)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                    ? 'bg-accent text-text'
+                    : 'bg-surface-sunken text-text-secondary'
                 }`}
               >
                 {day.label}
@@ -146,13 +144,13 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
       {/* Monthly day */}
       {value.type === 'monthly' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             On which day of the month?
           </label>
           <select
             value={value.monthlyDay ?? 1}
             onChange={(e) => onChange({ ...value, monthlyDay: parseInt(e.target.value) })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
           >
             {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
               <option key={day} value={day}>
@@ -168,15 +166,13 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
       {/* Goal/Habit configuration */}
       {value.type === 'goal' && (
         <div className="space-y-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-          <p className="text-xs text-purple-600 dark:text-purple-400">
+          <p className="text-xs text-accent dark:text-accent">
             Set a target to complete this habit a certain number of times within a period.
           </p>
 
           {/* Period selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-              Period
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Period</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'daily', label: 'Daily' },
@@ -194,8 +190,8 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                   }
                   className={`px-3 py-2 rounded-lg text-sm font-medium ${
                     value.goalPeriod === option.value
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white dark:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                      ? 'bg-accent text-text'
+                      : 'bg-surface-sunken text-text-secondary'
                   }`}
                 >
                   {option.label}
@@ -206,7 +202,7 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
 
           {/* Target count */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Target: {value.targetCount ?? 3}x per{' '}
               {value.goalPeriod === 'daily'
                 ? 'day'
@@ -223,11 +219,11 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                     targetCount: Math.max(1, (value.targetCount ?? 3) - 1),
                   })
                 }
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 text-xl font-medium border border-gray-300 dark:border-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium border border-border"
               >
                 −
               </button>
-              <span className="text-2xl font-semibold w-12 text-center dark:text-white">
+              <span className="text-2xl font-semibold w-12 text-center text-text">
                 {value.targetCount ?? 3}
               </span>
               <button
@@ -238,11 +234,11 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                     targetCount: Math.min(31, (value.targetCount ?? 3) + 1),
                   })
                 }
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 text-xl font-medium border border-gray-300 dark:border-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium border border-border"
               >
                 +
               </button>
-              <span className="text-gray-500 dark:text-neutral-400">times</span>
+              <span className="text-text-muted">times</span>
             </div>
           </div>
         </div>

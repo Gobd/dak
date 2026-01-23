@@ -57,13 +57,13 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
   const getRankIcon = (index: number) => {
     switch (index) {
       case 0:
-        return <Trophy className="text-yellow-500" size={24} />;
+        return <Trophy className="text-warning" size={24} />;
       case 1:
-        return <Medal className="text-gray-400" size={24} />;
+        return <Medal className="text-text-muted" size={24} />;
       case 2:
-        return <Award className="text-amber-600" size={24} />;
+        return <Award className="text-warning" size={24} />;
       default:
-        return <span className="w-6 text-center text-gray-500 font-medium">{index + 1}</span>;
+        return <span className="w-6 text-center text-text-muted font-medium">{index + 1}</span>;
     }
   };
 
@@ -71,42 +71,40 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
     <div className="p-4 space-y-6">
       {/* Period selector */}
       <div className="space-y-2">
-        <div className="flex bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
+        <div className="flex bg-surface-sunken rounded-lg p-1">
           {(['week', 'month', 'all'] as Period[]).map((period) => (
             <button
               key={period}
               onClick={() => setPeriod(period)}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 currentPeriod === period
-                  ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-surface-sunken text-text shadow-sm'
+                  : 'text-text-secondary text-text-muted hover:text-text dark:hover:text-text'
               }`}
             >
               {periodLabels[period]}
             </button>
           ))}
         </div>
-        <p className="text-xs text-center text-gray-500 dark:text-neutral-400">{dateRange}</p>
+        <p className="text-xs text-center text-text-muted">{dateRange}</p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center p-8">
-          <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+          <div className="text-text-muted">Loading...</div>
         </div>
       ) : members.length === 0 ? (
         <div className="text-center py-12 space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 mx-auto bg-surface-sunken rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8 text-text-muted" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">No family members yet</p>
-            <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
-              Add your family to track points
-            </p>
+            <p className="text-text-muted">No family members yet</p>
+            <p className="text-sm text-text-muted mt-1">Add your family to track points</p>
           </div>
           <button
             onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
           >
             <Users size={18} />
             Add Family Members
@@ -123,9 +121,7 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
               <div
                 key={member.id}
                 className={`flex items-center gap-4 p-4 rounded-xl ${
-                  isTop3
-                    ? 'bg-white dark:bg-neutral-800 shadow-sm'
-                    : 'bg-gray-50 dark:bg-neutral-900'
+                  isTop3 ? 'bg-surface-raised shadow-sm' : 'bg-surface'
                 } ${index === 0 ? 'ring-2 ring-yellow-400 dark:ring-yellow-600' : ''}`}
               >
                 {/* Rank */}
@@ -141,12 +137,8 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
 
                 {/* Name and balance */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                    {member.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-neutral-400">
-                    {totalBalance} total points
-                  </p>
+                  <h3 className="font-medium text-text truncate">{member.name}</h3>
+                  <p className="text-sm text-text-muted">{totalBalance} total points</p>
                 </div>
 
                 {/* Period points */}
@@ -154,17 +146,17 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
                   <p
                     className={`text-xl font-bold ${
                       index === 0
-                        ? 'text-yellow-600'
+                        ? 'text-warning'
                         : index === 1
-                          ? 'text-gray-500'
+                          ? 'text-text-muted'
                           : index === 2
-                            ? 'text-amber-600'
-                            : 'text-blue-600'
+                            ? 'text-warning'
+                            : 'text-accent'
                     }`}
                   >
                     {points}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">pts</p>
+                  <p className="text-xs text-text-muted">pts</p>
                 </div>
               </div>
             );

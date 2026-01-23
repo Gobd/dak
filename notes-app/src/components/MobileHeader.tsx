@@ -73,31 +73,27 @@ export function MobileHeader({
 
   if (isSelectionMode) {
     return (
-      <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-border bg-surface-sunken">
         <button onClick={toggleSelectAll} className="flex items-center gap-2">
           {allOwnedSelected ? (
-            <SquareCheck size={20} className="text-amber-500 dark:text-amber-400" />
+            <SquareCheck size={20} className="text-warning" />
           ) : (
-            <Square size={20} className="text-zinc-400" />
+            <Square size={20} className="text-text-muted" />
           )}
-          <span className="text-sm text-zinc-950 dark:text-white">All</span>
+          <span className="text-sm text-text">All</span>
         </button>
-        <span className="text-sm font-medium text-zinc-950 dark:text-white">
-          {selectedNoteIds.size} selected
-        </span>
+        <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => selectedNoteIds.size > 0 && onBulkDelete()}
             className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-              selectedNoteIds.size > 0
-                ? 'bg-red-500 text-white'
-                : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'
+              selectedNoteIds.size > 0 ? 'bg-danger text-text' : 'bg-surface-sunken text-text-muted'
             }`}
           >
             Delete
           </button>
           <button onClick={exitSelectionMode} className="p-1">
-            <X size={20} className="text-zinc-500" />
+            <X size={20} className="text-text-muted" />
           </button>
         </div>
       </div>
@@ -105,13 +101,11 @@ export function MobileHeader({
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-zinc-200 dark:border-zinc-800">
+    <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-border">
       <button onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2">
-        {!showPrivate && <Lock size={16} className="text-amber-500 dark:text-amber-400" />}
-        <span className="text-xl font-bold text-zinc-950 dark:text-white">
-          {showPrivate ? 'All Notes' : 'Public'}
-        </span>
-        <ChevronDown size={18} className="text-zinc-500" />
+        {!showPrivate && <Lock size={16} className="text-warning" />}
+        <span className="text-xl font-bold text-text">{showPrivate ? 'All Notes' : 'Public'}</span>
+        <ChevronDown size={18} className="text-text-muted" />
       </button>
       <div className="flex items-center gap-2">
         {/* Create Note Button */}
@@ -125,25 +119,25 @@ export function MobileHeader({
                 setShowCreateMenu(!showCreateMenu);
               }
             }}
-            className="p-2 rounded-lg bg-amber-500 dark:bg-amber-400"
+            className="p-2 rounded-lg bg-warning"
           >
             <Plus size={20} className="text-black" />
           </button>
           {showCreateMenu && showPrivate && (
-            <div className="absolute top-11 right-0 rounded-lg border min-w-[160px] z-[100] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+            <div className="absolute top-11 right-0 rounded-lg border min-w-[160px] z-[100] bg-surface-sunken border-border">
               <button
                 onClick={() => onCreateNote(false)}
-                className="w-full flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center gap-2 p-3 border-b border-border"
               >
-                <Plus size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">New Note</span>
+                <Plus size={16} className="text-text-muted" />
+                <span className="text-sm text-text">New Note</span>
               </button>
               <button
                 onClick={() => onCreateNote(true)}
                 className="w-full flex items-center gap-2 p-3"
               >
-                <Lock size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">Private Note</span>
+                <Lock size={16} className="text-text-muted" />
+                <span className="text-sm text-text">Private Note</span>
               </button>
             </div>
           )}
@@ -157,18 +151,18 @@ export function MobileHeader({
             }}
             className="p-2"
           >
-            <Menu size={20} className="text-zinc-500" />
+            <Menu size={20} className="text-text-muted" />
           </button>
           {showMobileMenu && (
-            <div className="absolute top-11 right-0 rounded-lg border min-w-[200px] max-h-[400px] z-[100] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+            <div className="absolute top-11 right-0 rounded-lg border min-w-[200px] max-h-[400px] z-[100] bg-surface-sunken border-border">
               {/* Tags Section */}
               <button
                 onClick={() => setShowMobileTagsMenu(!showMobileTagsMenu)}
-                className="w-full flex items-center justify-between p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center justify-between p-3 border-b border-border"
               >
                 <div className="flex items-center gap-2">
-                  <Tag size={16} className="text-zinc-500" />
-                  <span className="text-sm text-zinc-950 dark:text-white">
+                  <Tag size={16} className="text-text-muted" />
+                  <span className="text-sm text-text">
                     {selectedTagId
                       ? tags.find((t) => t.id === selectedTagId)?.name || 'Tags'
                       : 'Tags'}
@@ -183,14 +177,14 @@ export function MobileHeader({
                         setShowMobileTagsMenu(false);
                         setShowMobileMenu(false);
                       }}
-                      className="px-1 py-0.5 rounded text-xs bg-zinc-200 dark:bg-zinc-900 text-zinc-500"
+                      className="px-1 py-0.5 rounded text-xs bg-surface-sunken text-text-muted"
                     >
                       Clear
                     </button>
                   )}
                   <ChevronRight
                     size={16}
-                    className={`text-zinc-400 transition-transform ${showMobileTagsMenu ? 'rotate-90' : ''}`}
+                    className={`text-text-muted transition-transform ${showMobileTagsMenu ? 'rotate-90' : ''}`}
                   />
                 </div>
               </button>
@@ -203,14 +197,10 @@ export function MobileHeader({
                       setShowMobileMenu(false);
                     }}
                     className={`w-full flex items-center gap-2 py-2.5 px-4 ${
-                      !selectedTagId ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+                      !selectedTagId ? 'bg-surface-sunken' : ''
                     }`}
                   >
-                    <span
-                      className={`text-sm ${
-                        !selectedTagId ? 'text-zinc-950 dark:text-white' : 'text-zinc-500'
-                      }`}
-                    >
+                    <span className={`text-sm ${!selectedTagId ? 'text-text' : 'text-text-muted'}`}>
                       All notes
                     </span>
                   </button>
@@ -223,7 +213,7 @@ export function MobileHeader({
                         setShowMobileMenu(false);
                       }}
                       className={`w-full flex items-center gap-2 py-2.5 px-4 ${
-                        selectedTagId === tag.id ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+                        selectedTagId === tag.id ? 'bg-surface-sunken' : ''
                       }`}
                     >
                       <div
@@ -232,15 +222,13 @@ export function MobileHeader({
                       />
                       <span
                         className={`text-sm flex-1 text-left truncate ${
-                          selectedTagId === tag.id
-                            ? 'text-zinc-950 dark:text-white'
-                            : 'text-zinc-500'
+                          selectedTagId === tag.id ? 'text-text' : 'text-text-muted'
                         }`}
                       >
                         {tag.name}
                       </span>
                       {tagCounts[tag.id] && (
-                        <span className="text-xs text-zinc-500">{tagCounts[tag.id]}</span>
+                        <span className="text-xs text-text-muted">{tagCounts[tag.id]}</span>
                       )}
                     </button>
                   ))}
@@ -251,40 +239,40 @@ export function MobileHeader({
                   setShowMobileMenu(false);
                   window.location.reload();
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center gap-2 p-3 border-b border-border"
               >
-                <RefreshCw size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">Refresh</span>
+                <RefreshCw size={16} className="text-text-muted" />
+                <span className="text-sm text-text">Refresh</span>
               </button>
               <button
                 onClick={() => {
                   setShowMobileMenu(false);
                   navigate('/settings');
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center gap-2 p-3 border-b border-border"
               >
-                <Settings size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">Settings</span>
+                <Settings size={16} className="text-text-muted" />
+                <span className="text-sm text-text">Settings</span>
               </button>
               <button
                 onClick={() => {
                   setShowMobileMenu(false);
                   navigate('/trash');
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center gap-2 p-3 border-b border-border"
               >
-                <Trash2 size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">Trash</span>
+                <Trash2 size={16} className="text-text-muted" />
+                <span className="text-sm text-text">Trash</span>
               </button>
               <button
                 onClick={() => {
                   setShowMobileMenu(false);
                   enterSelectionMode();
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-700"
+                className="w-full flex items-center gap-2 p-3 border-b border-border"
               >
-                <SquareCheck size={16} className="text-zinc-500" />
-                <span className="text-sm text-zinc-950 dark:text-white">Select</span>
+                <SquareCheck size={16} className="text-text-muted" />
+                <span className="text-sm text-text">Select</span>
               </button>
               <button
                 onClick={() => {
@@ -293,8 +281,8 @@ export function MobileHeader({
                 }}
                 className="w-full flex items-center gap-2 p-3"
               >
-                <LogOut size={16} className="text-red-500" />
-                <span className="text-sm text-red-500">Log out</span>
+                <LogOut size={16} className="text-danger" />
+                <span className="text-sm text-danger">Log out</span>
               </button>
             </div>
           )}

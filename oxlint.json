@@ -10,7 +10,7 @@
     "restriction": "off"
   },
   "rules": {
-    "no-unused-vars": "warn",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^$", "varsIgnorePattern": "^$" }],
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn"
   },

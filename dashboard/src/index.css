@@ -1,9 +1,7 @@
 @import 'tailwindcss';
 @import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
 @source "../../packages/ui/src/**/*.tsx";
-
-/* Enable class-based dark mode (triggered by .dark class on document) */
-@variant dark (&:where(.dark, .dark *));
 
 /* Prevent virtual keyboard scroll-extend from creating scroll */
 html,
@@ -110,13 +108,13 @@ body {
 .wheel-mask-top {
   top: 0;
   height: 80px;
-  background: linear-gradient(to bottom, theme(colors.neutral.900), transparent);
+  background: linear-gradient(to bottom, var(--color-surface), transparent);
 }
 
 .wheel-mask-bottom {
   bottom: 0;
   height: 80px;
-  background: linear-gradient(to top, theme(colors.neutral.900), transparent);
+  background: linear-gradient(to top, var(--color-surface), transparent);
 }
 
 .wheel-highlight {
@@ -126,7 +124,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   height: 40px;
-  background: theme(colors.neutral.800);
+  background: var(--color-surface-raised);
   border-radius: 8px;
 }
 
@@ -162,20 +160,12 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: theme(colors.neutral.300);
+  background: var(--color-border);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: theme(colors.neutral.400);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: theme(colors.neutral.600);
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: theme(colors.neutral.500);
+  background: var(--color-text-muted);
 }
 
 /* Roller styles from shared UI package */

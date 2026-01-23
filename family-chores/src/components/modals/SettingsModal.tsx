@@ -45,12 +45,12 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
     <Modal open={true} onClose={onClose} title="Settings">
       <div className="space-y-4">
         {/* PIN Section */}
-        <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
+        <div className="bg-surface-raised rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <Lock size={20} className="text-gray-500" />
+            <Lock size={20} className="text-text-muted" />
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Parent PIN</h3>
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
+              <h3 className="font-medium text-text">Parent PIN</h3>
+              <p className="text-sm text-text-muted">
                 {settings?.parent_pin ? 'PIN is set' : 'No PIN set'}
               </p>
             </div>
@@ -66,7 +66,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                   setPinError('');
                 }}
                 placeholder="New PIN (4-6 digits)"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                 inputMode="numeric"
               />
               <input
@@ -77,10 +77,10 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                   setPinError('');
                 }}
                 placeholder="Confirm PIN"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                 inputMode="numeric"
               />
-              {pinError && <p className="text-red-600 text-sm">{pinError}</p>}
+              {pinError && <p className="text-danger text-sm">{pinError}</p>}
               <div className="flex gap-2">
                 <button
                   onClick={() => {
@@ -89,13 +89,13 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                     setConfirmPin('');
                     setPinError('');
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleChangePin}
-                  className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg"
+                  className="flex-1 bg-accent text-text px-3 py-2 rounded-lg"
                 >
                   Save
                 </button>
@@ -104,7 +104,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
           ) : (
             <button
               onClick={() => setShowPinChange(true)}
-              className="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600"
+              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface"
             >
               {settings?.parent_pin ? 'Change PIN' : 'Set PIN'}
             </button>
@@ -112,29 +112,27 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
         </div>
 
         {/* Hide Points */}
-        <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
+        <div className="bg-surface-raised rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {settings?.hide_points ? (
-                <EyeOff size={20} className="text-gray-500" />
+                <EyeOff size={20} className="text-text-muted" />
               ) : (
-                <Eye size={20} className="text-gray-500" />
+                <Eye size={20} className="text-text-muted" />
               )}
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Hide Points</h3>
-                <p className="text-sm text-gray-500 dark:text-neutral-400">
-                  Hide all points, leaderboard, and rewards
-                </p>
+                <h3 className="font-medium text-text">Hide Points</h3>
+                <p className="text-sm text-text-muted">Hide all points, leaderboard, and rewards</p>
               </div>
             </div>
             <button
               onClick={() => setHidePoints(!settings?.hide_points)}
               className={`relative w-12 h-7 rounded-full transition-colors ${
-                settings?.hide_points ? 'bg-blue-600' : 'bg-gray-300 dark:bg-neutral-600'
+                settings?.hide_points ? 'bg-accent' : 'bg-surface-sunken'
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 left-0.5 w-6 h-6 bg-surface rounded-full shadow transition-transform ${
                   settings?.hide_points ? 'translate-x-5' : ''
                 }`}
               />
@@ -143,20 +141,18 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
         </div>
 
         {/* Refresh Tasks */}
-        <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
+        <div className="bg-surface-raised rounded-xl p-4">
           <div className="flex items-center gap-3 mb-3">
-            <RefreshCw size={20} className="text-gray-500" />
+            <RefreshCw size={20} className="text-text-muted" />
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Refresh Tasks</h3>
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
-                Regenerate today's task list
-              </p>
+              <h3 className="font-medium text-text">Refresh Tasks</h3>
+              <p className="text-sm text-text-muted">Regenerate today's task list</p>
             </div>
           </div>
           <button
             onClick={handleRefreshTasks}
             disabled={refreshing}
-            className="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
             {refreshing ? 'Refreshing...' : 'Refresh Now'}
@@ -165,14 +161,12 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
 
         {/* Review Walkthrough */}
         {onShowWalkthrough && (
-          <div className="bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
+          <div className="bg-surface-raised rounded-xl p-4">
             <div className="flex items-center gap-3 mb-3">
-              <BookOpen size={20} className="text-gray-500" />
+              <BookOpen size={20} className="text-text-muted" />
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Review Walkthrough</h3>
-                <p className="text-sm text-gray-500 dark:text-neutral-400">
-                  Learn about chores, habits, and goals
-                </p>
+                <h3 className="font-medium text-text">Review Walkthrough</h3>
+                <p className="text-sm text-text-muted">Learn about chores, habits, and goals</p>
               </div>
             </div>
             <button
@@ -180,7 +174,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                 onClose();
                 onShowWalkthrough();
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-600 flex items-center justify-center gap-2"
+              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface flex items-center justify-center gap-2"
             >
               <BookOpen size={16} />
               Show Walkthrough

@@ -116,9 +116,9 @@ export function Courses() {
   };
 
   const inputClass =
-    'w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500';
+    'w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent';
   const btnSecondary =
-    'flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300';
+    'flex-1 px-4 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary';
 
   return (
     <div className="space-y-6">
@@ -126,7 +126,7 @@ export function Courses() {
         <h1 className="text-2xl font-bold">Courses Tracking</h1>
         <button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
         >
           <Plus size={18} /> Add
         </button>
@@ -154,7 +154,7 @@ export function Courses() {
             <button
               type="submit"
               form="add-course-form"
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
             >
               Create
             </button>
@@ -163,7 +163,7 @@ export function Courses() {
       >
         <form id="add-course-form" onSubmit={handleAddCourse} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Person</label>
             <select
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
@@ -179,7 +179,7 @@ export function Courses() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
               Medicine Name
             </label>
             <input
@@ -192,14 +192,12 @@ export function Courses() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
-              Start Date
-            </label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Start Date</label>
             <DatePickerCompact value={startDate} onChange={setStartDate} allowFuture={true} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              <label className="block text-sm font-medium mb-1 text-text-secondary">
                 Duration (days)
               </label>
               <NumberPickerCompact
@@ -212,7 +210,7 @@ export function Courses() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              <label className="block text-sm font-medium mb-1 text-text-secondary">
                 Doses per day
               </label>
               <NumberPickerCompact
@@ -226,7 +224,7 @@ export function Courses() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
               Notes (optional)
             </label>
             <input
@@ -241,7 +239,7 @@ export function Courses() {
       </Modal>
 
       {activeCourses.length === 0 && completedCourses.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center text-gray-500 dark:text-neutral-400">
+        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
           No medicine courses yet. Create one to start tracking.
         </div>
       ) : (
@@ -252,39 +250,34 @@ export function Courses() {
             const dates = Object.keys(dosesByDate).sort();
 
             return (
-              <div
-                key={course.id}
-                className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm overflow-hidden"
-              >
-                <div className="p-4 border-b border-gray-200 dark:border-neutral-700">
+              <div key={course.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Pill className="text-green-600" size={24} />
+                      <Pill className="text-success" size={24} />
                       <div>
                         <div className="font-semibold">{course.person?.name}</div>
-                        <div className="text-gray-600 dark:text-neutral-400">{course.name}</div>
+                        <div className="text-text-secondary text-text-muted">{course.name}</div>
                       </div>
                     </div>
                     <button
                       onClick={() => setConfirmDelete(course.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                      className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
                     >
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <div className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
+                  <div className="mt-2 text-sm text-text-secondary text-text-muted">
                     {course.doses_per_day}x/day for {course.duration_days} days • Started{' '}
                     {format(new Date(course.start_date + 'T00:00:00'), 'MMM d')}
                   </div>
                   {course.notes && (
-                    <div className="mt-2 text-sm text-gray-500 dark:text-neutral-500 italic">
-                      {course.notes}
-                    </div>
+                    <div className="mt-2 text-sm text-text-muted italic">{course.notes}</div>
                   )}
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="flex-1 bg-gray-200 dark:bg-neutral-700 rounded-full h-2">
+                    <div className="flex-1 bg-surface-sunken rounded-full h-2">
                       <div
-                        className="bg-green-600 h-2 rounded-full transition-all"
+                        className="bg-success h-2 rounded-full transition-all"
                         style={{
                           width: total > 0 ? `${(taken / total) * 100}%` : '0%',
                         }}
@@ -303,11 +296,11 @@ export function Courses() {
                     return (
                       <div
                         key={date}
-                        className={`flex items-center gap-4 p-2 rounded-lg ${isToday ? 'bg-gray-100 dark:bg-neutral-800' : ''}`}
+                        className={`flex items-center gap-4 p-2 rounded-lg ${isToday ? 'bg-surface-sunken' : ''}`}
                       >
                         <div className="w-20 text-sm font-medium">
                           {format(new Date(date + 'T00:00:00'), 'MMM d')}
-                          {isToday && <span className="text-blue-600 ml-1">•</span>}
+                          {isToday && <span className="text-accent ml-1">•</span>}
                         </div>
                         <div className="flex gap-3">
                           {dayDoses.map((dose) => (
@@ -316,10 +309,10 @@ export function Courses() {
                                 type="checkbox"
                                 checked={dose.taken}
                                 onChange={() => toggleDose(dose.id, !dose.taken)}
-                                className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-green-600 focus:ring-green-500 dark:bg-neutral-700"
+                                className="w-5 h-5 rounded border-border text-success focus:ring-success bg-surface-sunken"
                               />
                               <span
-                                className={`text-sm ${dose.taken ? 'text-gray-400 line-through' : ''}`}
+                                className={`text-sm ${dose.taken ? 'text-text-muted line-through' : ''}`}
                               >
                                 Dose {dose.dose_number}
                               </span>
@@ -336,9 +329,7 @@ export function Courses() {
 
           {completedCourses.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-500 dark:text-neutral-400 mb-4">
-                Completed
-              </h2>
+              <h2 className="text-lg font-semibold text-text-muted mb-4">Completed</h2>
               <div className="space-y-2">
                 {completedCourses.map((course) => {
                   const { taken, total } = getProgress(course.id);
@@ -346,19 +337,16 @@ export function Courses() {
                   const dosesByDate = getDosesByDate(course.id);
                   const dates = Object.keys(dosesByDate).sort();
                   return (
-                    <div
-                      key={course.id}
-                      className="bg-gray-100 dark:bg-neutral-900 rounded-lg overflow-hidden"
-                    >
+                    <div key={course.id} className="bg-surface-sunken rounded-lg overflow-hidden">
                       <button
                         onClick={() => toggleCompleted(course.id)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors"
+                        className="w-full p-4 flex items-center justify-between hover:bg-surface-sunken dark:hover:bg-surface-raised transition-colors"
                       >
                         <div className="text-left">
-                          <div className="font-medium text-gray-700 dark:text-neutral-300">
+                          <div className="font-medium text-text-secondary">
                             {course.person?.name} - {course.name}
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-neutral-400">
+                          <div className="text-sm text-text-muted">
                             {format(new Date(course.start_date + 'T00:00:00'), 'MMM d')} -{' '}
                             {format(
                               addDays(
@@ -369,28 +357,28 @@ export function Courses() {
                             )}
                           </div>
                           {course.notes && (
-                            <div className="text-xs text-gray-500 dark:text-neutral-500 italic mt-1">
+                            <div className="text-xs text-text-muted italic mt-1">
                               {course.notes}
                             </div>
                           )}
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className="text-sm text-gray-500 dark:text-neutral-400">
+                          <span className="text-sm text-text-muted">
                             {taken}/{total} doses
                           </span>
                           {isExpanded ? (
-                            <ChevronDown size={20} className="text-gray-400" />
+                            <ChevronDown size={20} className="text-text-muted" />
                           ) : (
-                            <ChevronRight size={20} className="text-gray-400" />
+                            <ChevronRight size={20} className="text-text-muted" />
                           )}
                         </div>
                       </button>
                       {isExpanded && (
-                        <div className="px-4 pb-4 space-y-2 border-t border-gray-200 dark:border-neutral-700 pt-3">
+                        <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
                           <div className="flex justify-end mb-2">
                             <button
                               onClick={() => setConfirmDelete(course.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-sm flex items-center gap-1"
+                              className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg text-sm flex items-center gap-1"
                             >
                               <Trash2 size={14} /> Delete
                             </button>
@@ -399,7 +387,7 @@ export function Courses() {
                             const dayDoses = dosesByDate[date];
                             return (
                               <div key={date} className="flex items-center gap-4 p-2 rounded-lg">
-                                <div className="w-20 text-sm font-medium text-gray-600 dark:text-neutral-400">
+                                <div className="w-20 text-sm font-medium text-text-secondary text-text-muted">
                                   {format(new Date(date + 'T00:00:00'), 'MMM d')}
                                 </div>
                                 <div className="flex gap-3">
@@ -412,10 +400,10 @@ export function Courses() {
                                         type="checkbox"
                                         checked={dose.taken}
                                         onChange={() => toggleDose(dose.id, !dose.taken)}
-                                        className="w-5 h-5 rounded border-gray-300 dark:border-neutral-600 text-green-600 focus:ring-green-500 dark:bg-neutral-700"
+                                        className="w-5 h-5 rounded border-border text-success focus:ring-success bg-surface-sunken"
                                       />
                                       <span
-                                        className={`text-sm ${dose.taken ? 'text-gray-400 line-through' : ''}`}
+                                        className={`text-sm ${dose.taken ? 'text-text-muted line-through' : ''}`}
                                       >
                                         Dose {dose.dose_number}
                                       </span>

@@ -8,13 +8,13 @@ export function LoadingSpinner({ size = 'large', fullScreen = false }: LoadingSp
 
   const spinner = (
     <div
-      className={`${sizeClass} border-2 border-amber-500 dark:border-amber-400 border-t-transparent rounded-full animate-spin`}
+      className={`${sizeClass} border-2 border-accent border-t-transparent rounded-full animate-spin`}
     />
   );
 
   if (fullScreen) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-white dark:bg-black">
+      <div className="flex-1 flex items-center justify-center min-h-screen bg-surface">
         {spinner}
       </div>
     );

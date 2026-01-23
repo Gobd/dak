@@ -79,29 +79,20 @@
 }
 
 .roller-wrapper [data-rwp-option] {
-  color: #a3a3a3;
+  color: var(--color-text-muted);
   font-size: 1rem;
   font-weight: 500;
 }
 
-.dark .roller-wrapper [data-rwp-option] {
-  color: #737373;
-}
-
 .roller-wrapper [data-rwp-highlight-item] {
-  color: #2563eb;
+  color: var(--color-accent);
   font-size: 1.125rem;
   font-weight: 600;
-  background: #f5f5f5;
-}
-
-.dark .roller-wrapper [data-rwp-highlight-item] {
-  color: #60a5fa;
-  background: #404040;
+  background: var(--color-surface-sunken);
 }
 
 .roller-wrapper [data-rwp-highlight-wrapper] {
-  background: rgba(59, 130, 246, 0.1);
+  background: oklch(from var(--color-accent) l c h / 0.1);
   border-radius: 0.5rem;
   height: 36px;
 }

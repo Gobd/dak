@@ -68,13 +68,13 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
   }
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 w-[280px] shadow-lg border border-gray-200 dark:border-neutral-700">
+    <div className="bg-surface-raised rounded-lg p-3 w-[280px] shadow-lg border border-border">
       {/* Navigation */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1">
           <button
             onClick={handlePrevYear}
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
             type="button"
             aria-label="Previous year"
           >
@@ -82,20 +82,20 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
           </button>
           <button
             onClick={handlePrevMonth}
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
             type="button"
             aria-label="Previous month"
           >
             <ChevronLeft size={16} />
           </button>
         </div>
-        <span className="text-sm font-medium text-center flex-1 text-gray-900 dark:text-white">
+        <span className="text-sm font-medium text-center flex-1 text-text">
           {viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={handleNextMonth}
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
             type="button"
             aria-label="Next month"
           >
@@ -103,7 +103,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
           </button>
           <button
             onClick={handleNextYear}
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-600 dark:text-neutral-300"
+            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
             type="button"
             aria-label="Next year"
           >
@@ -115,7 +115,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
       {/* Day names */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {DAY_NAMES.map((name) => (
-          <div key={name} className="text-center text-xs text-gray-500 dark:text-neutral-500 py-1">
+          <div key={name} className="text-center text-xs text-text-muted py-1">
             {name}
           </div>
         ))}
@@ -142,10 +142,10 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
               type="button"
               disabled={disabled}
               className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors
-                ${disabled ? 'text-gray-300 dark:text-neutral-600 cursor-not-allowed' : ''}
-                ${isSelected && !disabled ? 'bg-blue-600 text-white' : ''}
-                ${isToday && !isSelected && !disabled ? 'ring-1 ring-blue-500' : ''}
-                ${!isSelected && !disabled ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-neutral-700' : ''}`}
+                ${disabled ? 'text-text-muted cursor-not-allowed opacity-50' : ''}
+                ${isSelected && !disabled ? 'bg-accent text-text' : ''}
+                ${isToday && !isSelected && !disabled ? 'ring-1 ring-accent' : ''}
+                ${!isSelected && !disabled ? 'text-text hover:bg-surface-sunken' : ''}`}
             >
               {day}
             </button>
@@ -171,14 +171,14 @@ export function DatePickerCompact({ value, onChange, allowFuture = true }: DateP
       <button
         onClick={() => setShowPicker(true)}
         type="button"
-        className="w-full p-2 rounded bg-gray-100 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-left text-gray-900 dark:text-white"
+        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
       >
         {displayDate}
       </button>
 
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-surface-raised rounded-xl p-4 shadow-2xl">
             <DatePicker
               value={value}
               onChange={(d) => {
@@ -190,7 +190,7 @@ export function DatePickerCompact({ value, onChange, allowFuture = true }: DateP
             <button
               onClick={() => setShowPicker(false)}
               type="button"
-              className="w-full mt-3 px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-white font-medium"
+              className="w-full mt-3 px-4 py-2 rounded-lg bg-surface-sunken text-text font-medium"
             >
               Cancel
             </button>

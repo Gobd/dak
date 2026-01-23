@@ -33,17 +33,15 @@ export function Register() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-bold text-center mb-4 text-zinc-950 dark:text-white">
-            Check your email
-          </h1>
-          <p className="text-center mb-8 text-zinc-500">
+          <h1 className="text-3xl font-bold text-center mb-4 text-text">Check your email</h1>
+          <p className="text-center mb-8 text-text-muted">
             We sent a verification link to
             <br />
-            <span className="font-medium text-zinc-950 dark:text-white">{email}</span>
+            <span className="font-medium text-text">{email}</span>
           </p>
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-text-muted">
             Click the link in the email to verify your account and set your password.
           </p>
         </div>
@@ -52,12 +50,10 @@ export function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
-          Create Account
-        </h1>
-        <p className="text-center mb-8 text-zinc-500">Enter your email to get started</p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-text">Create Account</h1>
+        <p className="text-center mb-8 text-text-muted">Enter your email to get started</p>
 
         <div className="mb-6">
           <Input
@@ -78,9 +74,9 @@ export function Register() {
           </Button>
         </div>
 
-        <p className="text-center text-zinc-500">
+        <p className="text-center text-text-muted">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-amber-500 dark:text-amber-400">
+          <Link to="/login" className="font-medium text-accent">
             Sign In
           </Link>
         </p>

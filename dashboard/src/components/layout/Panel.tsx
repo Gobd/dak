@@ -168,8 +168,8 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
     <div
       ref={panelRef}
       className={`absolute overflow-hidden
-                  ${frameless ? '' : 'bg-white dark:bg-neutral-800 rounded-xl shadow-lg'}
-                  ${isEditMode ? 'ring-2 ring-blue-500/50 cursor-move' : ''}
+                  ${frameless ? '' : 'bg-surface-raised rounded-xl shadow-lg'}
+                  ${isEditMode ? 'ring-2 ring-accent/50 cursor-move' : ''}
                   ${isDragging ? 'opacity-80' : ''}`}
       style={{
         left: `${panel.x}%`,
@@ -192,7 +192,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             <button
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => removePanel(panel.id)}
-              className="p-1.5 rounded bg-red-500/80 hover:bg-red-500 text-white"
+              className="p-1.5 rounded bg-danger/80 hover:bg-danger text-text"
               title="Delete panel"
             >
               <Trash2 size={14} />
@@ -200,7 +200,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             <button
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => setShowSettings(true)}
-              className="p-1.5 rounded bg-neutral-500/80 hover:bg-neutral-500 text-white"
+              className="p-1.5 rounded bg-surface/80 hover:bg-surface text-text"
               title="Panel settings"
             >
               <Settings size={14} />
@@ -208,7 +208,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             <div
               onMouseDown={handleDragStart}
               onTouchStart={handleDragStart}
-              className="p-1.5 rounded bg-blue-500/80 hover:bg-blue-500 text-white cursor-move"
+              className="p-1.5 rounded bg-accent/80 hover:bg-accent text-text cursor-move"
               title="Drag to move"
             >
               <Move size={14} />
@@ -217,17 +217,17 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
 
           {/* Resize handles */}
           <div
-            className="resize-handle resize-handle-e hover:bg-blue-500/30"
+            className="resize-handle resize-handle-e hover:bg-accent/30"
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeStart}
           />
           <div
-            className="resize-handle resize-handle-s hover:bg-blue-500/30"
+            className="resize-handle resize-handle-s hover:bg-accent/30"
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeStart}
           />
           <div
-            className="resize-handle resize-handle-se bg-blue-500/50 rounded-tl"
+            className="resize-handle resize-handle-se bg-accent/50 rounded-tl"
             onMouseDown={handleResizeStart}
             onTouchStart={handleResizeStart}
           />
@@ -239,7 +239,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Widget</label>
-            <p className="text-sm text-neutral-500 capitalize">{panel.widget}</p>
+            <p className="text-sm text-text-muted capitalize">{panel.widget}</p>
           </div>
 
           <div>
@@ -247,7 +247,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             <select
               value={tempRefresh}
               onChange={(e) => setTempRefresh(e.target.value)}
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+              className="w-full p-2 rounded bg-surface-sunken border border-border"
             >
               {REFRESH_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>

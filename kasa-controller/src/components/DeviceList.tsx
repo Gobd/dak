@@ -147,7 +147,7 @@ export default function DeviceList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -156,14 +156,14 @@ export default function DeviceList() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <AlertCircle className="w-12 h-12 text-red-500" />
-        <p className="text-slate-400">
+        <AlertCircle className="w-12 h-12 text-danger" />
+        <p className="text-text-secondary">
           {error instanceof Error ? error.message : 'Failed to load devices'}
         </p>
-        <p className="text-slate-500 text-sm">Relay: {relayUrl}</p>
+        <p className="text-text-muted text-sm">Relay: {relayUrl}</p>
         <button
           onClick={() => refetch()}
-          className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
         >
           Retry
         </button>
@@ -175,11 +175,11 @@ export default function DeviceList() {
   if (!devices?.length) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <Wifi className="w-12 h-12 text-slate-500" />
-        <p className="text-slate-400">No devices found</p>
+        <Wifi className="w-12 h-12 text-text-muted" />
+        <p className="text-text-secondary">No devices found</p>
         <button
           onClick={() => refetch()}
-          className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
         >
           Scan Again
         </button>
@@ -195,39 +195,39 @@ export default function DeviceList() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSelectedDevice(null)}
-            className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700"
+            className="p-2 bg-surface-sunken rounded-lg hover:bg-border"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-lg font-semibold flex-1">{selectedDevice.name}</h2>
+          <h2 className="text-lg font-semibold flex-1 text-text">{selectedDevice.name}</h2>
         </div>
 
         {/* Power Control */}
         <div
           className={`p-4 rounded-xl ${
             selectedDevice.on
-              ? 'bg-green-900/50 border border-green-700'
-              : 'bg-slate-800 border border-slate-700'
+              ? 'bg-success/20 border border-success/50'
+              : 'bg-surface-raised border border-border'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="font-medium">Power</span>
+            <span className="font-medium text-text">Power</span>
             <button
               onClick={() => {
                 toggleMutation.mutate(selectedDevice);
                 setSelectedDevice({ ...selectedDevice, on: !selectedDevice.on });
               }}
-              className={`px-4 py-2 rounded-lg font-medium ${
+              className={`px-4 py-2 rounded-lg font-medium text-text ${
                 selectedDevice.on
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-slate-600 hover:bg-slate-500'
+                  ? 'bg-success hover:bg-success-hover'
+                  : 'bg-surface-sunken text-text hover:bg-border'
               }`}
             >
               {selectedDevice.on ? 'ON' : 'OFF'}
             </button>
           </div>
           {selectedDevice.on && selectedDevice.on_since && (
-            <div className="text-sm text-slate-400 mt-2 flex items-center gap-1">
+            <div className="text-sm text-text-secondary mt-2 flex items-center gap-1">
               <Clock className="w-4 h-4" />
               On for {formatDuration(selectedDevice.on_since)}
             </div>
@@ -236,13 +236,13 @@ export default function DeviceList() {
 
         {/* Brightness */}
         {hasBrightness(selectedDevice) && selectedDevice.brightness !== null && (
-          <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
+          <div className="p-4 rounded-xl bg-surface-raised border border-border">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-medium flex items-center gap-2">
-                <Sun className="w-5 h-5 text-yellow-400" />
+              <span className="font-medium flex items-center gap-2 text-text">
+                <Sun className="w-5 h-5 text-warning" />
                 Brightness
               </span>
-              <span className="text-slate-400">
+              <span className="text-text-secondary">
                 {brightnessMutation.isPending ? '...' : `${selectedDevice.brightness}%`}
               </span>
             </div>
@@ -265,7 +265,7 @@ export default function DeviceList() {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
                 brightnessMutation.mutate({ ip: selectedDevice.ip, brightness: val });
               }}
-              className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-600"
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken"
               disabled={!selectedDevice.on}
             />
           </div>
@@ -273,21 +273,21 @@ export default function DeviceList() {
 
         {/* Energy */}
         {selectedDevice.has_emeter && (
-          <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
-            <div className="font-medium flex items-center gap-2 mb-3">
-              <Zap className="w-5 h-5 text-yellow-400" />
+          <div className="p-4 rounded-xl bg-surface-raised border border-border">
+            <div className="font-medium flex items-center gap-2 mb-3 text-text">
+              <Zap className="w-5 h-5 text-warning" />
               Energy
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-slate-400 text-sm">Current</span>
-                <div className="font-medium text-lg">
+                <span className="text-text-secondary text-sm">Current</span>
+                <div className="font-medium text-lg text-text">
                   {selectedDevice.power_watts?.toFixed(1) ?? '--'} W
                 </div>
               </div>
               <div>
-                <span className="text-slate-400 text-sm">Today</span>
-                <div className="font-medium text-lg">
+                <span className="text-text-secondary text-sm">Today</span>
+                <div className="font-medium text-lg text-text">
                   {selectedDevice.energy_today_kwh?.toFixed(2) ?? '--'} kWh
                 </div>
               </div>
@@ -296,16 +296,16 @@ export default function DeviceList() {
         )}
 
         {/* Countdown Timer */}
-        <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
-          <div className="font-medium flex items-center gap-2 mb-3">
-            <Timer className="w-5 h-5 text-blue-400" />
+        <div className="p-4 rounded-xl bg-surface-raised border border-border">
+          <div className="font-medium flex items-center gap-2 mb-3 text-text">
+            <Timer className="w-5 h-5 text-accent" />
             Turn Off Timer
           </div>
           <div className="flex items-center gap-3">
             <select
               value={countdownMins}
               onChange={(e) => setCountdownMins(parseInt(e.target.value, 10))}
-              className="flex-1 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600"
+              className="flex-1 px-3 py-2 rounded-lg bg-surface-sunken border border-border text-text"
             >
               <option value={15}>15 minutes</option>
               <option value={30}>30 minutes</option>
@@ -322,7 +322,7 @@ export default function DeviceList() {
                 })
               }
               disabled={countdownMutation.isPending}
-              className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover disabled:opacity-50"
             >
               {countdownMutation.isPending
                 ? 'Setting...'
@@ -332,18 +332,18 @@ export default function DeviceList() {
             </button>
           </div>
           {countdownStatus === 'success' && (
-            <div className="text-sm text-green-400 mt-2">Timer set for {countdownMins} minutes</div>
+            <div className="text-sm text-success mt-2">Timer set for {countdownMins} minutes</div>
           )}
           {countdownStatus === 'error' && (
-            <div className="text-sm text-red-400 mt-2">Device may not support timers</div>
+            <div className="text-sm text-danger mt-2">Device may not support timers</div>
           )}
         </div>
 
         {/* Schedules */}
-        <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
+        <div className="p-4 rounded-xl bg-surface-raised border border-border">
           <div className="flex items-center justify-between mb-3">
-            <span className="font-medium flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-purple-400" />
+            <span className="font-medium flex items-center gap-2 text-text">
+              <Calendar className="w-5 h-5 text-accent" />
               Schedules
             </span>
             <button
@@ -356,7 +356,7 @@ export default function DeviceList() {
                 });
                 setShowScheduleForm(true);
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 rounded-lg hover:bg-slate-600"
+              className="flex items-center gap-1 px-3 py-1.5 bg-surface-sunken rounded-lg hover:bg-border text-text"
             >
               <Plus className="w-4 h-4" />
               Add
@@ -364,13 +364,13 @@ export default function DeviceList() {
           </div>
 
           {scheduleLoading ? (
-            <div className="text-sm text-slate-500">Loading schedules...</div>
+            <div className="text-sm text-text-muted">Loading schedules...</div>
           ) : scheduleData?.rules && scheduleData.rules.length > 0 ? (
             <div className="space-y-2">
               {scheduleData.rules.map((rule) => (
                 <div
                   key={rule.id}
-                  className={`flex items-center justify-between p-3 rounded-lg bg-slate-700/50 ${
+                  className={`flex items-center justify-between p-3 rounded-lg bg-surface-sunken ${
                     !rule.enabled ? 'opacity-50' : ''
                   }`}
                 >
@@ -379,15 +379,15 @@ export default function DeviceList() {
                       <span
                         className={`text-xs px-2 py-0.5 rounded font-medium ${
                           rule.action === 'on'
-                            ? 'bg-green-500/30 text-green-400'
-                            : 'bg-red-500/30 text-red-400'
+                            ? 'bg-success/30 text-success'
+                            : 'bg-danger/30 text-danger'
                         }`}
                       >
                         {rule.action.toUpperCase()}
                       </span>
-                      <span className="font-medium">{rule.time}</span>
+                      <span className="font-medium text-text">{rule.time}</span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
+                    <div className="text-xs text-text-muted mt-1">
                       {rule.days.map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3)).join(', ')}
                     </div>
                   </div>
@@ -402,11 +402,11 @@ export default function DeviceList() {
                         })
                       }
                       className={`w-10 h-5 rounded-full transition-colors ${
-                        rule.enabled ? 'bg-green-500' : 'bg-slate-500'
+                        rule.enabled ? 'bg-success' : 'bg-surface-sunken'
                       }`}
                     >
                       <div
-                        className={`w-4 h-4 rounded-full bg-white shadow transform transition-transform ${
+                        className={`w-4 h-4 rounded-full bg-surface shadow transform transition-transform ${
                           rule.enabled ? 'translate-x-5' : 'translate-x-0.5'
                         }`}
                       />
@@ -421,27 +421,27 @@ export default function DeviceList() {
                         });
                         setShowScheduleForm(true);
                       }}
-                      className="p-1.5 rounded hover:bg-slate-600"
+                      className="p-1.5 rounded hover:bg-border text-text-secondary"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(rule)}
-                      className="p-1.5 rounded hover:bg-red-500/30"
+                      className="p-1.5 rounded hover:bg-danger/30 text-danger"
                     >
-                      <Trash2 className="w-4 h-4 text-red-400" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-slate-500">No schedules configured</div>
+            <div className="text-sm text-text-muted">No schedules configured</div>
           )}
         </div>
 
         {/* Device Info */}
-        <div className="text-sm text-slate-500 space-y-1">
+        <div className="text-sm text-text-muted space-y-1">
           <div>Model: {selectedDevice.model}</div>
           <div>IP: {selectedDevice.ip}</div>
           {selectedDevice.features && selectedDevice.features.length > 0 && (
@@ -451,23 +451,23 @@ export default function DeviceList() {
 
         {/* Schedule Form Modal */}
         {showScheduleForm && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-800 rounded-xl p-5 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-surface-raised rounded-xl p-5 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4 text-text">
                 {editingRule ? 'Edit Schedule' : 'Add Schedule'}
               </h3>
 
               <div className="space-y-4">
                 {/* Action */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Action</label>
+                  <label className="block text-sm font-medium mb-2 text-text">Action</label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setScheduleForm((f) => ({ ...f, action: 'on' }))}
                       className={`flex-1 py-2 rounded-lg font-medium ${
                         scheduleForm.action === 'on'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-slate-700 text-slate-300'
+                          ? 'bg-success text-text'
+                          : 'bg-surface-sunken text-text-secondary'
                       }`}
                     >
                       Turn On
@@ -476,8 +476,8 @@ export default function DeviceList() {
                       onClick={() => setScheduleForm((f) => ({ ...f, action: 'off' }))}
                       className={`flex-1 py-2 rounded-lg font-medium ${
                         scheduleForm.action === 'off'
-                          ? 'bg-red-500 text-white'
-                          : 'bg-slate-700 text-slate-300'
+                          ? 'bg-danger text-text'
+                          : 'bg-surface-sunken text-text-secondary'
                       }`}
                     >
                       Turn Off
@@ -487,18 +487,18 @@ export default function DeviceList() {
 
                 {/* Time */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Time</label>
+                  <label className="block text-sm font-medium mb-2 text-text">Time</label>
                   <input
                     type="time"
                     value={scheduleForm.time}
                     onChange={(e) => setScheduleForm((f) => ({ ...f, time: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600"
+                    className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border text-text"
                   />
                 </div>
 
                 {/* Days */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Days</label>
+                  <label className="block text-sm font-medium mb-2 text-text">Days</label>
                   <div className="flex gap-1">
                     {(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const).map((day) => (
                       <button
@@ -513,8 +513,8 @@ export default function DeviceList() {
                         }
                         className={`w-9 h-9 rounded-lg text-sm font-medium ${
                           scheduleForm.days.includes(day)
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-slate-700 text-slate-400'
+                            ? 'bg-accent text-text'
+                            : 'bg-surface-sunken text-text-secondary'
                         }`}
                       >
                         {day.charAt(0).toUpperCase()}
@@ -522,7 +522,7 @@ export default function DeviceList() {
                     ))}
                   </div>
                   {scheduleForm.days.length === 0 && (
-                    <div className="text-xs text-red-400 mt-1">Select at least one day</div>
+                    <div className="text-xs text-danger mt-1">Select at least one day</div>
                   )}
                 </div>
               </div>
@@ -533,7 +533,7 @@ export default function DeviceList() {
                     setShowScheduleForm(false);
                     setEditingRule(null);
                   }}
-                  className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600"
+                  className="flex-1 py-2 rounded-lg bg-surface-sunken hover:bg-border text-text"
                 >
                   Cancel
                 </button>
@@ -559,7 +559,7 @@ export default function DeviceList() {
                     }
                   }}
                   disabled={scheduleMutation.isPending || scheduleForm.days.length === 0}
-                  className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-accent text-text hover:bg-accent-hover disabled:opacity-50"
                 >
                   {scheduleMutation.isPending ? 'Saving...' : 'Save'}
                 </button>
@@ -570,16 +570,16 @@ export default function DeviceList() {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-800 rounded-xl p-5 w-full max-w-sm">
-              <h3 className="text-lg font-semibold mb-2">Delete Schedule</h3>
-              <p className="text-slate-400 mb-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-surface-raised rounded-xl p-5 w-full max-w-sm">
+              <h3 className="text-lg font-semibold mb-2 text-text">Delete Schedule</h3>
+              <p className="text-text-secondary mb-4">
                 Delete this schedule ({deleteConfirm.action.toUpperCase()} at {deleteConfirm.time})?
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600"
+                  className="flex-1 py-2 rounded-lg bg-surface-sunken hover:bg-border text-text"
                 >
                   Cancel
                 </button>
@@ -592,7 +592,7 @@ export default function DeviceList() {
                     })
                   }
                   disabled={scheduleMutation.isPending}
-                  className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-danger text-text hover:opacity-90 disabled:opacity-50"
                 >
                   {scheduleMutation.isPending ? 'Deleting...' : 'Delete'}
                 </button>
@@ -608,13 +608,13 @@ export default function DeviceList() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-slate-400 text-sm">
+        <span className="text-text-secondary text-sm">
           {devices.length} device{devices.length !== 1 && 's'}
         </span>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50"
+          className="p-2 bg-surface-sunken rounded-lg hover:bg-border transition-colors disabled:opacity-50"
           aria-label="Refresh devices"
         >
           <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
@@ -628,25 +628,27 @@ export default function DeviceList() {
             key={device.ip}
             className={`p-4 rounded-xl flex items-center gap-4 transition-all ${
               device.on
-                ? 'bg-green-900/50 border border-green-700'
-                : 'bg-slate-800 border border-slate-700'
+                ? 'bg-success/20 border border-success/50'
+                : 'bg-surface-raised border border-border'
             }`}
           >
             <button
               onClick={() => toggleMutation.mutate(device)}
               disabled={toggleMutation.isPending}
-              className={`p-3 rounded-full ${
-                device.on ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-600 hover:bg-slate-500'
+              className={`p-3 rounded-full text-text ${
+                device.on
+                  ? 'bg-success hover:bg-success-hover'
+                  : 'bg-surface-sunken hover:bg-border'
               }`}
             >
-              <Power className="w-6 h-6" />
+              <Power className={`w-6 h-6 ${device.on ? '' : 'text-text-secondary'}`} />
             </button>
             <button
               onClick={() => setSelectedDevice(device)}
               className="flex-1 text-left hover:opacity-80"
             >
-              <p className="font-medium">{device.name}</p>
-              <div className="flex items-center gap-3 text-sm text-slate-400">
+              <p className="font-medium text-text">{device.name}</p>
+              <div className="flex items-center gap-3 text-sm text-text-secondary">
                 <span>{device.model}</span>
                 {device.on && device.on_since && (
                   <span className="flex items-center gap-1">
@@ -655,7 +657,7 @@ export default function DeviceList() {
                   </span>
                 )}
                 {device.has_emeter && device.power_watts != null && device.on && (
-                  <span className="flex items-center gap-1 text-yellow-400">
+                  <span className="flex items-center gap-1 text-warning">
                     <Zap className="w-3 h-3" />
                     {device.power_watts.toFixed(1)}W
                   </span>
@@ -663,7 +665,7 @@ export default function DeviceList() {
               </div>
             </button>
             <span
-              className={`text-sm font-medium ${device.on ? 'text-green-400' : 'text-slate-500'}`}
+              className={`text-sm font-medium ${device.on ? 'text-success' : 'text-text-muted'}`}
             >
               {device.on ? 'ON' : 'OFF'}
             </span>

@@ -47,11 +47,11 @@ function resolveUrl(url: string, dark: boolean): string {
 }
 
 export default function Iframe({ panel, dark }: WidgetComponentProps) {
-  const src = resolveUrl((panel.args?.src as string) || '', dark);
+  const src = resolveUrl((panel.args?.src as string) || '', dark ?? false);
 
   if (!src) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-neutral-500">
+      <div className="w-full h-full flex items-center justify-center bg-surface-raised text-text-muted">
         No URL specified
       </div>
     );

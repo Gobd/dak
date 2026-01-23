@@ -21,13 +21,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const variantClasses = {
-      primary:
-        'bg-amber-500 dark:bg-amber-400 text-black hover:bg-amber-600 dark:hover:bg-amber-500',
-      secondary:
-        'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-300 dark:hover:bg-zinc-700',
-      ghost:
-        'bg-transparent text-amber-600 dark:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800',
-      danger: 'bg-red-600 text-white hover:bg-red-700',
+      primary: 'bg-warning text-black hover:bg-warning dark:hover:bg-warning',
+      secondary: 'bg-surface-sunken text-text hover:bg-surface-sunken',
+      ghost: 'bg-transparent text-warning hover:bg-surface-sunken dark:hover:bg-surface-raised',
+      danger: 'bg-danger text-text hover:bg-danger-hover',
     };
 
     return (

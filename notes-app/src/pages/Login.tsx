@@ -34,12 +34,10 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
-          Welcome Back
-        </h1>
-        <p className="text-center mb-8 text-zinc-500">Sign in to your account</p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-text">Welcome Back</h1>
+        <p className="text-center mb-8 text-text-muted">Sign in to your account</p>
 
         <div className="mb-4">
           <Input
@@ -67,10 +65,7 @@ export function Login() {
           />
         </div>
 
-        <Link
-          to="/forgot-password"
-          className="block text-right text-sm mb-6 text-amber-500 dark:text-amber-400"
-        >
+        <Link to="/forgot-password" className="block text-right text-sm mb-6 text-accent">
           Forgot password?
         </Link>
 
@@ -80,9 +75,9 @@ export function Login() {
           </Button>
         </div>
 
-        <p className="text-center text-zinc-500">
+        <p className="text-center text-text-muted">
           Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-amber-500 dark:text-amber-400">
+          <Link to="/register" className="font-medium text-accent">
             Create Account
           </Link>
         </p>

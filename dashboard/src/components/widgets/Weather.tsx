@@ -80,13 +80,13 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
 function getAlertSeverityColor(severity: string): string {
   switch (severity?.toLowerCase()) {
     case 'extreme':
-      return 'bg-red-600';
+      return 'bg-danger';
     case 'severe':
       return 'bg-orange-500';
     case 'moderate':
-      return 'bg-yellow-500';
+      return 'bg-warning';
     default:
-      return 'bg-blue-500';
+      return 'bg-accent';
   }
 }
 
@@ -108,7 +108,7 @@ function formatAlertTime(expires: string): string {
   return `${minutes}m`;
 }
 
-export default function Weather({ panel, dark }: WidgetComponentProps) {
+export default function Weather({ panel }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const widgetId = panel.id || 'weather';
   const layout = (panel.args?.layout as string) || 'horizontal';
@@ -142,21 +142,17 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
 
   if (isLoading && !weather) {
     return (
-      <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-      >
-        <RefreshCw size={20} className="animate-spin text-neutral-500" />
+      <div className={`w-full h-full flex items-center justify-center bg-surface text-text`}>
+        <RefreshCw size={20} className="animate-spin text-text-muted" />
       </div>
     );
   }
 
   if (error && !weather) {
     return (
-      <div
-        className={`w-full h-full p-4 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-      >
-        <p className="text-red-500 text-sm mb-2">{error.message}</p>
-        <button onClick={() => refetch()} className="text-sm text-blue-500 hover:underline">
+      <div className={`w-full h-full p-4 bg-surface text-text`}>
+        <p className="text-danger text-sm mb-2">{error.message}</p>
+        <button onClick={() => refetch()} className="text-sm text-accent hover:underline">
           Retry
         </button>
       </div>
@@ -168,25 +164,23 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
   const isVertical = layout === 'vertical';
 
   return (
-    <div
-      className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className={`w-full h-full flex flex-col overflow-hidden bg-surface text-text`}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 shrink-0">
-        <span className="text-sm text-neutral-500 truncate">
+        <span className="text-sm text-text-muted truncate">
           {formatLocation(location.city, location.state)}
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={handleRefresh}
-            className={`p-1 rounded shrink-0 ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
+            className={`p-1 rounded shrink-0 hover:bg-surface-sunken/50`}
             title="Refresh"
           >
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => setShowSettings(true)}
-            className={`p-1 rounded shrink-0 ${dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'}`}
+            className={`p-1 rounded shrink-0 hover:bg-surface-sunken/50`}
             title="Change location"
           >
             <Settings size={14} />
@@ -201,7 +195,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
             <button
               key={i}
               onClick={() => setSelectedAlert(alert)}
-              className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left text-xs text-white ${getAlertSeverityColor(alert.properties.severity)}`}
+              className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left text-xs text-text ${getAlertSeverityColor(alert.properties.severity)}`}
             >
               <AlertTriangle size={12} className="shrink-0" />
               <span className="truncate flex-1">{alert.properties.event}</span>
@@ -211,7 +205,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
             </button>
           ))}
           {weather.alerts && weather.alerts.length > 3 && (
-            <div className="text-xs text-neutral-500 px-2">
+            <div className="text-xs text-text-muted px-2">
               +{weather.alerts.length - 3} more alerts
             </div>
           )}
@@ -226,12 +220,12 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
           <button
             key={i}
             onClick={() => setSelectedPeriod(period)}
-            className={`flex items-center gap-2 rounded-lg hover:bg-neutral-800/50 transition-colors text-left ${
+            className={`flex items-center gap-2 rounded-lg hover:bg-surface-raised/50 transition-colors text-left ${
               isVertical ? 'w-full flex-1 min-h-0 px-2' : 'flex-col min-w-[80px] flex-shrink-0 p-2'
             }`}
           >
             <div
-              className={`text-neutral-400 ${isVertical ? 'w-20 shrink-0 text-sm' : 'text-center text-xs'}`}
+              className={`text-text-muted ${isVertical ? 'w-20 shrink-0 text-sm' : 'text-center text-xs'}`}
             >
               {period.name}
             </div>
@@ -241,12 +235,12 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
               className={`${isVertical ? 'w-10 h-10' : 'w-10 h-10'} rounded shrink-0`}
             />
             <div
-              className={`font-medium ${period.isDaytime ? 'text-orange-400' : 'text-blue-400'} ${isVertical ? 'text-lg' : 'text-center'}`}
+              className={`font-medium ${period.isDaytime ? 'text-warning' : 'text-accent'} ${isVertical ? 'text-lg' : 'text-center'}`}
             >
               {period.temperature}°{period.temperatureUnit}
             </div>
             {isVertical && (
-              <div className="text-sm text-neutral-500 truncate flex-1">{period.shortForecast}</div>
+              <div className="text-sm text-text-muted truncate flex-1">{period.shortForecast}</div>
             )}
           </button>
         ))}
@@ -268,20 +262,20 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
               />
               <div>
                 <div
-                  className={`text-3xl font-bold ${selectedPeriod.isDaytime ? 'text-orange-400' : 'text-blue-400'}`}
+                  className={`text-3xl font-bold ${selectedPeriod.isDaytime ? 'text-warning' : 'text-accent'}`}
                 >
                   {selectedPeriod.temperature}°{selectedPeriod.temperatureUnit}
                 </div>
-                <div className="text-neutral-400">{selectedPeriod.shortForecast}</div>
+                <div className="text-text-muted">{selectedPeriod.shortForecast}</div>
               </div>
             </div>
 
             {selectedPeriod.detailedForecast && (
-              <p className="text-sm text-neutral-300">{selectedPeriod.detailedForecast}</p>
+              <p className="text-sm text-text-secondary">{selectedPeriod.detailedForecast}</p>
             )}
 
             {selectedPeriod.windSpeed && (
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
+              <div className="flex items-center gap-2 text-sm text-text-muted">
                 <Wind size={14} />
                 <span>
                   {selectedPeriod.windDirection} {selectedPeriod.windSpeed}
@@ -306,7 +300,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
               <h3 className="font-bold text-lg">{selectedAlert.properties.event}</h3>
             </div>
 
-            <div className="text-sm text-neutral-400">
+            <div className="text-sm text-text-muted">
               <strong>Expires:</strong>{' '}
               {new Date(selectedAlert.properties.expires).toLocaleString()}
               <br />
@@ -318,7 +312,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
             )}
 
             {selectedAlert.properties.description && (
-              <p className="text-sm text-neutral-300 whitespace-pre-wrap max-h-48 overflow-auto">
+              <p className="text-sm text-text-secondary whitespace-pre-wrap max-h-48 overflow-auto">
                 {selectedAlert.properties.description}
               </p>
             )}
@@ -326,7 +320,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
             {selectedAlert.properties.instruction && (
               <div className="text-sm">
                 <strong>Instructions:</strong>
-                <p className="text-neutral-300 mt-1">{selectedAlert.properties.instruction}</p>
+                <p className="text-text-secondary mt-1">{selectedAlert.properties.instruction}</p>
               </div>
             )}
           </div>

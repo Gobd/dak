@@ -373,9 +373,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
       <div className="space-y-6">
         {/* Theme Selector */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Theme
-          </label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Theme</label>
           <div className="flex gap-2">
             {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
               <button
@@ -384,8 +382,8 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg
                            border transition-colors ${
                              currentTheme === value
-                               ? 'bg-blue-600 border-blue-600 text-white'
-                               : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                               ? 'bg-accent border-blue-600 text-text'
+                               : 'bg-surface-sunken border-border text-text-secondary hover:bg-border'
                            }`}
               >
                 <Icon size={18} />
@@ -397,11 +395,11 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
         {/* Default Location */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Default Location
           </label>
           {defaultLocation && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+            <p className="text-sm text-text-muted mb-2">
               Current: {formatLocation(defaultLocation.city, defaultLocation.state)}
             </p>
           )}
@@ -411,7 +409,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             onSelect={handleLocationSelect}
             placeholder="Search for a new location..."
           />
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-text-muted">
             Used as fallback for weather, UV, and air quality widgets
           </p>
         </div>
@@ -423,14 +421,12 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               type="checkbox"
               checked={hideCursor}
               onChange={(e) => handleHideCursorChange(e.target.checked)}
-              className="w-5 h-5 rounded border-neutral-300 dark:border-neutral-600
-                         text-blue-600 focus:ring-blue-500 dark:bg-neutral-800"
+              className="w-5 h-5 rounded border-border
+                         text-accent focus:ring-accent bg-surface-raised"
             />
             <div>
-              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Hide Cursor
-              </span>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span className="text-sm font-medium text-text-secondary">Hide Cursor</span>
+              <p className="text-xs text-text-muted">
                 Hides the mouse cursor for kiosk displays (Ctrl+Shift+H to toggle)
               </p>
             </div>
@@ -439,7 +435,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
         {/* Volume Control */}
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-2">
             <Volume2 size={18} />
             Volume
           </label>
@@ -447,7 +443,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             <button
               onClick={() => changeVolume(volume - 10)}
               disabled={volumeLoading || volume <= 0}
-              className="p-2 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg bg-surface-sunken hover:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Minus size={16} />
             </button>
@@ -460,21 +456,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 value={volume}
                 onChange={(e) => changeVolume(parseInt(e.target.value, 10))}
                 disabled={volumeLoading}
-                className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="w-full h-2 bg-surface-sunken rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-neutral-500">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-text-muted">
                 {volume}%
               </div>
             </div>
             <button
               onClick={() => changeVolume(volume + 10)}
               disabled={volumeLoading || volume >= 100}
-              className="p-2 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg bg-surface-sunken hover:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
             </button>
           </div>
-          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-2 text-xs text-text-muted">
             Plays a test sound when changed. Controls kiosk speaker volume.
           </p>
         </div>
@@ -486,27 +482,23 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               type="checkbox"
               checked={voiceEnabled}
               onChange={(e) => updateGlobalSettings({ voiceEnabled: e.target.checked })}
-              className="w-5 h-5 rounded border-neutral-300 dark:border-neutral-600
-                         text-blue-600 focus:ring-blue-500 dark:bg-neutral-800"
+              className="w-5 h-5 rounded border-border
+                         text-accent focus:ring-accent bg-surface-raised"
             />
             <div className="flex items-center gap-2">
-              <Mic size={18} className="text-neutral-500" />
-              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Voice Control
-              </span>
+              <Mic size={18} className="text-text-muted" />
+              <span className="text-sm font-medium text-text-secondary">Voice Control</span>
             </div>
           </label>
           {voiceEnabled && (
             <div className="ml-8">
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                Wake Word
-              </label>
+              <label className="block text-xs text-text-muted mb-1">Wake Word</label>
               <select
                 value={wakeWord}
                 onChange={(e) => updateGlobalSettings({ wakeWord: e.target.value as WakeWord })}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                           bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-border
+                           bg-surface-raised text-text
+                           focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
               >
                 {WAKE_WORD_OPTIONS.map(({ value, label }) => (
                   <option key={value} value={value}>
@@ -514,23 +506,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-1 text-xs text-text-muted">
                 Say the wake word, then your command (e.g., "add milk to groceries")
               </p>
 
               {/* Speech Model Selector */}
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
-                Speech Model
-              </label>
+              <label className="block text-xs text-text-muted mb-1 mt-4">Speech Model</label>
               <div className="flex gap-2">
                 <select
                   value={voiceModel}
                   onChange={(e) =>
                     updateGlobalSettings({ voiceModel: e.target.value as VoskModel })
                   }
-                  className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                             bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="flex-1 px-3 py-2 rounded-lg border border-border
+                             bg-surface-raised text-text
+                             focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
                 >
                   {voiceModels.length > 0 ? (
                     voiceModels.map((m) => (
@@ -553,7 +543,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloaded) {
                     return (
-                      <div className="flex items-center px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-green-700 text-success">
                         <CheckCircle size={16} />
                       </div>
                     );
@@ -561,7 +551,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloading) {
                     return (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 min-w-[80px]">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 text-accent min-w-[80px]">
                         <Loader2 size={16} className="animate-spin" />
                         <span className="text-xs">{downloadProgress}%</span>
                       </div>
@@ -571,7 +561,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   return (
                     <button
                       onClick={() => downloadModel(voiceModel)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-sm"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-text hover:bg-accent text-sm"
                     >
                       <Download size={16} />
                       Download
@@ -579,21 +569,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   );
                 })()}
               </div>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-1 text-xs text-text-muted">
                 Larger models are more accurate but slower. Download required before use.
               </p>
 
               {/* TTS Voice Selector */}
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+              <label className="block text-xs text-text-muted mb-1 mt-4">
                 TTS Voice (for spoken responses)
               </label>
               <div className="flex gap-2">
                 <select
                   value={ttsVoice}
                   onChange={(e) => updateGlobalSettings({ ttsVoice: e.target.value as TtsVoice })}
-                  className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                             bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="flex-1 px-3 py-2 rounded-lg border border-border
+                             bg-surface-raised text-text
+                             focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
                 >
                   {ttsVoices.length > 0 ? (
                     ttsVoices.map((v) => (
@@ -617,7 +607,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloaded) {
                     return (
-                      <div className="flex items-center px-3 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                      <div className="flex items-center px-3 py-2 rounded-lg bg-success-light/30 text-green-700 text-success">
                         <CheckCircle size={16} />
                       </div>
                     );
@@ -625,7 +615,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
                   if (isDownloading) {
                     return (
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 min-w-[80px]">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 text-accent min-w-[80px]">
                         <Loader2 size={16} className="animate-spin" />
                         <span className="text-xs">{ttsDownloadProgress}%</span>
                       </div>
@@ -635,7 +625,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   return (
                     <button
                       onClick={() => downloadTtsVoice(ttsVoice)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-sm"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-text hover:bg-accent text-sm"
                     >
                       <Download size={16} />
                       Download
@@ -643,22 +633,20 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   );
                 })()}
               </div>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-1 text-xs text-text-muted">
                 Voice used for spoken responses (e.g., climate check). Requires Piper on kiosk.
               </p>
 
               {/* Response Mode Selector */}
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
-                Response Mode
-              </label>
+              <label className="block text-xs text-text-muted mb-1 mt-4">Response Mode</label>
               <select
                 value={voiceResponseMode}
                 onChange={(e) =>
                   updateGlobalSettings({ voiceResponseMode: e.target.value as VoiceResponseMode })
                 }
-                className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                           bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                           focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-border
+                           bg-surface-raised text-text
+                           focus:ring-2 focus:ring-accent focus:border-transparent text-sm"
               >
                 {RESPONSE_MODE_OPTIONS.map(({ value, label, description }) => (
                   <option key={value} value={value}>
@@ -666,12 +654,12 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-1 text-xs text-text-muted">
                 How to show responses from commands like weather and climate check
               </p>
 
               {/* Max Recording Duration */}
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1 mt-4">
+              <label className="block text-xs text-text-muted mb-1 mt-4">
                 Max Recording Duration
               </label>
               <div className="flex items-center gap-3">
@@ -684,21 +672,21 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   onChange={(e) =>
                     updateGlobalSettings({ maxRecordingDuration: parseInt(e.target.value, 10) })
                   }
-                  className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="flex-1 h-2 bg-surface-sunken rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                <span className="text-sm text-neutral-600 dark:text-neutral-300 w-12 text-right">
+                <span className="text-sm text-text-secondary w-12 text-right">
                   {maxRecordingDuration}s
                 </span>
               </div>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-1 text-xs text-text-muted">
                 Max time for PTT and wake word recording (5-30 seconds)
               </p>
 
               <details className="mt-3">
-                <summary className="text-xs text-blue-500 cursor-pointer hover:text-blue-400">
+                <summary className="text-xs text-accent cursor-pointer hover:text-accent">
                   View available commands
                 </summary>
-                <ul className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 space-y-1 pl-2">
+                <ul className="mt-2 text-xs text-text-muted space-y-1 pl-2">
                   <li>"add [item] to [list]" — add to groceries, shopping, etc.</li>
                   <li>"what's the weather" — indoor temp + today's high/low</li>
                   <li>"is it warmer/colder outside" — compare indoor/outdoor temp</li>
@@ -716,9 +704,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
         {/* Relay URL */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Relay URL
-          </label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Relay URL</label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -728,9 +714,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 setRelayStatus('idle');
               }}
               placeholder="kiosk-relay.bkemper.me"
-              className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                         bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 rounded-lg border border-border
+                         bg-surface-raised text-text
+                         focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <Button
               onClick={handleTestRelay}
@@ -740,9 +726,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               {relayStatus === 'testing' ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : relayStatus === 'success' ? (
-                <CheckCircle size={18} className="text-green-500" />
+                <CheckCircle size={18} className="text-success" />
               ) : relayStatus === 'error' ? (
-                <XCircle size={18} className="text-red-500" />
+                <XCircle size={18} className="text-danger" />
               ) : (
                 'Test'
               )}
@@ -755,14 +741,14 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               Save
             </Button>
           </div>
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-text-muted">
             Home-relay server for Kasa, WoL, brightness, and config sync
           </p>
         </div>
 
         {/* Zigbee2MQTT URL */}
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Zigbee2MQTT URL
           </label>
           <div className="flex gap-2">
@@ -774,9 +760,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 setZigbeeStatus('idle');
               }}
               placeholder="https://zigbee2mqtt.bkemper.me"
-              className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600
-                         bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100
-                         focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 rounded-lg border border-border
+                         bg-surface-raised text-text
+                         focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <Button
               onClick={handleTestZigbee}
@@ -786,9 +772,9 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               {zigbeeStatus === 'testing' ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : zigbeeStatus === 'success' ? (
-                <CheckCircle size={18} className="text-green-500" />
+                <CheckCircle size={18} className="text-success" />
               ) : zigbeeStatus === 'error' ? (
-                <XCircle size={18} className="text-red-500" />
+                <XCircle size={18} className="text-danger" />
               ) : (
                 'Test'
               )}
@@ -803,7 +789,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               Save
             </Button>
           </div>
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-text-muted">
             Zigbee2MQTT web interface for climate sensors
           </p>
         </div>

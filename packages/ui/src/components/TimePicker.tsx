@@ -40,9 +40,7 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
         type="button"
         onClick={() => onChange(false)}
         className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          !value
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
+          !value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary text-text-muted'
         }`}
       >
         AM
@@ -51,9 +49,7 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
         type="button"
         onClick={() => onChange(true)}
         className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          value
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-400'
+          value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary text-text-muted'
         }`}
       >
         PM
@@ -86,12 +82,12 @@ export function TimePicker({ value, onChange, minuteStep = 5 }: TimePickerProps)
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 bg-white dark:bg-neutral-800 rounded-xl p-4">
+    <div className="flex items-center justify-center gap-2 bg-surface-raised rounded-xl p-4">
       <div className="w-16">
         <Roller items={HOURS} value={hour} onChange={handleHourChange} />
       </div>
 
-      <div className="text-3xl font-bold text-gray-400 dark:text-neutral-500">:</div>
+      <div className="text-3xl font-bold text-text-muted">:</div>
 
       <div className="w-16">
         <Roller
@@ -121,19 +117,19 @@ export function TimePickerCompact({ value, onChange, minuteStep = 5 }: TimePicke
       <button
         onClick={() => setShowPicker(true)}
         type="button"
-        className="w-full p-2 rounded bg-gray-100 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-left text-gray-900 dark:text-white"
+        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
       >
         {displayTime}
       </button>
 
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-surface rounded-xl p-4 shadow-2xl">
             <TimePicker value={value} onChange={onChange} minuteStep={minuteStep} />
             <button
               onClick={() => setShowPicker(false)}
               type="button"
-              className="w-full mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium"
+              className="w-full mt-4 px-4 py-2 rounded-lg bg-accent text-text font-medium"
             >
               Done
             </button>

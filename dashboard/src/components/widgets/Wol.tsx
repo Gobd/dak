@@ -91,7 +91,7 @@ async function fetchWolStatuses(devices: WolDevice[]): Promise<WolData> {
   }
 }
 
-export default function Wol({ panel, dark }: WidgetComponentProps) {
+export default function Wol({ panel }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const widgetId = panel.id || 'wol';
 
@@ -193,17 +193,17 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}
-        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
+        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Wake on LAN${devices.length > 0 ? ` (${devices.length} devices)` : ''}`}
       >
-        <Monitor size={24} className={anyOnline ? 'text-green-400' : 'text-neutral-500'} />
-        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />}
+        <Monitor size={24} className={anyOnline ? 'text-success' : 'text-text-muted'} />
+        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
+          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
         )}
         {!hasError && !isLoading && devices.length > 0 && (
           <span
-            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
+            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded bg-surface-sunken`}
           >
             {devices.length}
           </span>
@@ -226,13 +226,13 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
       >
         <div className="space-y-3">
           {error && (
-            <div className="p-2 bg-red-500/20 rounded text-red-400 text-sm flex items-center gap-2">
+            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
               <AlertCircle size={14} /> {error}
             </div>
           )}
 
           {devices.length === 0 ? (
-            <p className="text-neutral-500 text-center py-4">
+            <p className="text-text-muted text-center py-4">
               No devices configured. Click "Add Device" to get started.
             </p>
           ) : (
@@ -245,21 +245,18 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                   <div
                     key={device.mac}
                     className={`flex items-center justify-between p-3 rounded-lg
-                               ${online ? 'bg-green-500/20' : dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}
+                               ${online ? 'bg-success/20' : 'bg-surface-sunken/40'}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <Monitor
-                        size={20}
-                        className={online ? 'text-green-400' : 'text-neutral-500'}
-                      />
+                      <Monitor size={20} className={online ? 'text-success' : 'text-text-muted'} />
                       <div className="min-w-0">
                         <div className="font-medium truncate">{device.name}</div>
-                        <div className="text-xs text-neutral-500">{device.ip}</div>
+                        <div className="text-xs text-text-muted">{device.ip}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-green-500/30 text-green-400' : dark ? 'bg-neutral-600 text-neutral-400' : 'bg-neutral-300 text-neutral-600'}`}
+                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-success/30 text-success' : 'bg-surface-sunken text-text-muted'}`}
                       >
                         {online ? 'Online' : 'Offline'}
                       </span>
@@ -267,7 +264,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                         <button
                           onClick={() => handleWake(device)}
                           disabled={isWaking}
-                          className="p-2 rounded bg-blue-500/80 hover:bg-blue-500 text-white disabled:opacity-50"
+                          className="p-2 rounded bg-accent/80 hover:bg-accent text-text disabled:opacity-50"
                           title="Wake"
                         >
                           <Power size={16} className={isWaking ? 'animate-pulse' : ''} />
@@ -275,10 +272,10 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
                       )}
                       <button
                         onClick={() => setDeleteDevice(device)}
-                        className="p-2 rounded hover:bg-red-500/30"
+                        className="p-2 rounded hover:bg-danger/30"
                         title="Delete"
                       >
-                        <Trash2 size={16} className="text-red-400" />
+                        <Trash2 size={16} className="text-danger" />
                       </button>
                     </div>
                   </div>
@@ -288,7 +285,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
           )}
 
           {isLoading && devices.length > 0 && (
-            <div className="flex items-center gap-2 text-neutral-500 text-sm">
+            <div className="flex items-center gap-2 text-text-muted text-sm">
               <RefreshCw size={14} className="animate-spin" /> Checking status...
             </div>
           )}
@@ -314,40 +311,40 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
       >
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-neutral-500 mb-1">Device Name</label>
+            <label className="block text-sm text-text-muted mb-1">Device Name</label>
             <input
               type="text"
               value={addForm.name}
               onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
               placeholder="e.g., Gaming PC"
-              className="w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
+              className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border"
             />
           </div>
           <div>
-            <label className="block text-sm text-neutral-500 mb-1">IP Address</label>
+            <label className="block text-sm text-text-muted mb-1">IP Address</label>
             <input
               type="text"
               value={addForm.ip}
               onChange={(e) => setAddForm((p) => ({ ...p, ip: e.target.value }))}
               placeholder="e.g., 192.168.1.100"
-              className="w-full px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
+              className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border"
             />
           </div>
           <div>
-            <label className="block text-sm text-neutral-500 mb-1">MAC Address</label>
+            <label className="block text-sm text-text-muted mb-1">MAC Address</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={addForm.mac}
                 onChange={(e) => setAddForm((p) => ({ ...p, mac: e.target.value }))}
                 placeholder="e.g., AA:BB:CC:DD:EE:FF"
-                className="flex-1 px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600"
+                className="flex-1 px-3 py-2 rounded-lg bg-surface-sunken border border-border"
               />
               <button
                 type="button"
                 onClick={handleDetectMac}
                 disabled={detectingMac || !addForm.ip.trim()}
-                className="px-3 py-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white disabled:opacity-50 text-sm"
+                className="px-3 py-2 rounded-lg bg-accent/80 hover:bg-accent text-text disabled:opacity-50 text-sm"
               >
                 {detectingMac ? 'Detecting...' : 'Detect'}
               </button>
@@ -355,7 +352,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
           </div>
           {addError && (
             <p
-              className={`text-sm ${addError.includes('Detecting') ? 'text-blue-400' : 'text-red-500'}`}
+              className={`text-sm ${addError.includes('Detecting') ? 'text-accent' : 'text-danger'}`}
             >
               {addError}
             </p>

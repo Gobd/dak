@@ -12,7 +12,6 @@ import {
   type DeviceListResponse,
   type ZigbeeDevice,
 } from '@dak/api-client';
-import type { WidgetComponentProps } from './index';
 
 async function fetchDevices(): Promise<DeviceListResponse> {
   client.setConfig({ baseUrl: getRelayUrl() });
@@ -44,7 +43,7 @@ async function removeDevice(device: string, force: boolean = false): Promise<voi
   });
 }
 
-export default function Mqtt({ dark }: WidgetComponentProps) {
+export default function Mqtt() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
@@ -149,19 +148,19 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
       {/* Compact icon button */}
       <button
         onClick={() => setShowModal(true)}
-        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
+        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Zigbee Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Radio
           size={24}
-          className={permitJoin ? 'text-green-400 animate-pulse' : 'text-neutral-500'}
+          className={permitJoin ? 'text-success animate-pulse' : 'text-text-muted'}
         />
         {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
+          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
         )}
         {devices.length > 0 && (
           <span
-            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded ${dark ? 'bg-neutral-600' : 'bg-neutral-300 text-neutral-700'}`}
+            className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded bg-surface-sunken`}
           >
             {devices.length}
           </span>
@@ -193,7 +192,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
         <div className="space-y-4">
           {/* Pairing Mode Toggle */}
           <div
-            className={`p-3 rounded-lg ${permitJoin ? 'bg-green-500/20' : dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}
+            className={`p-3 rounded-lg ${permitJoin ? 'bg-success/20' : 'bg-surface-sunken/40'}`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -201,7 +200,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                   <Plus size={16} />
                   Pairing Mode
                 </div>
-                <div className="text-sm text-neutral-500">
+                <div className="text-sm text-text-muted">
                   {permitJoin
                     ? pairingCountdown
                       ? `Active - ${pairingCountdown}s remaining`
@@ -227,23 +226,20 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
 
           {/* Error Message */}
           {error && (
-            <div className="p-2 bg-red-500/20 rounded text-red-400 text-sm flex items-center gap-2">
+            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
               <AlertCircle size={14} /> {error}
             </div>
           )}
 
           {/* Device List */}
           {devices.length === 0 && !isLoading && (
-            <p className="text-neutral-500 text-center py-4">No Zigbee devices found.</p>
+            <p className="text-text-muted text-center py-4">No Zigbee devices found.</p>
           )}
 
           {devices.length > 0 && (
             <div className="space-y-2">
               {devices.map((device) => (
-                <div
-                  key={device.ieee_address}
-                  className={`p-3 rounded-lg ${dark ? 'bg-neutral-700/30' : 'bg-neutral-200/50'}`}
-                >
+                <div key={device.ieee_address} className={`p-3 rounded-lg bg-surface-sunken/40`}>
                   {editingDevice === device.friendly_name ? (
                     // Edit Mode
                     <div className="flex items-center gap-2">
@@ -258,12 +254,12 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                             setEditName('');
                           }
                         }}
-                        className={`flex-1 px-2 py-1 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+                        className={`flex-1 px-2 py-1 rounded border bg-surface-raised border-border`}
                         autoFocus
                       />
                       <button
                         onClick={handleSaveEdit}
-                        className="p-1.5 rounded hover:bg-green-500/20 text-green-400"
+                        className="p-1.5 rounded hover:bg-success/20 text-success"
                         disabled={renameMutation.isPending}
                       >
                         <Check size={16} />
@@ -273,7 +269,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                           setEditingDevice(null);
                           setEditName('');
                         }}
-                        className="p-1.5 rounded hover:bg-red-500/20 text-red-400"
+                        className="p-1.5 rounded hover:bg-danger/20 text-danger"
                       >
                         <X size={16} />
                       </button>
@@ -281,7 +277,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                   ) : deleteConfirm === device.friendly_name ? (
                     // Delete Confirmation
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-red-400">Remove {device.friendly_name}?</span>
+                      <span className="text-sm text-danger">Remove {device.friendly_name}?</span>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="danger"
@@ -302,7 +298,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{device.friendly_name}</div>
-                        <div className="text-xs text-neutral-500 truncate">
+                        <div className="text-xs text-text-muted truncate">
                           {device.model || device.vendor || device.ieee_address}
                           {device.description && ` - ${device.description}`}
                         </div>
@@ -311,22 +307,22 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
                         <span
                           className={`text-xs px-2 py-0.5 rounded ${
                             device.type === 'Router'
-                              ? 'bg-blue-500/20 text-blue-400'
-                              : 'bg-neutral-500/20 text-neutral-400'
+                              ? 'bg-accent/20 text-accent'
+                              : 'bg-surface/20 text-text-muted'
                           }`}
                         >
                           {device.type}
                         </span>
                         <button
                           onClick={() => handleStartEdit(device)}
-                          className={`p-1.5 rounded ${dark ? 'hover:bg-neutral-600' : 'hover:bg-neutral-300'}`}
+                          className={`p-1.5 rounded hover:bg-surface-sunken`}
                           title="Rename"
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(device.friendly_name)}
-                          className="p-1.5 rounded hover:bg-red-500/20 text-red-400"
+                          className="p-1.5 rounded hover:bg-danger/20 text-danger"
                           title="Remove"
                         >
                           <Trash2 size={14} />
@@ -340,7 +336,7 @@ export default function Mqtt({ dark }: WidgetComponentProps) {
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-2 text-neutral-500 text-sm">
+            <div className="flex items-center gap-2 text-text-muted text-sm">
               <RefreshCw size={14} className="animate-spin" /> Loading devices...
             </div>
           )}

@@ -65,23 +65,21 @@ export function WeeklyView() {
       <div className="flex items-center justify-between">
         <button
           onClick={goToPrevWeek}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+          className="p-2 rounded-lg hover:bg-surface-sunken dark:hover:bg-surface-raised"
         >
           <ChevronLeft size={24} />
         </button>
 
         <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {format(weekStart, 'MMMM yyyy')}
-          </h2>
-          <button onClick={goToThisWeek} className="text-sm text-blue-600 hover:underline">
+          <h2 className="text-lg font-semibold text-text">{format(weekStart, 'MMMM yyyy')}</h2>
+          <button onClick={goToThisWeek} className="text-sm text-accent hover:underline">
             Today
           </button>
         </div>
 
         <button
           onClick={goToNextWeek}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+          className="p-2 rounded-lg hover:bg-surface-sunken dark:hover:bg-surface-raised"
         >
           <ChevronRight size={24} />
         </button>
@@ -89,7 +87,7 @@ export function WeeklyView() {
 
       {loading ? (
         <div className="flex items-center justify-center p-8">
-          <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+          <div className="text-text-muted">Loading...</div>
         </div>
       ) : (
         /* Week grid */
@@ -99,15 +97,11 @@ export function WeeklyView() {
             <div
               key={day.toISOString()}
               className={`text-center p-2 rounded-lg ${
-                isToday(day) ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-gray-50 dark:bg-neutral-900'
+                isToday(day) ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-surface'
               }`}
             >
-              <p className="text-xs text-gray-500 dark:text-neutral-400">{format(day, 'EEE')}</p>
-              <p
-                className={`text-lg font-semibold ${
-                  isToday(day) ? 'text-blue-600' : 'text-gray-900 dark:text-white'
-                }`}
-              >
+              <p className="text-xs text-text-muted">{format(day, 'EEE')}</p>
+              <p className={`text-lg font-semibold ${isToday(day) ? 'text-accent' : 'text-text'}`}>
                 {format(day, 'd')}
               </p>
             </div>
@@ -126,17 +120,17 @@ export function WeeklyView() {
                 className={`min-h-[100px] p-2 rounded-lg border text-left transition-all hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-700 ${
                   isToday(day)
                     ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10'
-                    : 'border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800'
+                    : 'border-border bg-surface-raised'
                 }`}
               >
                 {total > 0 ? (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500 dark:text-neutral-400">
+                      <span className="text-xs text-text-muted">
                         {completed}/{total}
                       </span>
                       {completed === total && total > 0 && (
-                        <span className="text-xs text-green-600">✓</span>
+                        <span className="text-xs text-success">✓</span>
                       )}
                     </div>
                     {dayInstances.slice(0, 3).map((instance) => {
@@ -146,8 +140,8 @@ export function WeeklyView() {
                           key={instance.id}
                           className={`text-xs p-1 rounded truncate ${
                             instance.completed
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 line-through'
-                              : 'bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-300'
+                              ? 'bg-success-light/30 text-green-700 dark:text-success line-through'
+                              : 'bg-surface-sunken text-text-secondary'
                           }`}
                         >
                           {chore?.name ?? 'Unknown'}
@@ -155,15 +149,11 @@ export function WeeklyView() {
                       );
                     })}
                     {dayInstances.length > 3 && (
-                      <p className="text-xs text-gray-400 dark:text-neutral-500">
-                        +{dayInstances.length - 3} more
-                      </p>
+                      <p className="text-xs text-text-muted">+{dayInstances.length - 3} more</p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400 dark:text-neutral-500 text-center mt-4">
-                    No tasks
-                  </p>
+                  <p className="text-xs text-text-muted text-center mt-4">No tasks</p>
                 )}
               </button>
             );
@@ -183,9 +173,7 @@ export function WeeklyView() {
       >
         <div className="space-y-3">
           {!selectedDay ? null : getInstancesForDay(selectedDay).length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-neutral-400 py-8">
-              No tasks scheduled for this day
-            </p>
+            <p className="text-center text-text-muted py-8">No tasks scheduled for this day</p>
           ) : (
             getInstancesForDay(selectedDay).map((instance) => {
               const chore = getChore(instance.chore_id);
@@ -197,17 +185,15 @@ export function WeeklyView() {
                   key={instance.id}
                   className={`p-3 rounded-xl border ${
                     instance.completed
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                      : 'bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700'
+                      ? 'bg-success-light/20 border-green-200 dark:border-green-800'
+                      : 'bg-surface-raised border-border'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Completion indicator */}
                     <div
                       className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-                        instance.completed
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 dark:bg-neutral-700'
+                        instance.completed ? 'bg-success text-text' : 'bg-surface-sunken'
                       }`}
                     >
                       {instance.completed && <Check size={18} strokeWidth={3} />}
@@ -217,9 +203,7 @@ export function WeeklyView() {
                       <div className="flex items-center gap-2">
                         <h3
                           className={`font-medium ${
-                            instance.completed
-                              ? 'text-gray-500 dark:text-neutral-500 line-through'
-                              : 'text-gray-900 dark:text-white'
+                            instance.completed ? 'text-text-muted line-through' : 'text-text'
                           }`}
                         >
                           {chore?.name ?? 'Unknown chore'}
@@ -239,7 +223,7 @@ export function WeeklyView() {
                               color={completedByMember.color}
                               size="xs"
                             />
-                            <span className="text-sm text-gray-500 dark:text-neutral-400">
+                            <span className="text-sm text-text-muted">
                               {completedByMember.name}
                               {instance.completed_at && (
                                 <> at {format(new Date(instance.completed_at), 'h:mm a')}</>
@@ -254,14 +238,12 @@ export function WeeklyView() {
                               color={assignedMember.color}
                               size="xs"
                             />
-                            <span className="text-sm text-gray-500 dark:text-neutral-400">
+                            <span className="text-sm text-text-muted">
                               Assigned to {assignedMember.name}
                             </span>
                           </>
                         ) : (
-                          <span className="text-sm text-amber-600 dark:text-amber-400">
-                            Race - anyone can complete
-                          </span>
+                          <span className="text-sm text-warning">Race - anyone can complete</span>
                         )}
                       </div>
                     </div>

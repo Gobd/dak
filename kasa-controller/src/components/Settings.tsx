@@ -29,7 +29,7 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="relay-url" className="block text-sm font-medium text-slate-300 mb-2">
+        <label htmlFor="relay-url" className="block text-sm font-medium text-text-secondary mb-2">
           Relay URL
         </label>
         <input
@@ -38,9 +38,9 @@ export default function Settings() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="http://localhost:5111"
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 bg-surface-sunken border border-border rounded-xl text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
         />
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-text-muted">
           The URL of the home relay server that controls your Kasa devices.
         </p>
       </div>
@@ -49,24 +49,24 @@ export default function Settings() {
         <button
           onClick={handleSave}
           disabled={!hasChanges}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-accent text-text rounded-xl font-medium hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-5 h-5" />
           {saved ? 'Saved!' : 'Save'}
         </button>
         <button
           onClick={handleReset}
-          className="px-4 py-3 bg-slate-700 rounded-xl hover:bg-slate-600 transition-colors"
+          className="px-4 py-3 bg-surface-sunken text-text rounded-xl hover:bg-border transition-colors"
           aria-label="Reset to default"
         >
           <RotateCcw className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="pt-4 border-t border-slate-700">
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Current Configuration</h3>
-        <div className="p-3 bg-slate-800 rounded-lg">
-          <code className="text-sm text-slate-400 break-all">{relayUrl}</code>
+      <div className="pt-4 border-t border-border">
+        <h3 className="text-sm font-medium text-text-secondary mb-2">Current Configuration</h3>
+        <div className="p-3 bg-surface-sunken rounded-lg">
+          <code className="text-sm text-text-muted break-all">{relayUrl}</code>
         </div>
       </div>
     </div>

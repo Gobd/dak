@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
 @source "../../packages/ui/src/**/*.tsx";
 
 @layer base {
@@ -7,8 +8,6 @@
     font-synthesis: weight;
   }
 }
-
-@custom-variant dark (&:where(.dark, .dark *));
 
 button,
 [role='button'],
@@ -22,7 +21,7 @@ input[type='button'] {
 }
 
 body {
-  @apply bg-white text-zinc-900 min-h-screen dark:bg-black dark:text-white;
+  @apply bg-surface text-text min-h-screen;
   overflow: hidden;
   height: 100%;
 }

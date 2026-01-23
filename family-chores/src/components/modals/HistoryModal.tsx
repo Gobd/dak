@@ -31,13 +31,13 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
   return (
     <Modal open={true} onClose={onClose} title="Points History">
       {/* Filter */}
-      <div className="pb-4 border-b border-gray-200 dark:border-neutral-700 mb-4">
+      <div className="pb-4 border-b border-border mb-4">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          <Filter size={16} className="text-gray-400 flex-shrink-0" />
+          <Filter size={16} className="text-text-muted flex-shrink-0" />
           <button
             onClick={() => setFilterMemberId(null)}
             className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-              filterMemberId === null ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-neutral-800'
+              filterMemberId === null ? 'bg-accent text-text' : 'bg-surface-sunken'
             }`}
           >
             All
@@ -47,9 +47,7 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
               key={member.id}
               onClick={() => setFilterMemberId(member.id)}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-                filterMemberId === member.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-neutral-800'
+                filterMemberId === member.id ? 'bg-accent text-text' : 'bg-surface-sunken'
               }`}
             >
               <span>{member.avatar_emoji}</span>
@@ -63,14 +61,14 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center p-8">
-            <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+            <div className="text-text-muted">Loading...</div>
           </div>
         ) : ledger.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-neutral-400">No history yet</p>
+            <p className="text-text-muted">No history yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-neutral-800">
+          <div className="divide-y divide-border">
             {ledger.map((entry) => {
               const member = getMember(entry.member_id);
               const isPositive = entry.amount > 0;
@@ -78,7 +76,7 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
               return (
                 <div
                   key={entry.id}
-                  className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50"
+                  className="flex items-center gap-3 p-4 hover:bg-surface-raised/50"
                 >
                   {member && (
                     <MemberAvatar
@@ -90,21 +88,21 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-text truncate">
                       {entry.transaction_type === 'earned'
                         ? 'Task completed'
                         : entry.transaction_type === 'redeemed'
                           ? (entry.notes ?? 'Points redeemed')
                           : (entry.notes ?? 'Adjustment')}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">
+                    <p className="text-sm text-text-muted">
                       {member?.name} • {format(new Date(entry.created_at), 'MMM d, h:mm a')}
                     </p>
                   </div>
 
                   <span
                     className={`text-lg font-semibold ${
-                      isPositive ? 'text-green-600' : 'text-red-600'
+                      isPositive ? 'text-success' : 'text-danger'
                     }`}
                   >
                     {isPositive ? '+' : ''}

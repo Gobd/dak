@@ -35,19 +35,19 @@ export function NumberPickerCompact({
       <button
         onClick={() => setShowPicker(true)}
         type="button"
-        className="w-full p-2 rounded bg-gray-100 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-left text-gray-900 dark:text-white"
+        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
       >
         {displayValue}
       </button>
 
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 shadow-2xl">
-            <div className="flex items-center justify-center gap-2 bg-gray-50 dark:bg-neutral-800 rounded-xl p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-surface rounded-xl p-4 shadow-2xl">
+            <div className="flex items-center justify-center gap-2 bg-surface-raised rounded-xl p-4">
               <div className="w-20">
                 <Roller items={items} value={value} onChange={onChange} />
               </div>
-              <div className="text-lg text-gray-500 dark:text-neutral-400">{suffix}</div>
+              <div className="text-lg text-text-muted">{suffix}</div>
             </div>
 
             <div className="flex gap-2 mt-4">
@@ -58,7 +58,7 @@ export function NumberPickerCompact({
                     setShowPicker(false);
                   }}
                   type="button"
-                  className="flex-1 px-4 py-2 rounded-lg bg-gray-200 dark:bg-neutral-700 text-gray-900 dark:text-white font-medium"
+                  className="flex-1 px-4 py-2 rounded-lg bg-surface-sunken text-text font-medium"
                 >
                   {zeroLabel}
                 </button>
@@ -66,7 +66,7 @@ export function NumberPickerCompact({
               <button
                 onClick={() => setShowPicker(false)}
                 type="button"
-                className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium"
+                className="flex-1 px-4 py-2 rounded-lg bg-accent text-text font-medium"
               >
                 Done
               </button>

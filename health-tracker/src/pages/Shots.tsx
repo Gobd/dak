@@ -96,9 +96,9 @@ export function Shots() {
   };
 
   const inputClass =
-    'w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500';
+    'w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent';
   const btnSecondary =
-    'px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300';
+    'px-3 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary';
 
   return (
     <div className="space-y-6">
@@ -106,7 +106,7 @@ export function Shots() {
         <h1 className="text-2xl font-bold">Shot Tracking</h1>
         <button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
         >
           <Plus size={18} /> Add
         </button>
@@ -148,7 +148,7 @@ export function Shots() {
             <button
               type="submit"
               form="add-schedule-form"
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
             >
               Create
             </button>
@@ -157,7 +157,7 @@ export function Shots() {
       >
         <form id="add-schedule-form" onSubmit={handleAddSchedule} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Person</label>
             <select
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
@@ -173,7 +173,7 @@ export function Shots() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
               Medicine Name
             </label>
             <input
@@ -187,7 +187,7 @@ export function Shots() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              <label className="block text-sm font-medium mb-1 text-text-secondary">
                 Every X Days
               </label>
               <NumberPickerCompact
@@ -200,7 +200,7 @@ export function Shots() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+              <label className="block text-sm font-medium mb-1 text-text-secondary">
                 Starting Dose (optional)
               </label>
               <input
@@ -213,7 +213,7 @@ export function Shots() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
               Next Due Date
             </label>
             <DatePickerCompact value={nextDue} onChange={setNextDue} allowFuture={true} />
@@ -222,33 +222,30 @@ export function Shots() {
       </Modal>
 
       {schedules.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center text-gray-500 dark:text-neutral-400">
+        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
           No shot schedules yet. Create one to start tracking.
         </div>
       ) : (
         <div className="space-y-4">
           {schedules.map((schedule) => (
-            <div
-              key={schedule.id}
-              className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm overflow-hidden"
-            >
+            <div key={schedule.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
-                    <Syringe className="text-blue-600" size={24} />
+                    <Syringe className="text-accent" size={24} />
                     <div>
                       <div className="font-semibold">{schedule.person?.name}</div>
-                      <div className="text-gray-600 dark:text-neutral-400">{schedule.name}</div>
+                      <div className="text-text-secondary text-text-muted">{schedule.name}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-500 dark:text-neutral-400">Next due</div>
+                    <div className="text-sm text-text-muted">Next due</div>
                     <div className="font-bold text-lg">
                       {format(new Date(schedule.next_due + 'T00:00:00'), 'EEE, MMM d')}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-neutral-400 mb-4">
+                <div className="flex items-center gap-4 text-sm text-text-secondary text-text-muted mb-4">
                   <span>Every {schedule.interval_days} days</span>
                   <span>•</span>
                   <span>{schedule.current_dose}</span>
@@ -259,7 +256,7 @@ export function Shots() {
                       setLogDose(schedule.current_dose);
                       setShowLogForm(schedule.id);
                     }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium"
+                    className="bg-success text-text px-4 py-2 rounded-lg hover:bg-success-hover font-medium"
                   >
                     Log Shot
                   </button>
@@ -289,7 +286,7 @@ export function Shots() {
                   </button>
                   <button
                     onClick={() => setConfirmDelete(schedule.id)}
-                    className="px-3 py-2 text-red-600 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30"
+                    className="px-3 py-2 text-danger border border-danger rounded-lg hover:bg-danger-light dark:hover:bg-danger-light"
                   >
                     Delete
                   </button>
@@ -297,12 +294,10 @@ export function Shots() {
               </div>
 
               {showHistory === schedule.id && (
-                <div className="border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 p-4">
+                <div className="border-t border-border bg-surface p-4">
                   <h3 className="font-medium mb-2">Shot History</h3>
                   {(logs[schedule.id] || []).length === 0 ? (
-                    <p className="text-gray-500 dark:text-neutral-400 text-sm">
-                      No shots logged yet.
-                    </p>
+                    <p className="text-text-muted text-sm">No shots logged yet.</p>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {(logs[schedule.id] || []).map((log) => (
@@ -310,7 +305,7 @@ export function Shots() {
                           <div className="flex items-center justify-between">
                             <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
                             <div className="flex items-center gap-3">
-                              <span className="text-gray-600 dark:text-neutral-400">
+                              <span className="text-text-secondary text-text-muted">
                                 {log.dose}
                               </span>
                               <button
@@ -320,7 +315,7 @@ export function Shots() {
                                     logId: log.id,
                                   })
                                 }
-                                className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                                className="p-1 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded"
                                 title="Delete this entry"
                               >
                                 <Trash2 size={14} />
@@ -328,9 +323,7 @@ export function Shots() {
                             </div>
                           </div>
                           {log.notes && (
-                            <p className="text-gray-500 dark:text-neutral-500 text-xs mt-1 ml-1">
-                              {log.notes}
-                            </p>
+                            <p className="text-text-muted text-xs mt-1 ml-1">{log.notes}</p>
                           )}
                         </div>
                       ))}
@@ -340,11 +333,11 @@ export function Shots() {
               )}
 
               {showLogForm === schedule.id && (
-                <div className="border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 p-4">
+                <div className="border-t border-border bg-surface-raised p-4">
                   <h3 className="font-medium mb-3">Log Shot</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                      <label className="block text-sm font-medium mb-1 text-text-secondary">
                         Dose
                       </label>
                       <input
@@ -356,13 +349,13 @@ export function Shots() {
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium dark:text-neutral-300">
+                        <label className="block text-sm font-medium text-text-secondary">
                           Time
                         </label>
                         <button
                           type="button"
                           onClick={() => setUseCustomTime(!useCustomTime)}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300'}`}
+                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'}`}
                         >
                           {useCustomTime ? 'Custom time' : 'Now'}
                         </button>
@@ -372,7 +365,7 @@ export function Shots() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                      <label className="block text-sm font-medium mb-1 text-text-secondary">
                         Notes (optional)
                       </label>
                       <input
@@ -395,7 +388,7 @@ export function Shots() {
                       </button>
                       <button
                         onClick={() => handleLogShot(schedule.id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                        className="bg-success text-text px-4 py-2 rounded-lg hover:bg-success-hover"
                       >
                         Log Shot
                       </button>
@@ -405,12 +398,12 @@ export function Shots() {
               )}
 
               {showEditForm === schedule.id && (
-                <div className="border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 p-4">
+                <div className="border-t border-border bg-surface-raised p-4">
                   <h3 className="font-medium mb-3">Edit Schedule</h3>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                        <label className="block text-sm font-medium mb-1 text-text-secondary">
                           Interval (days)
                         </label>
                         <input
@@ -422,7 +415,7 @@ export function Shots() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+                        <label className="block text-sm font-medium mb-1 text-text-secondary">
                           Current Dose
                         </label>
                         <input
@@ -450,7 +443,7 @@ export function Shots() {
                             current_dose: dose,
                           });
                         }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
                       >
                         Save
                       </button>

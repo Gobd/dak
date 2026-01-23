@@ -62,7 +62,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+        <div className="text-text-muted">Loading...</div>
       </div>
     );
   }
@@ -72,19 +72,15 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
       {/* Header with date and progress */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            {format(new Date(), 'EEEE')}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-neutral-400">
-            {format(new Date(), 'MMMM d, yyyy')}
-          </p>
+          <h1 className="text-xl sm:text-2xl font-bold text-text">{format(new Date(), 'EEEE')}</h1>
+          <p className="text-sm text-text-muted">{format(new Date(), 'MMMM d, yyyy')}</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <p className="text-sm font-medium text-text">
               {completedTasks}/{totalTasks}
             </p>
-            <p className="text-xs text-gray-500 dark:text-neutral-400">tasks done</p>
+            <p className="text-xs text-text-muted">tasks done</p>
           </div>
           <ProgressRing percent={progressPercent} size={56} />
         </div>
@@ -92,18 +88,16 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
 
       {members.length === 0 ? (
         <div className="text-center py-12 space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 mx-auto bg-surface-sunken rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8 text-text-muted" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">No family members yet</p>
-            <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
-              Start by adding your family
-            </p>
+            <p className="text-text-muted">No family members yet</p>
+            <p className="text-sm text-text-muted mt-1">Start by adding your family</p>
           </div>
           <button
             onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
           >
             <Users size={18} />
             Add Family Members
@@ -111,18 +105,18 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
         </div>
       ) : totalTasks === 0 ? (
         <div className="text-center py-12 space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
-            <ClipboardList className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 mx-auto bg-surface-sunken rounded-full flex items-center justify-center">
+            <ClipboardList className="w-8 h-8 text-text-muted" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">No tasks scheduled for today</p>
-            <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
+            <p className="text-text-muted">No tasks scheduled for today</p>
+            <p className="text-sm text-text-muted mt-1">
               Create chores and assign them to family members
             </p>
           </div>
           <button
             onClick={onOpenChores}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
           >
             <ClipboardList size={18} />
             Add Chores
@@ -132,14 +126,12 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
         <div className="space-y-6">
           {/* Shared tasks (anyone mode) */}
           {sharedInstances.length > 0 && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-200 dark:border-amber-800">
+            <div className="bg-warning-light/20 rounded-2xl p-4 border border-amber-200 dark:border-amber-800">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-2xl">🏆</span>
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">Shared Tasks</h2>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">
-                    First to complete wins the points!
-                  </p>
+                  <h2 className="font-semibold text-text">Shared Tasks</h2>
+                  <p className="text-xs text-text-muted">First to complete wins the points!</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -174,7 +166,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
                 memberTasks.length > 0 ? (memberCompleted / memberTasks.length) * 100 : 0;
 
               return (
-                <div key={member.id} className="bg-gray-50 dark:bg-neutral-900 rounded-2xl p-4">
+                <div key={member.id} className="bg-surface rounded-2xl p-4">
                   {/* Member header */}
                   <div className="flex items-center gap-3 mb-4">
                     <MemberAvatar
@@ -184,10 +176,8 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
                       size="lg"
                     />
                     <div className="flex-1 min-w-0">
-                      <h2 className="font-semibold text-gray-900 dark:text-white truncate">
-                        {member.name}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">
+                      <h2 className="font-semibold text-text truncate">{member.name}</h2>
+                      <p className="text-sm text-text-muted">
                         {memberCompleted}/{memberTasks.length} done
                       </p>
                     </div>
@@ -221,12 +211,10 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
           {dailyGoals.length > 0 && (
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-4 border border-purple-200 dark:border-purple-800">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <Target className="w-6 h-6 text-accent dark:text-accent" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">Daily Goals</h2>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">
-                    Complete these goals today
-                  </p>
+                  <h2 className="font-semibold text-text">Daily Goals</h2>
+                  <p className="text-xs text-text-muted">Complete these goals today</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -246,12 +234,10 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
           {weeklyGoals.length > 0 && (
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <Target className="w-6 h-6 text-accent" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">This Week</h2>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">
-                    Weekly goals to achieve
-                  </p>
+                  <h2 className="font-semibold text-text">This Week</h2>
+                  <p className="text-xs text-text-muted">Weekly goals to achieve</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -271,12 +257,10 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
           {monthlyGoals.length > 0 && (
             <div className="bg-teal-50 dark:bg-teal-900/20 rounded-2xl p-4 border border-teal-200 dark:border-teal-800">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+                <Target className="w-6 h-6 text-teal-600 dark:text-info" />
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">This Month</h2>
-                  <p className="text-xs text-gray-500 dark:text-neutral-400">
-                    Monthly goals to achieve
-                  </p>
+                  <h2 className="font-semibold text-text">This Month</h2>
+                  <p className="text-xs text-text-muted">Monthly goals to achieve</p>
                 </div>
               </div>
               <div className="space-y-3">

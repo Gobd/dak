@@ -48,13 +48,13 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
   const Icon = step.icon;
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-surface rounded-2xl w-full max-w-sm overflow-hidden">
         {/* Header */}
         <div className="flex justify-end p-2">
           <button
             onClick={onDismiss}
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+            className="p-2 rounded-lg text-text-muted hover:text-text-secondary dark:hover:text-text-secondary hover:bg-surface-sunken dark:hover:bg-surface-raised"
           >
             <X size={20} />
           </button>
@@ -69,10 +69,10 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   i === currentStep
-                    ? 'bg-blue-600'
+                    ? 'bg-accent'
                     : i < currentStep
                       ? 'bg-blue-300'
-                      : 'bg-gray-200 dark:bg-neutral-700'
+                      : 'bg-surface-sunken'
                 }`}
               />
             ))}
@@ -80,24 +80,24 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
 
           {/* Icon */}
           <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
-            <Icon className="w-10 h-10 text-blue-600" />
+            <Icon className="w-10 h-10 text-accent" />
           </div>
 
           {/* Text */}
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{step.title}</h2>
-          <p className="text-gray-500 dark:text-neutral-400 mb-6">{step.description}</p>
+          <h2 className="text-xl font-semibold text-text mb-2">{step.title}</h2>
+          <p className="text-text-muted mb-6">{step.description}</p>
 
           {/* Buttons */}
           <div className="flex gap-3">
             <button
               onClick={onDismiss}
-              className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800"
+              className="flex-1 px-4 py-2.5 border border-border rounded-lg text-text-secondary text-text-muted hover:bg-surface-raised"
             >
               Skip
             </button>
             <button
               onClick={handleNext}
-              className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-accent text-text rounded-lg hover:bg-accent-hover flex items-center justify-center gap-2"
             >
               {currentStep === steps.length - 1 ? (
                 <>

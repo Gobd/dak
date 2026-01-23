@@ -4,8 +4,8 @@ import { lazy, Suspense, type ComponentType } from 'react';
 // Widget props interface
 export interface WidgetComponentProps {
   panel: PanelConfig;
-  dark: boolean;
-  isEditMode: boolean;
+  dark?: boolean;
+  isEditMode?: boolean;
 }
 
 // Lazy load widgets for code splitting
@@ -30,9 +30,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
 // Loading placeholder
 function WidgetLoading() {
   return (
-    <div className="w-full h-full flex items-center justify-center text-neutral-500">
-      Loading...
-    </div>
+    <div className="w-full h-full flex items-center justify-center text-text-muted">Loading...</div>
   );
 }
 
@@ -42,7 +40,7 @@ export function WidgetRenderer({ panel, dark, isEditMode }: WidgetComponentProps
 
   if (!Widget) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-red-500">
+      <div className="w-full h-full flex items-center justify-center text-danger">
         Unknown widget: {panel.widget}
       </div>
     );

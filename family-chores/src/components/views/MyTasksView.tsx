@@ -44,9 +44,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
     <div className="p-4 space-y-6">
       {/* Member selector */}
       <div className="mb-1">
-        <p className="text-xs text-gray-500 dark:text-neutral-400">
-          Tap a family member to see their tasks
-        </p>
+        <p className="text-xs text-text-muted">Tap a family member to see their tasks</p>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {members.map((member) => (
@@ -66,19 +64,15 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
       {selectedMember ? (
         <>
           {/* Stats */}
-          <div className="flex items-center justify-between bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between bg-surface-raised rounded-xl p-4 shadow-sm">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {selectedMember.name}'s Tasks
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-400">
-                {format(new Date(), 'EEEE, MMMM d')}
-              </p>
+              <h2 className="text-xl font-bold text-text">{selectedMember.name}'s Tasks</h2>
+              <p className="text-sm text-text-muted">{format(new Date(), 'EEEE, MMMM d')}</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{memberBalance}</p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400">total points</p>
+                <p className="text-2xl font-bold text-accent">{memberBalance}</p>
+                <p className="text-xs text-text-muted">total points</p>
               </div>
               <ProgressRing percent={progressPercent} size={56} />
             </div>
@@ -87,12 +81,10 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
           {/* Tasks */}
           {allMemberTasks.length === 0 ? (
             <div className="text-center py-8 space-y-3">
-              <p className="text-gray-500 dark:text-neutral-400">
-                No tasks for {selectedMember.name} today
-              </p>
+              <p className="text-text-muted">No tasks for {selectedMember.name} today</p>
               <button
                 onClick={onOpenChores}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-accent hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
               >
                 <ClipboardList size={16} />
                 Add Chores
@@ -119,7 +111,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
               {/* Shared tasks (anyone mode) */}
               {sharedTasks.filter((t) => !t.completed).length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <h3 className="text-sm font-medium text-warning flex items-center gap-1">
                     <span>🏆</span> Race Tasks
                   </h3>
                   {sharedTasks
@@ -137,10 +129,8 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
 
               {/* Completed tasks */}
               {allMemberTasks.filter((t) => t.completed).length > 0 && (
-                <div className="pt-4 border-t border-gray-200 dark:border-neutral-700 space-y-3">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-neutral-400">
-                    Completed
-                  </h3>
+                <div className="pt-4 border-t border-border space-y-3">
+                  <h3 className="text-sm font-medium text-text-muted">Completed</h3>
                   {allMemberTasks
                     .filter((t) => t.completed)
                     .map((instance) => (
@@ -158,18 +148,16 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
         </>
       ) : (
         <div className="text-center py-12 space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-neutral-800 rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-gray-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 mx-auto bg-surface-sunken rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8 text-text-muted" />
           </div>
           <div>
-            <p className="text-gray-500 dark:text-neutral-400">No family members yet</p>
-            <p className="text-sm text-gray-400 dark:text-neutral-500 mt-1">
-              Add your family to start tracking tasks
-            </p>
+            <p className="text-text-muted">No family members yet</p>
+            <p className="text-sm text-text-muted mt-1">Add your family to start tracking tasks</p>
           </div>
           <button
             onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
           >
             <Users size={18} />
             Add Family Members

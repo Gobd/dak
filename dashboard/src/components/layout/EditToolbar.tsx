@@ -123,8 +123,8 @@ export function EditToolbar() {
       {/* Floating toolbar */}
       <div
         className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40
-                      bg-neutral-900/90 backdrop-blur rounded-full px-4 py-2
-                      flex items-center gap-2 shadow-xl border border-neutral-700"
+                      bg-surface/90 backdrop-blur rounded-full px-4 py-2
+                      flex items-center gap-2 shadow-xl border border-border"
       >
         {/* Screen navigation */}
         <button
@@ -132,13 +132,13 @@ export function EditToolbar() {
             const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
             setActiveScreen(prevIndex);
           }}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Previous screen"
         >
-          <ChevronLeft size={20} className="text-white" />
+          <ChevronLeft size={20} className="text-text" />
         </button>
 
-        <span className="text-white text-sm px-2 min-w-[80px] text-center">
+        <span className="text-text text-sm px-2 min-w-[80px] text-center">
           {screens[activeScreenIndex]?.name ?? 'Screen'}
         </span>
 
@@ -147,66 +147,66 @@ export function EditToolbar() {
             const nextIndex = activeScreenIndex === screens.length - 1 ? 0 : activeScreenIndex + 1;
             setActiveScreen(nextIndex);
           }}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Next screen"
         >
-          <ChevronRight size={20} className="text-white" />
+          <ChevronRight size={20} className="text-text" />
         </button>
 
-        <div className="w-px h-6 bg-neutral-600" />
+        <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Add widget */}
         <button
           onClick={() => setShowAddWidget(true)}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Add widget"
         >
-          <Plus size={20} className="text-white" />
+          <Plus size={20} className="text-text" />
         </button>
 
         {/* Settings */}
         <button
           onClick={() => setShowSettingsModal(true)}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Settings"
         >
-          <Settings2 size={20} className="text-white" />
+          <Settings2 size={20} className="text-text" />
         </button>
 
-        <div className="w-px h-6 bg-neutral-600" />
+        <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Import/Export */}
         <button
           onClick={() => setShowExportModal(true)}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Export config"
         >
-          <Download size={20} className="text-white" />
+          <Download size={20} className="text-text" />
         </button>
 
         <button
           onClick={() => setShowImportModal(true)}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Import config"
         >
-          <Upload size={20} className="text-white" />
+          <Upload size={20} className="text-text" />
         </button>
 
         <button
           onClick={() => setShowResetModal(true)}
-          className="p-2 rounded-full hover:bg-neutral-700"
+          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Reset config"
         >
-          <RotateCcw size={20} className="text-white" />
+          <RotateCcw size={20} className="text-text" />
         </button>
 
-        <div className="w-px h-6 bg-neutral-600" />
+        <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Done button */}
         <button
           onClick={() => setEditMode(false)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                     bg-green-600 hover:bg-green-500 text-white text-sm font-medium"
+                     bg-success hover:bg-success text-text text-sm font-medium"
         >
           <Check size={16} />
           Done
@@ -229,11 +229,11 @@ export function EditToolbar() {
           placeholder="Search widgets..."
           autoFocus
           className="w-full mb-3 px-3 py-2 rounded-lg
-                     bg-neutral-100 dark:bg-neutral-800
-                     border border-neutral-300 dark:border-neutral-600
-                     text-neutral-900 dark:text-white
-                     placeholder:text-neutral-400
-                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     bg-surface-sunken
+                     border border-border
+                     text-text
+                     placeholder:text-text-muted
+                     focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <div className="grid gap-2 max-h-80 overflow-y-auto custom-scrollbar">
           {filteredWidgets.map(({ type, label, description }) => (
@@ -241,16 +241,16 @@ export function EditToolbar() {
               key={type}
               onClick={() => handleAddWidget(type)}
               className="flex flex-col items-start p-3 rounded-lg text-left
-                         bg-neutral-100 dark:bg-neutral-800
-                         hover:bg-neutral-200 dark:hover:bg-neutral-700
+                         bg-surface-sunken
+                         hover:bg-border
                          transition-colors"
             >
-              <span className="font-medium text-neutral-900 dark:text-white">{label}</span>
-              <span className="text-sm text-neutral-500 dark:text-neutral-400">{description}</span>
+              <span className="font-medium text-text">{label}</span>
+              <span className="text-sm text-text-muted">{description}</span>
             </button>
           ))}
           {filteredWidgets.length === 0 && (
-            <p className="text-center text-neutral-500 py-4">No widgets match your search</p>
+            <p className="text-center text-text-muted py-4">No widgets match your search</p>
           )}
         </div>
       </Modal>
@@ -270,15 +270,15 @@ export function EditToolbar() {
           </>
         }
       >
-        <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-text-secondary text-text-muted">
           Copy your dashboard configuration or download it as a file.
         </p>
         <textarea
           readOnly
           value={exportConfig()}
-          className="w-full h-48 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800
-                     border border-neutral-300 dark:border-neutral-600
-                     text-sm font-mono text-neutral-900 dark:text-white"
+          className="w-full h-48 p-3 rounded-lg bg-surface-sunken
+                     border border-border
+                     text-sm font-mono text-text"
         />
       </Modal>
 
@@ -306,7 +306,7 @@ export function EditToolbar() {
           </>
         }
       >
-        <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mb-4 text-sm text-text-secondary text-text-muted">
           Paste a configuration JSON or upload a file to restore your dashboard.
         </p>
         <div className="mb-3">
@@ -322,12 +322,12 @@ export function EditToolbar() {
         <textarea
           ref={importRef}
           placeholder='{"screens": [...], "dark": true}'
-          className="w-full h-48 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-800
-                     border border-neutral-300 dark:border-neutral-600
-                     text-sm font-mono text-neutral-900 dark:text-white
-                     placeholder:text-neutral-400"
+          className="w-full h-48 p-3 rounded-lg bg-surface-sunken
+                     border border-border
+                     text-sm font-mono text-text
+                     placeholder:text-text-muted"
         />
-        {importError && <p className="mt-2 text-sm text-red-500">{importError}</p>}
+        {importError && <p className="mt-2 text-sm text-danger">{importError}</p>}
       </Modal>
 
       {/* Reset Confirmation Modal */}
@@ -350,7 +350,7 @@ export function EditToolbar() {
           </>
         }
       >
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-text-secondary text-text-muted">
           This will reset all settings to defaults. Your current configuration will be lost.
         </p>
       </Modal>

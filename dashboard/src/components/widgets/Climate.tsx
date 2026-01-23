@@ -106,8 +106,8 @@ export default function Climate({ dark }: WidgetComponentProps) {
       return (
         <div className="contents">
           <span>{icon}</span>
-          <span className="text-neutral-500">--</span>
-          <span className="text-neutral-500">--</span>
+          <span className="text-text-muted">--</span>
+          <span className="text-text-muted">--</span>
         </div>
       );
     }
@@ -120,7 +120,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
         <span>
           {Math.round(s.temperature)}°{tTemp}
         </span>
-        <span className="text-neutral-500">
+        <span className="text-text-muted">
           {Math.round(s.humidity)}%{tHum}
         </span>
       </div>
@@ -136,19 +136,15 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
     return (
       <div>
-        <label
-          className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-        >
-          {label}
-        </label>
+        <label className={`block text-sm font-medium mb-2 text-text-secondary`}>{label}</label>
         <select
           value={climateConfig?.[role] || ''}
           onChange={(e) => saveSensorConfig({ [role]: e.target.value })}
           className={`w-full px-3 py-2 rounded text-sm ${
             dark
-              ? 'bg-neutral-700 text-neutral-200 border-neutral-600'
-              : 'bg-neutral-100 text-neutral-800 border-neutral-300'
-          } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              ? 'bg-surface-sunken text-text border-border'
+              : 'bg-surface-sunken text-text border-border'
+          } border focus:outline-none focus:ring-2 focus:ring-accent`}
         >
           <option value="">Not configured</option>
           {availableDevices.map((device) => (
@@ -162,25 +158,21 @@ export default function Climate({ dark }: WidgetComponentProps) {
   };
 
   return (
-    <div
-      className={`w-full h-full flex flex-col items-center justify-center px-3 py-2 text-sm ${
-        dark ? 'text-white' : 'text-neutral-900'
-      }`}
-    >
+    <div className="w-full h-full flex flex-col items-center justify-center px-3 py-2 text-sm text-text">
       {/* Sensors display */}
       <div className="flex items-center gap-4">
         {!relayUrl ? (
-          <span className="text-neutral-500">Configure relay</span>
+          <span className="text-text-muted">Configure relay</span>
         ) : relayOffline ? (
-          <span className="text-neutral-500 flex items-center gap-1">
-            <AlertCircle size={12} className="text-red-500" /> Relay offline
+          <span className="text-text-muted flex items-center gap-1">
+            <AlertCircle size={12} className="text-danger" /> Relay offline
           </span>
         ) : isLoading ? (
-          <span className="text-neutral-500">Loading...</span>
+          <span className="text-text-muted">Loading...</span>
         ) : error ? (
-          <span className="text-red-400">Error</span>
+          <span className="text-danger">Error</span>
         ) : sensorsConnected === 0 ? (
-          <span className="text-neutral-500">No sensors</span>
+          <span className="text-text-muted">No sensors</span>
         ) : (
           <div className="grid grid-cols-[auto_auto_auto] gap-x-2 gap-y-0.5 items-center">
             {renderSensorRow('🏠', data?.indoor)}
@@ -189,18 +181,16 @@ export default function Climate({ dark }: WidgetComponentProps) {
         )}
         <button
           onClick={() => setShowSettings(true)}
-          className={`p-1 rounded transition-colors ml-2 ${
-            dark ? 'hover:bg-neutral-700' : 'hover:bg-neutral-200'
-          }`}
+          className="p-1 rounded transition-colors ml-2 hover:bg-surface-sunken"
           title="Settings"
         >
-          <Settings size={14} className="text-neutral-400" />
+          <Settings size={14} className="text-text-muted" />
         </button>
       </div>
 
       {/* Row 2: Recommendation */}
       {recommendation && sensorsConnected === 2 && (
-        <div className="text-neutral-400 text-xs mt-1">
+        <div className="text-text-muted text-xs mt-1">
           {recommendation.icon} {recommendation.text}
         </div>
       )}
@@ -224,16 +214,14 @@ export default function Climate({ dark }: WidgetComponentProps) {
               {renderSensorSelect('outdoor', '🌳 Outdoor Sensor')}
             </>
           ) : (
-            <div className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div className={`text-sm text-text-muted`}>
               No climate sensors found. Pair sensors in Zigbee2MQTT first.
             </div>
           )}
 
           {/* Temperature Unit */}
           <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-            >
+            <label className={`block text-sm font-medium mb-2 text-text-secondary`}>
               Temperature Unit
             </label>
             <div className="flex gap-2">
@@ -243,10 +231,10 @@ export default function Climate({ dark }: WidgetComponentProps) {
                   onClick={() => saveSensorConfig({ unit })}
                   className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
                     (climateConfig?.unit ?? 'C') === unit
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-accent text-text'
                       : dark
-                        ? 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
-                        : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                        ? 'bg-surface-sunken text-text-secondary hover:bg-border'
+                        : 'bg-surface-sunken text-text-secondary hover:bg-surface-sunken'
                   }`}
                 >
                   °{unit}
@@ -257,22 +245,18 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
           {/* Connection Status */}
           <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${dark ? 'text-gray-300' : 'text-gray-700'}`}
-            >
-              Status
-            </label>
-            <div className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <label className={`block text-sm font-medium mb-2 text-text-secondary`}>Status</label>
+            <div className={`text-sm text-text-muted`}>
               {sensorsConnected === 2 ? (
-                <span className="text-green-500">✓ Both sensors receiving data</span>
+                <span className="text-success">✓ Both sensors receiving data</span>
               ) : sensorsConnected === 1 ? (
-                <span className="text-yellow-500">
+                <span className="text-warning">
                   ⚠ Only {data?.indoor?.available ? 'indoor' : 'outdoor'} receiving data
                 </span>
               ) : climateConfig?.indoor || climateConfig?.outdoor ? (
-                <span className="text-yellow-500">⚠ Waiting for sensor data...</span>
+                <span className="text-warning">⚠ Waiting for sensor data...</span>
               ) : (
-                <span className="text-neutral-500">Select sensors above</span>
+                <span className="text-text-muted">Select sensors above</span>
               )}
             </div>
           </div>
@@ -286,13 +270,13 @@ export default function Climate({ dark }: WidgetComponentProps) {
                 rel="noopener noreferrer"
                 className={`block w-full px-3 py-2 rounded transition-colors text-sm text-center ${
                   dark
-                    ? 'bg-neutral-700 text-neutral-200 hover:bg-neutral-600'
-                    : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                    ? 'bg-surface-sunken text-text hover:bg-border'
+                    : 'bg-surface-sunken text-text-secondary hover:bg-surface-sunken'
                 }`}
               >
                 Open Zigbee2MQTT UI
               </a>
-              <p className={`text-xs mt-1 ${dark ? 'text-gray-500' : 'text-gray-500'}`}>
+              <p className={`text-xs mt-1 text-text-muted`}>
                 Pair new sensors, rename devices, check signal
               </p>
             </div>
@@ -300,12 +284,12 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
           {/* Battery warnings */}
           {data?.indoor?.available && data.indoor.battery < 20 && (
-            <div className="text-yellow-500 text-sm">
+            <div className="text-warning text-sm">
               ⚠️ Indoor sensor battery low ({data.indoor.battery}%)
             </div>
           )}
           {data?.outdoor?.available && data.outdoor.battery < 20 && (
-            <div className="text-yellow-500 text-sm">
+            <div className="text-warning text-sm">
               ⚠️ Outdoor sensor battery low ({data.outdoor.battery}%)
             </div>
           )}

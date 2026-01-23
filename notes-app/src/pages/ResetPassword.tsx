@@ -41,12 +41,10 @@ export function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
-          Reset Password
-        </h1>
-        <p className="text-center mb-8 text-zinc-500">Enter your new password</p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-text">Reset Password</h1>
+        <p className="text-center mb-8 text-text-muted">Enter your new password</p>
 
         <div className="mb-4">
           <Input

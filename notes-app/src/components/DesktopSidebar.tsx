@@ -25,12 +25,12 @@ export function DesktopSidebar({
   const navigate = useNavigate();
 
   return (
-    <div className="w-56 flex flex-col border-r border-zinc-200 dark:border-zinc-800">
+    <div className="w-56 flex flex-col border-r border-border">
       {/* Nav Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
-        <span className="text-lg font-semibold text-zinc-950 dark:text-white">SimpleNotes</span>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+        <span className="text-lg font-semibold text-text">SimpleNotes</span>
         <button onClick={onClose} className="p-1 hover:opacity-70">
-          <PanelLeftClose size={18} className="text-zinc-400" />
+          <PanelLeftClose size={18} className="text-text-muted" />
         </button>
       </div>
 
@@ -45,34 +45,34 @@ export function DesktopSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="border-t border-zinc-200 dark:border-zinc-800 p-3">
+      <div className="border-t border-border p-3">
         <button
           onClick={() => window.location.reload()}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
         >
-          <RefreshCw size={16} className="text-zinc-400" />
-          <span className="text-sm text-zinc-500">Refresh</span>
+          <RefreshCw size={16} className="text-text-muted" />
+          <span className="text-sm text-text-muted">Refresh</span>
         </button>
         <button
           onClick={() => navigate('/settings')}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
         >
-          <Settings size={16} className="text-zinc-400" />
-          <span className="text-sm text-zinc-500">Settings</span>
+          <Settings size={16} className="text-text-muted" />
+          <span className="text-sm text-text-muted">Settings</span>
         </button>
         <button
           onClick={() => navigate('/trash')}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
         >
-          <Trash2 size={16} className="text-zinc-400" />
-          <span className="text-sm text-zinc-500">Trash</span>
+          <Trash2 size={16} className="text-text-muted" />
+          <span className="text-sm text-text-muted">Trash</span>
         </button>
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
         >
-          <LogOut size={16} className="text-zinc-400" />
-          <span className="text-sm truncate text-zinc-500">{userEmail}</span>
+          <LogOut size={16} className="text-text-muted" />
+          <span className="text-sm truncate text-text-muted">{userEmail}</span>
         </button>
       </div>
     </div>

@@ -9,15 +9,15 @@ const icons: Record<ToastType, LucideIcon> = {
 };
 
 const iconColors: Record<ToastType, string> = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  info: 'text-blue-500',
+  success: 'text-success',
+  error: 'text-danger',
+  info: 'text-accent',
 };
 
 const borderColors: Record<ToastType, string> = {
-  success: 'border-l-green-500',
-  error: 'border-l-red-500',
-  info: 'border-l-blue-500',
+  success: 'border-l-success',
+  error: 'border-l-danger',
+  info: 'border-l-accent',
 };
 
 export function ToastContainer() {
@@ -33,13 +33,13 @@ export function ToastContainer() {
         return (
           <div
             key={toast.id}
-            className={`flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto bg-zinc-100 dark:bg-zinc-900 border-l-[3px] ${borderColors[toast.type]}`}
+            className={`flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto bg-surface-sunken border-l-[3px] ${borderColors[toast.type]}`}
           >
             <Icon size={18} className={`mr-2.5 flex-shrink-0 ${iconColors[toast.type]}`} />
-            <span className="flex-1 text-sm text-zinc-950 dark:text-white">{toast.message}</span>
+            <span className="flex-1 text-sm text-text">{toast.message}</span>
             <button
               onClick={() => hideToast(toast.id)}
-              className="p-1 ml-2 hover:opacity-70 transition-opacity text-zinc-500"
+              className="p-1 ml-2 hover:opacity-70 transition-opacity text-text-muted"
             >
               <X size={16} />
             </button>

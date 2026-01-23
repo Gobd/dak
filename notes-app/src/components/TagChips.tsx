@@ -24,7 +24,7 @@ export function TagsSidebarSection({
 
   return (
     <div className="mb-4">
-      <span className="block text-xs font-semibold uppercase px-3 mb-2 text-zinc-500">Tags</span>
+      <span className="block text-xs font-semibold uppercase px-3 mb-2 text-text-muted">Tags</span>
 
       {tagsWithNotes.length > 3 && (
         <div className="px-3 mb-2">
@@ -33,7 +33,7 @@ export function TagsSidebarSection({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter tags..."
-            className="w-full px-2.5 py-1.5 rounded-md text-[13px] outline-none bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-white"
+            className="w-full px-2.5 py-1.5 rounded-md text-[13px] outline-none bg-surface-sunken text-text"
           />
         </div>
       )}
@@ -45,34 +45,32 @@ export function TagsSidebarSection({
             key={tag.id}
             onClick={() => onSelectTag(isSelected ? null : tag.id)}
             className={`w-full flex items-center py-2 px-3 text-left transition-colors ${
-              isSelected ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+              isSelected ? 'bg-surface-sunken' : ''
             }`}
           >
             <Hash
               size={16}
               style={{ color: tag.color ?? undefined }}
-              className={tag.color ? '' : 'text-zinc-400'}
+              className={tag.color ? '' : 'text-text-muted'}
             />
             <span
               className={`ml-2 text-sm flex-1 truncate ${
-                isSelected
-                  ? 'text-zinc-950 dark:text-white font-medium'
-                  : 'text-zinc-600 dark:text-zinc-300'
+                isSelected ? 'text-text font-medium' : 'text-text-secondary'
               }`}
             >
               {tag.name}
             </span>
             {tagCounts[tag.id] !== undefined && (
-              <span className="text-xs ml-1 text-zinc-500">({tagCounts[tag.id]})</span>
+              <span className="text-xs ml-1 text-text-muted">({tagCounts[tag.id]})</span>
             )}
           </button>
         );
       })}
 
-      {tags.length === 0 && <p className="text-sm px-3 py-2 text-zinc-500">No tags yet</p>}
+      {tags.length === 0 && <p className="text-sm px-3 py-2 text-text-muted">No tags yet</p>}
 
       {tags.length > 0 && filteredTags.length === 0 && (
-        <p className="text-sm px-3 py-2 text-zinc-500">No matching tags</p>
+        <p className="text-sm px-3 py-2 text-text-muted">No matching tags</p>
       )}
     </div>
   );

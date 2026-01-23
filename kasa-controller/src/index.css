@@ -1,12 +1,11 @@
 @import 'tailwindcss';
 @import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
 
-html {
-  background-color: #0f172a;
-}
+/* Always dark mode - set via script in index.html */
 
 body {
-  @apply bg-slate-900 text-slate-100 min-h-dvh;
+  @apply bg-surface text-text min-h-dvh;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);

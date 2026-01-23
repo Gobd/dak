@@ -21,11 +21,11 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
       {requirements.map((req, index) => (
         <div key={index} className="flex items-center gap-1.5">
           {req.met ? (
-            <Check size={14} className="text-green-500" />
+            <Check size={14} className="text-success" />
           ) : (
-            <X size={14} className="text-zinc-500" />
+            <X size={14} className="text-text-muted" />
           )}
-          <span className={`text-[13px] ${req.met ? 'text-green-500' : 'text-zinc-500'}`}>
+          <span className={`text-[13px] ${req.met ? 'text-success' : 'text-text-muted'}`}>
             {req.label}
           </span>
         </div>
