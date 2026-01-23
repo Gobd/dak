@@ -187,7 +187,7 @@ function getDayNames(weekStartsOn: number): string[] {
   return result;
 }
 
-export default function Calendar({ panel, dark }: WidgetComponentProps) {
+export default function Calendar({ panel }: WidgetComponentProps) {
   const calendarConfig = useConfigStore((s) => s.calendar);
   const updateCalendar = useConfigStore((s) => s.updateCalendar);
 
@@ -801,13 +801,13 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   if (!isSignedIn) {
     return (
       <div
-        className={`w-full h-full flex flex-col items-center justify-center p-4 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
+        className={`w-full h-full flex flex-col items-center justify-center p-4 bg-surface text-text`}
       >
         <h3 className="text-lg font-medium mb-2">Google Calendar</h3>
-        <p className="text-sm text-neutral-500 mb-4 text-center">
+        <p className="text-sm text-text-muted mb-4 text-center">
           Sign in to view and manage your calendars
         </p>
-        {authError && <p className="text-sm text-red-500 mb-4 text-center">{authError}</p>}
+        {authError && <p className="text-sm text-danger mb-4 text-center">{authError}</p>}
         <Button onClick={signIn} variant="primary" disabled={authLoading}>
           {authLoading ? 'Signing in...' : `Sign in with Google${isImplicitFlow ? ' (dev)' : ''}`}
         </Button>
@@ -818,28 +818,24 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
   // Loading
   if (loading && events.length === 0) {
     return (
-      <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black' : 'bg-white'}`}
-      >
-        <RefreshCw size={20} className="animate-spin text-neutral-500" />
+      <div className={`w-full h-full flex items-center justify-center bg-surface`}>
+        <RefreshCw size={20} className="animate-spin text-text-muted" />
       </div>
     );
   }
 
   return (
-    <div
-      className={`w-full h-full flex flex-col overflow-hidden ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className={`w-full h-full flex flex-col overflow-hidden bg-surface text-text`}>
       {/* Header */}
       <div
-        className="flex items-start justify-between px-3 py-2 border-b border-neutral-700"
+        className="flex items-start justify-between px-3 py-2 border-b border-border"
         style={headerHeight > 0 ? { minHeight: `${headerHeight}px` } : undefined}
       >
         <div className="flex items-center gap-0.5">
           {/* Month navigation - separated with gap */}
           <button
             onClick={handlePrevMonth}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Previous month"
           >
             <ChevronsLeft size={18} />
@@ -848,7 +844,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           {/* Week navigation */}
           <button
             onClick={handlePrevWeek}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Previous week"
           >
             <ChevronLeft size={18} />
@@ -856,7 +852,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           <button
             onClick={() => setShowJumpToDate(true)}
             className={`px-2 py-1 text-sm rounded ${
-              todayInView ? 'bg-blue-600/30 text-blue-400' : 'hover:bg-neutral-700/50'
+              todayInView ? 'bg-accent/30 text-accent' : 'hover:bg-surface-sunken/50'
             }`}
             title="Jump to date"
           >
@@ -864,7 +860,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           </button>
           <button
             onClick={handleNextWeek}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Next week"
           >
             <ChevronRight size={18} />
@@ -872,7 +868,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           <div className="w-2" /> {/* Spacer between week and month buttons */}
           <button
             onClick={handleNextMonth}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Next month"
           >
             <ChevronsRight size={18} />
@@ -880,7 +876,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           <button
             onClick={handleToday}
             className={`ml-2 px-2 py-1 text-xs rounded ${
-              todayInView ? 'bg-blue-600 text-white' : 'hover:bg-neutral-700/50'
+              todayInView ? 'bg-accent text-text' : 'hover:bg-surface-sunken/50'
             }`}
           >
             Today
@@ -889,7 +885,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
         <div className="flex items-center gap-3">
           {showTime && (
-            <span className="text-sm text-neutral-400">
+            <span className="text-sm text-text-muted">
               {currentTime.toLocaleTimeString([], {
                 hour: 'numeric',
                 minute: '2-digit',
@@ -899,7 +895,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
           )}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Settings"
           >
             <Settings size={16} />
@@ -909,7 +905,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               setSelectedDate(new Date());
               setShowAddEvent(true);
             }}
-            className="p-2 rounded hover:bg-neutral-700/50"
+            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Add event"
           >
             <Plus size={16} />
@@ -919,16 +915,14 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
       {/* Calendar legend */}
       {visibleCalendars.length > 0 && (
-        <div className="flex gap-2 px-3 py-1.5 text-xs overflow-x-auto border-b border-neutral-700">
+        <div className="flex gap-2 px-3 py-1.5 text-xs overflow-x-auto border-b border-border">
           {visibleCalendars.map((cal) => (
             <div key={cal.id} className="flex items-center gap-1 shrink-0">
               <div
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: cal.backgroundColor }}
               />
-              <span className="text-neutral-400">
-                {getCalendarDisplayName(cal.id, cal.summary)}
-              </span>
+              <span className="text-text-muted">{getCalendarDisplayName(cal.id, cal.summary)}</span>
             </div>
           ))}
         </div>
@@ -937,9 +931,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       {/* Month Grid */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Day names */}
-        <div className="grid grid-cols-7 border-b border-neutral-700">
+        <div className="grid grid-cols-7 border-b border-border">
           {dayNames.map((name) => (
-            <div key={name} className="px-1 py-1 text-xs text-center text-neutral-500">
+            <div key={name} className="px-1 py-1 text-xs text-center text-text-muted">
               {name}
             </div>
           ))}
@@ -959,8 +953,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
             return (
               <div
                 key={dateStr}
-                className={`border-r border-b border-neutral-700 p-1 min-h-0 overflow-hidden cursor-pointer
-                           hover:bg-neutral-700/30 ${isPastDate ? 'opacity-50' : ''}`}
+                className={`border-r border-b border-border p-1 min-h-0 overflow-hidden cursor-pointer
+                           hover:bg-surface-sunken/30 ${isPastDate ? 'opacity-50' : ''}`}
                 onClick={() => {
                   setSelectedDate(date);
                   setShowAddEvent(true);
@@ -969,8 +963,8 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 <div
                   className={`text-xs font-medium mb-0.5 ${
                     isTodayDate
-                      ? 'w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center'
-                      : 'text-neutral-400'
+                      ? 'w-5 h-5 rounded-full bg-accent text-text flex items-center justify-center'
+                      : 'text-text-muted'
                   }`}
                 >
                   {date.getDate()}
@@ -1004,7 +998,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                     );
                   })}
                   {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-neutral-500">+{dayEvents.length - 3} more</div>
+                    <div className="text-[10px] text-text-muted">+{dayEvents.length - 3} more</div>
                   )}
                 </div>
               </div>
@@ -1032,7 +1026,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               <button
                 onClick={() => handleViewChange('month')}
                 className={`px-3 py-1.5 rounded text-sm ${
-                  view === 'month' ? 'bg-blue-600 text-white' : 'bg-neutral-700 text-neutral-300'
+                  view === 'month' ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
                 }`}
               >
                 Month
@@ -1040,7 +1034,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               <button
                 onClick={() => handleViewChange('list')}
                 className={`px-3 py-1.5 rounded text-sm ${
-                  view === 'list' ? 'bg-blue-600 text-white' : 'bg-neutral-700 text-neutral-300'
+                  view === 'list' ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
                 }`}
               >
                 List
@@ -1062,7 +1056,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               onChange={(e) => updateCalendar({ headerHeight: parseInt(e.target.value, 10) })}
               className="w-full"
             />
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-text-muted mt-1">
               Extra space in header for overlaying other widgets
             </p>
           </div>
@@ -1105,7 +1099,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                         updateCalendar({ names: newNames });
                       }}
                       placeholder={cal.summary}
-                      className="flex-1 px-2 py-1 text-sm rounded bg-neutral-700 border border-neutral-600 placeholder:text-neutral-500"
+                      className="flex-1 px-2 py-1 text-sm rounded bg-surface-sunken border border-border placeholder:text-text-muted"
                       title={`Alias for ${cal.summary}`}
                     />
                   </div>
@@ -1114,9 +1108,9 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
             </div>
           )}
 
-          <div className="pt-2 border-t border-neutral-700 space-y-2">
+          <div className="pt-2 border-t border-border space-y-2">
             {isImplicitFlow && (
-              <div className="text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">
+              <div className="text-xs text-warning bg-warning/10 px-2 py-1 rounded">
                 Local dev mode (implicit auth flow - no refresh token)
               </div>
             )}
@@ -1159,7 +1153,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               value={newEvent.summary}
               onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
               placeholder="Event title"
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+              className="w-full p-2 rounded bg-surface-sunken border border-border"
               autoFocus
             />
           </div>
@@ -1209,7 +1203,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               value={newEvent.location}
               onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
               placeholder="Add location"
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+              className="w-full p-2 rounded bg-surface-sunken border border-border"
             />
           </div>
 
@@ -1221,7 +1215,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
               placeholder="Add description"
               rows={2}
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600 resize-none"
+              className="w-full p-2 rounded bg-surface-sunken border border-border resize-none"
             />
           </div>
 
@@ -1233,7 +1227,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               <select
                 value={newEvent.calendarId}
                 onChange={(e) => setNewEvent({ ...newEvent, calendarId: e.target.value })}
-                className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+                className="w-full p-2 rounded bg-surface-sunken border border-border"
               >
                 <option value="">Default</option>
                 {calendars
@@ -1294,16 +1288,16 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               )}
             </p>
             {selectedEvent.calendarName && (
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-text-muted">
                 {getCalendarDisplayName(selectedEvent.calendarId, selectedEvent.calendarName)}
               </p>
             )}
             {selectedEvent.location && <p>📍 {selectedEvent.location}</p>}
             {selectedEvent.description && (
-              <p className="text-sm text-neutral-400">{selectedEvent.description}</p>
+              <p className="text-sm text-text-muted">{selectedEvent.description}</p>
             )}
             {selectedEvent.recurringEventId && (
-              <p className="text-xs text-neutral-500">🔁 Recurring event</p>
+              <p className="text-xs text-text-muted">🔁 Recurring event</p>
             )}
           </div>
         )}
@@ -1327,7 +1321,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               type="text"
               value={editForm.summary}
               onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+              className="w-full p-2 rounded bg-surface-sunken border border-border"
             />
           </div>
 
@@ -1368,7 +1362,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               value={editForm.location}
               onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
               placeholder="Add location"
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600"
+              className="w-full p-2 rounded bg-surface-sunken border border-border"
             />
           </div>
 
@@ -1380,7 +1374,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
               placeholder="Add description"
               rows={2}
-              className="w-full p-2 rounded bg-neutral-700 border border-neutral-600 resize-none"
+              className="w-full p-2 rounded bg-surface-sunken border border-border resize-none"
             />
           </div>
         </div>
@@ -1450,7 +1444,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
       {/* Error Modal */}
       <Modal open={!!errorMessage} onClose={() => setErrorMessage(null)} title="Error">
-        <p className="text-red-400">{errorMessage}</p>
+        <p className="text-danger">{errorMessage}</p>
         <div className="flex gap-2 mt-4">
           <Button onClick={() => setErrorMessage(null)}>OK</Button>
         </div>

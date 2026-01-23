@@ -77,9 +77,9 @@ export function Home() {
 
   const getDueDateClass = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00');
-    if (isPast(date) && !isToday(date)) return 'text-red-600 font-bold';
-    if (isToday(date)) return 'text-orange-600 font-bold';
-    return 'text-gray-600';
+    if (isPast(date) && !isToday(date)) return 'text-danger font-bold';
+    if (isToday(date)) return 'text-warning font-bold';
+    return 'text-text-secondary';
   };
 
   // Get today's medicine doses
@@ -126,13 +126,11 @@ export function Home() {
       <h1 className="text-2xl font-bold">Home</h1>
 
       {people.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center">
-          <p className="text-gray-500 dark:text-neutral-400 mb-4">
-            Get started by adding family members
-          </p>
+        <div className="bg-surface rounded-xl shadow-sm p-6 text-center">
+          <p className="text-text-muted mb-4">Get started by adding family members</p>
           <Link
             to="/people"
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="inline-block bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
           >
             Add People
           </Link>
@@ -141,9 +139,9 @@ export function Home() {
         <>
           {/* Upcoming Shots - only show if there are shots */}
           {upcomingShots.length > 0 && (
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4">
+            <div className="bg-surface rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
-                <Syringe className="text-blue-600" size={20} />
+                <Syringe className="text-accent" size={20} />
                 <h2 className="font-semibold">Upcoming Shots</h2>
               </div>
               <div className="space-y-3">
@@ -151,13 +149,13 @@ export function Home() {
                   <Link
                     key={schedule.id}
                     to="/shots"
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                    className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                   >
                     <div>
                       <div className="font-medium">
                         {schedule.person?.name} - {schedule.name}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-neutral-400">
+                      <div className="text-sm text-text-muted">
                         {schedule.current_dose} • every {schedule.interval_days} days
                       </div>
                     </div>
@@ -172,9 +170,9 @@ export function Home() {
 
           {/* Active Medicine - only show if there are active courses */}
           {activeCourses.length > 0 && (
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4">
+            <div className="bg-surface rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
-                <Pill className="text-green-600" size={20} />
+                <Pill className="text-success" size={20} />
                 <h2 className="font-semibold">Active Medicine</h2>
               </div>
               <div className="space-y-3">
@@ -186,13 +184,13 @@ export function Home() {
                     <Link
                       key={course.id}
                       to="/courses"
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
                         <div className="font-medium">
                           {course.person?.name} - {course.name}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-neutral-400">
+                        <div className="text-sm text-text-muted">
                           {course.doses_per_day}x/day for {course.duration_days} days
                         </div>
                       </div>
@@ -200,18 +198,16 @@ export function Home() {
                         {total > 0 ? (
                           <>
                             {allDone ? (
-                              <CheckCircle2 className="text-green-600" size={18} />
+                              <CheckCircle2 className="text-success" size={18} />
                             ) : (
-                              <AlertCircle className="text-orange-500" size={18} />
+                              <AlertCircle className="text-warning" size={18} />
                             )}
-                            <span className={allDone ? 'text-green-600' : 'text-orange-600'}>
+                            <span className={allDone ? 'text-success' : 'text-warning'}>
                               {taken}/{total} today
                             </span>
                           </>
                         ) : (
-                          <span className="text-gray-500 dark:text-neutral-400 text-sm">
-                            No doses today
-                          </span>
+                          <span className="text-text-muted text-sm">No doses today</span>
                         )}
                       </div>
                     </Link>
@@ -223,9 +219,9 @@ export function Home() {
 
           {/* Recent As-Needed Meds - only show if there are recent doses */}
           {recentPrnMeds.length > 0 && (
-            <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-4">
+            <div className="bg-surface rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
-                <Clock className="text-purple-600" size={20} />
+                <Clock className="text-accent" size={20} />
                 <h2 className="font-semibold">As-Needed (Last 48h)</h2>
               </div>
               <div className="space-y-3">
@@ -235,26 +231,26 @@ export function Home() {
                     <Link
                       key={med.id}
                       to="/as-needed"
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                      className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
                         <div className="font-medium">
                           {med.person?.name} - {med.name}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-neutral-400">
+                        <div className="text-sm text-text-muted">
                           Last: {lastGiven} • every {med.min_hours}h
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {canGive ? (
                           <>
-                            <Check className="text-green-600" size={18} />
-                            <span className="text-green-600">OK to give</span>
+                            <Check className="text-success" size={18} />
+                            <span className="text-success">OK to give</span>
                           </>
                         ) : (
                           <>
-                            <AlertCircle className="text-orange-500" size={18} />
-                            <span className="text-orange-600">Wait {timeUntil}</span>
+                            <AlertCircle className="text-warning" size={18} />
+                            <span className="text-warning">Wait {timeUntil}</span>
                           </>
                         )}
                       </div>

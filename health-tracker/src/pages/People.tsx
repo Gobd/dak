@@ -54,11 +54,11 @@ export function People() {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="Add person (e.g., Brandon, Wife, Kiddo)"
-          className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           type="submit"
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
         >
           <Plus size={18} />
           Add
@@ -66,13 +66,13 @@ export function People() {
       </form>
 
       {loading ? (
-        <div className="text-gray-500 dark:text-neutral-400">Loading...</div>
+        <div className="text-text-muted">Loading...</div>
       ) : people.length === 0 ? (
-        <div className="text-gray-500 dark:text-neutral-400 text-center py-8">
+        <div className="text-text-muted text-center py-8">
           No people yet. Add family members to track their health.
         </div>
       ) : (
-        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm divide-y divide-gray-200 dark:divide-neutral-700">
+        <div className="bg-surface rounded-xl shadow-sm divide-y divide-border dark:divide-border">
           {people.map((person) => (
             <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
@@ -81,18 +81,18 @@ export function People() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-1 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-1 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
                     autoFocus
                   />
                   <button
                     onClick={handleUpdate}
-                    className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg"
+                    className="p-2 text-success hover:bg-success-light dark:hover:bg-success-light rounded-lg"
                   >
                     <Check size={18} />
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg"
+                    className="p-2 text-text-secondary text-text-muted hover:bg-surface-sunken rounded-lg"
                   >
                     <X size={18} />
                   </button>
@@ -103,13 +103,13 @@ export function People() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => startEdit(person.id, person.name)}
-                      className="p-2 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded-lg"
+                      className="p-2 text-text-secondary text-text-muted hover:bg-surface-sunken rounded-lg"
                     >
                       <Pencil size={18} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete(person.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                      className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
                     >
                       <Trash2 size={18} />
                     </button>

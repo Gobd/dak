@@ -12,7 +12,6 @@ import {
   setBrightnessBrightnessSetPost,
   type BrightnessStatus,
 } from '@dak/api-client';
-import type { WidgetComponentProps } from './index';
 
 async function checkRelayHealth(): Promise<boolean> {
   try {
@@ -61,7 +60,7 @@ async function fetchBrightnessData(): Promise<{
   return { status, error: null };
 }
 
-export default function Brightness({ dark }: WidgetComponentProps) {
+export default function Brightness() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [manualBrightness, setManualBrightness] = useState<number | null>(null);
@@ -172,17 +171,17 @@ export default function Brightness({ dark }: WidgetComponentProps) {
     <div className="w-full h-full flex items-center justify-center">
       <button
         onClick={() => setShowModal(true)}
-        className={`relative p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
+        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Brightness: ${currentBrightness}%`}
       >
         {isDay ? (
-          <Sun size={24} className={hasError ? 'text-neutral-500' : 'text-yellow-400'} />
+          <Sun size={24} className={hasError ? 'text-text-muted' : 'text-warning'} />
         ) : (
-          <Moon size={24} className={hasError ? 'text-neutral-500' : 'text-blue-300'} />
+          <Moon size={24} className={hasError ? 'text-text-muted' : 'text-accent'} />
         )}
-        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-red-500" />}
+        {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
+          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
         )}
       </button>
 
@@ -198,10 +197,10 @@ export default function Brightness({ dark }: WidgetComponentProps) {
       >
         <div className="space-y-4">
           {error && (
-            <div className="p-2 bg-red-500/20 rounded text-red-400 text-sm flex items-center gap-2">
+            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
               <AlertCircle size={14} /> {error}
               {error === 'Relay offline' && (
-                <span className="text-neutral-500 text-xs ml-2">Is home-relay running?</span>
+                <span className="text-text-muted text-xs ml-2">Is home-relay running?</span>
               )}
             </div>
           )}
@@ -211,13 +210,13 @@ export default function Brightness({ dark }: WidgetComponentProps) {
               {/* Current state and manual brightness */}
               <div className="flex items-center gap-4">
                 {isDay ? (
-                  <Sun size={40} className="text-yellow-400" />
+                  <Sun size={40} className="text-warning" />
                 ) : (
-                  <Moon size={40} className="text-blue-300" />
+                  <Moon size={40} className="text-accent" />
                 )}
                 <div className="flex-1">
                   <div className="text-3xl font-light">{currentBrightness}%</div>
-                  <div className="text-sm text-neutral-500">
+                  <div className="text-sm text-text-muted">
                     {config?.enabled ? (isDay ? 'Day mode (auto)' : 'Night mode (auto)') : 'Manual'}
                   </div>
                 </div>
@@ -225,7 +224,7 @@ export default function Brightness({ dark }: WidgetComponentProps) {
 
               {/* Set brightness now */}
               <div>
-                <label className="block text-sm text-neutral-500 mb-2">Set Now</label>
+                <label className="block text-sm text-text-muted mb-2">Set Now</label>
                 <input
                   type="range"
                   min={1}
@@ -233,29 +232,29 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                   value={currentBrightness}
                   onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer
-                             bg-neutral-300 dark:bg-neutral-600
+                             bg-surface-sunken
                              [&::-webkit-slider-thumb]:appearance-none
                              [&::-webkit-slider-thumb]:w-5
                              [&::-webkit-slider-thumb]:h-5
                              [&::-webkit-slider-thumb]:rounded-full
-                             [&::-webkit-slider-thumb]:bg-white
+                             [&::-webkit-slider-thumb]:bg-surface
                              [&::-webkit-slider-thumb]:shadow-md"
                 />
-                <div className="flex justify-between text-xs text-neutral-500 mt-1">
+                <div className="flex justify-between text-xs text-text-muted mt-1">
                   <span>1%</span>
                   <span>100%</span>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="border-t border-neutral-300 dark:border-neutral-700" />
+              <div className="border-t border-border" />
 
               {/* Auto-adjust toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-sm">Auto-adjust by sunrise/sunset</label>
                   {!hasLocation && (
-                    <div className="text-xs text-neutral-500">
+                    <div className="text-xs text-text-muted">
                       Set location in Global Settings first
                     </div>
                   )}
@@ -263,10 +262,10 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                 <button
                   onClick={handleToggleEnabled}
                   disabled={!hasLocation && !config?.enabled}
-                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'} ${!hasLocation && !config?.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-success' : 'bg-surface-sunken'} ${!hasLocation && !config?.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
+                    className={`w-5 h-5 rounded-full bg-surface shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
                   />
                 </button>
               </div>
@@ -275,7 +274,7 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                 <>
                   {/* Location */}
                   <div>
-                    <label className="block text-sm text-neutral-500 mb-1">
+                    <label className="block text-sm text-text-muted mb-1">
                       <MapPin size={14} className="inline mr-1" />
                       Location
                     </label>
@@ -286,12 +285,12 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                       placeholder={effectiveLocation?.name || 'Search city...'}
                     />
                     {config?.lat && config?.lon ? (
-                      <div className="mt-2 text-xs text-green-400">
+                      <div className="mt-2 text-xs text-success">
                         {config.locationName ||
                           `${config.lat.toFixed(4)}, ${config.lon.toFixed(4)}`}
                       </div>
                     ) : effectiveLocation ? (
-                      <div className="mt-2 text-xs text-blue-400">
+                      <div className="mt-2 text-xs text-accent">
                         Using global default:{' '}
                         {effectiveLocation.name ||
                           `${effectiveLocation.lat.toFixed(4)}, ${effectiveLocation.lon.toFixed(4)}`}
@@ -301,8 +300,8 @@ export default function Brightness({ dark }: WidgetComponentProps) {
 
                   {/* Day brightness */}
                   <div>
-                    <label className="block text-sm text-neutral-500 mb-1">
-                      <Sun size={14} className="inline mr-1 text-yellow-400" />
+                    <label className="block text-sm text-text-muted mb-1">
+                      <Sun size={14} className="inline mr-1 text-warning" />
                       Day: {config.dayBrightness ?? 100}%
                     </label>
                     <input
@@ -311,19 +310,19 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                       max={100}
                       value={config.dayBrightness ?? 100}
                       onChange={(e) => handleDayBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-600
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
                                  [&::-webkit-slider-thumb]:appearance-none
                                  [&::-webkit-slider-thumb]:w-4
                                  [&::-webkit-slider-thumb]:h-4
                                  [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-yellow-400"
+                                 [&::-webkit-slider-thumb]:bg-warning"
                     />
                   </div>
 
                   {/* Night brightness */}
                   <div>
-                    <label className="block text-sm text-neutral-500 mb-1">
-                      <Moon size={14} className="inline mr-1 text-blue-300" />
+                    <label className="block text-sm text-text-muted mb-1">
+                      <Moon size={14} className="inline mr-1 text-accent" />
                       Night: {config.nightBrightness ?? 1}%
                     </label>
                     <input
@@ -332,18 +331,18 @@ export default function Brightness({ dark }: WidgetComponentProps) {
                       max={100}
                       value={config.nightBrightness ?? 1}
                       onChange={(e) => handleNightBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-neutral-300 dark:bg-neutral-600
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
                                  [&::-webkit-slider-thumb]:appearance-none
                                  [&::-webkit-slider-thumb]:w-4
                                  [&::-webkit-slider-thumb]:h-4
                                  [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-blue-400"
+                                 [&::-webkit-slider-thumb]:bg-accent"
                     />
                   </div>
 
                   {/* Transition duration */}
                   <div>
-                    <label className="block text-sm text-neutral-500 mb-1">
+                    <label className="block text-sm text-text-muted mb-1">
                       <Clock size={14} className="inline mr-1" />
                       Transition duration
                     </label>
@@ -362,7 +361,7 @@ export default function Brightness({ dark }: WidgetComponentProps) {
           )}
 
           {isLoading && (
-            <div className="flex items-center gap-2 text-neutral-500 text-sm">
+            <div className="flex items-center gap-2 text-text-muted text-sm">
               <RefreshCw size={14} className="animate-spin" /> Loading...
             </div>
           )}

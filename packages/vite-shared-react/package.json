@@ -5,6 +5,11 @@
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": "./index.js",
+    "./fonts.css": "./fonts/fonts.css",
+    "./theme.css": "./theme/theme.css"
+  },
   "scripts": {
     "build:vendor": "node build-vendor.js"
   },

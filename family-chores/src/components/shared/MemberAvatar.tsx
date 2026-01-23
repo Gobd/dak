@@ -34,14 +34,14 @@ export function MemberAvatar({
     >
       <div
         className={`${sizeClasses[size]} rounded-full flex items-center justify-center ${
-          selected ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900' : ''
+          selected ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''
         }`}
         style={{ backgroundColor: color }}
       >
         {emoji}
       </div>
       {showName && (
-        <span className="text-xs text-gray-600 dark:text-neutral-400 truncate max-w-[60px]">
+        <span className="text-xs text-text-secondary text-text-muted truncate max-w-[60px]">
           {name}
         </span>
       )}

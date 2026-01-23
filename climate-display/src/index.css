@@ -1,1 +1,5 @@
 @import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
+
+/* Always dark mode - set via script in index.html */

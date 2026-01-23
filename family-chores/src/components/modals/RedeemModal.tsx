@@ -50,10 +50,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
       <Modal open={true} onClose={onClose} fit>
         <div className="text-center p-4">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Points Redeemed!
-          </h2>
-          <p className="text-gray-500 dark:text-neutral-400">
+          <h2 className="text-xl font-semibold text-text mb-2">Points Redeemed!</h2>
+          <p className="text-text-muted">
             {amount} points for {notes}
           </p>
         </div>
@@ -66,7 +64,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
       <div className="space-y-6">
         {/* Member selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Family Member
           </label>
           <div className="flex gap-3 flex-wrap">
@@ -81,8 +79,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                   }}
                   className={`flex flex-col items-center p-3 rounded-xl ${
                     selectedMemberId === member.id
-                      ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                      : 'bg-gray-50 dark:bg-neutral-800'
+                      ? 'bg-accent-light ring-2 ring-accent'
+                      : 'bg-surface-raised'
                   }`}
                 >
                   <MemberAvatar
@@ -92,9 +90,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                     size="lg"
                   />
                   <span className="text-sm font-medium mt-1">{member.name}</span>
-                  <span className="text-xs text-gray-500 dark:text-neutral-400">
-                    {memberBalance} pts
-                  </span>
+                  <span className="text-xs text-text-muted">{memberBalance} pts</span>
                 </button>
               );
             })}
@@ -105,25 +101,23 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
           <>
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Points to Redeem
               </label>
               <div className="flex items-center justify-center gap-4 mb-3">
                 <button
                   onClick={() => setAmount(Math.max(0, amount - 5))}
-                  className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                  className="w-12 h-12 rounded-xl bg-surface-sunken flex items-center justify-center"
                 >
                   <Minus size={24} />
                 </button>
                 <div className="text-center">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">{amount}</span>
-                  <p className="text-sm text-gray-500 dark:text-neutral-400">
-                    of {balance} available
-                  </p>
+                  <span className="text-4xl font-bold text-text">{amount}</span>
+                  <p className="text-sm text-text-muted">of {balance} available</p>
                 </div>
                 <button
                   onClick={() => setAmount(Math.min(balance, amount + 5))}
-                  className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                  className="w-12 h-12 rounded-xl bg-surface-sunken flex items-center justify-center"
                 >
                   <Plus size={24} />
                 </button>
@@ -138,8 +132,8 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                     disabled={qa > balance}
                     className={`px-4 py-2 rounded-lg text-sm font-medium ${
                       amount === qa
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-neutral-800 disabled:opacity-50'
+                        ? 'bg-accent text-text'
+                        : 'bg-surface-sunken disabled:opacity-50'
                     }`}
                   >
                     {qa}
@@ -148,9 +142,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                 <button
                   onClick={() => setAmount(balance)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    amount === balance
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-neutral-800'
+                    amount === balance ? 'bg-accent text-text' : 'bg-surface-sunken'
                   }`}
                 >
                   All
@@ -160,7 +152,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 What for?
               </label>
               <input
@@ -168,17 +160,17 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g., 30 min screen time, ice cream, etc."
-                className="w-full px-3 py-3 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+                className="w-full px-3 py-3 border border-border rounded-lg bg-surface-sunken text-text"
               />
             </div>
 
-            {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+            {error && <p className="text-danger text-sm text-center">{error}</p>}
 
             {/* Submit */}
             <button
               onClick={() => setShowConfirm(true)}
               disabled={amount <= 0 || !notes.trim() || loading}
-              className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-success text-text py-3 rounded-xl font-medium hover:bg-success-hover disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Processing...' : `Redeem ${amount} Points`}
             </button>

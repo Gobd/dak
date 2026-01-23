@@ -323,7 +323,7 @@ export function Dashboard() {
   if (!isDesktop) {
     if (currentNote && !showSidebar) {
       return (
-        <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-zinc-950">
+        <div className="h-screen flex flex-col overflow-hidden bg-surface">
           <NoteEditor
             key={currentNote.id}
             note={currentNote}
@@ -341,7 +341,7 @@ export function Dashboard() {
     }
 
     return (
-      <div className="flex flex-col min-h-screen relative bg-white dark:bg-zinc-950">
+      <div className="flex flex-col min-h-screen relative bg-surface">
         {/* Backdrop to close menus when tapping outside */}
         {(showMobileMenu || showSortMenu || showCreateMenu) && (
           <div
@@ -384,7 +384,7 @@ export function Dashboard() {
         {selectedTagId && (
           <button
             onClick={() => setSelectedTagId(null)}
-            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-zinc-100 dark:bg-zinc-900"
+            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
           >
             <div
               className="w-2 h-2 rounded-full"
@@ -392,20 +392,20 @@ export function Dashboard() {
                 backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
               }}
             />
-            <span className="text-sm text-zinc-950 dark:text-white">
+            <span className="text-sm text-text">
               {tags.find((t) => t.id === selectedTagId)?.name}
             </span>
-            <span className="text-sm ml-0.5 text-zinc-500">×</span>
+            <span className="text-sm ml-0.5 text-text-muted">×</span>
           </button>
         )}
         {/* Mobile Sort Options */}
-        <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="px-4 py-2 border-b border-border">
           <button
             onClick={() => setShowSortMenu(!showSortMenu)}
             className="flex items-center gap-1"
           >
-            <ArrowUpDown size={14} className="text-zinc-400" />
-            <span className="text-xs text-zinc-500">
+            <ArrowUpDown size={14} className="text-text-muted" />
+            <span className="text-xs text-text-muted">
               {sortBy === 'updated'
                 ? 'Last updated'
                 : sortBy === 'created'
@@ -414,7 +414,7 @@ export function Dashboard() {
             </span>
           </button>
           {showSortMenu && (
-            <div className="mt-2 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+            <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
               {(['updated', 'created', 'title'] as const).map((option) => (
                 <button
                   key={option}
@@ -423,13 +423,11 @@ export function Dashboard() {
                     setShowSortMenu(false);
                   }}
                   className={`w-full px-3 py-2 text-left ${
-                    sortBy === option ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+                    sortBy === option ? 'bg-surface-sunken' : ''
                   }`}
                 >
                   <span
-                    className={`text-sm ${
-                      sortBy === option ? 'text-zinc-950 dark:text-white' : 'text-zinc-500'
-                    }`}
+                    className={`text-sm ${sortBy === option ? 'text-text' : 'text-text-muted'}`}
                   >
                     {option === 'updated'
                       ? 'Last updated'
@@ -489,7 +487,7 @@ export function Dashboard() {
 
   // Desktop: side-by-side layout
   return (
-    <div className="flex h-screen overflow-hidden relative bg-white dark:bg-zinc-950">
+    <div className="flex h-screen overflow-hidden relative bg-surface">
       {/* Backdrop to close menus when clicking/tapping outside */}
       {(showSortMenu || showCreateMenu) && (
         <div
@@ -515,46 +513,44 @@ export function Dashboard() {
 
       {/* Notes List Sidebar (collapsible) */}
       {showNotesSidebar && (
-        <div className="w-72 border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0 z-10">
+        <div className="w-72 border-r border-border flex flex-col min-h-0 z-10">
           {/* Notes Header */}
           {isSelectionMode ? (
-            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
+            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border bg-surface-sunken">
               <button onClick={toggleSelectAll} className="flex items-center gap-2">
                 {allOwnedSelected ? (
-                  <SquareCheck size={18} className="text-amber-500 dark:text-amber-400" />
+                  <SquareCheck size={18} className="text-warning" />
                 ) : (
-                  <Square size={18} className="text-zinc-400" />
+                  <Square size={18} className="text-text-muted" />
                 )}
-                <span className="text-sm text-zinc-950 dark:text-white">All</span>
+                <span className="text-sm text-text">All</span>
               </button>
-              <span className="text-sm font-medium text-zinc-950 dark:text-white">
-                {selectedNoteIds.size} selected
-              </span>
+              <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium ${
                     selectedNoteIds.size > 0
-                      ? 'bg-red-500 text-white'
-                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'
+                      ? 'bg-danger text-text'
+                      : 'bg-surface-sunken text-text-muted'
                   }`}
                 >
                   Delete
                 </button>
                 <button onClick={exitSelectionMode} className="p-1">
-                  <X size={18} className="text-zinc-500" />
+                  <X size={18} className="text-text-muted" />
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border">
               {!showNavSidebar && (
                 <button onClick={() => setShowNavSidebar(true)} className="p-1 mr-2">
-                  <PanelLeft size={18} className="text-zinc-400" />
+                  <PanelLeft size={18} className="text-text-muted" />
                 </button>
               )}
               {selectedTagId ? (
-                <span className="text-base font-medium flex-1 text-zinc-950 dark:text-white">
+                <span className="text-base font-medium flex-1 text-text">
                   {tags.find((t) => t.id === selectedTagId)?.name || 'Notes'}
                 </span>
               ) : (
@@ -562,17 +558,15 @@ export function Dashboard() {
                   onClick={toggleShowPrivate}
                   className="flex items-center flex-1 gap-1 py-1 pr-2"
                 >
-                  {!showPrivate && (
-                    <Lock size={14} className="text-amber-500 dark:text-amber-400" />
-                  )}
-                  <span className="text-base font-medium text-zinc-950 dark:text-white">
+                  {!showPrivate && <Lock size={14} className="text-warning" />}
+                  <span className="text-base font-medium text-text">
                     {showPrivate ? 'All Notes' : 'Public'}
                   </span>
-                  <ChevronDown size={16} className="text-zinc-500" />
+                  <ChevronDown size={16} className="text-text-muted" />
                 </button>
               )}
               <button onClick={enterSelectionMode} className="p-1.5 mr-1 shrink-0">
-                <SquareCheck size={18} className="text-zinc-400" />
+                <SquareCheck size={18} className="text-text-muted" />
               </button>
               <div className="relative z-10">
                 <button
@@ -584,31 +578,31 @@ export function Dashboard() {
                       setShowCreateMenu(!showCreateMenu);
                     }
                   }}
-                  className="p-1.5 rounded-md mr-2 bg-amber-500 dark:bg-amber-400"
+                  className="p-1.5 rounded-md mr-2 bg-warning"
                 >
                   <Plus size={18} className="text-black" />
                 </button>
                 {showCreateMenu && showPrivate && (
-                  <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+                  <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-surface-sunken border-border">
                     <button
                       onClick={() => handleCreateNote(false)}
-                      className="flex items-center gap-2 w-full p-3 border-b border-zinc-200 dark:border-zinc-700"
+                      className="flex items-center gap-2 w-full p-3 border-b border-border"
                     >
-                      <Plus size={16} className="text-zinc-500" />
-                      <span className="text-sm text-zinc-950 dark:text-white">New Note</span>
+                      <Plus size={16} className="text-text-muted" />
+                      <span className="text-sm text-text">New Note</span>
                     </button>
                     <button
                       onClick={() => handleCreateNote(true)}
                       className="flex items-center gap-2 w-full p-3"
                     >
-                      <Lock size={16} className="text-zinc-500" />
-                      <span className="text-sm text-zinc-950 dark:text-white">Private Note</span>
+                      <Lock size={16} className="text-text-muted" />
+                      <span className="text-sm text-text">Private Note</span>
                     </button>
                   </div>
                 )}
               </div>
               <button onClick={() => setShowNotesSidebar(false)} className="p-1">
-                <PanelLeftClose size={18} className="text-zinc-400" />
+                <PanelLeftClose size={18} className="text-text-muted" />
               </button>
             </div>
           )}
@@ -620,7 +614,7 @@ export function Dashboard() {
           {selectedTagId && (
             <button
               onClick={() => setSelectedTagId(null)}
-              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-zinc-100 dark:bg-zinc-900"
+              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
             >
               <div
                 className="w-2 h-2 rounded-full"
@@ -628,21 +622,21 @@ export function Dashboard() {
                   backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
                 }}
               />
-              <span className="text-sm text-zinc-950 dark:text-white">
+              <span className="text-sm text-text">
                 {tags.find((t) => t.id === selectedTagId)?.name}
               </span>
-              <span className="text-sm ml-0.5 text-zinc-500">×</span>
+              <span className="text-sm ml-0.5 text-text-muted">×</span>
             </button>
           )}
 
           {/* Sort Options */}
-          <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="px-4 py-2 border-b border-border">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
               className="flex items-center gap-1"
             >
-              <ArrowUpDown size={14} className="text-zinc-400" />
-              <span className="text-xs text-zinc-500">
+              <ArrowUpDown size={14} className="text-text-muted" />
+              <span className="text-xs text-text-muted">
                 {sortBy === 'updated'
                   ? 'Last updated'
                   : sortBy === 'created'
@@ -651,7 +645,7 @@ export function Dashboard() {
               </span>
             </button>
             {showSortMenu && (
-              <div className="mt-2 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+              <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
                 {(['updated', 'created', 'title'] as const).map((option) => (
                   <button
                     key={option}
@@ -660,13 +654,11 @@ export function Dashboard() {
                       setShowSortMenu(false);
                     }}
                     className={`w-full px-3 py-2 text-left ${
-                      sortBy === option ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+                      sortBy === option ? 'bg-surface-sunken' : ''
                     }`}
                   >
                     <span
-                      className={`text-sm ${
-                        sortBy === option ? 'text-zinc-950 dark:text-white' : 'text-zinc-500'
-                      }`}
+                      className={`text-sm ${sortBy === option ? 'text-text' : 'text-text-muted'}`}
                     >
                       {option === 'updated'
                         ? 'Last updated'
@@ -699,34 +691,34 @@ export function Dashboard() {
       <div className="flex-1 flex flex-col">
         {/* Always show header when sidebars are collapsed */}
         {(!showNavSidebar || !showNotesSidebar) && (
-          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
                 <button
                   onClick={() => setShowNavSidebar(true)}
-                  className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-900"
+                  className="p-1.5 rounded bg-surface-sunken"
                 >
-                  <PanelLeft size={18} className="text-zinc-400" />
+                  <PanelLeft size={18} className="text-text-muted" />
                 </button>
               )}
               {!showNotesSidebar && (
                 <button
                   onClick={() => setShowNotesSidebar(true)}
-                  className="p-1.5 rounded bg-zinc-100 dark:bg-zinc-900"
+                  className="p-1.5 rounded bg-surface-sunken"
                 >
-                  <PanelLeft size={18} className="text-zinc-500" />
+                  <PanelLeft size={18} className="text-text-muted" />
                 </button>
               )}
             </div>
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
                 <button onClick={() => window.location.reload()} className="p-2">
-                  <RefreshCw size={18} className="text-zinc-400" />
+                  <RefreshCw size={18} className="text-text-muted" />
                 </button>
               )}
               {currentNote && (
                 <button onClick={handleTrashNote} className="p-2">
-                  <Trash2 size={18} className="text-zinc-400" />
+                  <Trash2 size={18} className="text-text-muted" />
                 </button>
               )}
             </div>
@@ -749,7 +741,7 @@ export function Dashboard() {
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-base text-zinc-500">Select a note or create a new one</span>
+            <span className="text-base text-text-muted">Select a note or create a new one</span>
           </div>
         )}
       </div>

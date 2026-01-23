@@ -88,22 +88,22 @@ export function AddressAutocomplete({
         onFocus={() => predictions.length > 0 && setShowDropdown(true)}
         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
         placeholder={placeholder}
-        className={`w-full p-2 rounded bg-neutral-700 border border-neutral-600 text-white placeholder:text-neutral-400 ${className}`}
+        className={`w-full p-2 rounded bg-surface-sunken border border-border text-text placeholder:text-text-muted ${className}`}
         autoComplete="off"
       />
 
       {/* Loading indicator */}
       {loading && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-neutral-500 border-t-white rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-border border-t-text rounded-full animate-spin" />
         </div>
       )}
 
       {/* Autocomplete dropdown */}
       {showDropdown && predictions.length > 0 && (
         <div
-          className="absolute z-50 w-full mt-1 bg-neutral-800
-                     border border-neutral-600 rounded-lg shadow-lg overflow-hidden"
+          className="absolute z-50 w-full mt-1 bg-surface-raised
+                     border border-border rounded-lg shadow-lg overflow-hidden"
         >
           {predictions.map((prediction) => {
             const parts = prediction.description.split(', ');
@@ -114,13 +114,13 @@ export function AddressAutocomplete({
               <button
                 key={prediction.placeId}
                 type="button"
-                className="w-full px-3 py-2 text-left hover:bg-neutral-700
+                className="w-full px-3 py-2 text-left hover:bg-surface-sunken
                            transition-colors cursor-pointer"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelectPrediction(prediction)}
               >
-                <span className="font-medium text-white">{main}</span>
-                {secondary && <span className="text-sm text-neutral-400 ml-1">{secondary}</span>}
+                <span className="font-medium text-text">{main}</span>
+                {secondary && <span className="text-sm text-text-muted ml-1">{secondary}</span>}
               </button>
             );
           })}

@@ -211,22 +211,20 @@ export default function Ptt() {
         disabled={!relayUrl || relayOffline}
         className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all ${
           isRecording
-            ? 'bg-red-500 scale-110 shadow-lg shadow-red-500/50'
+            ? 'bg-danger scale-110 shadow-lg shadow-red-500/50'
             : relayUrl && !relayOffline
-              ? 'bg-blue-600 hover:bg-blue-500 active:scale-95'
-              : 'bg-neutral-400 cursor-not-allowed'
+              ? 'bg-accent hover:bg-accent active:scale-95'
+              : 'bg-border cursor-not-allowed'
         }`}
       >
         {isRecording ? (
-          <Mic className="w-8 h-8 text-white animate-pulse" />
+          <Mic className="w-8 h-8 text-text animate-pulse" />
         ) : (
-          <Mic className="w-8 h-8 text-white" />
+          <Mic className="w-8 h-8 text-text" />
         )}
 
         {/* Relay offline indicator */}
-        {relayOffline && (
-          <AlertCircle size={14} className="absolute -top-1 -right-1 text-red-500" />
-        )}
+        {relayOffline && <AlertCircle size={14} className="absolute -top-1 -right-1 text-danger" />}
 
         {/* Countdown ring */}
         {isRecording && (
@@ -257,9 +255,9 @@ export default function Ptt() {
       {(error || isRecording) && (
         <div className="mt-2 text-xs text-center">
           {error ? (
-            <span className="text-red-500">{error}</span>
+            <span className="text-danger">{error}</span>
           ) : (
-            <span className="text-red-500">{timeLeft}s</span>
+            <span className="text-danger">{timeLeft}s</span>
           )}
         </div>
       )}

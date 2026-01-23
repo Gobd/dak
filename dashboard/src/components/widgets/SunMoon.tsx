@@ -280,7 +280,7 @@ function formatShortDate(date: Date): string {
   return `${days[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}`;
 }
 
-export default function SunMoon({ panel, dark }: WidgetComponentProps) {
+export default function SunMoon({ panel }: WidgetComponentProps) {
   const widgetId = panel.id || 'sun-moon';
   const { location, setLocation } = useLocation(
     widgetId,
@@ -327,10 +327,8 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
 
   if (!data) {
     return (
-      <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-      >
-        <span className="text-neutral-500 text-sm">Loading...</span>
+      <div className={`w-full h-full flex items-center justify-center bg-surface text-text`}>
+        <span className="text-text-muted text-sm">Loading...</span>
       </div>
     );
   }
@@ -340,7 +338,7 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
 
   return (
     <div
-      className={`w-full h-full flex items-center justify-around px-4 py-2 gap-5 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
+      className={`w-full h-full flex items-center justify-around px-4 py-2 gap-5 bg-surface text-text`}
     >
       {/* Location & Settings */}
       <div className="flex flex-col items-center gap-1">
@@ -349,7 +347,7 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
         </span>
         <button
           onClick={() => setShowSettings(true)}
-          className="text-neutral-500 hover:text-neutral-300 text-lg leading-none"
+          className="text-text-muted hover:text-text-secondary text-lg leading-none"
           title="Change location"
         >
           ⚙
@@ -359,32 +357,32 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
       {/* Sun times */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-12 text-right text-neutral-500">Dawn</span>
-          <span className="text-pink-400 font-semibold">{formatTime(sun.dawn)}</span>
+          <span className="w-12 text-right text-text-muted">Dawn</span>
+          <span className="text-danger font-semibold">{formatTime(sun.dawn)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-12 text-right text-neutral-500">Sunrise</span>
-          <span className="text-amber-400 font-semibold">{formatTime(sun.sunrise)}</span>
+          <span className="w-12 text-right text-text-muted">Sunrise</span>
+          <span className="text-warning font-semibold">{formatTime(sun.sunrise)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-12 text-right text-neutral-500">Sunset</span>
-          <span className="text-amber-400 font-semibold">{formatTime(sun.sunset)}</span>
+          <span className="w-12 text-right text-text-muted">Sunset</span>
+          <span className="text-warning font-semibold">{formatTime(sun.sunset)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-12 text-right text-neutral-500">Dusk</span>
-          <span className="text-purple-400 font-semibold">{formatTime(sun.dusk)}</span>
+          <span className="w-12 text-right text-text-muted">Dusk</span>
+          <span className="text-accent font-semibold">{formatTime(sun.dusk)}</span>
         </div>
       </div>
 
       {/* Moon times */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-14 text-right text-neutral-500">Moonrise</span>
-          <span className="text-violet-400 font-semibold">{formatTime(moonTimes.rise)}</span>
+          <span className="w-14 text-right text-text-muted">Moonrise</span>
+          <span className="text-feature font-semibold">{formatTime(moonTimes.rise)}</span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className="w-14 text-right text-neutral-500">Moonset</span>
-          <span className="text-violet-400 font-semibold">{formatTime(moonTimes.set)}</span>
+          <span className="w-14 text-right text-text-muted">Moonset</span>
+          <span className="text-feature font-semibold">{formatTime(moonTimes.set)}</span>
         </div>
       </div>
 
@@ -392,13 +390,13 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
       <div className="flex flex-col items-center gap-1">
         {/* Day length */}
         <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-neutral-500">Day</span>
+          <span className="text-text-muted">Day</span>
           <span className="font-semibold">{formatDayLength(dayLength)}</span>
           <span
             className={`text-[10px] px-1 py-0.5 rounded font-semibold ${
               dayLengthChange >= 0
-                ? 'text-green-400 bg-green-400/15'
-                : 'text-orange-400 bg-orange-400/15'
+                ? 'text-success bg-success-light'
+                : 'text-warning bg-warning-light'
             }`}
           >
             {changeSign}
@@ -413,7 +411,7 @@ export default function SunMoon({ panel, dark }: WidgetComponentProps) {
             {moon.trend ? `${moon.trend} ${moon.name}` : moon.name}
           </span>
         </div>
-        <span className="text-[10px] text-neutral-500">
+        <span className="text-[10px] text-text-muted">
           {daysToFull === 0 ? 'Full tonight' : `Full ${formatShortDate(moon.nextFullMoon)}`}
         </span>
       </div>

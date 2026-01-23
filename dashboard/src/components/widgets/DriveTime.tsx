@@ -262,17 +262,15 @@ export default function DriveTime() {
       {/* Trigger button */}
       <button
         onClick={() => (hasRoutes ? setFloatingOpen(true) : setShowManager(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-neutral-700/30"
+        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
         <Car
           size={24}
-          className={
-            hasActiveData ? 'text-green-400' : hasRoutes ? 'text-blue-400' : 'text-neutral-500'
-          }
+          className={hasActiveData ? 'text-success' : hasRoutes ? 'text-accent' : 'text-text-muted'}
         />
         {hasRoutes && (
-          <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+          <span className="absolute top-0 right-0 bg-accent text-text text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
             {routes.length}
           </span>
         )}
@@ -281,29 +279,27 @@ export default function DriveTime() {
       {/* Floating traffic window */}
       {floatingOpen && hasRoutes && (
         <div
-          className="fixed z-50 bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700 w-[240px]"
+          className="fixed z-50 bg-surface-raised rounded-xl shadow-2xl border border-border w-[240px]"
           style={{ left: floatingPos.x, top: floatingPos.y }}
         >
           {/* Draggable header */}
           <div
-            className="flex items-center justify-between px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-t-xl cursor-move select-none"
+            className="flex items-center justify-between px-3 py-2 bg-surface-sunken rounded-t-xl cursor-move select-none"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
           >
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
-              Traffic
-            </span>
+            <span className="text-sm font-medium text-text-secondary dark:text-text">Traffic</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowManager(true)}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                className="p-1 rounded hover:bg-surface-sunken"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setFloatingOpen(false)}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                className="p-1 rounded hover:bg-surface-sunken"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -314,9 +310,9 @@ export default function DriveTime() {
           {/* Content */}
           <div className="p-2 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
             {isLoading && allRouteData.length === 0 ? (
-              <div className="text-center text-neutral-500 py-4 text-sm">Checking traffic...</div>
+              <div className="text-center text-text-muted py-4 text-sm">Checking traffic...</div>
             ) : allRouteData.length === 0 ? (
-              <div className="text-center text-neutral-500 py-4 text-sm">No traffic data</div>
+              <div className="text-center text-text-muted py-4 text-sm">No traffic data</div>
             ) : (
               <>
                 {allRouteData.map(({ route, driveData }) => {
@@ -332,16 +328,16 @@ export default function DriveTime() {
                       onClick={() => setDetailRoute({ route, driveData })}
                       className={`w-full text-left flex items-center justify-between p-2 rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-neutral-200/50 dark:bg-neutral-700/50 hover:bg-neutral-300/50 dark:hover:bg-neutral-600/50'
-                          : 'bg-neutral-100/50 dark:bg-neutral-800/50 opacity-60 hover:opacity-80'
+                          ? 'bg-surface-sunken/50 bg-surface-sunken/50 hover:bg-surface-sunken/50/50'
+                          : 'bg-surface-sunken/50 bg-surface-raised/50 opacity-60 hover:opacity-80'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium truncate text-neutral-700 dark:text-neutral-200">
+                        <div className="text-xs font-medium truncate text-text-secondary dark:text-text">
                           {route.label || `${route.origin} → ${route.destination}`}
                         </div>
                         {driveData.summary && (
-                          <div className="text-[10px] text-neutral-500 truncate">
+                          <div className="text-[10px] text-text-muted truncate">
                             via {driveData.summary}
                           </div>
                         )}
@@ -351,7 +347,7 @@ export default function DriveTime() {
                           {driveData.durationInTraffic}
                         </span>
                         {delayMinutes > 0 && (
-                          <span className="text-xs text-neutral-500">+{delayMinutes}</span>
+                          <span className="text-xs text-text-muted">+{delayMinutes}</span>
                         )}
                       </div>
                     </button>
@@ -435,7 +431,7 @@ export default function DriveTime() {
                   {detailRoute.route.label ||
                     `${detailRoute.route.origin} → ${detailRoute.route.destination}`}
                 </div>
-                <div className="text-sm text-neutral-500">
+                <div className="text-sm text-text-muted">
                   {detailRoute.route.origin} → {detailRoute.route.destination}
                 </div>
               </div>
@@ -454,18 +450,18 @@ export default function DriveTime() {
 
             {/* Current route info */}
             {detailRoute.driveData.summary && (
-              <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
-                <div className="text-xs text-neutral-500 mb-1">Current route</div>
+              <div className="p-3 rounded-lg bg-surface-sunken/50 bg-surface-sunken/30">
+                <div className="text-xs text-text-muted mb-1">Current route</div>
                 <div className="font-medium">via {detailRoute.driveData.summary}</div>
               </div>
             )}
 
             {/* Locked route info */}
             {detailRoute.route.viaLabel && (
-              <div className="p-3 rounded-lg bg-blue-600/20 border border-blue-500/30">
-                <div className="text-xs text-blue-400 mb-1">Locked to</div>
-                <div className="font-medium text-blue-300">{detailRoute.route.viaLabel}</div>
-                <div className="text-xs text-neutral-500 mt-1">
+              <div className="p-3 rounded-lg bg-accent/20 border border-accent/30">
+                <div className="text-xs text-accent mb-1">Locked to</div>
+                <div className="font-medium text-accent">{detailRoute.route.viaLabel}</div>
+                <div className="text-xs text-text-muted mt-1">
                   {detailRoute.route.via?.length || 0} waypoint
                   {(detailRoute.route.via?.length || 0) !== 1 ? 's' : ''} saved
                 </div>
@@ -473,26 +469,26 @@ export default function DriveTime() {
             )}
 
             {!detailRoute.route.viaLabel && (
-              <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
-                <div className="text-xs text-neutral-500">
+              <div className="p-3 rounded-lg bg-surface-sunken/50 bg-surface-sunken/30">
+                <div className="text-xs text-text-muted">
                   No route locked — using fastest available route
                 </div>
               </div>
             )}
 
             {/* Schedule */}
-            <div className="p-3 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
-              <div className="text-xs text-neutral-500 mb-1">Active schedule</div>
+            <div className="p-3 rounded-lg bg-surface-sunken/50 bg-surface-sunken/30">
+              <div className="text-xs text-text-muted mb-1">Active schedule</div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
                   {detailRoute.route.days.map((d) => d.charAt(0).toUpperCase()).join(' ')}
                 </span>
-                <span className="text-neutral-500">
+                <span className="text-text-muted">
                   {detailRoute.route.startTime} – {detailRoute.route.endTime}
                 </span>
               </div>
               {detailRoute.route.minTimeToShow ? (
-                <div className="text-xs text-neutral-500 mt-1">
+                <div className="text-xs text-text-muted mt-1">
                   Shows when ≥ {detailRoute.route.minTimeToShow} min
                 </div>
               ) : null}
@@ -501,17 +497,17 @@ export default function DriveTime() {
             {/* Comparison */}
             <div className="flex gap-4 text-sm">
               <div>
-                <span className="text-neutral-500">Normal: </span>
+                <span className="text-text-muted">Normal: </span>
                 <span>{Math.round(detailRoute.driveData.durationValue / 60)} min</span>
               </div>
               <div>
-                <span className="text-neutral-500">Delay: </span>
+                <span className="text-text-muted">Delay: </span>
                 <span
                   className={
                     detailRoute.driveData.durationInTrafficValue >
                     detailRoute.driveData.durationValue
-                      ? 'text-orange-400'
-                      : 'text-green-400'
+                      ? 'text-warning'
+                      : 'text-success'
                   }
                 >
                   +
@@ -585,21 +581,21 @@ function RouteManagerModal({
     <Modal open={open} onClose={onClose} title="Drive Time Settings">
       {/* Routes Section */}
       <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2 text-neutral-700 dark:text-neutral-300">Routes</h3>
+        <h3 className="text-sm font-medium mb-2 text-text-secondary">Routes</h3>
         {routes.length === 0 ? (
-          <p className="text-neutral-500 text-sm mb-2">No routes configured.</p>
+          <p className="text-text-muted text-sm mb-2">No routes configured.</p>
         ) : (
           <div className="space-y-2 mb-2 max-h-40 overflow-auto">
             {routes.map((route) => (
               <div
                 key={getRouteId(route)}
-                className="flex items-center justify-between p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30"
+                className="flex items-center justify-between p-2 rounded-lg bg-surface-sunken/50 bg-surface-sunken/30"
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium">
                     {route.label || `${route.origin} → ${route.destination}`}
                   </div>
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-text-muted">
                     {route.days.map((d) => d.charAt(0).toUpperCase()).join('')} {route.startTime}–
                     {route.endTime}
                   </div>
@@ -607,17 +603,17 @@ function RouteManagerModal({
                 <div className="flex gap-1">
                   <button
                     onClick={() => onEditRoute(route)}
-                    className="p-1.5 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                    className="p-1.5 rounded hover:bg-surface-sunken"
                     title="Edit"
                   >
                     <Settings size={14} />
                   </button>
                   <button
                     onClick={() => onDeleteRoute(route)}
-                    className="p-1.5 rounded hover:bg-red-500/50"
+                    className="p-1.5 rounded hover:bg-danger/50"
                     title="Delete"
                   >
-                    <Trash2 size={14} className="text-red-400" />
+                    <Trash2 size={14} className="text-danger" />
                   </button>
                 </div>
               </div>
@@ -633,12 +629,10 @@ function RouteManagerModal({
       {/* Locations Section */}
       {locationEntries.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium mb-2 text-neutral-700 dark:text-neutral-300">
-            Locations
-          </h3>
+          <h3 className="text-sm font-medium mb-2 text-text-secondary">Locations</h3>
           <div className="space-y-2 max-h-40 overflow-auto">
             {locationEntries.map(([name, address]) => (
-              <div key={name} className="p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/30">
+              <div key={name} className="p-2 rounded-lg bg-surface-sunken/50 bg-surface-sunken/30">
                 {editingLocation === name ? (
                   <div className="space-y-2">
                     <div className="text-sm font-medium">{name}</div>
@@ -646,7 +640,7 @@ function RouteManagerModal({
                       type="text"
                       value={editAddress}
                       onChange={(e) => setEditAddress(e.target.value)}
-                      className="w-full p-2 text-sm rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+                      className="w-full p-2 text-sm rounded bg-surface-sunken border border-border"
                       placeholder="Address"
                     />
                     <div className="flex gap-2">
@@ -660,12 +654,12 @@ function RouteManagerModal({
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium">{name}</div>
-                      <div className="text-xs text-neutral-500 truncate">{address}</div>
+                      <div className="text-xs text-text-muted truncate">{address}</div>
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => handleEditLocation(name)}
-                        className="p-1.5 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                        className="p-1.5 rounded hover:bg-surface-sunken"
                         title="Edit address"
                       >
                         <Settings size={14} />
@@ -673,10 +667,10 @@ function RouteManagerModal({
                       {!isLocationUsed(name) && (
                         <button
                           onClick={() => handleDeleteLocation(name)}
-                          className="p-1.5 rounded hover:bg-red-500/50"
+                          className="p-1.5 rounded hover:bg-danger/50"
                           title="Delete location"
                         >
-                          <Trash2 size={14} className="text-red-400" />
+                          <Trash2 size={14} className="text-danger" />
                         </button>
                       )}
                     </div>
@@ -889,7 +883,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           <select
             value={form.origin}
             onChange={(e) => setForm((f) => ({ ...f, origin: e.target.value }))}
-            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+            className="w-full p-2 rounded bg-surface-sunken border border-border"
           >
             <option value="">Select location...</option>
             {defaultLocation && !hasDefaultInLocations && (
@@ -911,7 +905,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                 value={form.newOriginName}
                 onChange={(e) => setForm((f) => ({ ...f, newOriginName: e.target.value }))}
                 placeholder="Name (e.g., home)"
-                className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+                className="w-full p-2 rounded bg-surface-sunken border border-border"
               />
               <AddressAutocomplete
                 value={form.newOriginAddr}
@@ -928,7 +922,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           <select
             value={form.destination}
             onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
-            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+            className="w-full p-2 rounded bg-surface-sunken border border-border"
           >
             <option value="">Select location...</option>
             {defaultLocation && !hasDefaultInLocations && (
@@ -950,7 +944,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                 value={form.newDestName}
                 onChange={(e) => setForm((f) => ({ ...f, newDestName: e.target.value }))}
                 placeholder="Name (e.g., work)"
-                className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+                className="w-full p-2 rounded bg-surface-sunken border border-border"
               />
               <AddressAutocomplete
                 value={form.newDestAddr}
@@ -978,12 +972,12 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
             </div>
             {/* Show current locked route when not previewing */}
             {form.viaLabel && alternatives.length === 0 && (
-              <div className="p-3 rounded-lg bg-blue-600/20 border border-blue-500/30">
+              <div className="p-3 rounded-lg bg-accent/20 border border-accent/30">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-blue-400">Locked to:</span>
-                  <span className="text-sm font-medium text-blue-300">{form.viaLabel}</span>
+                  <span className="text-xs text-accent">Locked to:</span>
+                  <span className="text-sm font-medium text-accent">{form.viaLabel}</span>
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   Click "Change Route" to see alternatives
                 </p>
               </div>
@@ -1003,21 +997,17 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                       onClick={() => selectRoute(alt)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
                         isSelected
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-neutral-200/50 dark:bg-neutral-700/30 hover:bg-neutral-300/50 dark:hover:bg-neutral-600/30'
+                          ? 'bg-accent text-text'
+                          : 'bg-surface-sunken/50 bg-surface-sunken/30 hover:bg-surface-sunken/50/30'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-sm">{alt.summary}</span>
-                        <span
-                          className={`text-sm ${isSelected ? 'text-blue-100' : 'text-neutral-500'}`}
-                        >
+                        <span className={`text-sm ${isSelected ? 'text-info' : 'text-text-muted'}`}>
                           {alt.distance}
                         </span>
                       </div>
-                      <div
-                        className={`text-xs ${isSelected ? 'text-blue-200' : 'text-neutral-500'}`}
-                      >
+                      <div className={`text-xs ${isSelected ? 'text-info' : 'text-text-muted'}`}>
                         {alt.durationInTraffic} (with traffic)
                       </div>
                     </button>
@@ -1038,8 +1028,8 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                 onClick={() => toggleDay(day)}
                 className={`w-8 h-8 rounded text-sm font-medium ${
                   form.days.includes(day)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
+                    ? 'bg-accent text-text'
+                    : 'bg-surface-sunken text-text-secondary text-text-muted'
                 }`}
               >
                 {DAY_LABELS[i]}
@@ -1074,7 +1064,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
             value={form.label}
             onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
             placeholder="e.g., Dad to Office"
-            className="w-full p-2 rounded bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600"
+            className="w-full p-2 rounded bg-surface-sunken border border-border"
           />
         </div>
 

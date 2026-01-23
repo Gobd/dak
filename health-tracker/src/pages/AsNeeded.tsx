@@ -123,7 +123,7 @@ export function AsNeeded() {
         <h1 className="text-2xl font-bold">As-Needed Tracking</h1>
         <button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
         >
           <Plus size={18} />
           Add
@@ -150,14 +150,14 @@ export function AsNeeded() {
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 dark:text-neutral-300"
+              className="flex-1 px-4 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               form="add-med-form"
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
             >
               Add
             </button>
@@ -166,11 +166,11 @@ export function AsNeeded() {
       >
         <form id="add-med-form" onSubmit={handleAddMed} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Person</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Person</label>
             <select
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
               required
             >
               <option value="">Select person...</option>
@@ -182,18 +182,18 @@ export function AsNeeded() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">Name</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Ibuprofen, Tylenol, Zyrtec"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 dark:text-neutral-300">
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
               Minimum Hours Between Doses
             </label>
             <NumberPickerCompact
@@ -204,7 +204,7 @@ export function AsNeeded() {
               suffix="hours"
               zeroLabel=""
             />
-            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+            <p className="text-sm text-text-muted mt-1">
               Common: Ibuprofen (6h), Tylenol (4h), Zyrtec (24h)
             </p>
           </div>
@@ -213,7 +213,7 @@ export function AsNeeded() {
 
       {/* Meds by Person */}
       {medsByPerson.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 text-center text-gray-500 dark:text-neutral-400">
+        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
           No as-needed set up yet. Add one to start tracking.
         </div>
       ) : (
@@ -221,22 +221,19 @@ export function AsNeeded() {
           {medsByPerson.map(({ person, meds: personMeds }) => {
             const isExpanded = expandedPersons.has(person.id);
             return (
-              <div
-                key={person.id}
-                className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm overflow-hidden"
-              >
+              <div key={person.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
                 <button
                   onClick={() => togglePerson(person.id)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-surface-raised hover:bg-surface-sunken transition-colors"
                 >
                   <h2 className="font-semibold text-lg">{person.name}</h2>
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-neutral-400">
+                  <div className="flex items-center gap-2 text-text-muted">
                     <span className="text-sm">({personMeds.length})</span>
                     {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                   </div>
                 </button>
                 {isExpanded && (
-                  <div className="divide-y divide-gray-200 dark:divide-neutral-700">
+                  <div className="divide-y divide-border dark:divide-border">
                     {personMeds.map((med) => {
                       const lastDose = getLastDose(med.id);
                       const okToGive = canGive(med.id, med.min_hours);
@@ -246,31 +243,31 @@ export function AsNeeded() {
                         <div key={med.id} className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              <Clock className="text-gray-400" size={20} />
+                              <Clock className="text-text-muted" size={20} />
                               <div>
                                 <div className="font-medium">{med.name}</div>
-                                <div className="text-sm text-gray-500 dark:text-neutral-400">
+                                <div className="text-sm text-text-muted">
                                   every {med.min_hours}h minimum
                                 </div>
                               </div>
                             </div>
                             <button
                               onClick={() => setConfirmDelete(med.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                              className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
                             >
                               <Trash2 size={16} />
                             </button>
                           </div>
 
-                          <div className="flex items-center justify-between mt-3 p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                          <div className="flex items-center justify-between mt-3 p-3 bg-surface-raised rounded-lg">
                             <div>
                               {lastDose ? (
                                 <div className="text-sm">
-                                  <span className="text-gray-500 dark:text-neutral-400">Last:</span>{' '}
+                                  <span className="text-text-muted">Last:</span>{' '}
                                   <span className="font-medium">
                                     {formatLastGiven(lastDose.given_at)}
                                   </span>
-                                  <span className="text-gray-400 ml-2">
+                                  <span className="text-text-muted ml-2">
                                     (
                                     {formatDistanceToNow(new Date(lastDose.given_at), {
                                       addSuffix: true,
@@ -279,18 +276,16 @@ export function AsNeeded() {
                                   </span>
                                 </div>
                               ) : (
-                                <div className="text-sm text-gray-500 dark:text-neutral-400">
-                                  Never given
-                                </div>
+                                <div className="text-sm text-text-muted">Never given</div>
                               )}
                               {timeUntil && (
-                                <div className="flex items-center gap-1 text-sm text-orange-600 mt-1">
+                                <div className="flex items-center gap-1 text-sm text-warning mt-1">
                                   <AlertCircle size={14} />
                                   Wait {timeUntil}
                                 </div>
                               )}
                               {okToGive && lastDose && (
-                                <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
+                                <div className="flex items-center gap-1 text-sm text-success mt-1">
                                   <Check size={14} />
                                   OK to give
                                 </div>
@@ -301,7 +296,7 @@ export function AsNeeded() {
                               {lastDose && (
                                 <button
                                   onClick={() => undoLastDose(med.id)}
-                                  className="flex items-center gap-1 px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-neutral-300"
+                                  className="flex items-center gap-1 px-3 py-2 text-sm border border-border rounded-lg hover:bg-surface-sunken text-text-secondary"
                                   title="Undo last dose"
                                 >
                                   <Undo2 size={16} />
@@ -320,8 +315,8 @@ export function AsNeeded() {
                                 }}
                                 className={`text-sm px-3 py-1.5 rounded-full ${
                                   showTimeInput === med.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 dark:bg-neutral-600 text-gray-600 dark:text-neutral-300'
+                                    ? 'bg-accent text-text'
+                                    : 'bg-surface-sunken text-text-secondary'
                                 }`}
                               >
                                 {showTimeInput === med.id ? 'Custom time' : 'Now'}
@@ -338,8 +333,8 @@ export function AsNeeded() {
                                 }}
                                 className={`px-4 py-2 rounded-lg font-medium ${
                                   okToGive
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
-                                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50'
+                                    ? 'bg-success text-text hover:bg-success-hover'
+                                    : 'bg-danger-light text-danger hover:opacity-80'
                                 }`}
                               >
                                 Give
@@ -368,7 +363,7 @@ export function AsNeeded() {
       {/* People without meds */}
       {people.filter((p) => !meds.some((m) => m.person_id === p.id)).length > 0 &&
         medsByPerson.length > 0 && (
-          <div className="text-sm text-gray-500 dark:text-neutral-400 text-center">
+          <div className="text-sm text-text-muted text-center">
             Add for:{' '}
             {people
               .filter((p) => !meds.some((m) => m.person_id === p.id))

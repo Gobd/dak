@@ -119,7 +119,7 @@ function DayBars({ hours, maxAqiScale = 150 }: DayBarsProps) {
             title={`${h.hour}:00 AQI ${Math.round(h.aqi)}`}
           >
             {isPeak && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 text-[9px] text-neutral-400 whitespace-nowrap">
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 text-[9px] text-text-muted whitespace-nowrap">
                 {formatHour(h.hour)}
               </span>
             )}
@@ -138,7 +138,7 @@ function DayBars({ hours, maxAqiScale = 150 }: DayBarsProps) {
   );
 }
 
-export default function Aqi({ panel, dark }: WidgetComponentProps) {
+export default function Aqi({ panel }: WidgetComponentProps) {
   const widgetId = panel.id || 'aqi';
   const { location, setLocation } = useLocation(
     widgetId,
@@ -164,20 +164,16 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
 
   if (isLoading && !aqiData) {
     return (
-      <div
-        className={`w-full h-full flex items-center justify-center ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-      >
-        <RefreshCw size={16} className="animate-spin text-neutral-500" />
+      <div className={`w-full h-full flex items-center justify-center bg-surface text-text`}>
+        <RefreshCw size={16} className="animate-spin text-text-muted" />
       </div>
     );
   }
 
   if (error && !aqiData) {
     return (
-      <div
-        className={`w-full h-full p-3 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-      >
-        <p className="text-red-500 text-xs">{error.message}</p>
+      <div className={`w-full h-full p-3 bg-surface text-text`}>
+        <p className="text-danger text-xs">{error.message}</p>
       </div>
     );
   }
@@ -195,9 +191,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
     : 0;
 
   return (
-    <div
-      className={`w-full h-full flex flex-col gap-1 p-3 ${dark ? 'bg-black text-white' : 'bg-white text-neutral-900'}`}
-    >
+    <div className={`w-full h-full flex flex-col gap-1 p-3 bg-surface text-text`}>
       {/* Compact header row */}
       <div className="flex items-center gap-3 flex-wrap shrink-0">
         <div className="flex items-center gap-1.5">
@@ -206,7 +200,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
           </span>
           <button
             onClick={() => setShowSettings(true)}
-            className="text-neutral-500 hover:text-neutral-300 text-sm leading-none"
+            className="text-text-muted hover:text-text-secondary text-sm leading-none"
             title="Settings"
           >
             <Settings size={12} />
@@ -218,12 +212,12 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
         </span>
 
         {todayHours.length > 0 && (
-          <span className="text-[10px] text-neutral-500">
+          <span className="text-[10px] text-text-muted">
             Today <b style={{ color: getAqiColor(todayMax) }}>{todayMax}</b>
           </span>
         )}
         {tomorrowHours.length > 0 && (
-          <span className="text-[10px] text-neutral-500">
+          <span className="text-[10px] text-text-muted">
             Tomorrow <b style={{ color: getAqiColor(tomorrowMax) }}>{tomorrowMax}</b>
           </span>
         )}
@@ -244,14 +238,14 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
         <div className="space-y-4">
           {/* Location section */}
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Location</label>
+            <label className="block text-sm text-text-muted mb-1">Location</label>
             <p className="text-sm">{formatLocation(location.city, location.state) || 'Not set'}</p>
             <button
               onClick={() => {
                 setShowSettings(false);
                 setShowLocationSettings(true);
               }}
-              className="text-sm text-blue-500 hover:underline mt-1"
+              className="text-sm text-accent hover:underline mt-1"
             >
               Change location...
             </button>
@@ -259,7 +253,7 @@ export default function Aqi({ panel, dark }: WidgetComponentProps) {
 
           {/* Info section */}
           <details className="text-sm" open>
-            <summary className="cursor-pointer text-neutral-400 hover:text-neutral-300">
+            <summary className="cursor-pointer text-text-muted hover:text-text-secondary">
               About AQI
             </summary>
             <div className="mt-2 space-y-1 text-xs">

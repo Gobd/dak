@@ -88,7 +88,7 @@ export function LocationSettingsModal({
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-text-secondary text-text-muted">
           Enter a city, address, or ZIP code:
         </p>
 
@@ -97,25 +97,17 @@ export function LocationSettingsModal({
           onChange={setQuery}
           onSelect={handleSelect}
           placeholder="e.g., San Francisco, CA"
-          className="bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white"
+          className="bg-surface-sunken border-border text-text"
         />
 
-        {currentDisplay && (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Current: {currentDisplay}
-          </p>
-        )}
+        {currentDisplay && <p className="text-sm text-text-muted">Current: {currentDisplay}</p>}
 
         {pendingLocation && (
-          <p className="text-sm text-green-500">Selected: {pendingLocation.address}</p>
+          <p className="text-sm text-success">Selected: {pendingLocation.address}</p>
         )}
 
         {status.message && (
-          <p
-            className={`text-sm ${
-              status.type === 'error' ? 'text-red-500' : 'text-neutral-500 dark:text-neutral-400'
-            }`}
-          >
+          <p className={`text-sm ${status.type === 'error' ? 'text-danger' : 'text-text-muted'}`}>
             {status.message}
           </p>
         )}

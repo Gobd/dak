@@ -184,7 +184,7 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
     >
       <div
         ref={contentRef}
-        className={`bg-white dark:bg-black rounded-xl shadow-2xl animate-slide-up ${
+        className={`bg-surface-raised rounded-xl shadow-2xl animate-slide-up ${
           fit ? '' : wide ? 'max-w-2xl w-full' : 'max-w-md w-full'
         } max-h-[90vh] overflow-hidden flex flex-col`}
         style={positionStyle}
@@ -196,7 +196,7 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
           onTouchStart={handleDragStart}
         >
           {title && (
-            <h3 id="modal-title" className="text-lg font-semibold text-neutral-900 dark:text-white">
+            <h3 id="modal-title" className="text-lg font-semibold text-text">
               {title}
             </h3>
           )}
@@ -204,7 +204,7 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
 
         {/* Scrollable content */}
         <div className="px-6 pb-6 overflow-y-auto custom-scrollbar flex-1">
-          <div className="text-neutral-700 dark:text-neutral-300">{children}</div>
+          <div className="text-text-secondary">{children}</div>
           {actions && <div className="flex justify-end gap-2 mt-6">{actions}</div>}
         </div>
       </div>

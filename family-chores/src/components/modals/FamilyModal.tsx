@@ -77,10 +77,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
       <div className="space-y-4">
         {/* Member list */}
         {members.map((member) => (
-          <div
-            key={member.id}
-            className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-neutral-800 rounded-xl"
-          >
+          <div key={member.id} className="flex items-center gap-3 p-3 bg-surface-raised rounded-xl">
             {editingId === member.id ? (
               /* Edit mode */
               <div className="flex-1 space-y-3">
@@ -89,7 +86,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                   autoFocus
                 />
                 <div className="flex gap-2 flex-wrap">
@@ -98,9 +95,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                       key={e}
                       onClick={() => setEmoji(e)}
                       className={`w-10 h-10 text-xl rounded-lg ${
-                        emoji === e
-                          ? 'bg-blue-100 dark:bg-blue-900'
-                          : 'bg-gray-100 dark:bg-neutral-700'
+                        emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
                       }`}
                     >
                       {e}
@@ -113,7 +108,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                       key={c}
                       onClick={() => setColor(c)}
                       className={`w-8 h-8 rounded-full ${
-                        color === c ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                        color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                       }`}
                       style={{ backgroundColor: c }}
                     />
@@ -125,13 +120,13 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                       setEditingId(null);
                       resetForm();
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2"
+                    className="flex-1 bg-accent text-text px-3 py-2 rounded-lg flex items-center justify-center gap-2"
                   >
                     <Check size={18} /> Save
                   </button>
@@ -146,18 +141,16 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   color={member.color}
                   size="lg"
                 />
-                <span className="flex-1 font-medium text-gray-900 dark:text-white">
-                  {member.name}
-                </span>
+                <span className="flex-1 font-medium text-text">{member.name}</span>
                 <button
                   onClick={() => handleEdit(member)}
-                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-neutral-700"
+                  className="p-2 rounded-lg hover:bg-surface-sunken"
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(member.id)}
-                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"
+                  className="p-2 rounded-lg hover:bg-danger-light dark:hover:bg-danger-light text-danger"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -168,13 +161,13 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
 
         {/* Add new member form */}
         {isAdding ? (
-          <div className="p-4 border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-xl space-y-3">
+          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Name"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
               autoFocus
             />
             <div className="flex gap-2 flex-wrap">
@@ -183,7 +176,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   key={e}
                   onClick={() => setEmoji(e)}
                   className={`w-10 h-10 text-xl rounded-lg ${
-                    emoji === e ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-neutral-700'
+                    emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
                   }`}
                 >
                   {e}
@@ -196,7 +189,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   key={c}
                   onClick={() => setColor(c)}
                   className={`w-8 h-8 rounded-full ${
-                    color === c ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                    color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -208,14 +201,14 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   setIsAdding(false);
                   resetForm();
                 }}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg"
+                className="flex-1 px-3 py-2 border border-border rounded-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAdd}
                 disabled={!name.trim()}
-                className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg disabled:opacity-50"
+                className="flex-1 bg-accent text-text px-3 py-2 rounded-lg disabled:opacity-50"
               >
                 Add
               </button>
@@ -225,7 +218,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
           <button
             onClick={() => setIsAdding(true)}
             disabled={isEditing}
-            className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-neutral-600 rounded-xl text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full p-4 border-2 border-dashed border-border rounded-xl text-text-muted hover:bg-surface-raised flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Plus size={20} /> Add Family Member
           </button>

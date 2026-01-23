@@ -123,9 +123,9 @@ export function NoteEditor({
   const availableTags = tags.filter((t) => !noteTags.some((nt) => nt.id === t.id));
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white dark:bg-zinc-950">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-surface">
       {/* Toolbar */}
-      <div className="border-b py-2 relative z-10 border-zinc-200 dark:border-zinc-800">
+      <div className="border-b py-2 relative z-10 border-border">
         <div className="flex items-center gap-2 px-4 flex-wrap">
           {/* Back Button (narrow view) */}
           {onBack && (
@@ -134,7 +134,7 @@ export function NoteEditor({
                 editorRef.current?.blur();
                 setTimeout(onBack, 50);
               }}
-              className="flex items-center py-1.5 pr-2 -ml-1 flex-shrink-0 text-amber-500 dark:text-amber-400"
+              className="flex items-center py-1.5 pr-2 -ml-1 flex-shrink-0 text-warning"
             >
               <ChevronLeft size={20} />
               <span className="text-sm">Back</span>
@@ -144,17 +144,12 @@ export function NoteEditor({
           <button
             onClick={() => onUpdate({ pinned: !note.pinned })}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-md flex-shrink-0 ${
-              note.pinned ? 'bg-amber-500/20 dark:bg-amber-400/20' : 'bg-zinc-100 dark:bg-zinc-900'
+              note.pinned ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
             }`}
           >
-            <Pin
-              size={16}
-              className={note.pinned ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'}
-            />
+            <Pin size={16} className={note.pinned ? 'text-warning' : 'text-text-muted'} />
             {!isNarrow && (
-              <span
-                className={`text-sm ${note.pinned ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'}`}
-              >
+              <span className={`text-sm ${note.pinned ? 'text-warning' : 'text-text-muted'}`}>
                 {note.pinned ? 'Pinned' : 'Pin'}
               </span>
             )}
@@ -164,26 +159,24 @@ export function NoteEditor({
           <button
             onClick={() => onUpdate({ is_private: !note.is_private })}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-md flex-shrink-0 ${
-              note.is_private
-                ? 'bg-zinc-100 dark:bg-zinc-900'
-                : 'bg-green-500/15 dark:bg-green-500/20'
+              note.is_private ? 'bg-surface-sunken' : 'bg-success/15 dark:bg-success/20'
             }`}
           >
             {note.is_private ? (
               <>
-                <Lock size={16} className="text-zinc-500" />
-                {!isNarrow && <span className="text-sm text-zinc-500">Private</span>}
+                <Lock size={16} className="text-text-muted" />
+                {!isNarrow && <span className="text-sm text-text-muted">Private</span>}
               </>
             ) : (
               <>
-                <LockOpen size={16} className="text-green-500" />
-                {!isNarrow && <span className="text-sm text-green-500">Shared</span>}
+                <LockOpen size={16} className="text-success" />
+                {!isNarrow && <span className="text-sm text-success">Shared</span>}
               </>
             )}
           </button>
 
           {/* Separator */}
-          <div className="w-px h-4 mx-1 flex-shrink-0 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
           {/* Read-only Toggle */}
           <button
@@ -193,39 +186,33 @@ export function NoteEditor({
               editorRef.current?.setEditable(!newState);
             }}
             className={`p-1.5 rounded-md flex-shrink-0 ${
-              isReadOnly ? 'bg-amber-500/20 dark:bg-amber-400/20' : 'bg-zinc-100 dark:bg-zinc-900'
+              isReadOnly ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
             }`}
           >
             {isReadOnly ? (
-              <Eye size={16} className="text-amber-500 dark:text-amber-400" />
+              <Eye size={16} className="text-warning" />
             ) : (
-              <EyeOff size={16} className="text-zinc-500" />
+              <EyeOff size={16} className="text-text-muted" />
             )}
           </button>
 
-          <div className="w-px h-4 mx-1 flex-shrink-0 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
           {/* Checkbox dropdown trigger */}
           <div className="relative">
             <button
               onClick={() => setShowCheckboxDropdown(!showCheckboxDropdown)}
               className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showCheckboxDropdown
-                  ? 'bg-amber-500/20 dark:bg-amber-400/20'
-                  : 'bg-zinc-100 dark:bg-zinc-900'
+                showCheckboxDropdown ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
               }`}
             >
               <SquareCheck
                 size={16}
-                className={
-                  showCheckboxDropdown ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'
-                }
+                className={showCheckboxDropdown ? 'text-warning' : 'text-text-muted'}
               />
               <ChevronDown
                 size={12}
-                className={
-                  showCheckboxDropdown ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'
-                }
+                className={showCheckboxDropdown ? 'text-warning' : 'text-text-muted'}
               />
             </button>
             {showCheckboxDropdown && (
@@ -234,13 +221,13 @@ export function NoteEditor({
                   className="fixed inset-0 z-[99]"
                   onClick={() => setShowCheckboxDropdown(false)}
                 />
-                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
                   <button
                     onClick={() => {
                       editorRef.current?.toggleTaskList();
                       setShowCheckboxDropdown(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-black/5 dark:hover:bg-white/5 border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-white"
+                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
                   >
                     Insert checkbox
                   </button>
@@ -249,7 +236,7 @@ export function NoteEditor({
                       setShowCheckboxDropdown(false);
                       setShowDeleteCheckedConfirm(true);
                     }}
-                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-black/5 dark:hover:bg-white/5 border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-white"
+                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
                   >
                     Delete checked lines
                   </button>
@@ -258,7 +245,7 @@ export function NoteEditor({
                       setShowCheckboxDropdown(false);
                       setShowUncheckAllConfirm(true);
                     }}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-black/5 dark:hover:bg-white/5 text-zinc-950 dark:text-white"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-surface-sunken hover:bg-surface-sunken text-text"
                   >
                     Uncheck all
                   </button>
@@ -267,29 +254,23 @@ export function NoteEditor({
             )}
           </div>
 
-          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
 
           {/* Heading dropdown trigger */}
           <div className="relative">
             <button
               onClick={() => setShowHeadingDropdown(!showHeadingDropdown)}
               className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showHeadingDropdown
-                  ? 'bg-amber-500/20 dark:bg-amber-400/20'
-                  : 'bg-zinc-100 dark:bg-zinc-900'
+                showHeadingDropdown ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
               }`}
             >
               <Heading
                 size={16}
-                className={
-                  showHeadingDropdown ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'
-                }
+                className={showHeadingDropdown ? 'text-warning' : 'text-text-muted'}
               />
               <ChevronDown
                 size={12}
-                className={
-                  showHeadingDropdown ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500'
-                }
+                className={showHeadingDropdown ? 'text-warning' : 'text-text-muted'}
               />
             </button>
             {showHeadingDropdown && (
@@ -298,7 +279,7 @@ export function NoteEditor({
                   className="fixed inset-0 z-[99]"
                   onClick={() => setShowHeadingDropdown(false)}
                 />
-                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[120px] bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
+                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[120px] bg-surface-sunken border-border">
                   {[1, 2, 3].map((level) => (
                     <button
                       key={level}
@@ -306,12 +287,12 @@ export function NoteEditor({
                         editorRef.current?.toggleHeading(level as 1 | 2 | 3);
                         setShowHeadingDropdown(false);
                       }}
-                      className={`w-full px-3 py-2 text-left hover:bg-black/5 dark:hover:bg-white/5 ${
-                        level < 3 ? 'border-b border-zinc-200 dark:border-zinc-700' : ''
+                      className={`w-full px-3 py-2 text-left hover:bg-surface-sunken hover:bg-surface-sunken ${
+                        level < 3 ? 'border-b border-border' : ''
                       }`}
                     >
                       <span
-                        className="font-semibold text-zinc-950 dark:text-white"
+                        className="font-semibold text-text"
                         style={{ fontSize: 18 - level * 2 }}
                       >
                         Heading {level}
@@ -325,20 +306,20 @@ export function NoteEditor({
 
           <button
             onClick={() => editorRef.current?.toggleBulletList()}
-            className="p-1.5 rounded-md flex-shrink-0 bg-zinc-100 dark:bg-zinc-900"
+            className="p-1.5 rounded-md flex-shrink-0 bg-surface-sunken"
           >
-            <List size={16} className="text-zinc-500" />
+            <List size={16} className="text-text-muted" />
           </button>
 
-          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-zinc-200 dark:bg-zinc-800" />
+          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
 
           <button
             onClick={handleCopyMarkdown}
             className={`p-1.5 rounded-md flex-shrink-0 ${
-              copied ? 'bg-green-500/20' : 'bg-zinc-100 dark:bg-zinc-900'
+              copied ? 'bg-success/20' : 'bg-surface-sunken'
             }`}
           >
-            <Copy size={16} className={copied ? 'text-green-500' : 'text-zinc-500'} />
+            <Copy size={16} className={copied ? 'text-success' : 'text-text-muted'} />
           </button>
         </div>
       </div>
@@ -354,7 +335,7 @@ export function NoteEditor({
       />
 
       {/* Tags Section at Bottom */}
-      <div className="border-t px-4 py-3 border-zinc-200 dark:border-zinc-800">
+      <div className="border-t px-4 py-3 border-border">
         {/* Tags row with inline input */}
         <div className="flex items-center flex-wrap gap-2">
           {/* Current tags */}
@@ -375,7 +356,7 @@ export function NoteEditor({
 
           {/* Inline tag input */}
           <div className="flex items-center relative">
-            <Hash size={12} className={isTagNameOverLimit ? 'text-red-500' : 'text-zinc-400'} />
+            <Hash size={12} className={isTagNameOverLimit ? 'text-danger' : 'text-text-muted'} />
             <input
               type="text"
               value={newTagName}
@@ -389,21 +370,21 @@ export function NoteEditor({
               }}
               placeholder="Add tag..."
               className={`bg-transparent text-sm outline-none min-w-[80px] py-1 ml-1 ${
-                isTagNameOverLimit ? 'text-red-500' : 'text-zinc-950 dark:text-white'
-              } placeholder:text-zinc-400`}
+                isTagNameOverLimit ? 'text-danger' : 'text-text'
+              } placeholder:text-text-muted`}
               maxLength={MAX_TAG_NAME_LENGTH + 10}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
             />
             {isTagNameOverLimit && (
-              <span className="text-[10px] ml-1 text-red-500">Max {MAX_TAG_NAME_LENGTH}</span>
+              <span className="text-[10px] ml-1 text-danger">Max {MAX_TAG_NAME_LENGTH}</span>
             )}
           </div>
         </div>
 
         {/* Tag suggestions dropdown */}
         {showTagPicker && availableTags.length > 0 && (
-          <div className="mt-2 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900">
-            <p className="text-xs mb-1.5 text-zinc-500">
+          <div className="mt-2 p-2 rounded-lg bg-surface-sunken">
+            <p className="text-xs mb-1.5 text-text-muted">
               {newTagName.trim() ? 'Suggestions' : 'Available tags'}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -442,14 +423,14 @@ export function NoteEditor({
       />
 
       {/* Created/Updated Info + Trash */}
-      <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-200 dark:border-zinc-800">
-        <span className="text-xs text-zinc-500">
+      <div className="flex items-center justify-between px-4 py-2 border-t border-border">
+        <span className="text-xs text-text-muted">
           Created {formatDate(note.created_at)}
           {note.updated_at !== note.created_at && ` · Updated ${formatDate(note.updated_at)}`}
         </span>
         {onTrash && (
           <button onClick={onTrash} className="p-1 hover:opacity-70">
-            <Trash2 size={16} className="text-zinc-400" />
+            <Trash2 size={16} className="text-text-muted" />
           </button>
         )}
       </div>

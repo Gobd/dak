@@ -26,7 +26,7 @@ export function ProgressRing({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-gray-200 dark:text-neutral-700"
+          className="text-text-secondary"
         />
         {/* Progress circle */}
         <circle
@@ -40,14 +40,12 @@ export function ProgressRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           className={
-            percent === 100 ? 'text-green-500' : percent > 50 ? 'text-blue-500' : 'text-orange-500'
+            percent === 100 ? 'text-success' : percent > 50 ? 'text-accent' : 'text-warning'
           }
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-medium text-gray-700 dark:text-neutral-300">
-          {Math.round(percent)}%
-        </span>
+        <span className="text-xs font-medium text-text-secondary">{Math.round(percent)}%</span>
       </div>
     </div>
   );

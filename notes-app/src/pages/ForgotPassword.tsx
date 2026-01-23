@@ -33,15 +33,13 @@ export function ForgotPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
         <div className="w-full max-w-sm">
-          <h1 className="text-3xl font-bold text-center mb-4 text-zinc-950 dark:text-white">
-            Check your email
-          </h1>
-          <p className="text-center mb-8 text-zinc-500">
+          <h1 className="text-3xl font-bold text-center mb-4 text-text">Check your email</h1>
+          <p className="text-center mb-8 text-text-muted">
             We sent a password reset link to
             <br />
-            <span className="font-medium text-zinc-950 dark:text-white">{email}</span>
+            <span className="font-medium text-text">{email}</span>
           </p>
           <Link to="/login">
             <Button variant="secondary" className="w-full">
@@ -54,12 +52,10 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-surface">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-bold text-center mb-2 text-zinc-950 dark:text-white">
-          Forgot Password
-        </h1>
-        <p className="text-center mb-8 text-zinc-500">Enter your email to receive a reset link</p>
+        <h1 className="text-3xl font-bold text-center mb-2 text-text">Forgot Password</h1>
+        <p className="text-center mb-8 text-text-muted">Enter your email to receive a reset link</p>
 
         <div className="mb-6">
           <Input
@@ -80,8 +76,8 @@ export function ForgotPassword() {
           </Button>
         </div>
 
-        <p className="text-center text-amber-500 dark:text-amber-400">
-          <Link to="/login" className="font-medium">
+        <p className="text-center">
+          <Link to="/login" className="font-medium text-accent">
             Back to Sign In
           </Link>
         </p>

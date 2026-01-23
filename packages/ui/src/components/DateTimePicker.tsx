@@ -78,14 +78,14 @@ export function DateTimePicker({
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl p-4">
+    <div className="bg-surface-raised rounded-xl p-4">
       <div className="flex items-center justify-center gap-4">
         {/* Date button */}
         {showDatePicker && (
           <button
             onClick={() => setShowCalendar(true)}
             type="button"
-            className="px-3 py-2 bg-gray-100 dark:bg-neutral-700 rounded-lg text-gray-900 dark:text-white font-medium text-sm border border-gray-200 dark:border-neutral-600 hover:border-blue-500 transition-colors"
+            className="px-3 py-2 bg-surface-sunken rounded-lg text-text font-medium text-sm border border-border hover:border-accent transition-colors"
           >
             {formatDisplayDate(selectedDate)}
           </button>
@@ -96,7 +96,7 @@ export function DateTimePicker({
           <div className="w-10">
             <Roller items={HOURS} value={hour} onChange={setHour} />
           </div>
-          <div className="text-xl font-bold text-gray-400 dark:text-neutral-500">:</div>
+          <div className="text-xl font-bold text-text-muted">:</div>
           <div className="w-10">
             <Roller
               items={minutes}
@@ -110,9 +110,7 @@ export function DateTimePicker({
               onClick={() => setIsPM(false)}
               type="button"
               className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
-                !isPM
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300'
+                !isPM ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
               }`}
             >
               AM
@@ -121,9 +119,7 @@ export function DateTimePicker({
               onClick={() => setIsPM(true)}
               type="button"
               className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
-                isPM
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300'
+                isPM ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
               }`}
             >
               PM

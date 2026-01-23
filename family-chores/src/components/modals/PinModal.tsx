@@ -89,7 +89,7 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
         <button
           onClick={handleSubmit}
           disabled={currentPin.length < 4}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-accent text-text py-3 rounded-xl font-medium hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSettingNewPin ? (step === 'enter' ? 'Continue' : 'Set PIN') : 'Unlock'}
         </button>
@@ -101,13 +101,13 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
           <div
             key={i}
             className={`w-4 h-4 rounded-full ${
-              i < currentPin.length ? 'bg-blue-600' : 'bg-gray-200 dark:bg-neutral-700'
+              i < currentPin.length ? 'bg-accent' : 'bg-surface-sunken'
             }`}
           />
         ))}
       </div>
 
-      {error && <p className="text-red-600 text-sm text-center mb-4">{error}</p>}
+      {error && <p className="text-danger text-sm text-center mb-4">{error}</p>}
 
       {/* Keypad */}
       <div className="grid grid-cols-3 gap-3">
@@ -121,7 +121,7 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
               <button
                 key="back"
                 onClick={handleBackspace}
-                className="h-16 rounded-xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700"
+                className="h-16 rounded-xl bg-surface-sunken flex items-center justify-center hover:bg-surface-sunken"
               >
                 <Delete size={24} />
               </button>
@@ -132,7 +132,7 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
             <button
               key={key}
               onClick={() => handleDigit(key)}
-              className="h-16 rounded-xl bg-gray-100 dark:bg-neutral-800 text-2xl font-semibold hover:bg-gray-200 dark:hover:bg-neutral-700"
+              className="h-16 rounded-xl bg-surface-sunken text-2xl font-semibold hover:bg-surface-sunken"
             >
               {key}
             </button>

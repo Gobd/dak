@@ -34,57 +34,50 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface p-4">
       <div className="w-full max-w-xs">
-        <h1 className="text-2xl font-bold text-center mb-8 dark:text-white">{appName}</h1>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-6 space-y-4"
-        >
+        <h1 className="text-2xl font-bold text-center mb-8 text-text">{appName}</h1>
+        <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
               required
             />
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {error && <div className="text-danger text-sm">{error}</div>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-accent text-text py-2 rounded-lg font-medium hover:bg-accent-hover disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
           <div className="flex justify-between text-sm">
-            <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/signup" className="text-accent hover:text-accent-hover font-medium">
               Create Account
             </Link>
-            <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/forgot-password" className="text-accent hover:text-accent-hover font-medium">
               Forgot Password?
             </Link>
           </div>
         </form>
         <button
           onClick={toggle}
-          className="mt-6 mx-auto flex items-center justify-center p-2 rounded-lg text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-700"
+          className="mt-6 mx-auto flex items-center justify-center p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
         >
           {dark ? <Sun size={20} /> : <Moon size={20} />}
         </button>

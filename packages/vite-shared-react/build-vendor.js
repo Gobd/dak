@@ -1,6 +1,6 @@
 import { build } from 'vite';
 import { createHash } from 'crypto';
-import { writeFileSync, readFileSync, copyFileSync, readdirSync, rmSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, copyFileSync, rmSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { parseSync } from 'oxc-parser';
@@ -186,12 +186,8 @@ for (const { name, entry, external } of entries) {
   console.log(`  ${hashedName} (${(content.length / 1024).toFixed(1)} KB)`);
 }
 
-// Copy fonts
-const fontsDir = join(__dirname, 'fonts');
-for (const file of readdirSync(fontsDir)) {
-  copyFileSync(join(fontsDir, file), join(outDir, file));
-}
-manifest['fonts'] = '/_shared/fonts.css';
+// Copy font file (woff2 only - CSS is imported directly by apps)
+copyFileSync(join(__dirname, 'fonts', 'open-sans.woff2'), join(outDir, 'open-sans.woff2'));
 
 // Write manifest
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));

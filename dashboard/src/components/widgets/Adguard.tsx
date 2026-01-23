@@ -58,7 +58,7 @@ async function setProtection(
   });
 }
 
-export default function Adguard({ panel, dark }: WidgetComponentProps) {
+export default function Adguard({ panel }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const getWidgetData = useConfigStore((s) => s.getWidgetData);
   const updateWidgetData = useConfigStore((s) => s.updateWidgetData);
@@ -159,10 +159,10 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
             setSettingsForm(config);
             setShowSettings(true);
           }}
-          className={`p-2 rounded-lg transition-colors ${dark ? 'hover:bg-neutral-700/30' : 'hover:bg-neutral-200/50'}`}
+          className={`p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
           title="Configure AdGuard"
         >
-          <Shield size={24} className="text-neutral-500" />
+          <Shield size={24} className="text-text-muted" />
         </button>
 
         <Modal
@@ -186,7 +186,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
                 placeholder="http://192.168.1.1:3000"
                 value={settingsForm.url}
                 onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-                className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
               />
             </div>
             <div>
@@ -195,7 +195,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
                 type="text"
                 value={settingsForm.username}
                 onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-                className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
               />
             </div>
             <div>
@@ -204,7 +204,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
                 type="password"
                 value={settingsForm.password}
                 onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-                className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
               />
             </div>
           </div>
@@ -223,18 +223,18 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
         title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
       >
         {protectionEnabled ? (
-          <Shield size={24} className="text-green-500" />
+          <Shield size={24} className="text-success" />
         ) : (
-          <ShieldOff size={24} className="text-red-500" />
+          <ShieldOff size={24} className="text-danger" />
         )}
         {(isLoading || isPending) && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-blue-400 animate-spin" />
+          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
         )}
       </button>
 
       {/* Countdown text */}
       {!protectionEnabled && countdown && (
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-neutral-500 whitespace-nowrap">
+        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-text-muted whitespace-nowrap">
           {countdown}
         </span>
       )}
@@ -245,12 +245,10 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
           setSettingsForm(config);
           setShowSettings(true);
         }}
-        className={`absolute top-0 right-0 p-1 rounded opacity-0 hover:opacity-100 transition-opacity ${
-          dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'
-        }`}
+        className="absolute top-0 right-0 p-1 rounded opacity-0 hover:opacity-100 transition-opacity hover:bg-surface-sunken/50"
         title="Settings"
       >
-        <Settings size={12} className="text-neutral-500" />
+        <Settings size={12} className="text-text-muted" />
       </button>
 
       {/* Control menu */}
@@ -269,10 +267,10 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
                 setSettingsForm(config);
                 setShowSettings(true);
               }}
-              className="p-2 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              className="p-2 rounded hover:bg-border"
               title="Settings"
             >
-              <Settings size={16} className="text-neutral-500" />
+              <Settings size={16} className="text-text-muted" />
             </button>
             <Button onClick={() => setShowMenu(false)}>Cancel</Button>
           </>
@@ -280,7 +278,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
       >
         <div className="space-y-2">
           {error && (
-            <div className="p-2 bg-red-500/20 rounded text-red-400 text-sm flex items-center gap-2">
+            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
               <AlertCircle size={14} /> {error}
             </div>
           )}
@@ -291,16 +289,14 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
                 key={opt.value}
                 onClick={() => handleDisable(opt.value)}
                 disabled={isPending}
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  dark ? 'hover:bg-neutral-700/50' : 'hover:bg-neutral-200/50'
-                }`}
+                className="w-full text-left px-3 py-2 rounded transition-colors hover:bg-surface-sunken/50"
               >
                 {opt.label}
               </button>
             ))
           ) : (
             <div className="space-y-3">
-              {countdown && <p className="text-sm text-neutral-500">Re-enables in {countdown}</p>}
+              {countdown && <p className="text-sm text-text-muted">Re-enables in {countdown}</p>}
               <Button
                 onClick={handleEnable}
                 disabled={isPending}
@@ -336,7 +332,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
               placeholder="http://192.168.1.1:3000"
               value={settingsForm.url}
               onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-              className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
             />
           </div>
           <div>
@@ -345,7 +341,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
               type="text"
               value={settingsForm.username}
               onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-              className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
             />
           </div>
           <div>
@@ -354,7 +350,7 @@ export default function Adguard({ panel, dark }: WidgetComponentProps) {
               type="password"
               value={settingsForm.password}
               onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-              className={`w-full px-3 py-2 rounded border ${dark ? 'bg-neutral-800 border-neutral-600' : 'bg-white border-neutral-300'}`}
+              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
             />
           </div>
         </div>

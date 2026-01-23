@@ -4,8 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DAK - Home</title>
-    <link rel="stylesheet" href="/_shared/fonts.css" />
+    <link rel="preload" href="/_shared/open-sans.woff2" as="font" type="font/woff2" crossorigin />
     <style>
+      @font-face {
+        font-family: 'Open Sans';
+        font-style: normal;
+        font-weight: 400 700;
+        font-stretch: 100%;
+        font-display: swap;
+        src: url('/_shared/open-sans.woff2') format('woff2');
+      }
       * {
         margin: 0;
         padding: 0;

@@ -375,12 +375,12 @@ export default function Timer() {
       {/* Trigger button */}
       <button
         onClick={() => (hasItems ? setFloatingOpen(true) : setShowMenu(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-neutral-700/30"
+        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
         title={hasItems ? 'Show timers' : 'Add timer or stopwatch'}
       >
-        <TimerIcon size={24} className={hasItems ? 'text-blue-400' : 'text-neutral-500'} />
+        <TimerIcon size={24} className={hasItems ? 'text-accent' : 'text-text-muted'} />
         {hasItems && (
-          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-accent text-text text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
             {items.length}
           </span>
         )}
@@ -400,14 +400,14 @@ export default function Timer() {
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setCreateMode('timer')}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-200 text-sm font-medium transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-sunken hover:bg-surface-sunken rounded-lg text-text-secondary dark:text-text text-sm font-medium transition-colors"
             >
               <TimerIcon className="w-5 h-5" />
               Timer
             </button>
             <button
               onClick={() => setCreateMode('stopwatch')}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-200 text-sm font-medium transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-sunken hover:bg-surface-sunken rounded-lg text-text-secondary dark:text-text text-sm font-medium transition-colors"
             >
               <Clock className="w-5 h-5" />
               Stopwatch
@@ -420,10 +420,10 @@ export default function Timer() {
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex items-center gap-3">
-              <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg overflow-hidden">
+              <div className="flex-1 bg-surface-sunken rounded-lg overflow-hidden">
                 <Roller
                   items={HOURS}
                   value={createHours}
@@ -431,8 +431,8 @@ export default function Timer() {
                   format={(v) => `${v}h`}
                 />
               </div>
-              <span className="text-neutral-400 font-bold text-xl">:</span>
-              <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-lg overflow-hidden">
+              <span className="text-text-muted font-bold text-xl">:</span>
+              <div className="flex-1 bg-surface-sunken rounded-lg overflow-hidden">
                 <Roller
                   items={MINUTES}
                   value={createMins}
@@ -462,7 +462,7 @@ export default function Timer() {
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex gap-2">
               <Button onClick={() => setCreateMode(null)}>Back</Button>
@@ -483,29 +483,29 @@ export default function Timer() {
       {/* Floating timer window */}
       {hasItems && floatingOpen && (
         <div
-          className="fixed z-50 bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-700 w-[180px]"
+          className="fixed z-50 bg-surface-raised rounded-xl shadow-2xl border border-border w-[180px]"
           style={{ left: floatingPos.x, top: floatingPos.y }}
         >
           {/* Draggable header */}
           <div
-            className="flex items-center justify-between px-3 py-2 bg-neutral-100 dark:bg-neutral-700 rounded-t-xl cursor-move select-none"
+            className="flex items-center justify-between px-3 py-2 bg-surface-sunken rounded-t-xl cursor-move select-none"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
           >
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            <span className="text-sm font-medium text-text-secondary dark:text-text">
               {items.length} active
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowMenu(true)}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                className="p-1 rounded hover:bg-surface-sunken"
                 title="Add"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setFloatingOpen(false)}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600"
+                className="p-1 rounded hover:bg-surface-sunken"
                 title="Minimize"
               >
                 <X className="w-4 h-4" />
@@ -533,7 +533,7 @@ export default function Timer() {
                         }
                       }}
                       onClick={isAlerting ? () => deleteItem(timer.id) : undefined}
-                      className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-red-500 text-white animate-pulse cursor-pointer' : 'bg-neutral-200/50 dark:bg-neutral-700/50'}`}
+                      className={`flex items-center gap-2 p-2 rounded-lg ${isAlerting ? 'bg-danger text-text animate-pulse cursor-pointer' : 'bg-surface-sunken/50 bg-surface-sunken/50'}`}
                     >
                       {isAlerting ? (
                         <Bell className="w-4 h-4 animate-bounce flex-shrink-0" />
@@ -570,12 +570,12 @@ export default function Timer() {
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                              className="flex-1 min-w-0 px-1 py-0.5 bg-white dark:bg-neutral-600 border border-neutral-300 dark:border-neutral-500 rounded text-xs text-neutral-900 dark:text-white outline-none"
+                              className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
                               autoFocus
                             />
                             <button
                               onClick={saveEdit}
-                              className="p-1 bg-green-600 hover:bg-green-500 rounded text-white"
+                              className="p-1 bg-success hover:bg-success rounded text-text"
                             >
                               <Check className="w-3 h-3" />
                             </button>
@@ -583,13 +583,13 @@ export default function Timer() {
                         ) : (
                           <button
                             onClick={() => startEditing(timer)}
-                            className="text-xs hover:underline text-left truncate w-full text-neutral-700 dark:text-neutral-200"
+                            className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text"
                           >
                             {timer.name}
                           </button>
                         )}
                         <div
-                          className={`text-sm font-mono ${isAlerting ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`}
+                          className={`text-sm font-mono ${isAlerting ? 'text-text' : 'text-text-secondary'}`}
                         >
                           {isAlerting ? "Time's up!" : formatTime(remaining)}
                         </div>
@@ -598,7 +598,7 @@ export default function Timer() {
                       {!isAlerting && (
                         <button
                           onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                          className={`p-1 rounded ${isAdjusting ? 'bg-blue-600 text-white' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                          className={`p-1 rounded ${isAdjusting ? 'bg-accent text-text' : 'text-text-muted hover:text-text hover:bg-surface-sunken'}`}
                         >
                           <TimerIcon className="w-3 h-3" />
                         </button>
@@ -606,7 +606,7 @@ export default function Timer() {
 
                       <button
                         onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
-                        className={`p-1 rounded ${isAlerting ? 'hover:bg-red-600' : 'hover:bg-neutral-300 dark:hover:bg-neutral-600'}`}
+                        className={`p-1 rounded ${isAlerting ? 'hover:bg-danger' : 'text-text-muted hover:text-danger hover:bg-danger/10'}`}
                         title={isAlerting ? 'Dismiss' : 'Cancel'}
                       >
                         {isAlerting ? (
@@ -618,14 +618,14 @@ export default function Timer() {
                     </div>
 
                     {isAdjusting && (
-                      <div className="relative z-20 flex items-center gap-1 p-2 bg-neutral-300/50 dark:bg-neutral-600/50 rounded">
+                      <div className="relative z-20 flex items-center gap-1 p-2 bg-surface-sunken/50/50 rounded">
                         <button
                           onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
-                          className="p-1.5 bg-neutral-500 hover:bg-neutral-400 dark:bg-neutral-600 dark:hover:bg-neutral-500 rounded text-white"
+                          className="p-1.5 bg-surface hover:bg-border dark:hover:bg-surface rounded text-text"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded">
+                        <div className="flex-1 bg-surface-sunken rounded">
                           <Roller
                             items={ADJUST_MINUTES}
                             value={adjustMinutes}
@@ -635,13 +635,13 @@ export default function Timer() {
                         </div>
                         <button
                           onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
-                          className="p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white"
+                          className="p-1.5 bg-accent hover:bg-accent rounded text-text"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => setAdjustingId(null)}
-                          className="p-1.5 bg-neutral-400 hover:bg-neutral-300 dark:bg-neutral-500 dark:hover:bg-neutral-400 rounded text-white"
+                          className="p-1.5 bg-border hover:bg-border dark:hover:bg-border rounded text-text"
                           title="Cancel"
                         >
                           <X className="w-3 h-3" />
@@ -658,10 +658,10 @@ export default function Timer() {
                 return (
                   <div
                     key={sw.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-neutral-200/50 dark:bg-neutral-700/50"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-surface-sunken/50 bg-surface-sunken/50"
                   >
                     <Clock
-                      className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-green-500' : 'text-neutral-400'}`}
+                      className={`w-4 h-4 flex-shrink-0 ${sw.running ? 'text-success' : 'text-text-muted'}`}
                     />
 
                     <div className="flex-1 min-w-0">
@@ -672,12 +672,12 @@ export default function Timer() {
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                            className="flex-1 min-w-0 px-1 py-0.5 bg-white dark:bg-neutral-600 border border-neutral-300 dark:border-neutral-500 rounded text-xs text-neutral-900 dark:text-white outline-none"
+                            className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
                             autoFocus
                           />
                           <button
                             onClick={saveEdit}
-                            className="p-1 bg-green-600 hover:bg-green-500 rounded text-white"
+                            className="p-1 bg-success hover:bg-success rounded text-text"
                           >
                             <Check className="w-3 h-3" />
                           </button>
@@ -685,19 +685,19 @@ export default function Timer() {
                       ) : (
                         <button
                           onClick={() => startEditing(sw)}
-                          className="text-xs hover:underline text-left truncate w-full text-neutral-700 dark:text-neutral-200"
+                          className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text"
                         >
                           {sw.name}
                         </button>
                       )}
-                      <div className="text-sm font-mono text-neutral-600 dark:text-neutral-300">
+                      <div className="text-sm font-mono text-text-secondary">
                         {formatTime(elapsedSeconds)}
                       </div>
                     </div>
 
                     <button
                       onClick={() => toggleStopwatch(sw.id)}
-                      className={`p-1 rounded ${sw.running ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-green-600 hover:bg-green-500'} text-white`}
+                      className={`p-1 rounded ${sw.running ? 'bg-warning hover:bg-warning' : 'bg-success hover:bg-success'} text-text`}
                       title={sw.running ? 'Pause' : 'Resume'}
                     >
                       {sw.running ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
@@ -705,7 +705,7 @@ export default function Timer() {
 
                     <button
                       onClick={() => setDeleteId(sw.id)}
-                      className="p-1 rounded hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                      className="p-1 rounded text-text-muted hover:text-danger hover:bg-danger/10"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" />

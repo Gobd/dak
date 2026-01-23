@@ -1,0 +1,179 @@
+/* Light mode defaults */
+:root {
+  /* Surfaces */
+  --color-surface: oklch(100% 0 0);
+  --color-surface-raised: oklch(98% 0.005 240);
+  --color-surface-sunken: oklch(96% 0.005 240);
+
+  /* Borders */
+  --color-border: oklch(90% 0.005 240);
+  --color-border-strong: oklch(75% 0.01 240);
+
+  /* Text */
+  --color-text: oklch(15% 0.005 240);
+  --color-text-secondary: oklch(45% 0.01 240);
+  --color-text-muted: oklch(60% 0.01 240);
+
+  /* Accent (blue) */
+  --color-accent: oklch(55% 0.24 260);
+  --color-accent-hover: oklch(48% 0.26 263);
+  --color-accent-light: oklch(95% 0.05 260);
+  --color-accent-dark: oklch(45% 0.2 260);
+
+  /* Success (green) */
+  --color-success: oklch(55% 0.22 150);
+  --color-success-hover: oklch(48% 0.24 150);
+  --color-success-light: oklch(95% 0.06 150);
+  --color-success-dark: oklch(40% 0.18 150);
+
+  /* Warning (yellow/amber) */
+  --color-warning: oklch(75% 0.18 80);
+  --color-warning-hover: oklch(68% 0.2 80);
+  --color-warning-light: oklch(96% 0.08 85);
+  --color-warning-dark: oklch(55% 0.16 75);
+
+  /* Danger (red) */
+  --color-danger: oklch(55% 0.24 25);
+  --color-danger-hover: oklch(48% 0.26 25);
+  --color-danger-light: oklch(95% 0.05 25);
+  --color-danger-dark: oklch(45% 0.2 25);
+
+  /* Info (cyan/teal) */
+  --color-info: oklch(55% 0.15 220);
+  --color-info-hover: oklch(48% 0.17 220);
+  --color-info-light: oklch(95% 0.04 220);
+  --color-info-dark: oklch(45% 0.12 220);
+
+  /* Feature (purple - goals, habits) */
+  --color-feature: oklch(55% 0.2 300);
+  --color-feature-hover: oklch(48% 0.22 300);
+  --color-feature-light: oklch(95% 0.05 300);
+  --color-feature-dark: oklch(45% 0.18 300);
+
+  /* Gold (achievements, highlights) */
+  --color-gold: oklch(75% 0.15 85);
+  --color-gold-hover: oklch(68% 0.17 85);
+  --color-gold-light: oklch(95% 0.06 85);
+  --color-gold-dark: oklch(55% 0.13 85);
+}
+
+/* Dark mode overrides */
+.dark {
+  /* Surfaces */
+  --color-surface: oklch(12% 0.005 240);
+  --color-surface-raised: oklch(18% 0.01 240);
+  --color-surface-sunken: oklch(8% 0.005 240);
+
+  /* Borders */
+  --color-border: oklch(28% 0.01 240);
+  --color-border-strong: oklch(40% 0.01 240);
+
+  /* Text */
+  --color-text: oklch(98% 0.005 240);
+  --color-text-secondary: oklch(70% 0.01 240);
+  --color-text-muted: oklch(55% 0.01 240);
+
+  /* Accent (blue) - brighter in dark mode */
+  --color-accent: oklch(65% 0.2 255);
+  --color-accent-hover: oklch(72% 0.22 255);
+  --color-accent-light: oklch(25% 0.08 255);
+  --color-accent-dark: oklch(55% 0.18 255);
+
+  /* Success (green) */
+  --color-success: oklch(70% 0.2 152);
+  --color-success-hover: oklch(77% 0.22 152);
+  --color-success-light: oklch(25% 0.08 150);
+  --color-success-dark: oklch(60% 0.18 152);
+
+  /* Warning (yellow/amber) */
+  --color-warning: oklch(82% 0.18 85);
+  --color-warning-hover: oklch(88% 0.2 85);
+  --color-warning-light: oklch(28% 0.1 80);
+  --color-warning-dark: oklch(70% 0.16 85);
+
+  /* Danger (red) */
+  --color-danger: oklch(68% 0.2 22);
+  --color-danger-hover: oklch(75% 0.22 22);
+  --color-danger-light: oklch(25% 0.08 25);
+  --color-danger-dark: oklch(58% 0.18 22);
+
+  /* Info (cyan/teal) */
+  --color-info: oklch(70% 0.14 220);
+  --color-info-hover: oklch(77% 0.16 220);
+  --color-info-light: oklch(25% 0.06 220);
+  --color-info-dark: oklch(60% 0.12 220);
+
+  /* Feature (purple) */
+  --color-feature: oklch(72% 0.18 300);
+  --color-feature-hover: oklch(78% 0.2 300);
+  --color-feature-light: oklch(25% 0.08 300);
+  --color-feature-dark: oklch(62% 0.16 300);
+
+  /* Gold (achievements) */
+  --color-gold: oklch(82% 0.15 85);
+  --color-gold-hover: oklch(88% 0.17 85);
+  --color-gold-light: oklch(28% 0.08 85);
+  --color-gold-dark: oklch(70% 0.13 85);
+}
+
+/* Tailwind integration */
+@theme {
+  /* Surfaces */
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
+
+  /* Borders */
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+
+  /* Text */
+  --color-text: var(--color-text);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+
+  /* Accent */
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-dark: var(--color-accent-dark);
+
+  /* Success */
+  --color-success: var(--color-success);
+  --color-success-hover: var(--color-success-hover);
+  --color-success-light: var(--color-success-light);
+  --color-success-dark: var(--color-success-dark);
+
+  /* Warning */
+  --color-warning: var(--color-warning);
+  --color-warning-hover: var(--color-warning-hover);
+  --color-warning-light: var(--color-warning-light);
+  --color-warning-dark: var(--color-warning-dark);
+
+  /* Danger */
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-light: var(--color-danger-light);
+  --color-danger-dark: var(--color-danger-dark);
+
+  /* Info */
+  --color-info: var(--color-info);
+  --color-info-hover: var(--color-info-hover);
+  --color-info-light: var(--color-info-light);
+  --color-info-dark: var(--color-info-dark);
+
+  /* Feature */
+  --color-feature: var(--color-feature);
+  --color-feature-hover: var(--color-feature-hover);
+  --color-feature-light: var(--color-feature-light);
+  --color-feature-dark: var(--color-feature-dark);
+
+  /* Gold */
+  --color-gold: var(--color-gold);
+  --color-gold-hover: var(--color-gold-hover);
+  --color-gold-light: var(--color-gold-light);
+  --color-gold-dark: var(--color-gold-dark);
+}
+
+/* Centralized dark mode variant - apps no longer define this */
+@custom-variant dark (&:where(.dark, .dark *));

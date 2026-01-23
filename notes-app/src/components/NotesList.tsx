@@ -29,9 +29,9 @@ export function NotesList({
     if (emptyStateType === 'search') {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <Search size={40} className="text-zinc-300 dark:text-zinc-700" />
-          <p className="text-center text-base mt-4 text-zinc-500">No matching notes</p>
-          <p className="text-center text-sm mt-2 text-zinc-400">Try a different search term</p>
+          <Search size={40} className="text-text-secondary" />
+          <p className="text-center text-base mt-4 text-text-muted">No matching notes</p>
+          <p className="text-center text-sm mt-2 text-text-muted">Try a different search term</p>
         </div>
       );
     }
@@ -39,9 +39,9 @@ export function NotesList({
     if (emptyStateType === 'tag') {
       return (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <Hash size={40} className="text-zinc-300 dark:text-zinc-700" />
-          <p className="text-center text-base mt-4 text-zinc-500">No notes with this tag</p>
-          <p className="text-center text-sm mt-2 text-zinc-400">
+          <Hash size={40} className="text-text-secondary" />
+          <p className="text-center text-base mt-4 text-text-muted">No notes with this tag</p>
+          <p className="text-center text-sm mt-2 text-text-muted">
             Add this tag to notes to see them here
           </p>
         </div>
@@ -50,9 +50,9 @@ export function NotesList({
 
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8">
-        <FileText size={40} className="text-zinc-300 dark:text-zinc-700" />
-        <p className="text-center text-base mt-4 text-zinc-500">No notes yet</p>
-        <p className="text-center text-sm mt-2 text-zinc-400">Tap + to create your first note</p>
+        <FileText size={40} className="text-text-secondary" />
+        <p className="text-center text-base mt-4 text-text-muted">No notes yet</p>
+        <p className="text-center text-sm mt-2 text-text-muted">Tap + to create your first note</p>
       </div>
     );
   }

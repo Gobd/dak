@@ -45,11 +45,11 @@ export function VoiceResponseToast() {
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-neutral-900 dark:bg-neutral-800 text-white rounded-xl shadow-2xl px-5 py-4 max-w-md flex items-start gap-3 border border-neutral-700">
-        <MessageCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+      <div className="bg-surface-raised text-text rounded-xl shadow-2xl px-5 py-4 max-w-md flex items-start gap-3 border border-border">
+        <MessageCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           {response.command && (
-            <p className="text-xs text-neutral-400 mb-1 uppercase tracking-wide">
+            <p className="text-xs text-text-muted mb-1 uppercase tracking-wide">
               {response.command.replace(/_/g, ' ')}
             </p>
           )}
@@ -57,7 +57,7 @@ export function VoiceResponseToast() {
         </div>
         <button
           onClick={clearResponse}
-          className="text-neutral-400 hover:text-white transition-colors flex-shrink-0"
+          className="text-text-muted hover:text-text transition-colors flex-shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

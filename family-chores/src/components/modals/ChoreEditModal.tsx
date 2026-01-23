@@ -97,14 +97,14 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
         <>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 dark:text-neutral-300"
+            className="flex-1 px-4 py-2.5 border border-border rounded-lg hover:bg-surface-raised text-text-secondary"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim() || assigneeIds.length === 0 || saving}
-            className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700"
+            className="flex-1 bg-accent text-text px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-accent-hover"
           >
             <Check size={18} />
             {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
@@ -114,22 +114,20 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-            Name
-          </label>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Make bed, Take vitamins"
             maxLength={100}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
             autoFocus
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             Description (optional)
           </label>
           <input
@@ -138,31 +136,27 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Add details..."
             maxLength={200}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 dark:text-white"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
           />
         </div>
 
         {/* Points - hidden when hide_points is enabled */}
         {!hidePoints && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-              Points
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Points</label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setPoints(Math.max(0, points - 1))}
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken border border-border text-xl font-medium hover:bg-surface"
               >
                 −
               </button>
-              <span className="text-2xl font-semibold w-12 text-center dark:text-white">
-                {points}
-              </span>
+              <span className="text-2xl font-semibold w-12 text-center text-text">{points}</span>
               <button
                 type="button"
                 onClick={() => setPoints(Math.min(100, points + 1))}
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken border border-border text-xl font-medium hover:bg-surface"
               >
                 +
               </button>
@@ -174,31 +168,31 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
 
         {/* Times per day - only for daily schedule */}
         {schedule.type === 'daily' && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+          <div className="p-3 bg-accent-light rounded-lg border border-accent">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Times per day
             </label>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setTimesPerDay(Math.max(1, timesPerDay - 1))}
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken border border-border text-xl font-medium hover:bg-surface"
               >
                 −
               </button>
-              <span className="text-2xl font-semibold w-12 text-center dark:text-white">
+              <span className="text-2xl font-semibold w-12 text-center text-text">
                 {timesPerDay}
               </span>
               <button
                 type="button"
                 onClick={() => setTimesPerDay(Math.min(10, timesPerDay + 1))}
-                className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 text-xl font-medium hover:bg-gray-50 dark:hover:bg-neutral-600"
+                className="w-10 h-10 rounded-lg bg-surface-sunken border border-border text-xl font-medium hover:bg-surface"
               >
                 +
               </button>
             </div>
             {timesPerDay > 1 && (
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+              <p className="text-xs text-accent mt-2">
                 Creates {timesPerDay} separate checkboxes per day
               </p>
             )}
@@ -207,9 +201,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
 
         {/* Assignees */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-            Assign to
-          </label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Assign to</label>
           <div className="flex gap-2 flex-wrap">
             {members.map((member) => (
               <button
@@ -218,8 +210,8 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                 onClick={() => toggleAssignee(member.id)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                   assigneeIds.includes(member.id)
-                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                    : 'bg-gray-100 dark:bg-neutral-700 hover:bg-gray-200 dark:hover:bg-neutral-600'
+                    ? 'bg-accent-light ring-2 ring-accent'
+                    : 'bg-surface-sunken hover:bg-surface-sunken'
                 }`}
               >
                 <MemberAvatar
@@ -228,35 +220,31 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                   color={member.color}
                   size="sm"
                 />
-                <span className="text-sm dark:text-white">{member.name}</span>
+                <span className="text-sm text-text">{member.name}</span>
               </button>
             ))}
           </div>
           {assigneeIds.length === 0 && (
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-              Select at least one person
-            </p>
+            <p className="text-sm text-warning mt-2">Select at least one person</p>
           )}
         </div>
 
         {/* Assignment Type - hide for goals (always per-person) */}
         {assigneeIds.length > 1 && schedule.type !== 'goal' && (
-          <div className="p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
+          <div className="p-3 bg-surface-raised rounded-lg border border-border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
-                How should this work?
-              </span>
+              <span className="text-sm font-medium text-text-secondary">How should this work?</span>
               <button
                 type="button"
                 onClick={() => setShowAssignmentHelp(!showAssignmentHelp)}
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300"
+                className="p-1 text-text-muted hover:text-text-secondary dark:hover:text-text-secondary"
               >
                 <HelpCircle size={16} />
               </button>
             </div>
 
             {showAssignmentHelp && (
-              <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+              <div className="mb-3 p-2 bg-accent-light rounded text-xs text-accent">
                 <p className="font-medium mb-1">Race mode:</p>
                 <p className="mb-2">
                   First person to complete wins all the points. Great for motivating quick action!
@@ -272,28 +260,24 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                 onClick={() => setAssignmentType('anyone')}
                 className={`p-3 rounded-lg text-left transition-all ${
                   assignmentType === 'anyone'
-                    ? 'bg-amber-100 dark:bg-amber-900/50 ring-2 ring-amber-500'
-                    : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                    ? 'bg-warning-light/50 ring-2 ring-warning'
+                    : 'bg-surface-sunken hover:bg-surface'
                 }`}
               >
-                <p className="font-medium text-sm text-gray-900 dark:text-white">Race</p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                  First to finish wins
-                </p>
+                <p className="font-medium text-sm text-text">Race</p>
+                <p className="text-xs text-text-muted mt-0.5">First to finish wins</p>
               </button>
               <button
                 type="button"
                 onClick={() => setAssignmentType('everyone')}
                 className={`p-3 rounded-lg text-left transition-all ${
                   assignmentType === 'everyone'
-                    ? 'bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500'
-                    : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                    ? 'bg-accent-light ring-2 ring-accent'
+                    : 'bg-surface-sunken hover:bg-surface'
                 }`}
               >
-                <p className="font-medium text-sm text-gray-900 dark:text-white">Each person</p>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                  Everyone does it
-                </p>
+                <p className="font-medium text-sm text-text">Each person</p>
+                <p className="text-xs text-text-muted mt-0.5">Everyone does it</p>
               </button>
             </div>
           </div>

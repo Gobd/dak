@@ -169,7 +169,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     );
 
     return (
-      <div className="flex-1 min-h-0 overflow-auto editor-scroll-container bg-white dark:bg-zinc-950">
+      <div className="flex-1 min-h-0 overflow-auto editor-scroll-container bg-surface">
         <EditorContent editor={editor} className="tiptap-editor h-full" />
       </div>
     );

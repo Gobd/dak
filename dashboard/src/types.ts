@@ -16,35 +16,117 @@ export type WidgetType =
   | 'mqtt'
   | 'adguard';
 
+// Anchor positions for pixel-based positioning
+export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 // Panel configuration
 export interface PanelConfig {
   id: string;
   widget: WidgetType;
+  // Percentage-based positioning (0-100) - used for background/scaling widgets
   x: number;
   y: number;
   width: number;
   height: number;
+  // Pixel-based anchored positioning - used for floating widgets that need consistent sizing
+  // When anchor is set, these pixel values take precedence over percentages
+  anchor?: AnchorPosition;
+  offsetX?: number; // pixels from anchor edge
+  offsetY?: number; // pixels from anchor edge
+  widthPx?: number; // fixed pixel width
+  heightPx?: number; // fixed pixel height
   refresh?: string; // Duration string like "5m", "1h"
   args?: Record<string, unknown>;
 }
 
 // Default settings per widget type (used when adding new widgets)
+// Frameless widgets get anchor defaults for consistent pixel-based sizing
 export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   weather: { width: 20, height: 25, refresh: '30m' },
   calendar: { width: 30, height: 40, refresh: '5m' },
-  'drive-time': { width: 6, height: 6, refresh: '5m' },
-  kasa: { width: 10, height: 10, refresh: '5m' },
-  wol: { width: 10, height: 10, refresh: '5m' },
-  brightness: { width: 10, height: 10, refresh: '1m' },
+  'drive-time': {
+    width: 6,
+    height: 6,
+    refresh: '5m',
+    anchor: 'bottom-left',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 16,
+    offsetY: 16,
+  },
+  kasa: {
+    width: 6,
+    height: 6,
+    refresh: '5m',
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 80,
+    offsetY: 16,
+  },
+  wol: {
+    width: 6,
+    height: 6,
+    refresh: '5m',
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 144,
+    offsetY: 16,
+  },
+  brightness: {
+    width: 6,
+    height: 6,
+    refresh: '1m',
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 208,
+    offsetY: 16,
+  },
   'sun-moon': { width: 15, height: 15, refresh: '1h' },
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
   iframe: { width: 40, height: 40 },
-  climate: { width: 12, height: 12, refresh: '1m' },
-  timer: { width: 6, height: 6 },
-  ptt: { width: 6, height: 6 },
+  climate: {
+    width: 12,
+    height: 12,
+    refresh: '1m',
+    anchor: 'top-right',
+    widthPx: 130,
+    heightPx: 104,
+    offsetX: 16,
+    offsetY: 16,
+  },
+  timer: {
+    width: 6,
+    height: 6,
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 16,
+    offsetY: 80,
+  },
+  ptt: {
+    width: 6,
+    height: 6,
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 16,
+    offsetY: 144,
+  },
   mqtt: { width: 10, height: 10, refresh: '10s' },
-  adguard: { width: 6, height: 6, refresh: '10s' },
+  adguard: {
+    width: 6,
+    height: 6,
+    refresh: '10s',
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 272,
+    offsetY: 16,
+  },
 };
 
 // Screen configuration

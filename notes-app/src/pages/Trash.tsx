@@ -111,50 +111,46 @@ export function Trash() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-zinc-950">
+    <div className="flex flex-col min-h-screen bg-surface">
       {/* Header */}
       {isSelectionMode ? (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-sunken">
           <button onClick={toggleSelectAll} className="flex items-center gap-2">
             {allOwnedSelected ? (
-              <SquareCheck size={20} className="text-amber-500 dark:text-amber-400" />
+              <SquareCheck size={20} className="text-warning" />
             ) : (
-              <Square size={20} className="text-zinc-400" />
+              <Square size={20} className="text-text-muted" />
             )}
-            <span className="text-sm text-zinc-950 dark:text-white">All</span>
+            <span className="text-sm text-text">All</span>
           </button>
-          <span className="text-sm font-medium text-zinc-950 dark:text-white">
-            {selectedNoteIds.size} selected
-          </span>
+          <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
               className={`px-3 py-1.5 rounded-md text-sm font-medium ${
                 selectedNoteIds.size > 0
-                  ? 'bg-red-500 text-white'
-                  : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'
+                  ? 'bg-danger text-text'
+                  : 'bg-surface-sunken text-text-muted'
               }`}
             >
               Delete
             </button>
             <button onClick={exitSelectionMode} className="p-1">
-              <X size={20} className="text-zinc-500" />
+              <X size={20} className="text-text-muted" />
             </button>
           </div>
         </div>
       ) : (
-        <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center px-4 py-3 border-b border-border">
           <Link to="/" className="p-2 -ml-2 mr-2">
-            <ArrowLeft size={20} className="text-zinc-500" />
+            <ArrowLeft size={20} className="text-text-muted" />
           </Link>
-          <Trash2 size={20} className="text-red-500" />
-          <span className="text-lg font-semibold ml-2 flex-1 text-zinc-950 dark:text-white">
-            Trash
-          </span>
-          <span className="text-sm mr-2 text-zinc-500">({trashedNotes.length})</span>
+          <Trash2 size={20} className="text-danger" />
+          <span className="text-lg font-semibold ml-2 flex-1 text-text">Trash</span>
+          <span className="text-sm mr-2 text-text-muted">({trashedNotes.length})</span>
           {trashedNotes.length > 0 && (
             <button onClick={enterSelectionMode} className="p-1.5">
-              <SquareCheck size={20} className="text-zinc-400" />
+              <SquareCheck size={20} className="text-text-muted" />
             </button>
           )}
         </div>
@@ -163,10 +159,10 @@ export function Trash() {
       {/* Content */}
       {trashedNotes.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <Trash2 size={48} className="text-zinc-300 dark:text-zinc-700" />
-          <p className="text-base mt-4 text-zinc-500">Trash is empty</p>
-          <p className="text-sm mt-2 text-zinc-500">Deleted notes will appear here</p>
-          <p className="text-xs mt-4 text-zinc-500">
+          <Trash2 size={48} className="text-text-secondary" />
+          <p className="text-base mt-4 text-text-muted">Trash is empty</p>
+          <p className="text-sm mt-2 text-text-muted">Deleted notes will appear here</p>
+          <p className="text-xs mt-4 text-text-muted">
             Notes in trash are automatically deleted after {TRASH_RETENTION_DAYS} days
           </p>
         </div>
@@ -188,30 +184,30 @@ export function Trash() {
                     toggleNoteSelection(item.id);
                   }
                 }}
-                className={`flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 cursor-pointer ${
+                className={`flex items-center justify-between px-4 py-3 border-b border-border cursor-pointer ${
                   isSelectionMode && !canSelect ? 'opacity-50' : ''
                 }`}
               >
                 {isSelectionMode && canSelect && (
                   <div className="mr-3">
                     {isChecked ? (
-                      <SquareCheck size={20} className="text-amber-500 dark:text-amber-400" />
+                      <SquareCheck size={20} className="text-warning" />
                     ) : (
-                      <Square size={20} className="text-zinc-400" />
+                      <Square size={20} className="text-text-muted" />
                     )}
                   </div>
                 )}
                 <div className="flex-1 mr-4 min-w-0">
-                  <p className="font-medium text-base truncate text-zinc-950 dark:text-white">
+                  <p className="font-medium text-base truncate text-text">
                     {getNoteTitle(item.content)}
                   </p>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-text-muted">
                       {item.trashed_at ? formatDate(item.trashed_at) : ''}
                     </span>
                     <div className="flex items-center gap-1">
-                      <Clock size={10} className={isUrgent ? 'text-red-500' : 'text-zinc-400'} />
-                      <span className={`text-xs ${isUrgent ? 'text-red-500' : 'text-zinc-500'}`}>
+                      <Clock size={10} className={isUrgent ? 'text-danger' : 'text-text-muted'} />
+                      <span className={`text-xs ${isUrgent ? 'text-danger' : 'text-text-muted'}`}>
                         {daysRemaining === 0 ? 'Deleting soon' : `${daysRemaining}d left`}
                       </span>
                     </div>
@@ -224,7 +220,7 @@ export function Trash() {
                         e.stopPropagation();
                         handleRestore(item);
                       }}
-                      className="p-2 rounded-lg bg-green-500"
+                      className="p-2 rounded-lg bg-success"
                     >
                       <RotateCcw size={18} color="#ffffff" />
                     </button>
@@ -233,7 +229,7 @@ export function Trash() {
                         e.stopPropagation();
                         setNoteToDelete(item);
                       }}
-                      className="p-2 rounded-lg bg-red-500"
+                      className="p-2 rounded-lg bg-danger"
                     >
                       <Trash2 size={18} color="#ffffff" />
                     </button>
@@ -247,8 +243,8 @@ export function Trash() {
 
       {/* Help text */}
       {trashedNotes.length > 0 && (
-        <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800 text-center">
-          <span className="text-xs text-zinc-500">
+        <div className="px-4 py-3 border-t border-border text-center">
+          <span className="text-xs text-text-muted">
             Notes in trash are automatically deleted after {TRASH_RETENTION_DAYS} days
           </span>
         </div>

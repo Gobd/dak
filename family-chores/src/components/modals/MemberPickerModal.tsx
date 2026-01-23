@@ -22,7 +22,7 @@ export function MemberPickerModal({
           <button
             key={member.id}
             onClick={() => onSelect(member.id)}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-surface-raised hover:bg-surface-sunken transition-colors"
           >
             <MemberAvatar
               name={member.name}
@@ -30,7 +30,7 @@ export function MemberPickerModal({
               color={member.color}
               size="lg"
             />
-            <span className="font-medium text-gray-900 dark:text-white">{member.name}</span>
+            <span className="font-medium text-text">{member.name}</span>
           </button>
         ))}
       </div>

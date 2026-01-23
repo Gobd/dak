@@ -21,11 +21,10 @@ try {
 /**
  * Get the list of external module IDs from the manifest.
  * Pass this to esmExternalRequirePlugin({ external: getExternalIds() }).
- * Excludes non-JS entries like 'fonts'.
  */
 export function getExternalIds() {
   if (!manifest) return [];
-  return Object.keys(manifest).filter((key) => key !== 'fonts');
+  return Object.keys(manifest);
 }
 
 /**

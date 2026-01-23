@@ -45,7 +45,7 @@ function HighlightedText({ text, query, className }: HighlightedTextProps) {
     <span className={`truncate ${className || ''}`}>
       {parts.map((part, i) =>
         part.highlight ? (
-          <span key={i} className="bg-yellow-200 dark:bg-yellow-300/50">
+          <span key={i} className="bg-warning-light">
             {part.text}
           </span>
         ) : (
@@ -103,8 +103,8 @@ export function NoteListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 transition-colors ${
-        isSelected && !selectionMode ? 'bg-zinc-200 dark:bg-zinc-800' : ''
+      className={`w-full text-left px-4 py-3 border-b border-border transition-colors ${
+        isSelected && !selectionMode ? 'bg-surface-sunken' : ''
       } ${selectionMode && !canSelect ? 'opacity-50' : ''}`}
     >
       <div className="flex items-center justify-between mb-1">
@@ -112,27 +112,27 @@ export function NoteListItem({
           {selectionMode && canSelect && (
             <span className="mr-2 flex-shrink-0">
               {isChecked ? (
-                <SquareCheck size={18} className="text-amber-500" />
+                <SquareCheck size={18} className="text-warning" />
               ) : (
-                <Square size={18} className="text-zinc-500" />
+                <Square size={18} className="text-text-muted" />
               )}
             </span>
           )}
-          {note.pinned && <Pin size={12} className="mr-1 flex-shrink-0 text-amber-500" />}
+          {note.pinned && <Pin size={12} className="mr-1 flex-shrink-0 text-warning" />}
           {isSharedWithMe ? (
-            <CircleUser size={12} className="mr-1 flex-shrink-0 text-blue-500" />
+            <CircleUser size={12} className="mr-1 flex-shrink-0 text-accent" />
           ) : note.is_private ? (
-            <Lock size={12} className="mr-1 flex-shrink-0 text-zinc-500" />
+            <Lock size={12} className="mr-1 flex-shrink-0 text-text-muted" />
           ) : (
-            <Users size={12} className="mr-1 flex-shrink-0 text-zinc-500" />
+            <Users size={12} className="mr-1 flex-shrink-0 text-text-muted" />
           )}
           <HighlightedText
             text={title}
             query={query}
-            className="font-medium text-base flex-1 min-w-0 text-zinc-950 dark:text-white"
+            className="font-medium text-base flex-1 min-w-0 text-text"
           />
         </div>
-        <span className="text-xs flex-shrink-0 text-zinc-500">
+        <span className="text-xs flex-shrink-0 text-text-muted">
           {formatRelativeTime(note.updated_at)}
         </span>
       </div>
