@@ -598,7 +598,7 @@ export default function Timer() {
                       {!isAlerting && (
                         <button
                           onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                          className={`p-1 rounded ${isAdjusting ? 'bg-accent text-text' : 'hover:bg-surface-sunken'}`}
+                          className={`p-1 rounded ${isAdjusting ? 'bg-accent text-text' : 'text-text-muted hover:text-text hover:bg-surface-sunken'}`}
                         >
                           <TimerIcon className="w-3 h-3" />
                         </button>
@@ -606,7 +606,7 @@ export default function Timer() {
 
                       <button
                         onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
-                        className={`p-1 rounded ${isAlerting ? 'hover:bg-danger' : 'hover:bg-surface-sunken'}`}
+                        className={`p-1 rounded ${isAlerting ? 'hover:bg-danger' : 'text-text-muted hover:text-danger hover:bg-danger/10'}`}
                         title={isAlerting ? 'Dismiss' : 'Cancel'}
                       >
                         {isAlerting ? (
@@ -705,7 +705,7 @@ export default function Timer() {
 
                     <button
                       onClick={() => setDeleteId(sw.id)}
-                      className="p-1 rounded hover:bg-surface-sunken"
+                      className="p-1 rounded text-text-muted hover:text-danger hover:bg-danger/10"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" />

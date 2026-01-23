@@ -71,6 +71,11 @@ export function EditToolbar() {
       width: defaults.width ?? 25,
       height: defaults.height ?? 20,
       refresh: defaults.refresh,
+      anchor: defaults.anchor,
+      offsetX: defaults.offsetX,
+      offsetY: defaults.offsetY,
+      widthPx: defaults.widthPx,
+      heightPx: defaults.heightPx,
     });
     setShowAddWidget(false);
     setWidgetSearch('');

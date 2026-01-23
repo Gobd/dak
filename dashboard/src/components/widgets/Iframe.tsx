@@ -1,3 +1,5 @@
+import { useState, useCallback } from 'react';
+import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import type { WidgetComponentProps } from './index';
 
 // Local dev URL mappings
@@ -48,6 +50,14 @@ function resolveUrl(url: string, dark: boolean): string {
 
 export default function Iframe({ panel, dark }: WidgetComponentProps) {
   const src = resolveUrl((panel.args?.src as string) || '', dark ?? false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Reload iframe at the configured refresh interval
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  useRefreshInterval(handleRefresh, panel.refresh, { immediate: false });
 
   if (!src) {
     return (
@@ -59,6 +69,7 @@ export default function Iframe({ panel, dark }: WidgetComponentProps) {
 
   return (
     <iframe
+      key={refreshKey}
       id={`iframe-${panel.id}`}
       src={src}
       className="w-full h-full border-0"

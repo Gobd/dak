@@ -41,8 +41,8 @@
           "width": 12,
           "height": 12,
           "anchor": "top-right",
-          "offsetX": 316,
-          "offsetY": 16,
+          "offsetX": 336,
+          "offsetY": 11,
           "widthPx": 185,
           "heightPx": 84,
           "refresh": "1m"
@@ -55,8 +55,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 260,
-          "offsetY": 7,
+          "offsetX": 280,
+          "offsetY": 2,
           "widthPx": 48,
           "heightPx": 48,
           "refresh": "5m"
@@ -69,8 +69,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 204,
-          "offsetY": 7,
+          "offsetX": 224,
+          "offsetY": 2,
           "widthPx": 48,
           "heightPx": 48
         },
@@ -82,8 +82,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 148,
-          "offsetY": 7,
+          "offsetX": 168,
+          "offsetY": 2,
           "widthPx": 48,
           "heightPx": 48
         },
@@ -95,8 +95,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 260,
-          "offsetY": 59,
+          "offsetX": 280,
+          "offsetY": 54,
           "widthPx": 48,
           "heightPx": 48,
           "refresh": "10s"
@@ -109,8 +109,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 204,
-          "offsetY": 59,
+          "offsetX": 224,
+          "offsetY": 54,
           "widthPx": 48,
           "heightPx": 48
         },
@@ -122,8 +122,8 @@
           "width": 5,
           "height": 6,
           "anchor": "top-right",
-          "offsetX": 148,
-          "offsetY": 59,
+          "offsetX": 168,
+          "offsetY": 54,
           "widthPx": 48,
           "heightPx": 48
         }
