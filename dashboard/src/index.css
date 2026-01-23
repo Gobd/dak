@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
 @source "../../packages/ui/src/**/*.tsx";
 
 /* Enable class-based dark mode (triggered by .dark class on document) */
@@ -8,11 +9,6 @@
 html,
 body {
   overflow: hidden;
-}
-
-/* Custom font */
-@theme {
-  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Animations */

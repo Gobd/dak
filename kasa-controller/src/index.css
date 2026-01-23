@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
 
 html {
   background-color: #0f172a;

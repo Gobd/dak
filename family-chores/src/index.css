@@ -1,9 +1,6 @@
 @import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
 @source "../../packages/ui/src/**/*.tsx";
-
-@theme {
-  --default-font-family: 'Open Sans', system-ui, sans-serif;
-}
 
 @layer base {
   * {
@@ -26,7 +23,6 @@ input[type='button'] {
 
 body {
   @apply bg-gray-50 text-gray-900 min-h-screen dark:bg-black dark:text-neutral-100;
-  font-family: 'Open Sans', system-ui, sans-serif;
 }
 
 /* Shared utilities from UI package */

@@ -6,3 +6,7 @@
   font-display: swap;
   src: url('/_shared/open-sans.woff2') format('woff2');
 }
+
+body {
+  font-family: 'Open Sans', system-ui, sans-serif;
+}
