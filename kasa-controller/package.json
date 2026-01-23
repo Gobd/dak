@@ -22,16 +22,12 @@
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
     "concurrently": "catalog:",
-    "rollup-plugin-visualizer": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-pwa": "catalog:"
+    "vite": "catalog:"
   }
 }

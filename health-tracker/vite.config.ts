@@ -1,63 +1,11 @@
-import { defineConfig, esmExternalRequirePlugin } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
-import { VitePWA } from 'vite-plugin-pwa';
-import { sharedReact, getExternalIds } from '@dak/vite-shared-react';
-import type { PluginOption } from 'vite';
+import { createViteConfig } from '@dak/vite-shared-react';
 
-export default defineConfig(({ command }) => ({
+export default createViteConfig({
   base: '/health-tracker/',
-  server: {
-    port: 5173,
-    strictPort: true,
+  port: 5173,
+  pwa: {
+    name: 'Health Tracker',
+    short_name: 'Health',
+    description: 'Family health tracking app',
   },
-  build: {
-    sourcemap: true,
-  },
-  plugins: [
-    command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
-    react(),
-    tailwindcss(),
-    sharedReact(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'Health Tracker',
-        short_name: 'Health',
-        description: 'Family health tracking app',
-        theme_color: '#2563eb',
-        background_color: '#000000',
-        display: 'standalone',
-        icons: [
-          {
-            src: 'icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-      },
-    }),
-    process.env.ANALYZE &&
-      visualizer({
-        open: true,
-        filename: 'stats.html',
-        gzipSize: true,
-        template: 'treemap',
-      }),
-  ].filter(Boolean) as PluginOption[],
-}));
+});
