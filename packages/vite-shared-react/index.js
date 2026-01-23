@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, 'dist');
+const fontsDir = join(__dirname, 'fonts');
 
 // Load manifest once at module load time
 let manifest = null;
@@ -16,6 +17,14 @@ try {
   manifest = JSON.parse(readFileSync(join(distDir, 'manifest.json'), 'utf-8'));
 } catch {
   // Manifest not found - plugin will be inactive
+}
+
+// Load font CSS for inlining (eliminates one round trip)
+let fontsCss = null;
+try {
+  fontsCss = readFileSync(join(fontsDir, 'fonts.css'), 'utf-8');
+} catch {
+  // Font CSS not found - will use external link
 }
 
 /**
@@ -75,14 +84,29 @@ export function sharedReact() {
     },
 
     transformIndexHtml(html) {
-      // Only inject import map in production builds
-      if (!isBuild || !manifest) {
+      // Only transform in production builds
+      if (!isBuild) {
         return html;
       }
 
-      const importMap = { imports: manifest };
-      const importMapScript = `<script type="importmap">\n${JSON.stringify(importMap, null, 2)}\n    </script>`;
-      return html.replace('<head>', `<head>\n    ${importMapScript}`);
+      // Inline font CSS and preload woff2 to eliminate waterfall
+      if (fontsCss) {
+        html = html.replace(
+          /<link rel="stylesheet" href="\/_shared\/fonts\.css" \/>\n?\s*/,
+          `<link rel="preload" href="/_shared/open-sans.woff2" as="font" type="font/woff2" crossorigin>
+    <style>${fontsCss}</style>
+    `,
+        );
+      }
+
+      // Inject import map for shared vendor bundles
+      if (manifest) {
+        const importMap = { imports: manifest };
+        const importMapScript = `<script type="importmap">\n${JSON.stringify(importMap, null, 2)}\n    </script>`;
+        html = html.replace('<head>', `<head>\n    ${importMapScript}`);
+      }
+
+      return html;
     },
   };
 }
