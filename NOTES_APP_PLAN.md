@@ -523,7 +523,7 @@ const results = await database
   .get('notes')
   .query(
     Q.or(Q.where('title', Q.like(`%${query}%`)), Q.where('content', Q.like(`%${query}%`))),
-    Q.where('trashed_at', null)
+    Q.where('trashed_at', null),
   )
   .fetch();
 
@@ -912,7 +912,7 @@ async function onNoteSaved(note: Note, savedByUserId: string, savedByDeviceId: s
     {
       data: { action: 'sync' },
       contentAvailable: true,
-    }
+    },
   );
 }
 ```

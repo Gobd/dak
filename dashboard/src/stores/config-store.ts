@@ -216,7 +216,7 @@ export const useConfigStore = create<ConfigState>()(
               screens: state.screens.map((screen, i) =>
                 i === state.activeScreenIndex
                   ? { ...screen, panels: [...screen.panels, newPanel] }
-                  : screen
+                  : screen,
               ),
             };
           }),
@@ -226,7 +226,7 @@ export const useConfigStore = create<ConfigState>()(
             screens: state.screens.map((screen) => ({
               ...screen,
               panels: screen.panels.map((panel) =>
-                panel.id === panelId ? { ...panel, ...updates } : panel
+                panel.id === panelId ? { ...panel, ...updates } : panel,
               ),
             })),
           })),
@@ -244,7 +244,7 @@ export const useConfigStore = create<ConfigState>()(
             screens: state.screens.map((screen) => ({
               ...screen,
               panels: screen.panels.map((panel) =>
-                panel.id === panelId ? { ...panel, x, y } : panel
+                panel.id === panelId ? { ...panel, x, y } : panel,
               ),
             })),
           })),
@@ -254,7 +254,7 @@ export const useConfigStore = create<ConfigState>()(
             screens: state.screens.map((screen) => ({
               ...screen,
               panels: screen.panels.map((panel) =>
-                panel.id === panelId ? { ...panel, width, height } : panel
+                panel.id === panelId ? { ...panel, width, height } : panel,
               ),
             })),
           })),
@@ -391,9 +391,9 @@ export const useConfigStore = create<ConfigState>()(
             queueMicrotask(initializeExternalConfigs);
           };
         },
-      }
-    )
-  )
+      },
+    ),
+  ),
 );
 
 // Initialize external configs (static file + relay) after localStorage hydration
@@ -454,7 +454,7 @@ useConfigStore.subscribe(
       useConfigStore.getState()._saveToRelay();
     }, 500);
   },
-  { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) }
+  { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
 );
 
 // SSE connection for live config updates

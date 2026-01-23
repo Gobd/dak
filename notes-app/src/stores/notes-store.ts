@@ -95,7 +95,7 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     // Optimistic update
     set((state) => ({
       notes: state.notes.map((n) =>
-        n.id === id ? { ...n, ...updates, updated_at: new Date().toISOString() } : n
+        n.id === id ? { ...n, ...updates, updated_at: new Date().toISOString() } : n,
       ),
       currentNote:
         state.currentNote?.id === id

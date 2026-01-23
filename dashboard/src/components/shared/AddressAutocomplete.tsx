@@ -59,7 +59,7 @@ export function AddressAutocomplete({
         setLoading(false);
       }, 300);
     },
-    [onChange]
+    [onChange],
   );
 
   async function handleSelectPrediction(prediction: PlacePrediction) {

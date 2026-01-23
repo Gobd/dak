@@ -36,7 +36,7 @@ supabase
       table: 'family_invitations',
       filter: `email=eq.${userEmail}`,
     },
-    () => refetchPendingCount()
+    () => refetchPendingCount(),
   )
   .subscribe();
 ```
@@ -994,7 +994,7 @@ export function useNotifications(userId: string, userEmail: string) {
           table: 'family_invitations',
           filter: `email=eq.${userEmail}`,
         },
-        fetchPendingCount
+        fetchPendingCount,
       )
       .on(
         'postgres_changes',
@@ -1004,7 +1004,7 @@ export function useNotifications(userId: string, userEmail: string) {
           table: 'pending_shares',
           filter: `to_user_id=eq.${userId}`,
         },
-        fetchPendingCount
+        fetchPendingCount,
       )
       .subscribe();
 

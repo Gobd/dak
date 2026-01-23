@@ -28,7 +28,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
     const personal = instances.filter((instance) => instance.assigned_to === selectedMemberId);
     const shared = instances.filter(
       (instance) =>
-        !instance.assigned_to && instance.assignees.some((a) => a.id === selectedMemberId)
+        !instance.assigned_to && instance.assignees.some((a) => a.id === selectedMemberId),
     );
     return { personalTasks: personal, sharedTasks: shared };
   }, [instances, selectedMemberId]);

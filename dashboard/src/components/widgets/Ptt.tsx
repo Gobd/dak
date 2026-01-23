@@ -157,7 +157,7 @@ export default function Ptt() {
               window.dispatchEvent(
                 new CustomEvent('voice-command', {
                   detail: { text: data.text, command: data.command, result: data.result },
-                })
+                }),
               );
             }
             // Show response modal if result has speak text

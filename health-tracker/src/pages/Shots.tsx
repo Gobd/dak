@@ -89,7 +89,7 @@ export function Shots() {
 
   const handleUpdateSchedule = async (
     id: string,
-    data: { interval_days?: number; current_dose?: string }
+    data: { interval_days?: number; current_dose?: string },
   ) => {
     await updateSchedule(id, data);
     setShowEditForm(null);

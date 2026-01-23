@@ -56,7 +56,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
       const result = await allSensorsSensorsAllGet({ throwOnError: true });
       return result.data;
     },
-    { refresh: '5m', enabled: !!relayUrl && relayUp !== false }
+    { refresh: '5m', enabled: !!relayUrl && relayUp !== false },
   );
 
   // Fetch available devices (only when settings open and relay is up)
@@ -67,7 +67,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
       const result = await devicesSensorsDevicesGet({ throwOnError: true });
       return result.data;
     },
-    { enabled: !!relayUrl && showSettings && relayUp !== false, staleTime: 10_000 }
+    { enabled: !!relayUrl && showSettings && relayUp !== false, staleTime: 10_000 },
   );
 
   const devices = devicesData?.devices ?? [];

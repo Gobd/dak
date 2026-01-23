@@ -78,7 +78,7 @@ export function useVoiceCommandRelay() {
         console.log('[voice-relay] Forwarded command to notes-app');
       }
     },
-    [showResponse]
+    [showResponse],
   );
 
   useEffect(() => {

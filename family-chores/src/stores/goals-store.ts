@@ -61,7 +61,7 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
           (c) =>
             c.chore_id === goal.id &&
             c.member_id === assignment.member.id &&
-            c.period_start === periodStart
+            c.period_start === periodStart,
         );
 
         const targetCount = goal.target_count ?? 1;

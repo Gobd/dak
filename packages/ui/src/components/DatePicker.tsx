@@ -129,7 +129,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
           }
 
           const dateStr = formatLocalDate(
-            new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day)
+            new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day),
           );
           const isSelected = dateStr === selectedStr;
           const isToday = dateStr === todayStr;

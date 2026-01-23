@@ -115,7 +115,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
   const { location, setLocation } = useLocation(
     widgetId,
     panel.args?.lat as number | undefined,
-    panel.args?.lon as number | undefined
+    panel.args?.lon as number | undefined,
   );
 
   const [showSettings, setShowSettings] = useState(false);
@@ -133,7 +133,7 @@ export default function Weather({ panel, dark }: WidgetComponentProps) {
     {
       refresh: '30m',
       enabled: !!location,
-    }
+    },
   );
 
   const handleRefresh = () => {

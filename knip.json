@@ -2,9 +2,10 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignoreBinaries": ["sleep", "open", "uv"],
   "rules": {
-    "unresolved": "off",
     "duplicates": "off"
   },
+  "ignore": ["**/*.css"],
+  "ignoreUnresolved": ["vite/client"],
   "workspaces": {
     ".": {
       "entry": ["scripts/*.{sh,ts,js}"]
@@ -27,7 +28,7 @@
     "packages/kasa-client": {},
     "packages/ui": {},
     "packages/vite-shared-react": {
-      "ignoreDependencies": ["react", "react-dom", "zustand", "vite"],
+      "ignoreDependencies": ["react", "react-dom", "zustand"],
       "ignore": ["fonts/**"]
     }
   }

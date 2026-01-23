@@ -9,7 +9,7 @@ import { parseDuration } from '../types';
 export function useRefreshInterval(
   callback: () => void | Promise<void>,
   interval?: string,
-  { immediate = true }: { immediate?: boolean } = {}
+  { immediate = true }: { immediate?: boolean } = {},
 ): () => void {
   const callbackRef = useRef(callback);
   const intervalIdRef = useRef<number | null>(null);

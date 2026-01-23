@@ -10,7 +10,7 @@ interface MembersState {
   addMember: (data: { name: string; avatar_emoji: string; color: string }) => Promise<void>;
   updateMember: (
     id: string,
-    data: Partial<{ name: string; avatar_emoji: string; color: string }>
+    data: Partial<{ name: string; avatar_emoji: string; color: string }>,
   ) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
 }

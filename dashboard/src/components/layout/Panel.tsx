@@ -60,7 +60,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
       };
       setIsDragging(true);
     },
-    [isEditMode, panel.x, panel.y]
+    [isEditMode, panel.x, panel.y],
   );
 
   const handleDragMove = useCallback(
@@ -79,7 +79,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
 
       movePanel(panel.id, newX, newY);
     },
-    [isDragging, panel.id, movePanel]
+    [isDragging, panel.id, movePanel],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -104,7 +104,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
       };
       setIsResizing(true);
     },
-    [isEditMode, panel.width, panel.height]
+    [isEditMode, panel.width, panel.height],
   );
 
   const handleResizeMove = useCallback(
@@ -123,7 +123,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
 
       resizePanel(panel.id, newWidth, newHeight);
     },
-    [isResizing, panel.id, resizePanel]
+    [isResizing, panel.id, resizePanel],
   );
 
   const handleResizeEnd = useCallback(() => {

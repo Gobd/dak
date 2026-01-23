@@ -347,7 +347,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 nextSyncToken?: string;
               }>(
                 `/calendars/${encodeURIComponent(cal.id)}/events?` + new URLSearchParams(params),
-                accessToken
+                accessToken,
               );
 
               // Save the new sync token and update fetched range
@@ -399,7 +399,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
                 error: err,
               };
             }
-          })
+          }),
       );
 
       // Merge results from all calendars
@@ -423,7 +423,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
 
         // Remove events that were updated/deleted
         updatedEvents = updatedEvents.filter(
-          (e) => !(e.calendarId === cal.id && removedEventIds.has(e.id))
+          (e) => !(e.calendarId === cal.id && removedEventIds.has(e.id)),
         );
 
         // Add new events
@@ -539,7 +539,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         {
           method: 'POST',
           body: JSON.stringify(eventBody),
-        }
+        },
       );
 
       // Clear sync token and fetched range for this calendar to force refresh
@@ -656,7 +656,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
         {
           method: 'PATCH',
           body: JSON.stringify(eventBody),
-        }
+        },
       );
 
       clearSyncToken(editingEvent.calendarId);
@@ -696,7 +696,7 @@ export default function Calendar({ panel, dark }: WidgetComponentProps) {
       await fetchCalendarApi(
         `/calendars/${encodeURIComponent(event.calendarId)}/events/${encodeURIComponent(eventId)}`,
         accessToken,
-        { method: 'DELETE' }
+        { method: 'DELETE' },
       );
 
       clearSyncToken(event.calendarId);

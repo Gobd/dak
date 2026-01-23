@@ -22,6 +22,6 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'climate-display-settings',
-    }
-  )
+    },
+  ),
 );

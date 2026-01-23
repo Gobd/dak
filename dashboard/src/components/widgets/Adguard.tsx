@@ -47,7 +47,7 @@ async function fetchStatus(config: AdguardConfig): Promise<AdguardStatus> {
 async function setProtection(
   config: AdguardConfig,
   enabled: boolean,
-  duration?: number
+  duration?: number,
 ): Promise<void> {
   const { url, username, password } = config;
 

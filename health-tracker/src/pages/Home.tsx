@@ -51,7 +51,7 @@ export function Home() {
     })
     .sort(
       (a, b) =>
-        new Date(a.next_due + 'T00:00:00').getTime() - new Date(b.next_due + 'T00:00:00').getTime()
+        new Date(a.next_due + 'T00:00:00').getTime() - new Date(b.next_due + 'T00:00:00').getTime(),
     );
 
   // Check if all doses are taken for a course

@@ -173,14 +173,14 @@ export default function Timer() {
           return prev.map((t) =>
             t.type === 'timer' && t.name.toLowerCase().includes(name.toLowerCase())
               ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
-              : t
+              : t,
           );
         }
         if (timers.length === 1) {
           return prev.map((t) =>
             t.type === 'timer'
               ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
-              : t
+              : t,
           );
         }
         return prev;
@@ -191,13 +191,13 @@ export default function Timer() {
       if (data.name) {
         setItems((prev) =>
           prev.filter(
-            (t) => !(t.type === 'timer' && t.name.toLowerCase().includes(data.name.toLowerCase()))
-          )
+            (t) => !(t.type === 'timer' && t.name.toLowerCase().includes(data.name.toLowerCase())),
+          ),
         );
       } else {
         setItems((prev) => {
           const alerting = prev.filter(
-            (t) => t.type === 'timer' && t.endTime <= Date.now() && !t.dismissed
+            (t) => t.type === 'timer' && t.endTime <= Date.now() && !t.dismissed,
           );
           if (alerting.length > 0) {
             const alertingIds = new Set(alerting.map((t) => t.id));
@@ -244,8 +244,8 @@ export default function Timer() {
       prev.map((t) =>
         t.type === 'timer' && t.id === id
           ? { ...t, endTime: Math.max(Date.now() + 1000, t.endTime + deltaSeconds * 1000) }
-          : t
-      )
+          : t,
+      ),
     );
   }, []);
 
@@ -257,7 +257,7 @@ export default function Timer() {
   const saveEdit = useCallback(() => {
     if (editingId && editName.trim()) {
       setItems((prev) =>
-        prev.map((t) => (t.id === editingId ? { ...t, name: editName.trim() } : t))
+        prev.map((t) => (t.id === editingId ? { ...t, name: editName.trim() } : t)),
       );
     }
     setEditingId(null);
@@ -307,7 +307,7 @@ export default function Timer() {
         } else {
           return { ...s, startTime: Date.now(), running: true };
         }
-      })
+      }),
     );
   }, []);
 
@@ -322,7 +322,7 @@ export default function Timer() {
   const [floatingOpen, setFloatingOpen] = useState(true);
   const [floatingPos, setFloatingPos] = useState({ x: 100, y: 100 });
   const dragRef = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(
-    null
+    null,
   );
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {

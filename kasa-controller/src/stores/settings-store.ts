@@ -16,6 +16,6 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'kasa-controller-settings',
-    }
-  )
+    },
+  ),
 );

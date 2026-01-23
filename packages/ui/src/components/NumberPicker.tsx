@@ -25,7 +25,7 @@ export function NumberPickerCompact({
   // Generate array of numbers from min to max with step
   const items = Array.from(
     { length: Math.floor((max - min) / step) + 1 },
-    (_, i) => min + i * step
+    (_, i) => min + i * step,
   );
 
   const displayValue = value === 0 && zeroLabel ? zeroLabel : `${value} ${suffix}`;

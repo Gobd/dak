@@ -23,7 +23,7 @@ interface ChoreEditModalProps {
       target_count?: number;
       goal_period?: 'daily' | 'weekly' | 'monthly';
     },
-    assigneeIds: string[]
+    assigneeIds: string[],
   ) => Promise<void>;
   onClose: () => void;
 }
@@ -48,17 +48,17 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
   });
   const [timesPerDay, setTimesPerDay] = useState(chore?.times_per_day ?? 1);
   const [assigneeIds, setAssigneeIds] = useState<string[]>(
-    chore?.assignments.map((a) => a.member.id) ?? []
+    chore?.assignments.map((a) => a.member.id) ?? [],
   );
   const [assignmentType, setAssignmentType] = useState<'anyone' | 'everyone'>(
-    chore?.assignment_type ?? 'everyone'
+    chore?.assignment_type ?? 'everyone',
   );
   const [saving, setSaving] = useState(false);
   const [showAssignmentHelp, setShowAssignmentHelp] = useState(false);
 
   const toggleAssignee = (memberId: string) => {
     setAssigneeIds((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
+      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId],
     );
   };
 
@@ -82,7 +82,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
         target_count: schedule.type === 'goal' ? schedule.targetCount : undefined,
         goal_period: schedule.type === 'goal' ? schedule.goalPeriod : undefined,
       },
-      assigneeIds
+      assigneeIds,
     );
     setSaving(false);
     onClose();

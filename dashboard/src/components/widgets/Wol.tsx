@@ -78,7 +78,7 @@ async function fetchWolStatuses(devices: WolDevice[]): Promise<WolData> {
       devices.map(async (d) => ({
         ip: d.ip,
         online: await pingDevice(d.ip),
-      }))
+      })),
     );
 
     const statuses: Record<string, boolean> = {};
@@ -125,7 +125,7 @@ export default function Wol({ panel, dark }: WidgetComponentProps) {
     (newDevices: WolDevice[]) => {
       updateLocation(widgetId, { devices: newDevices } as unknown as { lat: number; lon: number });
     },
-    [widgetId, updateLocation]
+    [widgetId, updateLocation],
   );
 
   async function handleWake(device: WolDevice) {

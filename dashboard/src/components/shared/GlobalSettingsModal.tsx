@@ -71,7 +71,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const [zigbeeUrlInput, setZigbeeUrlInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [zigbeeStatus, setZigbeeStatus] = useState<'idle' | 'testing' | 'success' | 'error'>(
-    'idle'
+    'idle',
   );
   const [volume, setVolume] = useState(50);
   const [volumeLoading, setVolumeLoading] = useState(false);
@@ -276,7 +276,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const playTestSound = useCallback(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio(
-        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ=='
+        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQgAVKrgx3JNAhRKruTDaDwCHUux4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQIfSLDhxG09Ah9IsOHEbT0CH0iw4cRtPQ==',
       );
     }
     audioRef.current.volume = volume / 100;
@@ -307,7 +307,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
         }
       }
     },
-    [playTestSound]
+    [playTestSound],
   );
 
   async function handleTestRelay() {

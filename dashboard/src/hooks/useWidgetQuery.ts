@@ -13,7 +13,7 @@ export function useWidgetQuery<TData>(
   options?: {
     refresh?: string;
     enabled?: boolean;
-  } & Omit<UseQueryOptions<TData, Error, TData>, 'queryKey' | 'queryFn'>
+  } & Omit<UseQueryOptions<TData, Error, TData>, 'queryKey' | 'queryFn'>,
 ) {
   const { refresh, enabled = true, ...queryOptions } = options ?? {};
   const refetchInterval = parseDuration(refresh) ?? undefined;

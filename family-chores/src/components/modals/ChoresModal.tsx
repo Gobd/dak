@@ -54,7 +54,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
       monthly_day?: number;
       assignment_type: 'anyone' | 'everyone';
     },
-    assigneeIds: string[]
+    assigneeIds: string[],
   ) => {
     if (editingChore) {
       await updateChore(editingChore.id, data as Parameters<typeof updateChore>[1], assigneeIds);

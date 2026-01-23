@@ -22,7 +22,7 @@ interface InstancesState {
 function isChoreScheduledForDate(
   chore: ChoreWithAssignments,
   dateStr: string,
-  lastCompletionDate: string | null
+  lastCompletionDate: string | null,
 ): boolean {
   const date = new Date(dateStr + 'T00:00:00');
 
@@ -84,7 +84,7 @@ export const useInstancesStore = create<InstancesState>((set, get) => ({
         chores(*),
         assigned_member:family_members!chore_instances_assigned_to_fkey(*),
         completed_by_member:family_members!chore_instances_completed_by_fkey(*)
-      `
+      `,
       )
       .eq('scheduled_date', date);
 

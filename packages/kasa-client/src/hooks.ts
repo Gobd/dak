@@ -39,7 +39,7 @@ export function createKasaHooks(relayUrl: string) {
         await queryClient.cancelQueries({ queryKey: ['kasa-devices', relayUrl] });
         const previous = queryClient.getQueryData<KasaDevice[]>(['kasa-devices', relayUrl]);
         queryClient.setQueryData<KasaDevice[]>(['kasa-devices', relayUrl], (old) =>
-          old?.map((d) => (d.ip === device.ip ? { ...d, on: !d.on } : d))
+          old?.map((d) => (d.ip === device.ip ? { ...d, on: !d.on } : d)),
         );
         return { previous };
       },

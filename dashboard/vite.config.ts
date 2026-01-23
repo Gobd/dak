@@ -22,7 +22,7 @@ export default defineConfig(({ command, mode }) => {
         filename: 'stats.html',
         gzipSize: true,
         brotliSize: true,
-      })
+      }),
     );
   }
 

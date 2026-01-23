@@ -31,7 +31,7 @@ export function Screen() {
         {screens.map((screen, screenIndex) => {
           const isActive = screenIndex === activeScreenIndex;
           const sortedPanels = [...screen.panels].sort(
-            (a, b) => b.width * b.height - a.width * a.height
+            (a, b) => b.width * b.height - a.width * a.height,
           );
 
           return (

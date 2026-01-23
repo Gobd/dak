@@ -363,9 +363,9 @@ export function Courses() {
                             {format(
                               addDays(
                                 new Date(course.start_date + 'T00:00:00'),
-                                course.duration_days - 1
+                                course.duration_days - 1,
                               ),
-                              'MMM d'
+                              'MMM d',
                             )}
                           </div>
                           {course.notes && (

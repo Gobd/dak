@@ -12,7 +12,7 @@ export function Roller({ items, value, onChange, format = (v) => String(v) }: Ro
   // Convert items array to options format
   const options = useMemo(
     () => items.map((item) => ({ value: item, label: format(item) })),
-    [items, format]
+    [items, format],
   );
 
   return (

@@ -25,7 +25,7 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
           className={`w-3 h-3 rounded-full transition-colors ${
             i < completions_this_period ? 'bg-green-500' : 'bg-gray-300 dark:bg-neutral-600'
           }`}
-        />
+        />,
       );
     }
     // Show extra dots for over-achievement
