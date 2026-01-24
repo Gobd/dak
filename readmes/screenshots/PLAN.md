@@ -5,6 +5,7 @@
 ### Dashboard (`dashboard/`)
 
 **Widgets:**
+
 - [x] widget-weather.png
 - [x] widget-calendar.png
 - [x] widget-climate.png
@@ -16,6 +17,7 @@
 - [ ] widget-adguard.png
 
 **Modals:**
+
 - [x] modal-kasa.png
 - [x] modal-wol.png
 - [x] modal-wol-add.png
@@ -31,26 +33,32 @@
 - [x] modal-mqtt.png
 
 **Edit Mode:**
+
 - [x] edit-mode-settings.png
 - [x] edit-mode-add-widget.png
 
 **Full Views:**
+
 - [ ] dashboard-full.png (with left sidebar visible)
 
 **Skipped:**
+
 - ~~widget-ptt.png~~ (not needed)
 
 ### Notes App (`notes-app/`)
+
 - [x] notes-list.png
 - [x] note-detail.png
 
 ### Standalone Apps
+
 - [ ] climate-display/app.png
 - [ ] kasa-controller/app.png
 - [ ] family-chores/app.png
 - [ ] health-tracker/app.png
 
 ### Future (not yet)
+
 - [ ] dashboard-full-keyboard.png (virtual keyboard visible)
 
 ## Automation Approach
@@ -97,7 +105,7 @@ const screenshots: Screenshot[] = [
     sanitize: async (page) => {
       await page.evaluate(() => {
         // Scrub event titles
-        document.querySelectorAll('.event-title').forEach(el => {
+        document.querySelectorAll('.event-title').forEach((el) => {
           el.textContent = 'Team Meeting';
         });
       });
@@ -114,7 +122,7 @@ async function run() {
     viewport: { width: 1920, height: 1080 },
     headless: false, // Must be false for persistent context
   });
-  const page = context.pages()[0] || await context.newPage();
+  const page = context.pages()[0] || (await context.newPage());
 
   await page.goto('https://dak.bkemper.me/dashboard');
 
@@ -153,12 +161,12 @@ await page.evaluate(() => {
   });
 
   // Email addresses
-  document.querySelectorAll('[data-email], .email').forEach(el => {
+  document.querySelectorAll('[data-email], .email').forEach((el) => {
     el.textContent = 'user@example.com';
   });
 
   // Names
-  document.querySelectorAll('.attendee-name').forEach(el => {
+  document.querySelectorAll('.attendee-name').forEach((el) => {
     el.textContent = 'John Doe';
   });
 });

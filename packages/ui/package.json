@@ -8,7 +8,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "check": "pnpm typecheck"
+    "check": "pnpm typecheck",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@ncdai/react-wheel-picker": "^1.1.0",
@@ -20,8 +22,17 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "@dak/vite-shared-react": "workspace:*",
+    "@storybook/addon-a11y": "^10.2.0",
+    "@storybook/react": "^10.2.0",
+    "@storybook/react-vite": "^10.2.0",
+    "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "typescript": "catalog:"
+    "@vitejs/plugin-react": "catalog:",
+    "storybook": "^10.2.0",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

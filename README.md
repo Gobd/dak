@@ -7,6 +7,7 @@ Browse all apps at [dak.bkemper.me](https://dak.bkemper.me).
 ## Quick Start
 
 ### Hardware
+
 - Raspberry Pi 4 (or newer)
 - Touchscreen display
 - USB microphone (optional, for voice control)
@@ -22,6 +23,7 @@ Browse all apps at [dak.bkemper.me](https://dak.bkemper.me).
 ```
 
 This SSHs into the Pi and sets up everything:
+
 - **Kiosk** - Cage (Wayland compositor), Chromium, auto-login
 - **Home relay** - Python service for Kasa, WoL, brightness, config sync
 - **Zigbee** - Mosquitto MQTT broker, Zigbee2MQTT

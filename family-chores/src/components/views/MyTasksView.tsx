@@ -6,7 +6,7 @@ import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { TaskCard } from '../shared/TaskCard';
 import { MemberAvatar } from '../shared/MemberAvatar';
-import { ProgressRing } from '../shared/ProgressRing';
+import { ProgressRing } from '@dak/ui';
 
 interface MyTasksViewProps {
   onOpenFamily: () => void;
@@ -74,7 +74,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
                 <p className="text-2xl font-bold text-accent">{memberBalance}</p>
                 <p className="text-xs text-text-muted">total points</p>
               </div>
-              <ProgressRing percent={progressPercent} size={56} />
+              <ProgressRing value={progressPercent} size={56} showValue colorByProgress />
             </div>
           </div>
 

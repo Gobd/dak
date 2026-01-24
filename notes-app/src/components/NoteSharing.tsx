@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useToggle } from '@dak/hooks';
 import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
 import { LoadingSpinner } from './ui/loading-spinner';
-import { ConfirmDialog } from './ui/confirm-dialog';
+import { ConfirmModal } from '@dak/ui';
 import { useToastStore } from '../stores/toast-store';
 import type { Note } from '../types/note';
 
@@ -27,10 +28,10 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
   } = useSharesStore();
 
   const [newEmail, setNewEmail] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const isAdding = useToggle(false);
+  const showAddForm = useToggle(false);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [showOwnerEmail, setShowOwnerEmail] = useState(false);
+  const showOwnerEmail = useToggle(false);
   const [removeConfirm, setRemoveConfirm] = useState<{ userId: string; email: string } | null>(
     null,
   );
@@ -66,15 +67,15 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
       return;
     }
 
-    setIsAdding(true);
+    isAdding.setTrue();
     try {
       await addNoteShare(note.id, user.id, newEmail.trim());
       setNewEmail('');
-      setShowAddForm(false);
+      showAddForm.setFalse();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to share note', 'error');
     } finally {
-      setIsAdding(false);
+      isAdding.setFalse();
     }
   };
 
@@ -102,13 +103,13 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
             <p className="text-sm text-text-muted">
               Shared with you by{' '}
               <button
-                onClick={hasEmail ? () => setShowOwnerEmail(!showOwnerEmail) : undefined}
+                onClick={hasEmail ? showOwnerEmail.toggle : undefined}
                 className="font-medium text-accent"
               >
                 {ownerDisplay}
               </button>
             </p>
-            {showOwnerEmail && hasEmail && (
+            {showOwnerEmail.value && hasEmail && (
               <p className="text-xs mt-0.5 text-text-muted">{note.owner_email}</p>
             )}
           </div>
@@ -192,7 +193,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
               )}
 
               {/* Add share form */}
-              {showAddForm ? (
+              {showAddForm.value ? (
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -205,18 +206,18 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                   />
                   <button
                     onClick={handleAddShare}
-                    disabled={isAdding || !newEmail.trim()}
+                    disabled={isAdding.value || !newEmail.trim()}
                     className={`px-3 rounded-md text-sm flex items-center justify-center ${
                       newEmail.trim()
                         ? 'bg-warning text-black'
                         : 'bg-surface-sunken text-text-muted'
                     }`}
                   >
-                    {isAdding ? <LoadingSpinner size="small" /> : 'Add'}
+                    {isAdding.value ? <LoadingSpinner size="small" /> : 'Add'}
                   </button>
                   <button
                     onClick={() => {
-                      setShowAddForm(false);
+                      showAddForm.setFalse();
                       setNewEmail('');
                     }}
                     className="p-2 hover:opacity-70"
@@ -226,7 +227,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowAddForm(true)}
+                  onClick={() => showAddForm.setTrue()}
                   className="flex items-center gap-1.5 hover:opacity-70 text-warning"
                 >
                   <Plus size={16} />
@@ -244,14 +245,14 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
       )}
 
       {/* Remove share confirmation */}
-      <ConfirmDialog
-        visible={removeConfirm !== null}
+      <ConfirmModal
+        open={removeConfirm !== null}
         title="Remove access?"
         message={`${removeConfirm?.email || ''} will no longer be able to view or edit this note.`}
         confirmText="Remove"
-        destructive
+        variant="danger"
         onConfirm={confirmRemoveShare}
-        onCancel={() => setRemoveConfirm(null)}
+        onClose={() => setRemoveConfirm(null)}
       />
     </div>
   );

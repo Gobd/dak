@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToggle } from '@dak/hooks';
 import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, ConfirmModal } from '@dak/ui';
@@ -102,20 +103,20 @@ export default function Wol({ panel }: WidgetComponentProps) {
   const updateLocation = useConfigStore((s) => s.updateLocation);
   const devices = useMemo(() => config?.devices ?? [], [config?.devices]);
 
-  const [showModal, setShowModal] = useState(false);
+  const showModal = useToggle(false);
   const [waking, setWaking] = useState<string | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const showAddModal = useToggle(false);
   const [deleteDevice, setDeleteDevice] = useState<WolDevice | null>(null);
   const [addForm, setAddForm] = useState({ name: '', ip: '', mac: '' });
   const [addError, setAddError] = useState<string | null>(null);
-  const [detectingMac, setDetectingMac] = useState(false);
+  const detectingMac = useToggle(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['wol-statuses', devices.map((d) => d.ip).join(',')],
     queryFn: () => fetchWolStatuses(devices),
-    refetchInterval: showModal ? 5_000 : 60_000,
+    refetchInterval: showModal.value ? 5_000 : 60_000,
     staleTime: 3000,
-    enabled: devices.length > 0 || showModal,
+    enabled: devices.length > 0 || showModal.value,
   });
 
   const statuses = data?.statuses ?? {};
@@ -155,7 +156,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
     }
 
     saveDevices([...devices, { name: addForm.name, ip: addForm.ip, mac }]);
-    setShowAddModal(false);
+    showAddModal.setFalse();
     setAddForm({ name: '', ip: '', mac: '' });
     setAddError(null);
     queryClient.invalidateQueries({ queryKey: ['wol-statuses'] });
@@ -173,10 +174,10 @@ export default function Wol({ panel }: WidgetComponentProps) {
       setAddError('Enter an IP address first');
       return;
     }
-    setDetectingMac(true);
+    detectingMac.setTrue();
     setAddError(null);
     const mac = await getMacFromIp(addForm.ip);
-    setDetectingMac(false);
+    detectingMac.setFalse();
     if (mac) {
       setAddForm((p) => ({ ...p, mac }));
     } else {
@@ -192,7 +193,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
     <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => showModal.setTrue()}
         className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Wake on LAN${devices.length > 0 ? ` (${devices.length} devices)` : ''}`}
       >
@@ -212,13 +213,13 @@ export default function Wol({ panel }: WidgetComponentProps) {
 
       {/* Main Modal - Device List */}
       <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
+        open={showModal.value}
+        onClose={() => showModal.setFalse()}
         title="Wake on LAN"
         actions={
           <>
-            <Button onClick={() => setShowModal(false)}>Close</Button>
-            <Button onClick={() => setShowAddModal(true)} variant="primary">
+            <Button onClick={() => showModal.setFalse()}>Close</Button>
+            <Button onClick={() => showAddModal.setTrue()} variant="primary">
               <Plus size={14} className="mr-1" /> Add Device
             </Button>
           </>
@@ -294,15 +295,15 @@ export default function Wol({ panel }: WidgetComponentProps) {
 
       {/* Add Device Modal */}
       <Modal
-        open={showAddModal}
+        open={showAddModal.value}
         onClose={() => {
-          setShowAddModal(false);
+          showAddModal.setFalse();
           setAddError(null);
         }}
         title="Add Device"
         actions={
           <>
-            <Button onClick={() => setShowAddModal(false)}>Cancel</Button>
+            <Button onClick={() => showAddModal.setFalse()}>Cancel</Button>
             <Button onClick={handleAdd} variant="primary">
               Add
             </Button>
@@ -343,10 +344,10 @@ export default function Wol({ panel }: WidgetComponentProps) {
               <button
                 type="button"
                 onClick={handleDetectMac}
-                disabled={detectingMac || !addForm.ip.trim()}
+                disabled={detectingMac.value || !addForm.ip.trim()}
                 className="px-3 py-2 rounded-lg bg-accent/80 hover:bg-accent text-text disabled:opacity-50 text-sm"
               >
-                {detectingMac ? 'Detecting...' : 'Detect'}
+                {detectingMac.value ? 'Detecting...' : 'Detect'}
               </button>
             </div>
           </div>

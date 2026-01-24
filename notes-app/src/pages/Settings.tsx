@@ -16,7 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { ConfirmModal } from '@dak/ui';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
@@ -593,24 +593,25 @@ export function Settings() {
       </div>
 
       {/* Remove share confirmation */}
-      <ConfirmDialog
-        visible={removeShareConfirm !== null}
+      <ConfirmModal
+        open={removeShareConfirm !== null}
         title="Remove from auto-share?"
         message="This person will no longer receive new notes automatically. Existing shared notes are not affected."
         confirmText="Remove"
-        destructive
+        variant="danger"
         onConfirm={confirmRemoveShare}
-        onCancel={() => setRemoveShareConfirm(null)}
+        onClose={() => setRemoveShareConfirm(null)}
       />
 
       {/* Import confirmation */}
-      <ConfirmDialog
-        visible={importConfirm !== null}
+      <ConfirmModal
+        open={importConfirm !== null}
         title="Import Notes"
         message={importConfirm?.message || ''}
         confirmText="Import"
+        variant="primary"
         onConfirm={confirmImport}
-        onCancel={cancelImport}
+        onClose={cancelImport}
       />
     </div>
   );

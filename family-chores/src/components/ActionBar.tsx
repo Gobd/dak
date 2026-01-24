@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Settings, Users, ClipboardList, Gift, History, Moon, Sun, LogOut } from 'lucide-react';
+import { useToggle } from '@dak/hooks';
 import { ConfirmModal } from '@dak/ui';
 import { useThemeStore } from '../stores/theme-store';
 import { useAuthStore } from '../stores/auth-store';
@@ -24,7 +24,7 @@ export function ActionBar({
   const { signOut } = useAuthStore();
   const { settings } = useSettingsStore();
   const hidePoints = settings?.hide_points ?? false;
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const showLogoutConfirm = useToggle(false);
 
   const allButtons = [
     {
@@ -93,7 +93,7 @@ export function ActionBar({
       </button>
 
       <button
-        onClick={() => setShowLogoutConfirm(true)}
+        onClick={() => showLogoutConfirm.setTrue()}
         className="flex flex-col items-center gap-1 p-2 rounded-lg text-text-secondary text-text-muted hover:bg-danger-light dark:hover:bg-danger-light hover:text-danger transition-colors min-w-[48px]"
         title="Sign out"
       >
@@ -103,15 +103,15 @@ export function ActionBar({
 
       {/* Logout Confirmation Modal */}
       <ConfirmModal
-        open={showLogoutConfirm}
+        open={showLogoutConfirm.value}
         message="Are you sure you want to sign out?"
         confirmText="Sign out"
         variant="danger"
         onConfirm={() => {
-          setShowLogoutConfirm(false);
+          showLogoutConfirm.setFalse();
           signOut();
         }}
-        onClose={() => setShowLogoutConfirm(false)}
+        onClose={() => showLogoutConfirm.setFalse()}
       />
     </div>
   );

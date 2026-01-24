@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useToggle } from '@dak/hooks';
 import { Sun, Moon, RefreshCw, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, NumberPickerCompact } from '@dak/ui';
@@ -62,7 +63,7 @@ async function fetchBrightnessData(): Promise<{
 
 export default function Brightness() {
   const queryClient = useQueryClient();
-  const [showModal, setShowModal] = useState(false);
+  const showModal = useToggle(false);
   const [manualBrightness, setManualBrightness] = useState<number | null>(null);
   const [locationAddress, setLocationAddress] = useState('');
 
@@ -92,7 +93,7 @@ export default function Brightness() {
   const { data, isLoading } = useQuery({
     queryKey: ['brightness-status'],
     queryFn: fetchBrightnessData,
-    refetchInterval: showModal ? 5_000 : 60_000,
+    refetchInterval: showModal.value ? 5_000 : 60_000,
     staleTime: 5000,
   });
 
@@ -170,7 +171,7 @@ export default function Brightness() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <button
-        onClick={() => setShowModal(true)}
+        onClick={showModal.setTrue}
         className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Brightness: ${currentBrightness}%`}
       >
@@ -186,11 +187,11 @@ export default function Brightness() {
       </button>
 
       <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
+        open={showModal.value}
+        onClose={showModal.setFalse}
         title="Display Brightness"
         actions={
-          <Button onClick={() => setShowModal(false)} variant="primary">
+          <Button onClick={showModal.setFalse} variant="primary">
             Close
           </Button>
         }

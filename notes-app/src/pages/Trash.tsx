@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useToggle } from '@dak/hooks';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Trash2, Clock, SquareCheck, Square, X } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
+import { ConfirmModal } from '@dak/ui';
 import { getNoteTitle } from '../types/note';
 import type { Note } from '../types/note';
 
@@ -34,9 +35,9 @@ export function Trash() {
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
 
   // Selection mode state
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const isSelectionMode = useToggle(false);
   const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const showBulkDeleteConfirm = useToggle(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -57,12 +58,12 @@ export function Trash() {
 
   // Selection mode handlers
   const enterSelectionMode = () => {
-    setIsSelectionMode(true);
+    isSelectionMode.setTrue();
     setSelectedNoteIds(new Set());
   };
 
   const exitSelectionMode = () => {
-    setIsSelectionMode(false);
+    isSelectionMode.setFalse();
     setSelectedNoteIds(new Set());
   };
 
@@ -97,7 +98,7 @@ export function Trash() {
       await deleteNotePermanently(noteId, user.id);
     }
 
-    setShowBulkDeleteConfirm(false);
+    showBulkDeleteConfirm.setFalse();
     exitSelectionMode();
   };
 
@@ -113,7 +114,7 @@ export function Trash() {
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Header */}
-      {isSelectionMode ? (
+      {isSelectionMode.value ? (
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-sunken">
           <button onClick={toggleSelectAll} className="flex items-center gap-2">
             {allOwnedSelected ? (
@@ -126,7 +127,7 @@ export function Trash() {
           <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
+              onClick={() => selectedNoteIds.size > 0 && showBulkDeleteConfirm.setTrue()}
               className={`px-3 py-1.5 rounded-md text-sm font-medium ${
                 selectedNoteIds.size > 0
                   ? 'bg-danger text-text'
@@ -180,15 +181,15 @@ export function Trash() {
               <div
                 key={item.id}
                 onClick={() => {
-                  if (isSelectionMode && canSelect) {
+                  if (isSelectionMode.value && canSelect) {
                     toggleNoteSelection(item.id);
                   }
                 }}
                 className={`flex items-center justify-between px-4 py-3 border-b border-border cursor-pointer ${
-                  isSelectionMode && !canSelect ? 'opacity-50' : ''
+                  isSelectionMode.value && !canSelect ? 'opacity-50' : ''
                 }`}
               >
-                {isSelectionMode && canSelect && (
+                {isSelectionMode.value && canSelect && (
                   <div className="mr-3">
                     {isChecked ? (
                       <SquareCheck size={20} className="text-warning" />
@@ -213,7 +214,7 @@ export function Trash() {
                     </div>
                   </div>
                 </div>
-                {!isSelectionMode && (
+                {!isSelectionMode.value && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => {
@@ -250,25 +251,25 @@ export function Trash() {
         </div>
       )}
 
-      <ConfirmDialog
-        visible={noteToDelete !== null}
+      <ConfirmModal
+        open={noteToDelete !== null}
         title="Delete Forever"
         message={`Are you sure you want to permanently delete "${noteToDelete ? getNoteTitle(noteToDelete.content) : ''}"? This cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
-        destructive
+        variant="danger"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setNoteToDelete(null)}
+        onClose={() => setNoteToDelete(null)}
       />
 
-      <ConfirmDialog
-        visible={showBulkDeleteConfirm}
+      <ConfirmModal
+        open={showBulkDeleteConfirm.value}
         title={`Permanently delete ${selectedNoteIds.size} notes?`}
         message="This action cannot be undone."
         confirmText="Delete"
-        destructive
+        variant="danger"
         onConfirm={handleBulkDelete}
-        onCancel={() => setShowBulkDeleteConfirm(false)}
+        onClose={() => showBulkDeleteConfirm.setFalse()}
       />
     </div>
   );

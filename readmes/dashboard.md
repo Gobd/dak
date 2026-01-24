@@ -26,58 +26,58 @@ A smart home command center for wall-mounted displays. Designed to run 24/7 on a
 
 ## Widgets
 
-| Widget         | Description                                                       |
-| -------------- | ----------------------------------------------------------------- |
-| **Weather**    | Current conditions, temperature, humidity, and multi-day forecast |
-| **Calendar**   | Month view with Google Calendar - one account, share others to see them |
-| **Clock**      | Time and date display with configurable format                    |
-| **Drive Time** | Commute estimates with traffic via Google Maps API                |
-| **Sun/Moon**   | Sunrise, sunset, and moon phase                                   |
-| **AQI**        | Air quality index with health recommendations                     |
-| **UV**         | UV index with safe exposure threshold - shows when it's too harsh to be outside |
-| **Climate**    | Indoor/outdoor temperature and humidity from Zigbee sensors       |
-| **Kasa**       | Smart plug control (on/off, brightness, schedules)                |
+| Widget         | Description                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| **Weather**    | Current conditions, temperature, humidity, and multi-day forecast                          |
+| **Calendar**   | Month view with Google Calendar - one account, share others to see them                    |
+| **Clock**      | Time and date display with configurable format                                             |
+| **Drive Time** | Commute estimates with traffic via Google Maps API                                         |
+| **Sun/Moon**   | Sunrise, sunset, and moon phase                                                            |
+| **AQI**        | Air quality index with health recommendations                                              |
+| **UV**         | UV index with safe exposure threshold - shows when it's too harsh to be outside            |
+| **Climate**    | Indoor/outdoor temperature and humidity from Zigbee sensors                                |
+| **Kasa**       | Smart plug control (on/off, brightness, schedules)                                         |
 | **WoL**        | Wake-on-LAN with auto MAC detection - scans network, stores defaults, per-device overrides |
-| **Brightness** | Display brightness with auto-dim at sunset/sunrise based on your location |
-| **Timer**      | Countdown timer and stopwatch with alarm                          |
-| **PTT**        | Push-to-talk voice commands                                       |
-| **MQTT**       | Publish messages to MQTT topics (control Zigbee devices, etc.)    |
-| **AdGuard**    | DNS filtering stats from AdGuard Home                             |
-| **Iframe**     | Embed any URL (used for notes app, other internal tools)          |
+| **Brightness** | Display brightness with auto-dim at sunset/sunrise based on your location                  |
+| **Timer**      | Countdown timer and stopwatch with alarm                                                   |
+| **PTT**        | Push-to-talk voice commands                                                                |
+| **MQTT**       | Publish messages to MQTT topics (control Zigbee devices, etc.)                             |
+| **AdGuard**    | DNS filtering stats from AdGuard Home                                                      |
+| **Iframe**     | Embed any URL (used for notes app, other internal tools)                                   |
 
 ### Widget Screenshots
 
-| | | |
-|---|---|---|
-| ![Weather](screenshots/dashboard/widget-weather.png) | ![Climate](screenshots/dashboard/widget-climate.png) | ![Clock](screenshots/dashboard/widget-clock.png) |
-| Weather | Climate | Clock |
-| ![Sun/Moon](screenshots/dashboard/widget-sun-moon.png) | ![AQI](screenshots/dashboard/widget-aqi.png) | ![UV](screenshots/dashboard/widget-uv.png) |
-| Sun/Moon | AQI | UV |
+|                                                        |                                                      |                                                  |
+| ------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------ |
+| ![Weather](screenshots/dashboard/widget-weather.png)   | ![Climate](screenshots/dashboard/widget-climate.png) | ![Clock](screenshots/dashboard/widget-clock.png) |
+| Weather                                                | Climate                                              | Clock                                            |
+| ![Sun/Moon](screenshots/dashboard/widget-sun-moon.png) | ![AQI](screenshots/dashboard/widget-aqi.png)         | ![UV](screenshots/dashboard/widget-uv.png)       |
+| Sun/Moon                                               | AQI                                                  | UV                                               |
 
 ### Drive Time
 
-| | | |
-|---|---|---|
+|                                                            |                                                                      |                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
 | ![Drive Time](screenshots/dashboard/widget-drive-time.png) | ![Route Details](screenshots/dashboard/modal-drive-time-details.png) | ![Edit Route](screenshots/dashboard/modal-drive-time-edit.png) |
-| Traffic overview | Route details | Route configuration |
+| Traffic overview                                           | Route details                                                        | Route configuration                                            |
 
 ### Modal Screenshots
 
-| | | |
-|---|---|---|
-| ![Kasa](screenshots/dashboard/modal-kasa.png) | ![WoL](screenshots/dashboard/modal-wol.png) | ![Timer](screenshots/dashboard/modal-timer.png) |
-| Smart Devices | Wake on LAN | Timer |
+|                                                           |                                               |                                                                 |
+| --------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| ![Kasa](screenshots/dashboard/modal-kasa.png)             | ![WoL](screenshots/dashboard/modal-wol.png)   | ![Timer](screenshots/dashboard/modal-timer.png)                 |
+| Smart Devices                                             | Wake on LAN                                   | Timer                                                           |
 | ![Brightness](screenshots/dashboard/modal-brightness.png) | ![MQTT](screenshots/dashboard/modal-mqtt.png) | ![Calendar Jump](screenshots/dashboard/modal-calendar-jump.png) |
-| Brightness | Zigbee/MQTT Devices | Jump to Date |
+| Brightness                                                | Zigbee/MQTT Devices                           | Jump to Date                                                    |
 
 ### Edit Mode
 
 Tap the gear icon to enter edit mode. Add widgets, drag to reposition, resize with corner handles. Create multiple screen layouts and configure global settings (location, voice, calendars). Changes sync instantly to all connected devices.
 
-| | |
-|---|---|
+|                                                           |                                                               |
+| --------------------------------------------------------- | ------------------------------------------------------------- |
 | ![Settings](screenshots/dashboard/edit-mode-settings.png) | ![Add Widget](screenshots/dashboard/edit-mode-add-widget.png) |
-| Global Settings | Add Widget |
+| Global Settings                                           | Add Widget                                                    |
 
 ## Backend
 

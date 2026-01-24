@@ -1,4 +1,5 @@
-import { ConfirmDialog } from './ui/confirm-dialog';
+import { ConfirmModal } from '@dak/ui';
+import { useToggle } from '@dak/hooks';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor, type RichNoteEditorRef } from './RichNoteEditor';
 import { useUserStore } from '../stores/user-store';
@@ -68,14 +69,14 @@ export function NoteEditor({
   const editorRef = useRef<RichNoteEditorRef>(null);
   const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  const [showTagPicker, setShowTagPicker] = useState(false);
+  const showTagPicker = useToggle(false);
   const [newTagName, setNewTagName] = useState('');
   const [copied, setCopied] = useState(false);
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  const [showHeadingDropdown, setShowHeadingDropdown] = useState(false);
-  const [showCheckboxDropdown, setShowCheckboxDropdown] = useState(false);
-  const [showDeleteCheckedConfirm, setShowDeleteCheckedConfirm] = useState(false);
-  const [showUncheckAllConfirm, setShowUncheckAllConfirm] = useState(false);
+  const isReadOnly = useToggle(false);
+  const showHeadingDropdown = useToggle(false);
+  const showCheckboxDropdown = useToggle(false);
+  const showDeleteCheckedConfirm = useToggle(false);
+  const showUncheckAllConfirm = useToggle(false);
 
   const maxContentLength = planLimits.maxNoteLength;
 
@@ -181,15 +182,15 @@ export function NoteEditor({
           {/* Read-only Toggle */}
           <button
             onClick={() => {
-              const newState = !isReadOnly;
-              setIsReadOnly(newState);
+              const newState = !isReadOnly.value;
+              isReadOnly.set(newState);
               editorRef.current?.setEditable(!newState);
             }}
             className={`p-1.5 rounded-md flex-shrink-0 ${
-              isReadOnly ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+              isReadOnly.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
             }`}
           >
-            {isReadOnly ? (
+            {isReadOnly.value ? (
               <Eye size={16} className="text-warning" />
             ) : (
               <EyeOff size={16} className="text-text-muted" />
@@ -201,31 +202,31 @@ export function NoteEditor({
           {/* Checkbox dropdown trigger */}
           <div className="relative">
             <button
-              onClick={() => setShowCheckboxDropdown(!showCheckboxDropdown)}
+              onClick={() => showCheckboxDropdown.toggle()}
               className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showCheckboxDropdown ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+                showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
               }`}
             >
               <SquareCheck
                 size={16}
-                className={showCheckboxDropdown ? 'text-warning' : 'text-text-muted'}
+                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
               <ChevronDown
                 size={12}
-                className={showCheckboxDropdown ? 'text-warning' : 'text-text-muted'}
+                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
             </button>
-            {showCheckboxDropdown && (
+            {showCheckboxDropdown.value && (
               <>
                 <div
                   className="fixed inset-0 z-[99]"
-                  onClick={() => setShowCheckboxDropdown(false)}
+                  onClick={() => showCheckboxDropdown.setFalse()}
                 />
                 <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
                   <button
                     onClick={() => {
                       editorRef.current?.toggleTaskList();
-                      setShowCheckboxDropdown(false);
+                      showCheckboxDropdown.setFalse();
                     }}
                     className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
                   >
@@ -233,8 +234,8 @@ export function NoteEditor({
                   </button>
                   <button
                     onClick={() => {
-                      setShowCheckboxDropdown(false);
-                      setShowDeleteCheckedConfirm(true);
+                      showCheckboxDropdown.setFalse();
+                      showDeleteCheckedConfirm.setTrue();
                     }}
                     className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
                   >
@@ -242,8 +243,8 @@ export function NoteEditor({
                   </button>
                   <button
                     onClick={() => {
-                      setShowCheckboxDropdown(false);
-                      setShowUncheckAllConfirm(true);
+                      showCheckboxDropdown.setFalse();
+                      showUncheckAllConfirm.setTrue();
                     }}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-surface-sunken hover:bg-surface-sunken text-text"
                   >
@@ -259,25 +260,25 @@ export function NoteEditor({
           {/* Heading dropdown trigger */}
           <div className="relative">
             <button
-              onClick={() => setShowHeadingDropdown(!showHeadingDropdown)}
+              onClick={() => showHeadingDropdown.toggle()}
               className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showHeadingDropdown ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+                showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
               }`}
             >
               <Heading
                 size={16}
-                className={showHeadingDropdown ? 'text-warning' : 'text-text-muted'}
+                className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
               <ChevronDown
                 size={12}
-                className={showHeadingDropdown ? 'text-warning' : 'text-text-muted'}
+                className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
             </button>
-            {showHeadingDropdown && (
+            {showHeadingDropdown.value && (
               <>
                 <div
                   className="fixed inset-0 z-[99]"
-                  onClick={() => setShowHeadingDropdown(false)}
+                  onClick={() => showHeadingDropdown.setFalse()}
                 />
                 <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[120px] bg-surface-sunken border-border">
                   {[1, 2, 3].map((level) => (
@@ -285,7 +286,7 @@ export function NoteEditor({
                       key={level}
                       onClick={() => {
                         editorRef.current?.toggleHeading(level as 1 | 2 | 3);
-                        setShowHeadingDropdown(false);
+                        showHeadingDropdown.setFalse();
                       }}
                       className={`w-full px-3 py-2 text-left hover:bg-surface-sunken hover:bg-surface-sunken ${
                         level < 3 ? 'border-b border-border' : ''
@@ -362,11 +363,11 @@ export function NoteEditor({
               value={newTagName}
               onChange={(e) => {
                 setNewTagName(e.target.value);
-                setShowTagPicker(e.target.value.length > 0);
+                showTagPicker.set(e.target.value.length > 0);
               }}
-              onFocus={() => setShowTagPicker(true)}
+              onFocus={() => showTagPicker.setTrue()}
               onBlur={() => {
-                setTimeout(() => setShowTagPicker(false), 200);
+                setTimeout(() => showTagPicker.setFalse(), 200);
               }}
               placeholder="Add tag..."
               className={`bg-transparent text-sm outline-none min-w-[80px] py-1 ml-1 ${
@@ -382,7 +383,7 @@ export function NoteEditor({
         </div>
 
         {/* Tag suggestions dropdown */}
-        {showTagPicker && availableTags.length > 0 && (
+        {showTagPicker.value && availableTags.length > 0 && (
           <div className="mt-2 p-2 rounded-lg bg-surface-sunken">
             <p className="text-xs mb-1.5 text-text-muted">
               {newTagName.trim() ? 'Suggestions' : 'Available tags'}
@@ -400,7 +401,7 @@ export function NoteEditor({
                     onClick={() => {
                       onAddTag?.(tag.id);
                       setNewTagName('');
-                      setShowTagPicker(false);
+                      showTagPicker.setFalse();
                     }}
                     className="flex items-center gap-1 px-2 py-1 rounded-full"
                     style={{ backgroundColor: (tag.color || '#71717a') + '33' }}
@@ -436,28 +437,29 @@ export function NoteEditor({
       </div>
 
       {/* Confirmation Dialogs */}
-      <ConfirmDialog
-        visible={showDeleteCheckedConfirm}
+      <ConfirmModal
+        open={showDeleteCheckedConfirm.value}
         title="Delete checked lines"
         message="Are you sure you want to delete all checked lines? This cannot be undone."
         confirmText="Delete"
-        destructive
+        variant="danger"
         onConfirm={() => {
           handleDeleteCheckedTasks();
-          setShowDeleteCheckedConfirm(false);
+          showDeleteCheckedConfirm.setFalse();
         }}
-        onCancel={() => setShowDeleteCheckedConfirm(false)}
+        onClose={() => showDeleteCheckedConfirm.setFalse()}
       />
-      <ConfirmDialog
-        visible={showUncheckAllConfirm}
+      <ConfirmModal
+        open={showUncheckAllConfirm.value}
         title="Uncheck all"
         message="Are you sure you want to uncheck all checkboxes in this note?"
         confirmText="Uncheck all"
+        variant="primary"
         onConfirm={() => {
           handleUncheckAll();
-          setShowUncheckAllConfirm(false);
+          showUncheckAllConfirm.setFalse();
         }}
-        onCancel={() => setShowUncheckAllConfirm(false)}
+        onClose={() => showUncheckAllConfirm.setFalse()}
       />
     </div>
   );
