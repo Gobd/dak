@@ -110,7 +110,9 @@ export function MobileHeader({
       ) : (
         <button onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2">
           {!showPrivate && <Lock size={16} className="text-warning" />}
-          <span className="text-xl font-bold text-text">{showPrivate ? 'All Notes' : 'Public'}</span>
+          <span className="text-xl font-bold text-text">
+            {showPrivate ? 'All Notes' : 'Public'}
+          </span>
           <ChevronDown size={18} className="text-text-muted" />
         </button>
       )}
