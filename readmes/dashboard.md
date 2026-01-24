@@ -29,7 +29,7 @@ A smart home command center for wall-mounted displays. Designed to run 24/7 on a
 | Widget         | Description                                                       |
 | -------------- | ----------------------------------------------------------------- |
 | **Weather**    | Current conditions, temperature, humidity, and multi-day forecast |
-| **Calendar**   | Month view with Google Calendar integration                       |
+| **Calendar**   | Month view with Google Calendar - one account, share others to see them |
 | **Clock**      | Time and date display with configurable format                    |
 | **Drive Time** | Commute estimates with traffic via Google Maps API                |
 | **Sun/Moon**   | Sunrise, sunset, and moon phase                                   |

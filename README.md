@@ -86,3 +86,12 @@ pnpm check         # Run all checks + build
 Push to `main` to automatically deploy all apps to Cloudflare Pages.
 
 Hosted at `dak.bkemper.me` with preview deployments for PRs.
+
+## Notes
+
+- All apps support light and dark mode (system preference or manual toggle)
+- Instead of using the hosted version, you can run `pnpm dev` on the Pi and point Chromium to `localhost:8080`
+
+## Credits
+
+Built with [Claude Code](https://claude.ai/code) (Anthropic's AI assistant) handling most of the implementation, with human direction on architecture, features, and design decisions.
