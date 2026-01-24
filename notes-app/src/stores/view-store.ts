@@ -24,7 +24,8 @@ function getPublicOnlyFromQueryParam(): boolean {
   }
 }
 
-const isPublicOnly = getPublicOnlyFromQueryParam();
+// Exported so components can hide the privacy toggle in publicOnly mode
+export const isPublicOnly = getPublicOnlyFromQueryParam();
 
 export const useViewStore = create<ViewStore>()(
   persist(

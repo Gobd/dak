@@ -18,11 +18,7 @@ const isLocalDev =
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 
-function resolveUrl(
-  url: string,
-  dark: boolean,
-  args: Record<string, unknown> = {},
-): string {
+function resolveUrl(url: string, dark: boolean, args: Record<string, unknown> = {}): string {
   if (!url) return url;
 
   // Check for ?local param for local dev servers

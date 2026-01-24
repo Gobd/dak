@@ -25,7 +25,7 @@ import { useNotesStore } from '../stores/notes-store';
 import { useTagsStore } from '../stores/tags-store';
 import { useToastStore } from '../stores/toast-store';
 import { useUserStore } from '../stores/user-store';
-import { useViewStore } from '../stores/view-store';
+import { isPublicOnly, useViewStore } from '../stores/view-store';
 import { getNoteTitle } from '../types/note';
 
 export function Dashboard() {
@@ -365,6 +365,7 @@ export function Dashboard() {
           enterSelectionMode={enterSelectionMode}
           showPrivate={showPrivate}
           toggleShowPrivate={toggleShowPrivate}
+          isPublicOnly={isPublicOnly}
           showCreateMenu={showCreateMenu}
           setShowCreateMenu={setShowCreateMenu}
           onCreateNote={handleCreateNote}
@@ -553,6 +554,8 @@ export function Dashboard() {
                 <span className="text-base font-medium flex-1 text-text">
                   {tags.find((t) => t.id === selectedTagId)?.name || 'Notes'}
                 </span>
+              ) : isPublicOnly ? (
+                <span className="text-base font-medium flex-1 text-text">Notes</span>
               ) : (
                 <button
                   onClick={toggleShowPrivate}
@@ -571,8 +574,8 @@ export function Dashboard() {
               <div className="relative z-10">
                 <button
                   onClick={() => {
-                    // In public-only mode, just create a public note directly
-                    if (!showPrivate) {
+                    // In public-only mode or kiosk mode, just create a public note directly
+                    if (isPublicOnly || !showPrivate) {
                       handleCreateNote(false);
                     } else {
                       setShowCreateMenu(!showCreateMenu);
@@ -582,7 +585,7 @@ export function Dashboard() {
                 >
                   <Plus size={18} className="text-black" />
                 </button>
-                {showCreateMenu && showPrivate && (
+                {showCreateMenu && showPrivate && !isPublicOnly && (
                   <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-surface-sunken border-border">
                     <button
                       onClick={() => handleCreateNote(false)}

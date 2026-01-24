@@ -90,6 +90,7 @@ Generates URL: `/notes-app/?publicOnly=true&tags=work&tags=personal`
 **Dark mode**: `?dark=true` is automatically appended when the dashboard is in dark mode. Supported apps are hardcoded in `Iframe.tsx`: `/notes-app/`, `/health-tracker/`, `/family-chores/`.
 
 **Supported arg types**:
+
 - `string` - passed as-is
 - `number` - converted to string
 - `boolean` - converted to `"true"` or `"false"`
