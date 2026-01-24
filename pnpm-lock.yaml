@@ -321,6 +321,9 @@ importers:
 
   notes-app:
     dependencies:
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.91.0

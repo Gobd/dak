@@ -33,8 +33,7 @@ import { useToastStore } from '../stores/toast-store';
 import { useUserStore } from '../stores/user-store';
 
 export function Settings() {
-  const { theme, toggleTheme } = useThemeStore();
-  const isDark = theme === 'dark';
+  const { dark, toggle } = useThemeStore();
   const { user } = useAuthStore();
   const { profile, planLimits, fetchProfile, updateDisplayName, updatePlan } = useUserStore();
   const {
@@ -330,16 +329,16 @@ export function Settings() {
         <div className="mb-6">
           <h2 className="text-base font-semibold mb-3 text-text">Appearance</h2>
           <button
-            onClick={toggleTheme}
+            onClick={toggle}
             className="w-full flex items-center justify-between rounded-lg p-4 bg-surface-sunken"
           >
             <div className="flex items-center gap-3">
-              {isDark ? (
+              {dark ? (
                 <Moon size={20} className="text-text-muted" />
               ) : (
                 <Sun size={20} className="text-text-muted" />
               )}
-              <span className="text-base text-text">{isDark ? 'Dark mode' : 'Light mode'}</span>
+              <span className="text-base text-text">{dark ? 'Dark mode' : 'Light mode'}</span>
             </div>
             <span className="text-sm text-text-muted">Tap to switch</span>
           </button>

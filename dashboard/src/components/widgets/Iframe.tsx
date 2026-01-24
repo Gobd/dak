@@ -18,7 +18,11 @@ const isLocalDev =
 
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 
-function resolveUrl(url: string, dark: boolean): string {
+function resolveUrl(
+  url: string,
+  dark: boolean,
+  args: Record<string, unknown> = {},
+): string {
   if (!url) return url;
 
   // Check for ?local param for local dev servers
@@ -39,17 +43,38 @@ function resolveUrl(url: string, dark: boolean): string {
     resolvedUrl = APP_URL + url;
   }
 
+  // Collect query params from args (excluding src)
+  // Supports: string, number, boolean, and arrays (multiple values with same key)
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(args)) {
+    if (key === 'src' || value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        params.append(key, String(item));
+      }
+    } else {
+      params.set(key, String(value));
+    }
+  }
+
   // Append dark mode param for supported apps
   if (dark && DARK_MODE_APPS.some((app) => url.startsWith(app))) {
+    params.set('dark', 'true');
+  }
+
+  // Append params to URL
+  const paramString = params.toString();
+  if (paramString) {
     const separator = resolvedUrl.includes('?') ? '&' : '?';
-    resolvedUrl = `${resolvedUrl}${separator}dark=true`;
+    resolvedUrl = `${resolvedUrl}${separator}${paramString}`;
   }
 
   return resolvedUrl;
 }
 
 export default function Iframe({ panel, dark }: WidgetComponentProps) {
-  const src = resolveUrl((panel.args?.src as string) || '', dark ?? false);
+  const args = (panel.args ?? {}) as Record<string, unknown>;
+  const src = resolveUrl((args.src as string) || '', dark ?? false, args);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Reload iframe at the configured refresh interval

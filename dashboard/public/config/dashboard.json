@@ -17,7 +17,7 @@
         {
           "id": "panel-notes",
           "widget": "iframe",
-          "args": { "src": "/notes-app/" },
+          "args": { "src": "/notes-app/", "publicOnly": true },
           "x": 0,
           "y": 0,
           "width": 30,

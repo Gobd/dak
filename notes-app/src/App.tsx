@@ -47,7 +47,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const { initialize } = useAuthStore();
-  const { theme } = useThemeStore();
+  const { dark } = useThemeStore();
 
   useEffect(() => {
     initialize();
@@ -55,8 +55,8 @@ export default function App() {
 
   // Apply dark mode class
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
 
   return (
     <>
