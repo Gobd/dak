@@ -16,6 +16,7 @@ import { WIDGET_DEFAULTS, type WidgetType } from '../../types';
 
 const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[] = [
   { type: 'calendar', label: 'Calendar', description: 'Google Calendar integration' },
+  { type: 'clock', label: 'Clock', description: 'Time and date display' },
   { type: 'weather', label: 'Weather', description: 'Current weather and forecast' },
   { type: 'climate', label: 'Climate', description: 'Indoor/outdoor temp & humidity' },
   { type: 'timer', label: 'Timer', description: 'Countdown timers & stopwatches' },

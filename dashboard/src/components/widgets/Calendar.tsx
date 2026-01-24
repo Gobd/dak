@@ -10,7 +10,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { useRefreshInterval, useSyncedClock } from '../../hooks/useRefreshInterval';
+import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
 import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
@@ -191,13 +191,10 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   const calendarConfig = useConfigStore((s) => s.calendar);
   const updateCalendar = useConfigStore((s) => s.updateCalendar);
 
-  const viewPreference = calendarConfig?.view ?? 'month';
   const hiddenCalendarIds = useMemo(() => calendarConfig?.hidden ?? [], [calendarConfig?.hidden]);
   const calendarNames = calendarConfig?.names ?? {};
   const weekStartsOn = (panel.args?.weekStart === 'sunday' ? 0 : 1) as number;
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
-  const showTime = panel.args?.showTime === true;
-  const showSeconds = panel.args?.showSeconds === true;
   const headerHeight = calendarConfig?.headerHeight ?? 0; // Extra height in pixels for header section
 
   // Google OAuth
@@ -211,7 +208,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     isImplicitFlow,
   } = useGoogleAuth();
 
-  const [view, setView] = useState<'month' | 'list'>(viewPreference);
   const [gridStartDate, setGridStartDate] = useState(getMostRecentWeekStart(weekStartsOn));
   const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -247,11 +243,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     action: 'edit' | 'delete';
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [showJumpToDate, setShowJumpToDate] = useState(false);
-
-  // Clock update
-  useSyncedClock(() => setCurrentTime(new Date()), showSeconds);
 
   // Ref to current events for use in callback without causing re-renders
   const eventsRef = useRef(events);
@@ -752,12 +744,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     setShowJumpToDate(false);
   }
 
-  // Save view preference
-  function handleViewChange(newView: 'month' | 'list') {
-    setView(newView);
-    updateCalendar({ view: newView });
-  }
-
   // Generate days for month view
   const monthDays = useMemo(() => {
     const days: Date[] = [];
@@ -884,21 +870,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {showTime && (
-            <span className="text-sm text-text-muted">
-              {currentTime.toLocaleTimeString([], {
-                hour: 'numeric',
-                minute: '2-digit',
-                ...(showSeconds && { second: '2-digit' }),
-              })}
-            </span>
-          )}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 rounded hover:bg-surface-sunken/50"
+            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
             title="Settings"
           >
-            <Settings size={16} />
+            <Settings size={14} className="text-text-muted" />
           </button>
           <button
             onClick={() => {
@@ -1019,29 +996,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-4">
-          {/* View toggle */}
-          <div>
-            <label className="block text-sm font-medium mb-2">View</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleViewChange('month')}
-                className={`px-3 py-1.5 rounded text-sm ${
-                  view === 'month' ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
-                }`}
-              >
-                Month
-              </button>
-              <button
-                onClick={() => handleViewChange('list')}
-                className={`px-3 py-1.5 rounded text-sm ${
-                  view === 'list' ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
-                }`}
-              >
-                List
-              </button>
-            </div>
-          </div>
-
           {/* Header height */}
           <div>
             <label className="block text-sm font-medium mb-2">

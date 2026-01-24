@@ -3,9 +3,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Settings, RefreshCw, AlertTriangle, Wind } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
-import { LocationSettingsModal } from '../shared/LocationSettingsModal';
+import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { Modal, Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
+import type { LocationConfig } from '../../types';
 
 // NWS API - free, no auth, CORS-enabled
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://example.com';
@@ -90,6 +91,117 @@ function getAlertSeverityColor(severity: string): string {
   }
 }
 
+interface WeatherSettingsModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (location: LocationConfig) => void;
+  onRefresh: () => void;
+  currentLocation?: LocationConfig | null;
+  isRefreshing?: boolean;
+}
+
+function WeatherSettingsModal({
+  open,
+  onClose,
+  onSave,
+  onRefresh,
+  currentLocation,
+  isRefreshing,
+}: WeatherSettingsModalProps) {
+  const [query, setQuery] = useState(currentLocation?.query ?? '');
+  const [pendingLocation, setPendingLocation] = useState<{
+    lat?: number;
+    lon?: number;
+    address: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSelect(details: { address: string; lat?: number; lon?: number }) {
+    setPendingLocation(details);
+    setError(null);
+  }
+
+  function handleSave() {
+    if (!pendingLocation?.lat || !pendingLocation?.lon) {
+      setError('Please select a location from the suggestions.');
+      return;
+    }
+
+    const parts = pendingLocation.address.split(', ');
+    let city = parts[0];
+    let state = '';
+
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i].trim();
+      const stateMatch = part.match(/^([A-Z]{2})(?:\s+\d{5})?$/);
+      if (stateMatch) {
+        state = stateMatch[1];
+        if (i > 0) city = parts[i - 1].trim();
+        break;
+      }
+    }
+
+    onSave({
+      lat: pendingLocation.lat,
+      lon: pendingLocation.lon,
+      city,
+      state,
+      query: pendingLocation.address,
+    });
+    onClose();
+  }
+
+  const currentDisplay = currentLocation
+    ? formatLocation(currentLocation.city, currentLocation.state)
+    : null;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Weather Settings"
+      actions={
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSave} variant="primary">
+            Save
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        {/* Refresh */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Data</label>
+          <Button onClick={onRefresh} disabled={isRefreshing}>
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin mr-2' : 'mr-2'} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
+          </Button>
+        </div>
+
+        {/* Location */}
+        <div>
+          <label className="block text-sm font-medium mb-2">Location</label>
+          <AddressAutocomplete
+            value={query}
+            onChange={setQuery}
+            onSelect={handleSelect}
+            placeholder="e.g., San Francisco, CA"
+            className="bg-surface-sunken border-border text-text"
+          />
+          {currentDisplay && (
+            <p className="text-sm text-text-muted mt-2">Current: {currentDisplay}</p>
+          )}
+          {pendingLocation && (
+            <p className="text-sm text-success mt-1">Selected: {pendingLocation.address}</p>
+          )}
+          {error && <p className="text-sm text-danger mt-1">{error}</p>}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function formatAlertTime(expires: string): string {
   const endDate = new Date(expires);
   const now = new Date();
@@ -170,22 +282,13 @@ export default function Weather({ panel }: WidgetComponentProps) {
         <span className="text-sm text-text-muted truncate">
           {formatLocation(location.city, location.state)}
         </span>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleRefresh}
-            className={`p-1 rounded shrink-0 hover:bg-surface-sunken/50`}
-            title="Refresh"
-          >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            className={`p-1 rounded shrink-0 hover:bg-surface-sunken/50`}
-            title="Change location"
-          >
-            <Settings size={14} />
-          </button>
-        </div>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="p-1 rounded shrink-0 opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+          title="Settings"
+        >
+          <Settings size={14} className="text-text-muted" />
+        </button>
       </div>
 
       {/* Alerts */}
@@ -330,12 +433,14 @@ export default function Weather({ panel }: WidgetComponentProps) {
         </div>
       </Modal>
 
-      {/* Location Settings Modal */}
-      <LocationSettingsModal
+      {/* Settings Modal */}
+      <WeatherSettingsModal
         open={showSettings}
         onClose={() => setShowSettings(false)}
         onSave={setLocation}
+        onRefresh={handleRefresh}
         currentLocation={location}
+        isRefreshing={isLoading}
       />
     </div>
   );

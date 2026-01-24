@@ -2,18 +2,36 @@
 
 Browse all apps at [dak.bkemper.me](https://dak.bkemper.me).
 
-## Live Apps
+## Apps
 
-| App             | URL                                     | Stack                   |
-| --------------- | --------------------------------------- | ----------------------- |
-| Climate Display | https://dak.bkemper.me/climate-display/ | Vite + React + Tailwind |
-| Dashboard       | https://dak.bkemper.me/dashboard/       | Vite + React + Tailwind |
-| Family Chores   | https://dak.bkemper.me/family-chores/   | Vite + React + Tailwind |
-| Health Tracker  | https://dak.bkemper.me/health-tracker/  | Vite + React + Tailwind |
-| Kasa Controller | https://dak.bkemper.me/kasa-controller/ | Vite + React + Tailwind |
-| Notes App       | https://dak.bkemper.me/notes-app/       | Vite + React + Tailwind |
+| App                                           | Description                                                       |
+| --------------------------------------------- | ----------------------------------------------------------------- |
+| [Dashboard](readmes/dashboard.md)             | Kiosk dashboard with customizable widgets and smart home controls |
+| [Notes App](readmes/notes-app.md)             | Rich-text note-taking with sharing and real-time sync             |
+| [Health Tracker](readmes/health-tracker.md)   | Family medication and shot tracking                               |
+| [Family Chores](readmes/family-chores.md)     | Chore management with points and leaderboards                     |
+| [Climate Display](readmes/climate-display.md) | Indoor/outdoor temperature display                                |
+| [Kasa Controller](readmes/kasa-controller.md) | Smart plug control app                                            |
 
-All apps use React, TypeScript, and Zustand for state.
+## Packages
+
+| Package                                                | Description                         |
+| ------------------------------------------------------ | ----------------------------------- |
+| [@dak/ui](readmes/ui.md)                               | Shared UI components                |
+| [@dak/vite-shared-react](readmes/vite-shared-react.md) | Shared Vite config and theme        |
+| [@dak/api-client](readmes/api-client.md)               | Generated home-relay API client     |
+| [@dak/kasa-client](readmes/kasa-client.md)             | Kasa smart plug hooks and utilities |
+
+## Stack
+
+- **Runtime** - React 19, TypeScript 5.9
+- **Build** - Vite 8, pnpm workspaces
+- **Styling** - Tailwind CSS 4
+- **State** - Zustand
+- **Linting** - oxlint
+- **Formatting** - oxfmt
+- **Backend** - Supabase (auth/db), FastAPI (home-relay)
+- **Hosting** - Cloudflare Pages
 
 ## Development
 
@@ -27,12 +45,10 @@ cd <app> && pnpm dev
 
 ## Quality Checks
 
-From repo root:
-
 ```bash
-pnpm lint          # Oxlint
+pnpm lint          # oxlint
 pnpm typecheck     # TypeScript (all apps)
-pnpm format:check  # Oxfmt
+pnpm format:check  # oxfmt
 pnpm format        # Auto-fix formatting
 pnpm check         # Run all checks + build
 

@@ -181,7 +181,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
         )}
         <button
           onClick={() => setShowSettings(true)}
-          className="p-1 rounded transition-colors ml-2 hover:bg-surface-sunken"
+          className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all ml-2"
           title="Settings"
         >
           <Settings size={14} className="text-text-muted" />

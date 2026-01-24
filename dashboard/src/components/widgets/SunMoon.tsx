@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Settings } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
@@ -347,10 +348,10 @@ export default function SunMoon({ panel }: WidgetComponentProps) {
         </span>
         <button
           onClick={() => setShowSettings(true)}
-          className="text-text-muted hover:text-text-secondary text-lg leading-none"
-          title="Change location"
+          className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+          title="Settings"
         >
-          ⚙
+          <Settings size={14} className="text-text-muted" />
         </button>
       </div>
 

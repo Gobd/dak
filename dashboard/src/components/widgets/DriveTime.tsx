@@ -603,10 +603,10 @@ function RouteManagerModal({
                 <div className="flex gap-1">
                   <button
                     onClick={() => onEditRoute(route)}
-                    className="p-1.5 rounded hover:bg-surface-sunken"
+                    className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
                     title="Edit"
                   >
-                    <Settings size={14} />
+                    <Settings size={14} className="text-text-muted" />
                   </button>
                   <button
                     onClick={() => onDeleteRoute(route)}
@@ -659,10 +659,10 @@ function RouteManagerModal({
                     <div className="flex gap-1">
                       <button
                         onClick={() => handleEditLocation(name)}
-                        className="p-1.5 rounded hover:bg-surface-sunken"
+                        className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
                         title="Edit address"
                       >
-                        <Settings size={14} />
+                        <Settings size={14} className="text-text-muted" />
                       </button>
                       {!isLocationUsed(name) && (
                         <button
