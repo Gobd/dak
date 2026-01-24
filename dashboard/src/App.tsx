@@ -4,6 +4,7 @@ import { useConfigStore } from './stores/config-store';
 import { useVoiceCommandRelay } from './hooks/useVoiceCommandRelay';
 import { Screen } from './components/layout/Screen';
 import { VoiceResponseToast } from './components/shared/VoiceResponseToast';
+import { MqttModal } from './components/shared/MqttModal';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Screen />
       <VoiceResponseToast />
+      <MqttModal />
     </QueryClientProvider>
   );
 }

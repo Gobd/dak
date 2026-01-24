@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, AlertCircle } from 'lucide-react';
+import { Settings, AlertCircle, Radio } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
@@ -28,14 +28,11 @@ async function checkRelayHealth(): Promise<boolean> {
 
 const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 
-const DEFAULT_ZIGBEE_URL = 'https://zigbee2mqtt.bkemper.me';
-
 export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
   const [showSettings, setShowSettings] = useState(false);
   const climateConfig = useConfigStore((s) => s.climate);
   const updateClimate = useConfigStore((s) => s.updateClimate);
-  const zigbeeUrl = useConfigStore((s) => s.globalSettings?.zigbeeUrl) ?? DEFAULT_ZIGBEE_URL;
 
   // Check relay health
   const { data: relayUp } = useQuery({
@@ -261,26 +258,22 @@ export default function Climate({ dark }: WidgetComponentProps) {
             </div>
           </div>
 
-          {/* Zigbee2MQTT Link */}
-          {zigbeeUrl && (
-            <div>
-              <a
-                href={zigbeeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`block w-full px-3 py-2 rounded transition-colors text-sm text-center ${
-                  dark
-                    ? 'bg-surface-sunken text-text hover:bg-border'
-                    : 'bg-surface-sunken text-text-secondary hover:bg-surface-sunken'
-                }`}
-              >
-                Open Zigbee2MQTT UI
-              </a>
-              <p className={`text-xs mt-1 text-text-muted`}>
-                Pair new sensors, rename devices, check signal
-              </p>
-            </div>
-          )}
+          {/* Manage Devices Link */}
+          <div>
+            <button
+              onClick={() => {
+                setShowSettings(false);
+                useConfigStore.getState().setMqttModalOpen(true);
+              }}
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded transition-colors text-sm bg-surface-sunken text-text-secondary hover:bg-border"
+            >
+              <Radio size={14} />
+              Manage Zigbee Devices
+            </button>
+            <p className="text-xs mt-1 text-text-muted">
+              Pair new sensors, rename or remove devices
+            </p>
+          </div>
 
           {/* Battery warnings */}
           {data?.indoor?.available && data.indoor.battery < 20 && (

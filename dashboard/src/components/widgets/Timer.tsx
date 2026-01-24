@@ -495,17 +495,17 @@ export default function Timer() {
             <span className="text-sm font-medium text-text-secondary dark:text-text">
               {items.length} active
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowMenu(true)}
-                className="p-1 rounded hover:bg-surface-sunken"
-                title="Add"
+                className="p-1.5 rounded-md bg-accent/20 hover:bg-accent/40 text-accent transition-colors"
+                title="Add timer or stopwatch"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setFloatingOpen(false)}
-                className="p-1 rounded hover:bg-surface-sunken"
+                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Minimize"
               >
                 <X className="w-4 h-4" />
