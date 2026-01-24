@@ -229,6 +229,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [editForm, setEditForm] = useState({
     summary: '',
+    date: null as Date | null,
     startTime: '',
     endTime: '',
     allDay: false,
@@ -576,6 +577,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     let startTime = '09:00';
     let endTime = '10:00';
 
+    // Parse the event date
+    const eventDateStr = event.start.dateTime?.split('T')[0] || event.start.date || '';
+    const [year, month, day] = eventDateStr.split('-').map(Number);
+    const eventDate = new Date(year, month - 1, day);
+
     if (!isAllDay && event.start.dateTime && event.end.dateTime) {
       const start = new Date(event.start.dateTime);
       const end = new Date(event.end.dateTime);
@@ -585,6 +591,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
 
     setEditForm({
       summary: event.summary,
+      date: eventDate,
       startTime,
       endTime,
       allDay: isAllDay,
@@ -597,7 +604,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
 
   // Save edited event
   async function handleSaveEdit(editAll: boolean = false) {
-    if (!accessToken || !editingEvent) return;
+    if (!accessToken || !editingEvent || !editForm.date) return;
 
     setSavingEdit(true);
 
@@ -606,10 +613,8 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       const eventId =
         editAll && editingEvent.recurringEventId ? editingEvent.recurringEventId : editingEvent.id;
 
-      // Get the event's date
-      const eventDate = editingEvent.start.dateTime
-        ? editingEvent.start.dateTime.split('T')[0]
-        : editingEvent.start.date;
+      // Get the date from the form
+      const eventDate = formatLocalDate(editForm.date);
 
       let eventBody: {
         summary: string;
@@ -622,12 +627,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       if (editForm.allDay) {
-        // Parse date as local (not UTC) to avoid timezone issues
-        const [year, month, day] = eventDate!.split('-').map(Number);
-        const endDate = new Date(year, month - 1, day + 1);
+        const endDate = new Date(editForm.date);
+        endDate.setDate(endDate.getDate() + 1);
         eventBody = {
           summary: editForm.summary.trim(),
-          start: { date: eventDate! },
+          start: { date: eventDate },
           end: { date: formatLocalDate(endDate) },
         };
       } else {
@@ -1040,22 +1044,24 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: cal.backgroundColor }}
                     />
-                    <input
-                      type="text"
-                      value={calendarNames[cal.id] ?? ''}
-                      onChange={(e) => {
-                        const newNames = { ...calendarNames };
-                        if (e.target.value) {
-                          newNames[cal.id] = e.target.value;
-                        } else {
-                          delete newNames[cal.id];
-                        }
-                        updateCalendar({ names: newNames });
-                      }}
-                      placeholder={cal.summary}
-                      className="flex-1 px-2 py-1 text-sm rounded bg-surface-sunken border border-border placeholder:text-text-muted"
-                      title={`Alias for ${cal.summary}`}
-                    />
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="text"
+                        value={calendarNames[cal.id] ?? ''}
+                        onChange={(e) => {
+                          const newNames = { ...calendarNames };
+                          if (e.target.value) {
+                            newNames[cal.id] = e.target.value;
+                          } else {
+                            delete newNames[cal.id];
+                          }
+                          updateCalendar({ names: newNames });
+                        }}
+                        placeholder="Custom name"
+                        className="w-full px-2 py-1 text-sm rounded bg-surface-sunken border border-border placeholder:text-text-muted"
+                      />
+                      <div className="text-xs text-text-muted mt-0.5 truncate">{cal.summary}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1277,6 +1283,17 @@ export default function Calendar({ panel }: WidgetComponentProps) {
               onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
               className="w-full p-2 rounded bg-surface-sunken border border-border"
             />
+          </div>
+
+          {/* Date picker */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Date</label>
+            {editForm.date && (
+              <DatePickerCompact
+                value={editForm.date}
+                onChange={(d) => setEditForm({ ...editForm, date: d })}
+              />
+            )}
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">

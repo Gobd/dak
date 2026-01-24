@@ -2,6 +2,8 @@
 
 Kiosk dashboard for Raspberry Pi with customizable widget layouts and smart home controls. Designed for always-on displays like wall-mounted tablets.
 
+![Calendar Widget](screenshots/dashboard/widget-calendar.png)
+
 ## Features
 
 - Drag-and-drop widget layouts with percentage or pixel-based positioning
@@ -31,6 +33,31 @@ Kiosk dashboard for Raspberry Pi with customizable widget layouts and smart home
 | **MQTT**       | Publish messages to MQTT topics                                   |
 | **AdGuard**    | DNS filtering stats from AdGuard Home                             |
 | **Iframe**     | Embed any URL                                                     |
+
+### Widget Screenshots
+
+| | | |
+|---|---|---|
+| ![Weather](screenshots/dashboard/widget-weather.png) | ![Climate](screenshots/dashboard/widget-climate.png) | ![Clock](screenshots/dashboard/widget-clock.png) |
+| Weather | Climate | Clock |
+| ![Sun/Moon](screenshots/dashboard/widget-sun-moon.png) | ![AQI](screenshots/dashboard/widget-aqi.png) | ![UV](screenshots/dashboard/widget-uv.png) |
+| Sun/Moon | AQI | UV |
+
+### Modal Screenshots
+
+| | | |
+|---|---|---|
+| ![Kasa](screenshots/dashboard/modal-kasa.png) | ![WoL](screenshots/dashboard/modal-wol.png) | ![Timer](screenshots/dashboard/modal-timer.png) |
+| Smart Devices | Wake on LAN | Timer |
+| ![Brightness](screenshots/dashboard/modal-brightness.png) | ![Calendar Settings](screenshots/dashboard/modal-calendar-settings.png) | ![Clock Settings](screenshots/dashboard/modal-clock-settings.png) |
+| Brightness | Calendar Settings | Clock Settings |
+
+### Edit Mode
+
+| | |
+|---|---|
+| ![Settings](screenshots/dashboard/edit-mode-settings.png) | ![Add Widget](screenshots/dashboard/edit-mode-add-widget.png) |
+| Global Settings | Add Widget |
 
 ## Backend Services
 

@@ -174,9 +174,7 @@ export function MqttModal() {
     >
       <div className="space-y-4">
         {/* Pairing Mode Toggle */}
-        <div
-          className={`p-3 rounded-lg ${permitJoin ? 'bg-success/20' : 'bg-surface-sunken/40'}`}
-        >
+        <div className={`p-3 rounded-lg ${permitJoin ? 'bg-success/20' : 'bg-surface-sunken/40'}`}>
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium flex items-center gap-2">
