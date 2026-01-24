@@ -34,16 +34,16 @@ A smart home command center for wall-mounted displays. Designed to run 24/7 on a
 | **Drive Time** | Commute estimates with traffic via Google Maps API                |
 | **Sun/Moon**   | Sunrise, sunset, and moon phase                                   |
 | **AQI**        | Air quality index with health recommendations                     |
-| **UV**         | UV index with exposure warnings                                   |
+| **UV**         | UV index with safe exposure threshold - shows when it's too harsh to be outside |
 | **Climate**    | Indoor/outdoor temperature and humidity from Zigbee sensors       |
 | **Kasa**       | Smart plug control (on/off, brightness, schedules)                |
-| **WoL**        | Wake-on-LAN to power on network devices                           |
-| **Brightness** | Display brightness control with day/night automation              |
-| **Timer**      | Countdown timer with alarm                                        |
+| **WoL**        | Wake-on-LAN with auto MAC detection - scans network, stores defaults, per-device overrides |
+| **Brightness** | Display brightness with auto-dim at sunset/sunrise based on your location |
+| **Timer**      | Countdown timer and stopwatch with alarm                          |
 | **PTT**        | Push-to-talk voice commands                                       |
-| **MQTT**       | Publish messages to MQTT topics                                   |
+| **MQTT**       | Publish messages to MQTT topics (control Zigbee devices, etc.)    |
 | **AdGuard**    | DNS filtering stats from AdGuard Home                             |
-| **Iframe**     | Embed any URL                                                     |
+| **Iframe**     | Embed any URL (used for notes app, other internal tools)          |
 
 ### Widget Screenshots
 

@@ -1,6 +1,32 @@
 # DAK Apps
 
+A suite of smart home apps for wall-mounted displays, built for Raspberry Pi.
+
 Browse all apps at [dak.bkemper.me](https://dak.bkemper.me).
+
+## Quick Start
+
+### Hardware
+- Raspberry Pi 4 (or newer)
+- Touchscreen display
+- USB microphone (optional, for voice control)
+
+### Flash & Setup
+
+1. Flash **Raspberry Pi OS Lite (64-bit)** to SD card
+2. Enable SSH, set hostname, connect to Wi-Fi via Raspberry Pi Imager
+3. From your laptop, run the deploy script:
+
+```bash
+./dashboard/scripts/deploy.sh <user@host>
+```
+
+This SSHs into the Pi and sets up everything:
+- **Kiosk** - Cage (Wayland compositor), Chromium, auto-login
+- **Home relay** - Python service for Kasa, WoL, brightness, config sync
+- **Zigbee** - Mosquitto MQTT broker, Zigbee2MQTT
+- **Voice** - Audio packages for Vosk/Piper voice control
+- **Extras** - i2c for DDC brightness, virtual keyboard, auto-brightness cron
 
 ## Apps
 
