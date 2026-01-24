@@ -12,6 +12,7 @@ export interface WidgetComponentProps {
 const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> = {
   weather: lazy(() => import('./Weather')),
   calendar: lazy(() => import('./Calendar')),
+  clock: lazy(() => import('./Clock')),
   'drive-time': lazy(() => import('./DriveTime')),
   'sun-moon': lazy(() => import('./SunMoon')),
   aqi: lazy(() => import('./Aqi')),

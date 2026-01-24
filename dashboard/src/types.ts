@@ -2,6 +2,7 @@
 export type WidgetType =
   | 'weather'
   | 'calendar'
+  | 'clock'
   | 'drive-time'
   | 'kasa'
   | 'wol'
@@ -44,6 +45,15 @@ export interface PanelConfig {
 export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   weather: { width: 20, height: 25, refresh: '30m' },
   calendar: { width: 30, height: 40, refresh: '5m' },
+  clock: {
+    width: 10,
+    height: 6,
+    anchor: 'top-right',
+    widthPx: 120,
+    heightPx: 51,
+    offsetX: 16,
+    offsetY: 46,
+  },
   'drive-time': {
     width: 6,
     height: 6,
@@ -159,7 +169,6 @@ export interface DriveTimeConfig {
 export interface CalendarConfig {
   hidden?: string[];
   names?: Record<string, string>;
-  view?: 'month' | 'list';
   headerHeight?: number; // Extra height in pixels for header section (0-200)
 }
 

@@ -134,7 +134,7 @@ Widgets live in `dashboard/src/components/widgets/`. Each widget:
 - Receives `WidgetComponentProps` (panel config, optional dark/isEditMode)
 - Is lazy-loaded via `index.tsx`
 
-**Available widgets:** weather, calendar, drive-time, sun-moon, aqi, uv, kasa, wol, brightness, iframe, climate, timer, ptt, mqtt, adguard
+**Available widgets:** weather, calendar, clock, drive-time, sun-moon, aqi, uv, kasa, wol, brightness, iframe, climate, timer, ptt, mqtt, adguard
 
 ### Frameless Widgets
 
@@ -170,3 +170,7 @@ The standalone apps share the same backend (home-relay) but have their own UI op
 - **Optional props** in interfaces for props that aren't always needed
 - **Semantic tokens only** - no hardcoded colors
 - **Remove unused imports** - lint enforces this
+- **Update READMEs** - after adding/removing features, check and update:
+  - `readmes/*.md` - per-app documentation (linked from main README)
+  - `apps/*/README.md` - app-specific docs
+  - `apps/*/public/config/README.md` - config documentation (if applicable)

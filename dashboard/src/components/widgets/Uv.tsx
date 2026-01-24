@@ -290,10 +290,10 @@ export default function Uv({ panel }: WidgetComponentProps) {
           </span>
           <button
             onClick={() => setShowSettings(true)}
-            className="text-text-muted hover:text-text-secondary text-sm leading-none"
+            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
             title="Settings"
           >
-            <Settings size={12} />
+            <Settings size={14} className="text-text-muted" />
           </button>
         </div>
 

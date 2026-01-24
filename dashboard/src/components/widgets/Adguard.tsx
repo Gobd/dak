@@ -245,10 +245,10 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           setSettingsForm(config);
           setShowSettings(true);
         }}
-        className="absolute top-0 right-0 p-1 rounded opacity-0 hover:opacity-100 transition-opacity hover:bg-surface-sunken/50"
+        className="absolute top-0 right-0 p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
         title="Settings"
       >
-        <Settings size={12} className="text-text-muted" />
+        <Settings size={14} className="text-text-muted" />
       </button>
 
       {/* Control menu */}
@@ -267,10 +267,10 @@ export default function Adguard({ panel }: WidgetComponentProps) {
                 setSettingsForm(config);
                 setShowSettings(true);
               }}
-              className="p-2 rounded hover:bg-border"
+              className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
               title="Settings"
             >
-              <Settings size={16} className="text-text-muted" />
+              <Settings size={14} className="text-text-muted" />
             </button>
             <Button onClick={() => setShowMenu(false)}>Cancel</Button>
           </>
