@@ -262,15 +262,12 @@ export default function DriveTime() {
       {/* Trigger button */}
       <button
         onClick={() => (hasRoutes ? setFloatingOpen(true) : setShowManager(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40"
+        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
-        <Car
-          size={24}
-          className={hasActiveData ? 'text-success' : hasRoutes ? 'text-accent' : 'text-text-muted'}
-        />
+        <Car size={24} className={hasActiveData ? 'text-success' : hasRoutes ? 'text-accent' : 'text-text-muted'} />
         {hasRoutes && (
-          <span className="absolute top-0 right-0 bg-accent text-text text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-accent text-text text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
             {routes.length}
           </span>
         )}
@@ -289,17 +286,17 @@ export default function DriveTime() {
             onTouchStart={handleDragStart}
           >
             <span className="text-sm font-medium text-text-secondary dark:text-text">Traffic</span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowManager(true)}
-                className="p-1 rounded hover:bg-surface-sunken"
+                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setFloatingOpen(false)}
-                className="p-1 rounded hover:bg-surface-sunken"
+                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Close"
               >
                 <X className="w-4 h-4" />
