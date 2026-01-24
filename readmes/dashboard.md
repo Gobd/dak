@@ -16,7 +16,8 @@ Kiosk dashboard for Raspberry Pi with customizable widget layouts and smart home
 | Widget         | Description                                                       |
 | -------------- | ----------------------------------------------------------------- |
 | **Weather**    | Current conditions, temperature, humidity, and multi-day forecast |
-| **Calendar**   | Month or list view with Google Calendar integration               |
+| **Calendar**   | Month view with Google Calendar integration                       |
+| **Clock**      | Time and date display with configurable format                    |
 | **Drive Time** | Commute estimates with traffic via Google Maps API                |
 | **Sun/Moon**   | Sunrise, sunset, and moon phase                                   |
 | **AQI**        | Air quality index with health recommendations                     |

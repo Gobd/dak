@@ -73,6 +73,7 @@ These are installed to `~/scripts/` on the kiosk:
 | Widget       | Description                                    |
 | ------------ | ---------------------------------------------- |
 | `calendar`   | Google Calendar (OAuth, auto-refreshes tokens) |
+| `clock`      | Time and date display                          |
 | `weather`    | NWS weather forecast                           |
 | `climate`    | Indoor/outdoor temp & humidity (Zigbee)        |
 | `timer`      | Countdown timers (voice + touch UI)            |

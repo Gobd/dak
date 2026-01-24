@@ -56,18 +56,19 @@ Each panel supports:
 
 ### Widget Types
 
-| Type         | Description                | Args                               |
-| ------------ | -------------------------- | ---------------------------------- |
-| `calendar`   | Google Calendar            | `showTime: boolean`                |
-| `weather`    | NWS Weather forecast       | `layout: "horizontal"\|"vertical"` |
-| `uv`         | UV Index chart             | `safeThreshold: number`            |
-| `aqi`        | Air Quality Index chart    | -                                  |
-| `sun-moon`   | Sunrise/sunset, moon phase | -                                  |
-| `drive-time` | Commute time overlay       | -                                  |
-| `kasa`       | Kasa smart device toggles  | -                                  |
-| `wol`        | Wake on LAN                | -                                  |
-| `brightness` | Auto-brightness settings   | -                                  |
-| `iframe`     | Embedded URL               | `src: string`                      |
+| Type         | Description                | Args                                                                            |
+| ------------ | -------------------------- | ------------------------------------------------------------------------------- |
+| `calendar`   | Google Calendar            | `weekStart: "sunday"\|"monday"`, `weeks: number`                                |
+| `clock`      | Time and date display      | `use24Hour`, `showSeconds`, `showDate`, `showWeekday`, `showYear` (all boolean) |
+| `weather`    | NWS Weather forecast       | `layout: "horizontal"\|"vertical"`                                              |
+| `uv`         | UV Index chart             | `safeThreshold: number`                                                         |
+| `aqi`        | Air Quality Index chart    | -                                                                               |
+| `sun-moon`   | Sunrise/sunset, moon phase | -                                                                               |
+| `drive-time` | Commute time overlay       | -                                                                               |
+| `kasa`       | Kasa smart device toggles  | -                                                                               |
+| `wol`        | Wake on LAN                | -                                                                               |
+| `brightness` | Auto-brightness settings   | -                                                                               |
+| `iframe`     | Embedded URL               | `src: string`                                                                   |
 
 ### brightness
 
