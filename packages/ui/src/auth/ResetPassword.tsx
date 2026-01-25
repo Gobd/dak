@@ -51,12 +51,9 @@ export function ResetPassword({ appName, useAuthStore, useThemeStore }: ResetPas
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface p-4">
-      <button
-        onClick={toggle}
-        className="absolute top-4 right-4 p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
-      >
+      <Button variant="ghost" size="icon" onClick={toggle} className="absolute top-4 right-4">
         {dark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
+      </Button>
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8 text-text">{appName}</h1>
         {success ? (

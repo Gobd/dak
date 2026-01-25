@@ -72,12 +72,9 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
             </Link>
           </div>
         </form>
-        <button
-          onClick={toggle}
-          className="mt-6 mx-auto flex items-center justify-center p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
-        >
+        <Button variant="ghost" size="icon" onClick={toggle} className="mt-6 mx-auto">
           {dark ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        </Button>
       </div>
     </div>
   );

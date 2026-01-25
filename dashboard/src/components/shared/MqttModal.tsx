@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { RefreshCw, Pencil, Trash2, Plus, X, Check, ExternalLink } from 'lucide-react';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
-import { Modal, Button, Spinner, Alert, Card } from '@dak/ui';
+import { Modal, Button, Spinner, Alert, Card, Input } from '@dak/ui';
 import {
   client,
   listDevicesMqttDevicesGet,
@@ -224,8 +224,9 @@ export function MqttModal() {
                 {editingDevice === device.friendly_name ? (
                   // Edit Mode
                   <div className="flex items-center gap-2">
-                    <input
-                      type="text"
+                    <Input
+                      size="sm"
+                      inline
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => {
@@ -235,7 +236,7 @@ export function MqttModal() {
                           setEditName('');
                         }
                       }}
-                      className="flex-1 px-2 py-1 rounded border bg-surface-raised border-border"
+                      className="flex-1"
                       autoFocus
                     />
                     <Button

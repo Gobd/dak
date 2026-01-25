@@ -1038,8 +1038,9 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                       style={{ backgroundColor: cal.backgroundColor }}
                     />
                     <div className="flex-1 min-w-0">
-                      <input
-                        type="text"
+                      <Input
+                        size="sm"
+                        inline
                         value={calendarNames[cal.id] ?? ''}
                         onChange={(e) => {
                           const newNames = { ...calendarNames };
@@ -1051,7 +1052,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                           updateCalendar({ names: newNames });
                         }}
                         placeholder="Custom name"
-                        className="w-full px-2 py-1 text-sm rounded bg-surface-sunken border border-border placeholder:text-text-muted"
                       />
                       <div className="text-xs text-text-muted mt-0.5 truncate">{cal.summary}</div>
                     </div>

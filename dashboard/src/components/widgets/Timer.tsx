@@ -546,12 +546,13 @@ export default function Timer() {
                       <div className="flex-1 min-w-0">
                         {editingId === timer.id ? (
                           <div className="flex items-center gap-1">
-                            <input
-                              type="text"
+                            <Input
+                              size="sm"
+                              inline
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                              className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
+                              className="flex-1 min-w-0"
                               autoFocus
                             />
                             <Button
@@ -668,12 +669,13 @@ export default function Timer() {
                     <div className="flex-1 min-w-0">
                       {editingId === sw.id ? (
                         <div className="flex items-center gap-1">
-                          <input
-                            type="text"
+                          <Input
+                            size="sm"
+                            inline
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                            className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
+                            className="flex-1 min-w-0"
                             autoFocus
                           />
                           <Button
