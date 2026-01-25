@@ -1,7 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact, Input, Button, Card } from '@dak/ui';
+import {
+  ConfirmModal,
+  Modal,
+  DateTimePicker,
+  NumberPickerCompact,
+  Input,
+  Button,
+  Card,
+} from '@dak/ui';
 import {
   Plus,
   Clock,
@@ -206,11 +214,7 @@ export function AsNeeded() {
           {medsByPerson.map(({ person, meds: personMeds }) => {
             const isExpanded = expandedPersons.has(person.id);
             return (
-              <Card
-                key={person.id}
-                padding="none"
-                className="shadow-sm overflow-hidden"
-              >
+              <Card key={person.id} padding="none" className="shadow-sm overflow-hidden">
                 <Button
                   variant="ghost"
                   onClick={() => togglePerson(person.id)}

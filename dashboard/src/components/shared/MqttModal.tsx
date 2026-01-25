@@ -215,7 +215,12 @@ export function MqttModal() {
         {devices.length > 0 && (
           <div className="space-y-2">
             {devices.map((device) => (
-              <Card key={device.ieee_address} variant="sunken" padding="sm" className="bg-surface-sunken/40">
+              <Card
+                key={device.ieee_address}
+                variant="sunken"
+                padding="sm"
+                className="bg-surface-sunken/40"
+              >
                 {editingDevice === device.friendly_name ? (
                   // Edit Mode
                   <div className="flex items-center gap-2">

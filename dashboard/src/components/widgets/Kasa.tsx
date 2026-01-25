@@ -14,7 +14,17 @@ import {
   Edit2,
 } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge, Spinner, Alert, Slider } from '@dak/ui';
+import {
+  Modal,
+  Button,
+  ConfirmModal,
+  TimePickerCompact,
+  Toggle,
+  Badge,
+  Spinner,
+  Alert,
+  Slider,
+} from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,

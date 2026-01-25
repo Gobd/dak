@@ -1,10 +1,12 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode, type CSSProperties } from 'react';
 
 interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'default' | 'selected' | 'outline';
   size?: 'sm' | 'md';
   onRemove?: () => void;
+  /** Custom color (hex) - overrides variant styling */
+  color?: string;
 }
 
 const variantClasses = {
@@ -20,15 +22,27 @@ const sizeClasses = {
 
 export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
   (
-    { children, variant = 'default', size = 'md', onRemove, className = '', onClick, ...props },
+    { children, variant = 'default', size = 'md', onRemove, color, className = '', onClick, style, ...props },
     ref,
   ) => {
+    // When custom color is provided, use it for background (with alpha) and text
+    const customStyle: CSSProperties | undefined = color
+      ? {
+          backgroundColor: color + '33', // 20% opacity
+          color: color,
+          ...style,
+        }
+      : style;
+
+    const colorClasses = color ? '' : variantClasses[variant];
+
     return (
       <button
         ref={ref}
         type="button"
         onClick={onClick}
-        className={`inline-flex items-center font-medium rounded-full transition-colors ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        className={`inline-flex items-center font-medium rounded-full transition-colors ${colorClasses} ${sizeClasses[size]} ${className}`}
+        style={customStyle}
         {...props}
       >
         {children}
@@ -39,7 +53,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
               e.stopPropagation();
               onRemove();
             }}
-            className="ml-0.5 hover:text-text"
+            className="ml-0.5 hover:opacity-70"
           >
             ×
           </span>

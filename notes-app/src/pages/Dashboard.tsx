@@ -17,7 +17,7 @@ import { DesktopSidebar } from '../components/DesktopSidebar';
 import { MobileHeader } from '../components/MobileHeader';
 import { NoteEditor } from '../components/NoteEditor';
 import { NotesList } from '../components/NotesList';
-import { Button, ConfirmModal, SearchInput, Spinner } from '@dak/ui';
+import { Button, ConfirmModal, SearchInput, Spinner, Chip } from '@dak/ui';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
@@ -387,23 +387,14 @@ export function Dashboard() {
         />
         {/* Active Tag Filter */}
         {selectedTagId && (
-          <Button
-            variant="ghost"
+          <Chip
             size="sm"
-            onClick={() => setSelectedTagId(null)}
-            className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
+            color={tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b'}
+            onRemove={() => setSelectedTagId(null)}
+            className="mx-4 mt-2 self-start"
           >
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{
-                backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
-              }}
-            />
-            <span className="text-sm text-text">
-              {tags.find((t) => t.id === selectedTagId)?.name}
-            </span>
-            <span className="text-sm ml-0.5 text-text-muted">×</span>
-          </Button>
+            {tags.find((t) => t.id === selectedTagId)?.name}
+          </Chip>
         )}
         {/* Mobile Sort Options */}
         <div className="px-4 py-2 border-b border-border">
@@ -645,23 +636,14 @@ export function Dashboard() {
 
           {/* Active Tag Filter */}
           {selectedTagId && (
-            <Button
-              variant="ghost"
+            <Chip
               size="sm"
-              onClick={() => setSelectedTagId(null)}
-              className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
+              color={tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b'}
+              onRemove={() => setSelectedTagId(null)}
+              className="mx-4 mt-2 self-start"
             >
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor: tags.find((t) => t.id === selectedTagId)?.color || '#f59e0b',
-                }}
-              />
-              <span className="text-sm text-text">
-                {tags.find((t) => t.id === selectedTagId)?.name}
-              </span>
-              <span className="text-sm ml-0.5 text-text-muted">×</span>
-            </Button>
+              {tags.find((t) => t.id === selectedTagId)?.name}
+            </Chip>
           )}
 
           {/* Sort Options */}

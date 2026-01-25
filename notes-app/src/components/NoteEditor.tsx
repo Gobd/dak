@@ -1,4 +1,4 @@
-import { Button, ConfirmModal } from '@dak/ui';
+import { Button, ConfirmModal, Chip } from '@dak/ui';
 import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor, type RichNoteEditorRef } from './RichNoteEditor';
@@ -19,7 +19,6 @@ import {
   Pin,
   SquareCheck,
   Trash2,
-  X,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -357,20 +356,15 @@ export function NoteEditor({
         <div className="flex items-center flex-wrap gap-2">
           {/* Current tags */}
           {noteTags.map((tag) => (
-            <Button
+            <Chip
               key={tag.id}
-              variant="ghost"
               size="sm"
-              onClick={() => onRemoveTag?.(tag.id)}
-              className="flex items-center gap-1 px-2 py-1 h-auto rounded-full"
-              style={{ backgroundColor: (tag.color || '#71717a') + '33' }}
+              color={tag.color || '#71717a'}
+              onRemove={() => onRemoveTag?.(tag.id)}
             >
-              <Hash size={12} color={tag.color || '#71717a'} />
-              <span className="text-sm" style={{ color: tag.color || '#71717a' }}>
-                {tag.name}
-              </span>
-              <X size={12} color={tag.color || '#71717a'} />
-            </Button>
+              <Hash size={12} />
+              {tag.name}
+            </Chip>
           ))}
 
           {/* Inline tag input */}
@@ -414,23 +408,19 @@ export function NoteEditor({
                 )
                 .slice(0, 8)
                 .map((tag) => (
-                  <Button
+                  <Chip
                     key={tag.id}
-                    variant="ghost"
                     size="sm"
+                    color={tag.color || '#71717a'}
                     onClick={() => {
                       onAddTag?.(tag.id);
                       setNewTagName('');
                       showTagPicker.setFalse();
                     }}
-                    className="flex items-center gap-1 px-2 py-1 h-auto rounded-full"
-                    style={{ backgroundColor: (tag.color || '#71717a') + '33' }}
                   >
-                    <Hash size={12} color={tag.color || '#71717a'} />
-                    <span className="text-sm" style={{ color: tag.color || '#71717a' }}>
-                      {tag.name}
-                    </span>
-                  </Button>
+                    <Hash size={12} />
+                    {tag.name}
+                  </Chip>
                 ))}
             </div>
           </div>

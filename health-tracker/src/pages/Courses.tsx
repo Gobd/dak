@@ -224,11 +224,7 @@ export function Courses() {
             const dates = Object.keys(dosesByDate).sort();
 
             return (
-              <Card
-                key={course.id}
-                padding="none"
-                className="shadow-sm overflow-hidden"
-              >
+              <Card key={course.id} padding="none" className="shadow-sm overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
