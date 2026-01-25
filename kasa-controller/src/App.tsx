@@ -1,28 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Settings as SettingsIcon, Power, Sun, Moon } from 'lucide-react';
+import { useDarkMode } from '@dak/hooks';
 import DeviceList from './components/DeviceList';
 import Settings from './components/Settings';
 
 type View = 'devices' | 'settings';
 
-function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem('kasa-dark-mode');
-    if (stored !== null) return stored === 'true';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('kasa-dark-mode', String(isDark));
-  }, [isDark]);
-
-  return [isDark, setIsDark] as const;
-}
-
 export default function App() {
   const [view, setView] = useState<View>('devices');
-  const [isDark, setIsDark] = useDarkMode();
+  const [isDark, setIsDark] = useDarkMode('kasa-dark-mode');
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">

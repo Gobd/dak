@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Thermometer,
@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { useDarkMode } from '@dak/hooks';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -37,21 +38,6 @@ interface ClimateData {
 }
 
 type View = 'climate' | 'settings';
-
-function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem('climate-dark-mode');
-    if (stored !== null) return stored === 'true';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('climate-dark-mode', String(isDark));
-  }, [isDark]);
-
-  return [isDark, setIsDark] as const;
-}
 
 function celsiusToFahrenheit(c: number): number {
   return (c * 9) / 5 + 32;
@@ -242,7 +228,7 @@ function ClimateView() {
 
 export default function App() {
   const [view, setView] = useState<View>('climate');
-  const [isDark, setIsDark] = useDarkMode();
+  const [isDark, setIsDark] = useDarkMode('climate-dark-mode');
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">

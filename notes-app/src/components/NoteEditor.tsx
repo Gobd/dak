@@ -1,5 +1,5 @@
 import { ConfirmModal } from '@dak/ui';
-import { useToggle } from '@dak/hooks';
+import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor, type RichNoteEditorRef } from './RichNoteEditor';
 import { useUserStore } from '../stores/user-store';
@@ -71,7 +71,7 @@ export function NoteEditor({
 
   const showTagPicker = useToggle(false);
   const [newTagName, setNewTagName] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copyToClipboard, copied] = useCopyToClipboard();
   const isReadOnly = useToggle(false);
   const showHeadingDropdown = useToggle(false);
   const showCheckboxDropdown = useToggle(false);
@@ -80,11 +80,9 @@ export function NoteEditor({
 
   const maxContentLength = planLimits.maxNoteLength;
 
-  const handleCopyMarkdown = async () => {
+  const handleCopyMarkdown = () => {
     if (note.content) {
-      await navigator.clipboard.writeText(note.content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      copyToClipboard(note.content);
     }
   };
 
@@ -204,7 +202,9 @@ export function NoteEditor({
             <button
               onClick={() => showCheckboxDropdown.toggle()}
               className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+                showCheckboxDropdown.value
+                  ? 'bg-warning/20 dark:bg-warning/20'
+                  : 'bg-surface-sunken'
               }`}
             >
               <SquareCheck

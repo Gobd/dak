@@ -12,6 +12,7 @@
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
+    "@dak/hooks": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

@@ -80,6 +80,9 @@ importers:
 
   climate-display:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.19(react@19.2.3)
@@ -123,6 +126,9 @@ importers:
       '@dak/api-client':
         specifier: workspace:*
         version: link:../packages/api-client
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/kasa-client':
         specifier: workspace:*
         version: link:../packages/kasa-client
@@ -175,6 +181,9 @@ importers:
 
   family-chores:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui
@@ -226,6 +235,9 @@ importers:
 
   health-tracker:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui
@@ -275,6 +287,9 @@ importers:
 
   kasa-controller:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/kasa-client':
         specifier: workspace:*
         version: link:../packages/kasa-client
@@ -321,6 +336,9 @@ importers:
 
   notes-app:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui

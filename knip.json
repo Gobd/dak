@@ -25,6 +25,9 @@
     "packages/api-client": {
       "ignore": ["src/generated/**", "openapi-ts.config.ts"]
     },
+    "packages/hooks": {
+      "includeEntryExports": true
+    },
     "packages/kasa-client": {},
     "packages/ui": {},
     "packages/vite-shared-react": {

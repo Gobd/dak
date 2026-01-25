@@ -402,10 +402,7 @@ export function Dashboard() {
         )}
         {/* Mobile Sort Options */}
         <div className="px-4 py-2 border-b border-border">
-          <button
-            onClick={() => showSortMenu.toggle()}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
             <ArrowUpDown size={14} className="text-text-muted" />
             <span className="text-xs text-text-muted">
               {sortBy === 'updated'
@@ -635,10 +632,7 @@ export function Dashboard() {
 
           {/* Sort Options */}
           <div className="px-4 py-2 border-b border-border">
-            <button
-              onClick={() => showSortMenu.toggle()}
-              className="flex items-center gap-1"
-            >
+            <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
               <ArrowUpDown size={14} className="text-text-muted" />
               <span className="text-xs text-text-muted">
                 {sortBy === 'updated'

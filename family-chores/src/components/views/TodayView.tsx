@@ -181,7 +181,13 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
                         {memberCompleted}/{memberTasks.length} done
                       </p>
                     </div>
-                    <ProgressRing value={memberPercent} size={40} strokeWidth={3} showValue colorByProgress />
+                    <ProgressRing
+                      value={memberPercent}
+                      size={40}
+                      strokeWidth={3}
+                      showValue
+                      colorByProgress
+                    />
                   </div>
 
                   {/* Tasks */}

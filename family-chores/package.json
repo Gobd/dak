@@ -12,6 +12,7 @@
     "analyze": "ANALYZE=true vite build"
   },
   "dependencies": {
+    "@dak/hooks": "workspace:*",
     "@dak/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "date-fns": "catalog:",
