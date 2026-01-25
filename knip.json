@@ -29,7 +29,10 @@
       "includeEntryExports": true
     },
     "packages/kasa-client": {},
-    "packages/ui": {},
+    "packages/ui": {
+      "includeEntryExports": true,
+      "ignore": ["**/*.stories.tsx"]
+    },
     "packages/vite-shared-react": {
       "ignoreDependencies": ["react", "react-dom", "zustand"],
       "ignore": ["fonts/**"]

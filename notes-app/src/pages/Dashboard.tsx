@@ -17,8 +17,7 @@ import { DesktopSidebar } from '../components/DesktopSidebar';
 import { MobileHeader } from '../components/MobileHeader';
 import { NoteEditor } from '../components/NoteEditor';
 import { NotesList } from '../components/NotesList';
-import { SearchBar } from '../components/SearchBar';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, SearchInput } from '@dak/ui';
 import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { useAuthStore } from '../stores/auth-store';
@@ -381,7 +380,12 @@ export function Dashboard() {
           onLogout={() => showLogoutConfirm.setTrue()}
         />
         {/* Mobile Search */}
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search notes..."
+          className="mx-4 my-2"
+        />
         {/* Active Tag Filter */}
         {selectedTagId && (
           <button
@@ -609,7 +613,12 @@ export function Dashboard() {
           )}
 
           {/* Desktop Search */}
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search notes..."
+            className="mx-4 my-2"
+          />
 
           {/* Active Tag Filter */}
           {selectedTagId && (

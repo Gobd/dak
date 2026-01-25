@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal } from '@dak/ui';
+import { Modal, Button, ConfirmModal, Badge } from '@dak/ui';
 import {
   client,
   healthHealthGet,
@@ -256,11 +256,9 @@ export default function Wol({ panel }: WidgetComponentProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded ${online ? 'bg-success/30 text-success' : 'bg-surface-sunken text-text-muted'}`}
-                      >
+                      <Badge variant={online ? 'success' : 'default'} size="sm">
                         {online ? 'Online' : 'Offline'}
-                      </span>
+                      </Badge>
                       {!online && (
                         <button
                           onClick={() => handleWake(device)}

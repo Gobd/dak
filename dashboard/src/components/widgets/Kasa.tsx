@@ -14,7 +14,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact } from '@dak/ui';
+import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge } from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,
@@ -533,15 +533,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs px-1.5 py-0.5 rounded ${
-                              rule.action === 'on'
-                                ? 'bg-success/30 text-success'
-                                : 'bg-danger/30 text-danger'
-                            }`}
-                          >
+                          <Badge variant={rule.action === 'on' ? 'success' : 'danger'} size="sm">
                             {rule.action.toUpperCase()}
-                          </span>
+                          </Badge>
                           <span className="font-medium">{formatScheduleTime(rule)}</span>
                         </div>
                         <div className="text-xs text-text-muted mt-0.5">
@@ -551,8 +545,10 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() =>
+                        <Toggle
+                          size="sm"
+                          checked={rule.enabled}
+                          onChange={() =>
                             scheduleMutation.mutate({
                               type: 'toggle',
                               ip: selectedDevice.ip,
@@ -560,17 +556,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                               enabled: !rule.enabled,
                             })
                           }
-                          className={`w-8 h-4 rounded-full transition-colors ${
-                            rule.enabled ? 'bg-success' : 'bg-surface'
-                          }`}
-                          title={rule.enabled ? 'Disable' : 'Enable'}
-                        >
-                          <div
-                            className={`w-3 h-3 rounded-full bg-surface shadow transform transition-transform ${
-                              rule.enabled ? 'translate-x-4' : 'translate-x-0.5'
-                            }`}
-                          />
-                        </button>
+                        />
                         <button
                           onClick={() => {
                             setEditingRule(rule);
