@@ -101,12 +101,13 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
           <div className="flex-1">
             <p className="text-sm text-text-muted">
               Shared with you by{' '}
-              <button
+              <Button
+                variant="ghost"
                 onClick={hasEmail ? showOwnerEmail.toggle : undefined}
-                className="font-medium text-accent"
+                className="font-medium text-accent p-0 h-auto inline"
               >
                 {ownerDisplay}
-              </button>
+              </Button>
             </p>
             {showOwnerEmail.value && hasEmail && (
               <p className="text-xs mt-0.5 text-text-muted">{note.owner_email}</p>
@@ -133,11 +134,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
         </div>
 
         {onTogglePrivate && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onTogglePrivate(!note.is_private)}
-          >
+          <Button variant="secondary" size="sm" onClick={() => onTogglePrivate(!note.is_private)}>
             {note.is_private ? 'Make Shared' : 'Make Private'}
           </Button>
         )}

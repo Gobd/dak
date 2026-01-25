@@ -13,7 +13,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { useDarkMode } from '@dak/hooks';
-import { Spinner } from '@dak/ui';
+import { Spinner, Button } from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -188,12 +188,9 @@ function ClimateView() {
           <span className="text-4xl mb-3 block">⚠️</span>
           <span className="text-danger text-lg">Failed to load climate data</span>
           <p className="text-danger/70 text-sm mt-2">Check relay URL in settings</p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-4 py-2 bg-danger-dark hover:bg-danger-hover rounded-lg text-sm"
-          >
+          <Button onClick={() => refetch()} variant="danger" size="sm" className="mt-4">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -203,14 +200,15 @@ function ClimateView() {
     <div className="flex-1 p-6 space-y-6 overflow-auto">
       {/* Refresh button */}
       <div className="flex justify-end">
-        <button
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="p-2 rounded-lg bg-surface-raised text-text-secondary hover:bg-border hover:text-text disabled:opacity-50 transition-colors"
           aria-label="Refresh"
         >
           {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-5 h-5" />}
-        </button>
+        </Button>
       </div>
 
       {/* Sensor cards */}
@@ -236,35 +234,30 @@ export default function App() {
       <header className="bg-surface-raised border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-text">Climate</h1>
         <nav className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
+            size="icon"
             onClick={() => setIsDark(!isDark)}
-            className="p-2 rounded-lg bg-surface-sunken text-text-secondary hover:bg-border transition-colors"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={view === 'climate' ? 'primary' : 'secondary'}
+            size="icon"
             onClick={() => setView('climate')}
-            className={`p-2 rounded-lg transition-colors ${
-              view === 'climate'
-                ? 'bg-accent text-text'
-                : 'bg-surface-sunken text-text-secondary hover:bg-border'
-            }`}
             aria-label="Climate"
           >
             <Home className="w-5 h-5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={view === 'settings' ? 'primary' : 'secondary'}
+            size="icon"
             onClick={() => setView('settings')}
-            className={`p-2 rounded-lg transition-colors ${
-              view === 'settings'
-                ? 'bg-accent text-text'
-                : 'bg-surface-sunken text-text-secondary hover:bg-border'
-            }`}
             aria-label="Settings"
           >
             <SettingsIcon className="w-5 h-5" />
-          </button>
+          </Button>
         </nav>
       </header>
 

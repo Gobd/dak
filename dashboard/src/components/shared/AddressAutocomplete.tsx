@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Spinner } from '@dak/ui';
+import { Spinner, Button } from '@dak/ui';
 import {
   fetchPlacesAutocomplete,
   fetchPlaceDetails,
@@ -112,17 +112,17 @@ export function AddressAutocomplete({
             const secondary = parts.slice(1).join(', ');
 
             return (
-              <button
+              <Button
                 key={prediction.placeId}
+                variant="ghost"
                 type="button"
-                className="w-full px-3 py-2 text-left hover:bg-surface-sunken
-                           transition-colors cursor-pointer"
+                className="w-full px-3 py-2 h-auto justify-start rounded-none"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelectPrediction(prediction)}
               >
                 <span className="font-medium text-text">{main}</span>
                 {secondary && <span className="text-sm text-text-muted ml-1">{secondary}</span>}
-              </button>
+              </Button>
             );
           })}
         </div>

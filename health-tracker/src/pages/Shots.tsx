@@ -238,15 +238,27 @@ export function Shots() {
                 >
                   Log Shot
                 </Button>
-                <Button variant="secondary" onClick={() => pushNextDue(schedule.id, 1)} className="gap-1">
+                <Button
+                  variant="secondary"
+                  onClick={() => pushNextDue(schedule.id, 1)}
+                  className="gap-1"
+                >
                   <ChevronRight size={16} />
                   +1 day
                 </Button>
-                <Button variant="secondary" onClick={() => pushNextDue(schedule.id, -1)} className="gap-1">
+                <Button
+                  variant="secondary"
+                  onClick={() => pushNextDue(schedule.id, -1)}
+                  className="gap-1"
+                >
                   <ChevronLeft size={16} />
                   -1 day
                 </Button>
-                <Button variant="secondary" onClick={() => handleShowHistory(schedule.id)} className="gap-1">
+                <Button
+                  variant="secondary"
+                  onClick={() => handleShowHistory(schedule.id)}
+                  className="gap-1"
+                >
                   <History size={16} />
                   History
                 </Button>

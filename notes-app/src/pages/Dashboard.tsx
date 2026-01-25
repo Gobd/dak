@@ -407,7 +407,12 @@ export function Dashboard() {
         )}
         {/* Mobile Sort Options */}
         <div className="px-4 py-2 border-b border-border">
-          <Button variant="ghost" size="sm" onClick={() => showSortMenu.toggle()} className="flex items-center gap-1 p-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => showSortMenu.toggle()}
+            className="flex items-center gap-1 p-0"
+          >
             <ArrowUpDown size={14} className="text-text-muted" />
             <span className="text-xs text-text-muted">
               {sortBy === 'updated'
@@ -522,7 +527,11 @@ export function Dashboard() {
           {/* Notes Header */}
           {isSelectionMode.value ? (
             <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border bg-surface-sunken">
-              <Button variant="ghost" onClick={toggleSelectAll} className="flex items-center gap-2 p-0">
+              <Button
+                variant="ghost"
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 p-0"
+              >
                 {allOwnedSelected ? (
                   <SquareCheck size={18} className="text-warning" />
                 ) : (
@@ -547,7 +556,12 @@ export function Dashboard() {
           ) : (
             <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border">
               {!showNavSidebar && (
-                <Button variant="ghost" size="icon-sm" onClick={() => setShowNavSidebar(true)} className="mr-2">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setShowNavSidebar(true)}
+                  className="mr-2"
+                >
                   <PanelLeft size={18} className="text-text-muted" />
                 </Button>
               )}
@@ -570,7 +584,12 @@ export function Dashboard() {
                   <ChevronDown size={16} className="text-text-muted" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon-sm" onClick={enterSelectionMode} className="mr-1 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={enterSelectionMode}
+                className="mr-1 shrink-0"
+              >
                 <SquareCheck size={18} className="text-text-muted" />
               </Button>
               <div className="relative z-10">
@@ -647,7 +666,12 @@ export function Dashboard() {
 
           {/* Sort Options */}
           <div className="px-4 py-2 border-b border-border">
-            <Button variant="ghost" size="sm" onClick={() => showSortMenu.toggle()} className="flex items-center gap-1 p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => showSortMenu.toggle()}
+              className="flex items-center gap-1 p-0"
+            >
               <ArrowUpDown size={14} className="text-text-muted" />
               <span className="text-xs text-text-muted">
                 {sortBy === 'updated'
@@ -708,11 +732,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
-                <Button
-                  variant="secondary"
-                  size="icon-sm"
-                  onClick={() => setShowNavSidebar(true)}
-                >
+                <Button variant="secondary" size="icon-sm" onClick={() => setShowNavSidebar(true)}>
                   <PanelLeft size={18} className="text-text-muted" />
                 </Button>
               )}

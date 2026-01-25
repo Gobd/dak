@@ -334,13 +334,14 @@ export default function DriveTime() {
                   const isActive = isInTimeWindow(route);
 
                   return (
-                    <button
+                    <Button
                       key={getRouteId(route)}
+                      variant="ghost"
                       onClick={() => setDetailRoute({ route, driveData })}
-                      className={`w-full text-left flex items-center justify-between p-2 rounded-lg transition-colors ${
+                      className={`w-full text-left flex items-center justify-between p-2 h-auto ${
                         isActive
-                          ? 'bg-surface-sunken/50 bg-surface-sunken/50 hover:bg-surface-sunken/50/50'
-                          : 'bg-surface-sunken/50 bg-surface-raised/50 opacity-60 hover:opacity-80'
+                          ? 'bg-surface-sunken/50 hover:bg-surface-sunken/50'
+                          : 'bg-surface-raised/50 opacity-60 hover:opacity-80'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -361,7 +362,7 @@ export default function DriveTime() {
                           <span className="text-xs text-text-muted">+{delayMinutes}</span>
                         )}
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </>
@@ -1005,25 +1006,26 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                       form.via[0] === `${alt.waypointCoords[0].lat},${alt.waypointCoords[0].lng}`);
 
                   return (
-                    <button
+                    <Button
                       key={alt.index}
+                      variant={isSelected ? 'primary' : 'ghost'}
                       onClick={() => selectRoute(alt)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        isSelected
-                          ? 'bg-accent text-text'
-                          : 'bg-surface-sunken/50 bg-surface-sunken/30 hover:bg-surface-sunken/50/30'
-                      }`}
+                      className="w-full text-left p-3 h-auto"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{alt.summary}</span>
-                        <span className={`text-sm ${isSelected ? 'text-info' : 'text-text-muted'}`}>
-                          {alt.distance}
-                        </span>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{alt.summary}</span>
+                          <span
+                            className={`text-sm ${isSelected ? 'text-info' : 'text-text-muted'}`}
+                          >
+                            {alt.distance}
+                          </span>
+                        </div>
+                        <div className={`text-xs ${isSelected ? 'text-info' : 'text-text-muted'}`}>
+                          {alt.durationInTraffic} (with traffic)
+                        </div>
                       </div>
-                      <div className={`text-xs ${isSelected ? 'text-info' : 'text-text-muted'}`}>
-                        {alt.durationInTraffic} (with traffic)
-                      </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -1036,17 +1038,14 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           <label className="block text-sm font-medium mb-1">Days</label>
           <div className="flex gap-1">
             {DAY_NAMES.map((day, i) => (
-              <button
+              <Button
                 key={day}
+                variant={form.days.includes(day) ? 'primary' : 'secondary'}
                 onClick={() => toggleDay(day)}
-                className={`w-8 h-8 rounded text-sm font-medium ${
-                  form.days.includes(day)
-                    ? 'bg-accent text-text'
-                    : 'bg-surface-sunken text-text-secondary text-text-muted'
-                }`}
+                className="w-8 h-8 p-0"
               >
                 {DAY_LABELS[i]}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

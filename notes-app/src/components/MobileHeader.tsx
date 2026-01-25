@@ -108,7 +108,11 @@ export function MobileHeader({
       {isPublicOnly ? (
         <span className="text-xl font-bold text-text">Notes</span>
       ) : (
-        <Button variant="ghost" onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2 p-0">
+        <Button
+          variant="ghost"
+          onClick={toggleShowPrivate}
+          className="flex items-center gap-1 py-1 pr-2 p-0"
+        >
           {!showPrivate && <Lock size={16} className="text-warning" />}
           <span className="text-xl font-bold text-text">
             {showPrivate ? 'All Notes' : 'Public'}

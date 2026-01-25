@@ -108,7 +108,9 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                         color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                       }`}
                       style={{ backgroundColor: c }}
-                    />
+                    >
+                      {'\u00A0'}
+                    </Button>
                   ))}
                 </div>
                 <div className="flex gap-2">
@@ -137,11 +139,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   size="lg"
                 />
                 <span className="flex-1 font-medium text-text">{member.name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleEdit(member)}
-                >
+                <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(member)}>
                   <Edit2 size={18} />
                 </Button>
                 <Button
@@ -188,7 +186,9 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                     color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                   }`}
                   style={{ backgroundColor: c }}
-                />
+                >
+                  {'\u00A0'}
+                </Button>
               ))}
             </div>
             <div className="flex gap-2">

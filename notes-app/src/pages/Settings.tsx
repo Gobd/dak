@@ -439,7 +439,9 @@ export function Settings() {
                   <div className="w-full">
                     <span className="block text-base font-medium capitalize text-text">{plan}</span>
                     <span className="block text-sm mt-1 text-text-muted">
-                      {PLAN_LIMITS[plan].maxNotes === null ? 'Unlimited' : PLAN_LIMITS[plan].maxNotes}{' '}
+                      {PLAN_LIMITS[plan].maxNotes === null
+                        ? 'Unlimited'
+                        : PLAN_LIMITS[plan].maxNotes}{' '}
                       notes •{' '}
                       {PLAN_LIMITS[plan].maxSharedUsers === 0
                         ? 'No sharing'
@@ -529,7 +531,12 @@ export function Settings() {
                       className="flex items-center justify-between p-3 border-b last:border-b-0 border-border"
                     >
                       <span className="text-base flex-1 text-text">{share.shared_with_email}</span>
-                      <Button variant="ghost" size="icon-sm" onClick={() => handleRemoveShare(share.id)} className="-mr-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleRemoveShare(share.id)}
+                        className="-mr-2"
+                      >
                         <X size={18} className="text-text-muted" />
                       </Button>
                     </div>

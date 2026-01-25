@@ -83,11 +83,7 @@ export function People() {
                   >
                     <Check size={18} />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => setEditingId(null)}
-                  >
+                  <Button variant="ghost" size="icon-sm" onClick={() => setEditingId(null)}>
                     <X size={18} />
                   </Button>
                 </div>

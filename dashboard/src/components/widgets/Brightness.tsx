@@ -170,9 +170,11 @@ export default function Brightness() {
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={showModal.setTrue}
-        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
+        className="relative"
         title={`Brightness: ${currentBrightness}%`}
       >
         {isDay ? (
@@ -182,7 +184,7 @@ export default function Brightness() {
         )}
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
-      </button>
+      </Button>
 
       <Modal
         open={showModal.value}

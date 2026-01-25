@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { Button } from '@dak/ui';
 import { useVoiceResponseStore } from '../../stores/voice-response-store';
 import { useConfigStore } from '../../stores/config-store';
 
@@ -55,12 +56,14 @@ export function VoiceResponseToast() {
           )}
           <p className="text-sm leading-relaxed">{response.text}</p>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={clearResponse}
-          className="text-text-muted hover:text-text transition-colors flex-shrink-0"
+          className="text-text-muted flex-shrink-0"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

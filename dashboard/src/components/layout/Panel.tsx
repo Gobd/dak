@@ -414,22 +414,26 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
         <>
           {/* Toolbar */}
           <div className="absolute top-2 right-2 flex gap-1 z-20">
-            <button
+            <Button
+              variant="danger"
+              size="icon-sm"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => removePanel(panel.id)}
-              className="p-1.5 rounded bg-danger/80 hover:bg-danger text-text"
+              className="bg-danger/80 hover:bg-danger"
               title="Delete panel"
             >
               <Trash2 size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon-sm"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => setShowSettings(true)}
-              className="p-1.5 rounded bg-surface/80 hover:bg-surface text-text"
+              className="bg-surface/80 hover:bg-surface"
               title="Panel settings"
             >
               <Settings size={14} />
-            </button>
+            </Button>
             <div
               onMouseDown={handleDragStart}
               onTouchStart={handleDragStart}
@@ -479,26 +483,28 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setShowSettings(true);
                 setShowContextMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-text hover:bg-surface-sunken flex items-center gap-2"
+              className="w-full px-3 py-2 justify-start text-sm rounded-none"
             >
               <Settings size={14} />
               Settings
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => {
                 removePanel(panel.id);
                 setShowContextMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-sunken flex items-center gap-2"
+              className="w-full px-3 py-2 justify-start text-sm text-danger rounded-none"
             >
               <Trash2 size={14} />
               Delete
-            </button>
+            </Button>
           </div>,
           document.body,
         )}

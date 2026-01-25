@@ -237,22 +237,26 @@ export function MqttModal() {
                       className="flex-1 px-2 py-1 rounded border bg-surface-raised border-border"
                       autoFocus
                     />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={handleSaveEdit}
-                      className="p-1.5 rounded hover:bg-success/20 text-success"
+                      className="hover:bg-success/20 text-success"
                       disabled={renameMutation.isPending}
                     >
                       <Check size={16} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => {
                         setEditingDevice(null);
                         setEditName('');
                       }}
-                      className="p-1.5 rounded hover:bg-danger/20 text-danger"
+                      className="hover:bg-danger/20 text-danger"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 ) : deleteConfirm === device.friendly_name ? (
                   // Delete Confirmation
@@ -289,20 +293,23 @@ export function MqttModal() {
                       >
                         {device.type}
                       </span>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleStartEdit(device)}
-                        className="p-1.5 rounded hover:bg-surface-sunken"
                         title="Rename"
                       >
                         <Pencil size={14} />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setDeleteConfirm(device.friendly_name)}
-                        className="p-1.5 rounded hover:bg-danger/20 text-danger"
+                        className="hover:bg-danger/20 text-danger"
                         title="Remove"
                       >
                         <Trash2 size={14} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

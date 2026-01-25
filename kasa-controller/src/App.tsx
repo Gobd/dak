@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Settings as SettingsIcon, Power, Sun, Moon } from 'lucide-react';
 import { useDarkMode } from '@dak/hooks';
+import { Button } from '@dak/ui';
 import DeviceList from './components/DeviceList';
 import Settings from './components/Settings';
 
@@ -15,35 +16,30 @@ export default function App() {
       <header className="bg-surface-raised border-b border-border px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-text">Kasa Controller</h1>
         <nav className="flex gap-2">
-          <button
+          <Button
+            variant="secondary"
+            size="icon"
             onClick={() => setIsDark(!isDark)}
-            className="p-2 rounded-lg bg-surface-sunken text-text-secondary hover:bg-border transition-colors"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={view === 'devices' ? 'primary' : 'secondary'}
+            size="icon"
             onClick={() => setView('devices')}
-            className={`p-2 rounded-lg transition-colors ${
-              view === 'devices'
-                ? 'bg-accent text-text'
-                : 'bg-surface-sunken text-text-secondary hover:bg-border'
-            }`}
             aria-label="Devices"
           >
             <Power className="w-5 h-5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={view === 'settings' ? 'primary' : 'secondary'}
+            size="icon"
             onClick={() => setView('settings')}
-            className={`p-2 rounded-lg transition-colors ${
-              view === 'settings'
-                ? 'bg-accent text-text'
-                : 'bg-surface-sunken text-text-secondary hover:bg-border'
-            }`}
             aria-label="Settings"
           >
             <SettingsIcon className="w-5 h-5" />
-          </button>
+          </Button>
         </nav>
       </header>
 

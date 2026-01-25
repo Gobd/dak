@@ -585,7 +585,11 @@ export default function Timer() {
                           variant="ghost"
                           size="icon-sm"
                           onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                          className={isAdjusting ? 'bg-accent text-text' : 'text-text-muted hover:text-text hover:bg-surface-sunken'}
+                          className={
+                            isAdjusting
+                              ? 'bg-accent text-text'
+                              : 'text-text-muted hover:text-text hover:bg-surface-sunken'
+                          }
                         >
                           <TimerIcon className="w-3 h-3" />
                         </Button>
@@ -595,7 +599,11 @@ export default function Timer() {
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
-                        className={isAlerting ? 'hover:bg-danger' : 'text-text-muted hover:text-danger hover:bg-danger/10'}
+                        className={
+                          isAlerting
+                            ? 'hover:bg-danger'
+                            : 'text-text-muted hover:text-danger hover:bg-danger/10'
+                        }
                         title={isAlerting ? 'Dismiss' : 'Cancel'}
                       >
                         {isAlerting ? (

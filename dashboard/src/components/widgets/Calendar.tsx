@@ -832,22 +832,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       >
         <div className="flex items-center gap-0.5">
           {/* Month navigation - separated with gap */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handlePrevMonth}
-            title="Previous month"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handlePrevMonth} title="Previous month">
             <ChevronsLeft size={18} />
           </Button>
           <div className="w-2" /> {/* Spacer between month and week buttons */}
           {/* Week navigation */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handlePrevWeek}
-            title="Previous week"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handlePrevWeek} title="Previous week">
             <ChevronLeft size={18} />
           </Button>
           <Button
@@ -859,21 +849,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           >
             {dateRange}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleNextWeek}
-            title="Next week"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handleNextWeek} title="Next week">
             <ChevronRight size={18} />
           </Button>
           <div className="w-2" /> {/* Spacer between week and month buttons */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleNextMonth}
-            title="Next month"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handleNextMonth} title="Next month">
             <ChevronsRight size={18} />
           </Button>
           <Button

@@ -166,27 +166,57 @@ export function EditToolbar() {
         <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Add widget */}
-        <Button variant="ghost" size="icon" rounded onClick={() => setShowAddWidget(true)} title="Add widget">
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
+          onClick={() => setShowAddWidget(true)}
+          title="Add widget"
+        >
           <Plus size={20} />
         </Button>
 
         {/* Settings */}
-        <Button variant="ghost" size="icon" rounded onClick={() => setShowSettingsModal(true)} title="Settings">
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
+          onClick={() => setShowSettingsModal(true)}
+          title="Settings"
+        >
           <Settings2 size={20} />
         </Button>
 
         <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Import/Export */}
-        <Button variant="ghost" size="icon" rounded onClick={() => setShowExportModal(true)} title="Export config">
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
+          onClick={() => setShowExportModal(true)}
+          title="Export config"
+        >
           <Download size={20} />
         </Button>
 
-        <Button variant="ghost" size="icon" rounded onClick={() => setShowImportModal(true)} title="Import config">
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
+          onClick={() => setShowImportModal(true)}
+          title="Import config"
+        >
           <Upload size={20} />
         </Button>
 
-        <Button variant="ghost" size="icon" rounded onClick={() => setShowResetModal(true)} title="Reset config">
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
+          onClick={() => setShowResetModal(true)}
+          title="Reset config"
+        >
           <RotateCcw size={20} />
         </Button>
 
@@ -222,17 +252,15 @@ export function EditToolbar() {
         />
         <div className="grid gap-2 max-h-80 overflow-y-auto custom-scrollbar">
           {filteredWidgets.map(({ type, label, description }) => (
-            <button
+            <Button
               key={type}
+              variant="ghost"
               onClick={() => handleAddWidget(type)}
-              className="flex flex-col items-start p-3 rounded-lg text-left
-                         bg-surface-sunken
-                         hover:bg-border
-                         transition-colors"
+              className="flex flex-col items-start p-3 h-auto justify-start text-left bg-surface-sunken hover:bg-border"
             >
               <span className="font-medium text-text">{label}</span>
               <span className="text-sm text-text-muted">{description}</span>
-            </button>
+            </Button>
           ))}
           {filteredWidgets.length === 0 && <EmptyState title="No widgets match your search" />}
         </div>

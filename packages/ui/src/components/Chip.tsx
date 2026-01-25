@@ -19,7 +19,10 @@ const sizeClasses = {
 };
 
 export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
-  ({ children, variant = 'default', size = 'md', onRemove, className = '', onClick, ...props }, ref) => {
+  (
+    { children, variant = 'default', size = 'md', onRemove, className = '', onClick, ...props },
+    ref,
+  ) => {
     return (
       <button
         ref={ref}

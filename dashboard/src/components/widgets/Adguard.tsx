@@ -207,10 +207,12 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   return (
     <div className="w-full h-full flex items-center justify-center relative">
       {/* Main button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => showMenu.setTrue()}
         disabled={isPending}
-        className="relative p-2"
+        className="relative"
         title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
       >
         {protectionEnabled ? (
@@ -219,7 +221,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           <ShieldOff size={24} className="text-danger" />
         )}
         {(isLoading || isPending) && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
-      </button>
+      </Button>
 
       {/* Countdown text */}
       {!protectionEnabled && countdown && (
@@ -252,17 +254,19 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         title={protectionEnabled ? 'Disable Protection' : 'Protection Disabled'}
         actions={
           <>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 showMenu.setFalse();
                 setSettingsForm(config);
                 showSettings.setTrue();
               }}
-              className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+              className="opacity-70 hover:opacity-100"
               title="Settings"
             >
               <Settings size={14} className="text-text-muted" />
-            </button>
+            </Button>
             <Button onClick={() => showMenu.setFalse()}>Cancel</Button>
           </>
         }
@@ -276,14 +280,15 @@ export default function Adguard({ panel }: WidgetComponentProps) {
 
           {protectionEnabled ? (
             DURATION_OPTIONS.map((opt) => (
-              <button
+              <Button
                 key={opt.value}
+                variant="ghost"
                 onClick={() => handleDisable(opt.value)}
                 disabled={isPending}
-                className="w-full text-left px-3 py-2 rounded transition-colors hover:bg-surface-sunken/50"
+                className="w-full justify-start"
               >
                 {opt.label}
-              </button>
+              </Button>
             ))
           ) : (
             <div className="space-y-3">

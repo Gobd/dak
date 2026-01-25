@@ -212,9 +212,7 @@ export function NoteEditor({
               size="icon-sm"
               onClick={() => showCheckboxDropdown.toggle()}
               className={`flex items-center gap-0.5 flex-shrink-0 ${
-                showCheckboxDropdown.value
-                  ? 'bg-warning/20 dark:bg-warning/20'
-                  : ''
+                showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
               }`}
             >
               <SquareCheck
@@ -359,10 +357,12 @@ export function NoteEditor({
         <div className="flex items-center flex-wrap gap-2">
           {/* Current tags */}
           {noteTags.map((tag) => (
-            <button
+            <Button
               key={tag.id}
+              variant="ghost"
+              size="sm"
               onClick={() => onRemoveTag?.(tag.id)}
-              className="flex items-center gap-1 px-2 py-1 rounded-full"
+              className="flex items-center gap-1 px-2 py-1 h-auto rounded-full"
               style={{ backgroundColor: (tag.color || '#71717a') + '33' }}
             >
               <Hash size={12} color={tag.color || '#71717a'} />
@@ -370,7 +370,7 @@ export function NoteEditor({
                 {tag.name}
               </span>
               <X size={12} color={tag.color || '#71717a'} />
-            </button>
+            </Button>
           ))}
 
           {/* Inline tag input */}
@@ -414,21 +414,23 @@ export function NoteEditor({
                 )
                 .slice(0, 8)
                 .map((tag) => (
-                  <button
+                  <Button
                     key={tag.id}
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       onAddTag?.(tag.id);
                       setNewTagName('');
                       showTagPicker.setFalse();
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded-full"
+                    className="flex items-center gap-1 px-2 py-1 h-auto rounded-full"
                     style={{ backgroundColor: (tag.color || '#71717a') + '33' }}
                   >
                     <Hash size={12} color={tag.color || '#71717a'} />
                     <span className="text-sm" style={{ color: tag.color || '#71717a' }}>
                       {tag.name}
                     </span>
-                  </button>
+                  </Button>
                 ))}
             </div>
           </div>

@@ -48,17 +48,14 @@ export default function Settings() {
         </label>
         <div className="flex gap-2">
           {(['C', 'F'] as const).map((u) => (
-            <button
+            <Button
               key={u}
+              variant={unit === u ? 'primary' : 'secondary'}
               onClick={() => setUnit(u)}
-              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${
-                unit === u
-                  ? 'bg-accent text-text'
-                  : 'bg-surface-sunken text-text-secondary hover:bg-border'
-              }`}
+              className="flex-1"
             >
               °{u}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

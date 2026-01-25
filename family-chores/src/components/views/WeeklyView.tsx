@@ -68,7 +68,12 @@ export function WeeklyView() {
 
         <div className="text-center">
           <h2 className="text-lg font-semibold text-text">{format(weekStart, 'MMMM yyyy')}</h2>
-          <Button variant="ghost" size="sm" onClick={goToThisWeek} className="text-accent p-0 h-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToThisWeek}
+            className="text-accent p-0 h-auto"
+          >
             Today
           </Button>
         </div>

@@ -322,7 +322,11 @@ export function AsNeeded() {
                                   setShowTimeInput(null);
                                   setCustomTime(null);
                                 }}
-                                className={okToGive ? 'bg-success hover:bg-success-hover' : 'bg-danger-light text-danger'}
+                                className={
+                                  okToGive
+                                    ? 'bg-success hover:bg-success-hover'
+                                    : 'bg-danger-light text-danger'
+                                }
                               >
                                 Give
                               </Button>

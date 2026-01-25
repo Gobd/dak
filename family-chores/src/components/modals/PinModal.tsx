@@ -114,12 +114,7 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
 
           if (key === 'back') {
             return (
-              <Button
-                key="back"
-                variant="secondary"
-                onClick={handleBackspace}
-                className="h-16"
-              >
+              <Button key="back" variant="secondary" onClick={handleBackspace} className="h-16">
                 <Delete size={24} />
               </Button>
             );

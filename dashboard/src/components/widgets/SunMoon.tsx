@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
+import { Button } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Sun/Moon calculations based on suncalc algorithms
@@ -346,13 +347,15 @@ export default function SunMoon({ panel }: WidgetComponentProps) {
         <span className="text-xs font-semibold">
           {formatLocation(location.city, location.state) || 'Set Location'}
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setShowSettings(true)}
-          className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+          className="opacity-70 hover:opacity-100"
           title="Settings"
         >
           <Settings size={14} className="text-text-muted" />
-        </button>
+        </Button>
       </div>
 
       {/* Sun times */}

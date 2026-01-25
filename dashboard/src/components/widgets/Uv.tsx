@@ -288,13 +288,15 @@ export default function Uv({ panel }: WidgetComponentProps) {
           <span className="text-[11px] font-semibold">
             {formatLocation(location.city, location.state) || 'Set Location'}
           </span>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowSettings(true)}
-            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+            className="opacity-70 hover:opacity-100"
             title="Settings"
           >
             <Settings size={14} className="text-text-muted" />
-          </button>
+          </Button>
         </div>
 
         <span className="text-[11px] font-bold" style={{ color: getUvColor(currentUv) }}>
@@ -332,15 +334,17 @@ export default function Uv({ panel }: WidgetComponentProps) {
           <div>
             <label className="block text-sm text-text-muted mb-1">Location</label>
             <p className="text-sm">{formatLocation(location.city, location.state) || 'Not set'}</p>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setShowSettings(false);
                 setShowLocationSettings(true);
               }}
-              className="text-sm text-accent hover:underline mt-1"
+              className="text-accent p-0 h-auto mt-1"
             >
               Change location...
-            </button>
+            </Button>
           </div>
 
           {/* Threshold slider */}
