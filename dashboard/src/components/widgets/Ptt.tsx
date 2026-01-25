@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { useVoiceResponseStore } from '../../stores/voice-response-store';
 import { client, healthHealthGet } from '@dak/api-client';
+import { Button } from '@dak/ui';
 
 const DEFAULT_MAX_DURATION = 10; // seconds
 
@@ -206,15 +207,12 @@ export default function Ptt() {
   return (
     <div className="h-full flex flex-col items-center justify-center p-2">
       {/* Main PTT button */}
-      <button
+      <Button
+        variant={isRecording ? 'danger' : 'primary'}
         onClick={handleClick}
         disabled={!relayUrl || relayOffline}
-        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all ${
-          isRecording
-            ? 'bg-danger scale-110 shadow-lg shadow-red-500/50'
-            : relayUrl && !relayOffline
-              ? 'bg-accent hover:bg-accent active:scale-95'
-              : 'bg-border cursor-not-allowed'
+        className={`relative w-16 h-16 rounded-full p-0 transition-all ${
+          isRecording ? 'scale-110 shadow-lg shadow-red-500/50' : 'active:scale-95'
         }`}
       >
         {isRecording ? (
@@ -249,7 +247,7 @@ export default function Ptt() {
             />
           </svg>
         )}
-      </button>
+      </Button>
 
       {/* Status text - only show errors or countdown */}
       {(error || isRecording) && (

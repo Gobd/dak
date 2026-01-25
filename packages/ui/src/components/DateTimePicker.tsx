@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { DatePicker } from './DatePicker';
 import { Roller } from './Roller';
+import { Button } from './Button';
 
 interface DateTimePickerProps {
   value: Date | null;
@@ -82,13 +83,9 @@ export function DateTimePicker({
       <div className="flex items-center justify-center gap-4">
         {/* Date button */}
         {showDatePicker && (
-          <button
-            onClick={() => setShowCalendar(true)}
-            type="button"
-            className="px-3 py-2 bg-surface-sunken rounded-lg text-text font-medium text-sm border border-border hover:border-accent transition-colors"
-          >
+          <Button variant="secondary" size="sm" onClick={() => setShowCalendar(true)}>
             {formatDisplayDate(selectedDate)}
-          </button>
+          </Button>
         )}
 
         {/* Time rollers */}
@@ -106,24 +103,22 @@ export function DateTimePicker({
             />
           </div>
           <div className="flex flex-col gap-1 ml-1">
-            <button
+            <Button
+              variant={!isPM ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => setIsPM(false)}
-              type="button"
-              className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
-                !isPM ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
-              }`}
+              className="px-2 py-1 text-xs"
             >
               AM
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={isPM ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => setIsPM(true)}
-              type="button"
-              className={`px-2 py-1 rounded-md font-medium text-xs transition-colors ${
-                isPM ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'
-              }`}
+              className="px-2 py-1 text-xs"
             >
               PM
-            </button>
+            </Button>
           </div>
         </div>
       </div>

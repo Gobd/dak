@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { Button } from './Button';
 
 interface DatePickerProps {
   value: Date;
@@ -71,44 +72,34 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
     <div className="bg-surface-raised rounded-lg p-3 w-[280px] shadow-lg border border-border">
       {/* Navigation */}
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1">
-          <button
+        <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handlePrevYear}
-            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
-            type="button"
             aria-label="Previous year"
           >
             <ChevronsLeft size={16} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handlePrevMonth}
-            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
-            type="button"
             aria-label="Previous month"
           >
             <ChevronLeft size={16} />
-          </button>
+          </Button>
         </div>
         <span className="text-sm font-medium text-center flex-1 text-text">
           {viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </span>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleNextMonth}
-            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
-            type="button"
-            aria-label="Next month"
-          >
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon-sm" onClick={handleNextMonth} aria-label="Next month">
             <ChevronRight size={16} />
-          </button>
-          <button
-            onClick={handleNextYear}
-            className="p-1.5 rounded hover:bg-surface-sunken text-text-secondary"
-            type="button"
-            aria-label="Next year"
-          >
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={handleNextYear} aria-label="Next year">
             <ChevronsRight size={16} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -136,19 +127,17 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
           const disabled = isDayDisabled(day);
 
           return (
-            <button
+            <Button
               key={day}
+              variant="ghost"
               onClick={() => handleSelectDay(day)}
-              type="button"
               disabled={disabled}
-              className={`w-8 h-8 text-sm rounded-full flex items-center justify-center transition-colors
-                ${disabled ? 'text-text-muted cursor-not-allowed opacity-50' : ''}
-                ${isSelected && !disabled ? 'bg-accent text-text' : ''}
-                ${isToday && !isSelected && !disabled ? 'ring-1 ring-accent' : ''}
-                ${!isSelected && !disabled ? 'text-text hover:bg-surface-sunken' : ''}`}
+              className={`w-8 h-8 p-0 text-sm rounded-full
+                ${isSelected && !disabled ? 'bg-accent text-text hover:bg-accent' : ''}
+                ${isToday && !isSelected && !disabled ? 'ring-1 ring-accent' : ''}`}
             >
               {day}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -168,13 +157,13 @@ export function DatePickerCompact({ value, onChange, allowFuture = true }: DateP
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
         onClick={() => setShowPicker(true)}
-        type="button"
-        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
+        className="w-full justify-start"
       >
         {displayDate}
-      </button>
+      </Button>
 
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -187,13 +176,13 @@ export function DatePickerCompact({ value, onChange, allowFuture = true }: DateP
               }}
               allowFuture={allowFuture}
             />
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setShowPicker(false)}
-              type="button"
-              className="w-full mt-3 px-4 py-2 rounded-lg bg-surface-sunken text-text font-medium"
+              className="w-full mt-3"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

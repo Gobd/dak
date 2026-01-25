@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Roller } from './Roller';
+import { Button } from './Button';
 
 interface NumberPickerProps {
   value: number;
@@ -32,13 +33,13 @@ export function NumberPickerCompact({
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
         onClick={() => setShowPicker(true)}
-        type="button"
-        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
+        className="w-full justify-start"
       >
         {displayValue}
-      </button>
+      </Button>
 
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -52,24 +53,20 @@ export function NumberPickerCompact({
 
             <div className="flex gap-2 mt-4">
               {zeroLabel && (
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     onChange(0);
                     setShowPicker(false);
                   }}
-                  type="button"
-                  className="flex-1 px-4 py-2 rounded-lg bg-surface-sunken text-text font-medium"
+                  className="flex-1"
                 >
                   {zeroLabel}
-                </button>
+                </Button>
               )}
-              <button
-                onClick={() => setShowPicker(false)}
-                type="button"
-                className="flex-1 px-4 py-2 rounded-lg bg-accent text-text font-medium"
-              >
+              <Button variant="primary" onClick={() => setShowPicker(false)} className="flex-1">
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -24,6 +24,7 @@ import {
   Spinner,
   Alert,
   Slider,
+  Input,
 } from '@dak/ui';
 import {
   createKasaClient,
@@ -714,8 +715,10 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">Offset:</span>
-                <input
+                <Input
                   type="number"
+                  size="sm"
+                  inline
                   value={scheduleForm.offsetMins}
                   onChange={(e) =>
                     setScheduleForm((f) => ({
@@ -723,7 +726,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                       offsetMins: parseInt(e.target.value, 10) || 0,
                     }))
                   }
-                  className={`w-20 px-2 py-1 rounded text-sm bg-surface-sunken`}
+                  className="w-20"
                 />
                 <span className="text-sm text-text-muted">minutes</span>
               </div>

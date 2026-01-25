@@ -1,4 +1,5 @@
 import { Search, X } from 'lucide-react';
+import { Button } from './Button';
 
 interface SearchInputProps {
   value: string;
@@ -37,14 +38,15 @@ export function SearchInput({
         className="w-full pl-9 pr-9 py-2 rounded-lg bg-surface-sunken border border-border text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
       />
       {value && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={handleClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-text-muted hover:text-text hover:bg-surface-sunken transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2"
           aria-label="Clear search"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       )}
     </div>
   );
