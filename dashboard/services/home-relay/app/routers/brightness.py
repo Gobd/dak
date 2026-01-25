@@ -7,7 +7,7 @@ Supports auto-adjustment based on sunrise/sunset times.
 import re
 import subprocess
 import time
-from datetime import date
+from datetime import date, timedelta
 from typing import Union
 
 from astral import LocationInfo
@@ -129,12 +129,20 @@ def _fetch_sun_times() -> dict:
         location = LocationInfo(timezone=tz_name, latitude=lat, longitude=lon)
         s = calc_sun(location.observer, date=date.today())
 
+        sunrise_ts = int(s["sunrise"].timestamp())
+        sunset_ts = int(s["sunset"].timestamp())
+
+        # Astral sometimes returns yesterday's sunset - if so, get today's sunset
+        if sunset_ts < sunrise_ts:
+            s_tomorrow = calc_sun(location.observer, date=date.today() + timedelta(days=1))
+            sunset_ts = int(s_tomorrow["sunset"].timestamp())
+
         _sun_cache = {
             "date": today,
             "lat": lat,
             "lon": lon,
-            "sunrise": int(s["sunrise"].timestamp()),
-            "sunset": int(s["sunset"].timestamp()),
+            "sunrise": sunrise_ts,
+            "sunset": sunset_ts,
         }
         return _sun_cache
     except Exception as e:
