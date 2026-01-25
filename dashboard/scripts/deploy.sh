@@ -1,23 +1,13 @@
 #!/bin/bash
 # Deploy dashboard to kiosk and run setup
-# Usage: ./scripts/deploy.sh <user@host> [--reboot]
-#   --reboot: reboot at end (default just restarts cage)
+# Usage: ./scripts/deploy.sh <user@host>
 
 set -e
 
-REMOTE=""
-REBOOT=false
-
-for arg in "$@"; do
-  case $arg in
-    --reboot) REBOOT=true ;;
-    *) REMOTE="$arg" ;;
-  esac
-done
+REMOTE="$1"
 
 if [[ -z "$REMOTE" ]]; then
-  echo "Usage: $0 <user@host> [--reboot]"
-  echo "  --reboot: reboot at end (default just restarts cage)"
+  echo "Usage: $0 <user@host>"
   exit 1
 fi
 
@@ -35,7 +25,7 @@ rsync -avz --delete \
   "$REPO_DIR/" "$REMOTE:~/dashboard/"
 
 echo "=== Running setup on $REMOTE ==="
-ssh -t "$REMOTE" "NO_REBOOT=$([[ $REBOOT == false ]] && echo true || echo false) bash -s" << 'SETUP_SCRIPT'
+ssh -t "$REMOTE" bash -s << 'SETUP_SCRIPT'
 set -e
 
 # Copy config from scripts folder if not already present
@@ -207,19 +197,9 @@ echo "  - Home relay (Kasa, WoL, brightness)"
 echo "  - Voice control (enable in Settings)"
 echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
 
-if [[ "$NO_REBOOT" == "true" ]]; then
-  echo "=== Restarting services ==="
-  sudo systemctl restart home-relay zigbee2mqtt 2>/dev/null || true
-  cp ~/dashboard/scripts/config/kiosk-launcher.sh ~/.kiosk.sh && chmod +x ~/.kiosk.sh
-  sed "s|__DASHBOARD_ORIGIN__|$DASHBOARD_ORIGIN|g" ~/dashboard/scripts/config/chromium-kiosk.json \
-    | sudo tee /etc/chromium/policies/managed/kiosk.json > /dev/null
-  pkill -f cage 2>/dev/null || true
-  echo "Done!"
-else
-  echo "Rebooting in 5 seconds..."
-  sleep 5
-  sudo reboot
-fi
+echo "Rebooting in 5 seconds..."
+sleep 5
+sudo reboot
 SETUP_SCRIPT
 
 echo "=== Deploy complete ==="
