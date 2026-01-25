@@ -4,7 +4,7 @@ import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
-import { ConfirmModal, Spinner } from '@dak/ui';
+import { ConfirmModal, Input, Button } from '@dak/ui';
 import { useToastStore } from '../stores/toast-store';
 import type { Note } from '../types/note';
 
@@ -193,27 +193,24 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
 
               {/* Add share form */}
               {showAddForm.value ? (
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="Email address"
-                    autoFocus
-                    className="flex-1 px-2.5 py-2 rounded-md text-sm outline-none bg-surface-sunken text-text placeholder:text-text-muted"
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddShare()}
-                  />
-                  <button
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="Email address"
+                      autoFocus
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddShare()}
+                    />
+                  </div>
+                  <Button
                     onClick={handleAddShare}
                     disabled={isAdding.value || !newEmail.trim()}
-                    className={`px-3 rounded-md text-sm flex items-center justify-center ${
-                      newEmail.trim()
-                        ? 'bg-warning text-black'
-                        : 'bg-surface-sunken text-text-muted'
-                    }`}
+                    loading={isAdding.value}
                   >
-                    {isAdding.value ? <Spinner size="sm" /> : 'Add'}
-                  </button>
+                    Add
+                  </Button>
                   <button
                     onClick={() => {
                       showAddForm.setFalse();

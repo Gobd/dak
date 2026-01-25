@@ -40,7 +40,7 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
         type="button"
         onClick={() => onChange(false)}
         className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          !value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary text-text-muted'
+          !value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-muted'
         }`}
       >
         AM
@@ -49,7 +49,7 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
         type="button"
         onClick={() => onChange(true)}
         className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary text-text-muted'
+          value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-muted'
         }`}
       >
         PM

@@ -23,7 +23,7 @@ import {
   listModelsVoiceModelsGet,
   listVoicesVoiceTtsVoicesGet,
 } from '@dak/api-client';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Input } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
   ThemeMode,
@@ -704,22 +704,20 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
         {/* Relay URL */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">Relay URL</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={relayUrlInput}
-              onChange={(e) => {
-                setRelayUrlInput(e.target.value);
-                setRelayStatus('idle');
-              }}
-              placeholder="kiosk-relay.bkemper.me"
-              className="flex-1 px-3 py-2 rounded-lg border border-border
-                         bg-surface-raised text-text
-                         focus:ring-2 focus:ring-accent focus:border-transparent"
-            />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                value={relayUrlInput}
+                onChange={(e) => {
+                  setRelayUrlInput(e.target.value);
+                  setRelayStatus('idle');
+                }}
+                placeholder="kiosk-relay.bkemper.me"
+              />
+            </div>
             <Button
               onClick={handleTestRelay}
-              variant="default"
+              variant="secondary"
               disabled={relayStatus === 'testing'}
             >
               {relayStatus === 'testing' ? (
@@ -734,7 +732,6 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             </Button>
             <Button
               onClick={handleSaveRelay}
-              variant="primary"
               disabled={relayUrlInput === (globalSettings?.relayUrl ?? '')}
             >
               Save
@@ -750,22 +747,20 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
           <label className="block text-sm font-medium text-text-secondary mb-2">
             Zigbee2MQTT URL
           </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={zigbeeUrlInput}
-              onChange={(e) => {
-                setZigbeeUrlInput(e.target.value);
-                setZigbeeStatus('idle');
-              }}
-              placeholder="https://zigbee2mqtt.bkemper.me"
-              className="flex-1 px-3 py-2 rounded-lg border border-border
-                         bg-surface-raised text-text
-                         focus:ring-2 focus:ring-accent focus:border-transparent"
-            />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                value={zigbeeUrlInput}
+                onChange={(e) => {
+                  setZigbeeUrlInput(e.target.value);
+                  setZigbeeStatus('idle');
+                }}
+                placeholder="https://zigbee2mqtt.bkemper.me"
+              />
+            </div>
             <Button
               onClick={handleTestZigbee}
-              variant="default"
+              variant="secondary"
               disabled={zigbeeStatus === 'testing'}
             >
               {zigbeeStatus === 'testing' ? (
@@ -780,7 +775,6 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             </Button>
             <Button
               onClick={handleSaveZigbee}
-              variant="primary"
               disabled={
                 zigbeeUrlInput === (globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me')
               }

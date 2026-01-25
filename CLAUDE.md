@@ -61,12 +61,75 @@ Shared components for forms, layout, and feedback:
 - **Modals:** `Modal`, `ConfirmModal`
 - **Pickers:** `DatePicker`, `DatePickerCompact`, `TimePickerCompact`, `DateTimePicker`, `NumberPickerCompact`
 - **Feedback:** `Spinner`, `Badge`, `EmptyState`, `ProgressRing`
-- **Auth:** `Login`, `SignUp`, `ForgotPassword`, `ResetPassword`, `createAuthStore`
-- **Utilities:** `Avatar`, `PasswordRequirements`, `Roller`, `RealtimeSync`, `createThemeStore`
+- **Auth:** `Login`, `SignUp`, `ForgotPassword`, `ResetPassword`, `ProtectedRoute`, `createAuthStore`
+- **Utilities:** `Avatar`, `PasswordRequirements`, `Roller`, `RealtimeSync`, `createThemeStore`, `createSupabaseClient`, `isPasswordValid`
 
 ```tsx
-import { Button, Modal, Spinner, Toggle } from '@dak/ui';
+import { Button, Modal, Spinner, Toggle, ProtectedRoute } from '@dak/ui';
 ```
+
+#### Auth Store
+
+Use `createAuthStore` to create an auth store for Supabase apps:
+
+```tsx
+// stores/auth-store.ts
+import { createAuthStore } from '@dak/ui';
+import { supabase } from '../lib/supabase';
+
+export const useAuthStore = createAuthStore({
+  supabase,
+  onSignOut: () => unsubscribeFromSync(), // Optional cleanup
+  basePath: '/my-app', // Optional: for redirect URLs
+});
+```
+
+The store provides:
+
+- `session`, `user`, `loading`, `isLoading`, `isInitialized`
+- `initialize()` - Call on app mount
+- `signIn(email, password)` - Returns `{ error }`
+- `signUp(email, password)` - Standard registration
+- `register(email)` - Email-first registration (password set after verification)
+- `setPassword(password)` - Set password after email verification
+- `resetPassword(email)` - Send password reset email
+- `updatePassword(password)` - Update password (when logged in)
+- `signOut()`
+
+#### Protected Routes
+
+Use `ProtectedRoute` for auth-protected pages:
+
+```tsx
+import { ProtectedRoute } from '@dak/ui';
+
+function App() {
+  const { session, loading } = useAuthStore();
+
+  return (
+    <ProtectedRoute session={session} loading={loading}>
+      <Dashboard />
+    </ProtectedRoute>
+  );
+}
+```
+
+#### Supabase Client
+
+Use `createSupabaseClient` for consistent Supabase initialization:
+
+```tsx
+// lib/supabase.ts
+import { createSupabaseClient } from '@dak/ui';
+
+// Basic usage
+export const supabase = createSupabaseClient();
+
+// With PKCE auth flow (recommended for public clients)
+export const supabase = createSupabaseClient({ pkce: true });
+```
+
+Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` environment variables.
 
 ### @dak/hooks
 
@@ -103,9 +166,11 @@ export default createViteConfig({ port: 3001 });
 
 Generated TypeScript client for the home-relay Python API (dashboard backend). Auto-generated from OpenAPI spec via `pnpm gen:api`.
 
-### Supabase
+### Supabase Apps
 
-Notes-app, family-chores, and health-tracker use Supabase directly for auth and data. Dashboard uses home-relay instead.
+Notes-app, family-chores, and health-tracker use Supabase for auth and data. All three use the shared `createSupabaseClient` and `createAuthStore` factories from `@dak/ui`.
+
+Dashboard uses home-relay backend instead of Supabase.
 
 ## Dashboard
 

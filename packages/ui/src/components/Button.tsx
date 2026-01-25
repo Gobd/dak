@@ -15,11 +15,11 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: 'bg-surface-sunken text-text hover:bg-border',
-  primary: 'bg-accent text-text hover:bg-accent-hover',
+  default: 'bg-accent text-white hover:bg-accent-hover',
+  primary: 'bg-accent text-white hover:bg-accent-hover',
   secondary: 'bg-surface-sunken text-text hover:bg-border',
   ghost: 'bg-transparent text-accent hover:bg-surface-sunken',
-  danger: 'bg-danger text-text hover:opacity-90',
+  danger: 'bg-danger text-white hover:opacity-90',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Power, Monitor, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, Badge, Spinner } from '@dak/ui';
+import { Modal, Button, ConfirmModal, Badge, Spinner, Input } from '@dak/ui';
 import {
   client,
   healthHealthGet,
@@ -307,44 +307,33 @@ export default function Wol({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-3">
+          <Input
+            label="Device Name"
+            value={addForm.name}
+            onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
+            placeholder="e.g., Gaming PC"
+          />
+          <Input
+            label="IP Address"
+            value={addForm.ip}
+            onChange={(e) => setAddForm((p) => ({ ...p, ip: e.target.value }))}
+            placeholder="e.g., 192.168.1.100"
+          />
           <div>
-            <label className="block text-sm text-text-muted mb-1">Device Name</label>
-            <input
-              type="text"
-              value={addForm.name}
-              onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="e.g., Gaming PC"
-              className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-muted mb-1">IP Address</label>
-            <input
-              type="text"
-              value={addForm.ip}
-              onChange={(e) => setAddForm((p) => ({ ...p, ip: e.target.value }))}
-              placeholder="e.g., 192.168.1.100"
-              className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-muted mb-1">MAC Address</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
+              MAC Address
+            </label>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={addForm.mac}
-                onChange={(e) => setAddForm((p) => ({ ...p, mac: e.target.value }))}
-                placeholder="e.g., AA:BB:CC:DD:EE:FF"
-                className="flex-1 px-3 py-2 rounded-lg bg-surface-sunken border border-border"
-              />
-              <button
-                type="button"
-                onClick={handleDetectMac}
-                disabled={detectingMac.value || !addForm.ip.trim()}
-                className="px-3 py-2 rounded-lg bg-accent/80 hover:bg-accent text-text disabled:opacity-50 text-sm"
-              >
+              <div className="flex-1">
+                <Input
+                  value={addForm.mac}
+                  onChange={(e) => setAddForm((p) => ({ ...p, mac: e.target.value }))}
+                  placeholder="e.g., AA:BB:CC:DD:EE:FF"
+                />
+              </div>
+              <Button onClick={handleDetectMac} disabled={detectingMac.value || !addForm.ip.trim()}>
                 {detectingMac.value ? 'Detecting...' : 'Detect'}
-              </button>
+              </Button>
             </div>
           </div>
           {addError && (

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePeopleStore } from '../stores/people-store';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, Input, Button } from '@dak/ui';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 export function People() {
@@ -48,21 +48,18 @@ export function People() {
         onClose={() => setConfirmDelete(null)}
       />
 
-      <form onSubmit={handleAdd} className="flex gap-2">
-        <input
-          type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Add person (e.g., Brandon, Wife, Kiddo)"
-          className="flex-1 px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-        />
-        <button
-          type="submit"
-          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-        >
+      <form onSubmit={handleAdd} className="flex gap-2 items-end">
+        <div className="flex-1">
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Add person (e.g., Brandon, Wife, Kiddo)"
+          />
+        </div>
+        <Button type="submit">
           <Plus size={18} />
           Add
-        </button>
+        </Button>
       </form>
 
       {loading ? (
@@ -72,18 +69,12 @@ export function People() {
           No people yet. Add family members to track their health.
         </div>
       ) : (
-        <div className="bg-surface rounded-xl shadow-sm divide-y divide-border dark:divide-border">
+        <div className="bg-surface-raised rounded-xl shadow-sm divide-y divide-border">
           {people.map((person) => (
             <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
                 <div className="flex items-center gap-2 flex-1">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-1 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-                    autoFocus
-                  />
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
                   <button
                     onClick={handleUpdate}
                     className="p-2 text-success hover:bg-success-light dark:hover:bg-success-light rounded-lg"

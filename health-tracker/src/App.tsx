@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './stores/auth-store';
+import { ProtectedRoute } from '@dak/ui';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { SignUp } from './pages/SignUp';
@@ -13,29 +14,17 @@ import { People } from './pages/People';
 import { useEffect } from 'react';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuthStore();
+function AuthenticatedApp({ children }: { children: React.ReactNode }) {
+  const { session } = useAuthStore();
 
   // Subscribe to realtime sync when logged in
   useRealtimeSync(session?.user?.id);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-text-muted">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
 
   return <>{children}</>;
 }
 
 export default function App() {
-  const { initialize } = useAuthStore();
+  const { initialize, session, loading } = useAuthStore();
 
   useEffect(() => {
     initialize();
@@ -50,16 +39,18 @@ export default function App() {
       <Route
         path="/*"
         element={
-          <ProtectedRoute>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/shots" element={<Shots />} />
-                <Route path="/medicine" element={<Courses />} />
-                <Route path="/prn" element={<AsNeeded />} />
-                <Route path="/people" element={<People />} />
-              </Routes>
-            </Layout>
+          <ProtectedRoute session={session} loading={loading}>
+            <AuthenticatedApp>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/shots" element={<Shots />} />
+                  <Route path="/medicine" element={<Courses />} />
+                  <Route path="/prn" element={<AsNeeded />} />
+                  <Route path="/people" element={<People />} />
+                </Routes>
+              </Layout>
+            </AuthenticatedApp>
           </ProtectedRoute>
         }
       />

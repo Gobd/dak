@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import type { AuthState } from './auth-store';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 
 interface LoginProps {
   appName: string;
@@ -17,6 +19,7 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
   const { signIn } = useAuthStore();
   const { dark, toggle } = useThemeStore();
   const navigate = useNavigate();
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,34 +41,28 @@ export function Login({ appName, useAuthStore, useThemeStore }: LoginProps) {
       <div className="w-full max-w-xs">
         <h1 className="text-2xl font-bold text-center mb-8 text-text">{appName}</h1>
         <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-              required
-            />
-          </div>
-          {error && <div className="text-danger text-sm">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-accent text-text py-2 rounded-lg font-medium hover:bg-accent-hover disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+            onKeyDown={(e) => e.key === 'Enter' && passwordRef.current?.focus()}
+          />
+          <Input
+            ref={passwordRef}
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            error={error}
+            required
+          />
+          <Button type="submit" loading={loading} className="w-full">
+            Sign In
+          </Button>
           <div className="flex justify-between text-sm">
             <Link to="/signup" className="text-accent hover:text-accent-hover font-medium">
               Create Account

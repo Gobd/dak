@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import type { AuthState } from './auth-store';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 
 interface ForgotPasswordProps {
   appName: string;
@@ -46,9 +48,7 @@ export function ForgotPassword({ appName, useAuthStore, useThemeStore }: ForgotP
         {success ? (
           <div className="bg-surface rounded-xl shadow-sm p-6 text-center">
             <h2 className="text-lg font-semibold text-text mb-2">Check your email</h2>
-            <p className="text-text-secondary text-text-muted mb-4">
-              We sent a password reset link to {email}
-            </p>
+            <p className="text-text-muted mb-4">We sent a password reset link to {email}</p>
             <Link to="/login" className="text-accent hover:text-accent-hover font-medium">
               Back to Sign In
             </Link>
@@ -56,28 +56,22 @@ export function ForgotPassword({ appName, useAuthStore, useThemeStore }: ForgotP
         ) : (
           <form onSubmit={handleSubmit} className="bg-surface rounded-xl shadow-sm p-6 space-y-4">
             <h2 className="text-lg font-semibold text-text text-center">Reset Password</h2>
-            <p className="text-sm text-text-secondary text-text-muted text-center">
+            <p className="text-sm text-text-muted text-center">
               Enter your email and we'll send you a reset link
             </p>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-                required
-              />
-            </div>
-            {error && <div className="text-danger text-sm">{error}</div>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-accent text-text py-2 rounded-lg font-medium hover:bg-accent-hover disabled:opacity-50"
-            >
-              {loading ? 'Sending...' : 'Send Reset Link'}
-            </button>
-            <p className="text-center text-sm text-text-secondary text-text-muted">
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              error={error}
+              required
+            />
+            <Button type="submit" loading={loading} className="w-full">
+              Send Reset Link
+            </Button>
+            <p className="text-center text-sm text-text-muted">
               <Link to="/login" className="text-accent hover:text-accent-hover font-medium">
                 Back to Sign In
               </Link>

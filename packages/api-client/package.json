@@ -12,7 +12,7 @@
     "gen:api": "(cd ../../dashboard/services/home-relay && uv run python export_openapi.py) > openapi.json && npx @hey-api/openapi-ts"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.90.4",
+    "@hey-api/openapi-ts": "^0.90.10",
     "typescript": "catalog:"
   }
 }

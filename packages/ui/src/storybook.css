@@ -3,3 +3,10 @@
 @import '@dak/vite-shared-react/theme.css';
 @import './utilities.css';
 @import './roller.css';
+
+/* Storybook preview background */
+html,
+body,
+#storybook-root {
+  background: #1e1e1e;
+}
