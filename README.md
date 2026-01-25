@@ -46,6 +46,7 @@ This SSHs into the Pi and sets up everything:
 | Package                                                | Description                         |
 | ------------------------------------------------------ | ----------------------------------- |
 | [@dak/ui](readmes/ui.md)                               | Shared UI components                |
+| [@dak/hooks](readmes/hooks.md)                         | Shared React hooks                  |
 | [@dak/vite-shared-react](readmes/vite-shared-react.md) | Shared Vite config and theme        |
 | [@dak/api-client](readmes/api-client.md)               | Generated home-relay API client     |
 | [@dak/kasa-client](readmes/kasa-client.md)             | Kasa smart plug hooks and utilities |
