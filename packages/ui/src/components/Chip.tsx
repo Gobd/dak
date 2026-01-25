@@ -22,7 +22,17 @@ const sizeClasses = {
 
 export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
   (
-    { children, variant = 'default', size = 'md', onRemove, color, className = '', onClick, style, ...props },
+    {
+      children,
+      variant = 'default',
+      size = 'md',
+      onRemove,
+      color,
+      className = '',
+      onClick,
+      style,
+      ...props
+    },
     ref,
   ) => {
     // When custom color is provided, use it for background (with alpha) and text
