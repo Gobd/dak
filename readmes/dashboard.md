@@ -47,37 +47,37 @@ A smart home command center for wall-mounted displays. Designed to run 24/7 on a
 
 ### Widget Screenshots
 
-|                                                        |                                                      |                                                  |
-| ------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------ |
-| ![Weather](screenshots/dashboard/widget-weather.png)   | ![Climate](screenshots/dashboard/widget-climate.png) | ![Clock](screenshots/dashboard/widget-clock.png) |
-| Weather                                                | Climate                                              | Clock                                            |
-| ![Sun/Moon](screenshots/dashboard/widget-sun-moon.png) | ![AQI](screenshots/dashboard/widget-aqi.png)         | ![UV](screenshots/dashboard/widget-uv.png)       |
-| Sun/Moon                                               | AQI                                                  | UV                                               |
+| Weather                                              | Climate                                              | Clock                                            |
+| ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| ![Weather](screenshots/dashboard/widget-weather.png) | ![Climate](screenshots/dashboard/widget-climate.png) | ![Clock](screenshots/dashboard/widget-clock.png) |
+
+| Sun/Moon                                               | AQI                                          | UV                                         |
+| ------------------------------------------------------ | -------------------------------------------- | ------------------------------------------ |
+| ![Sun/Moon](screenshots/dashboard/widget-sun-moon.png) | ![AQI](screenshots/dashboard/widget-aqi.png) | ![UV](screenshots/dashboard/widget-uv.png) |
 
 ### Drive Time
 
-|                                                            |                                                                      |                                                                |
+| Traffic Overview                                           | Route Details                                                        | Route Configuration                                            |
 | ---------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
 | ![Drive Time](screenshots/dashboard/widget-drive-time.png) | ![Route Details](screenshots/dashboard/modal-drive-time-details.png) | ![Edit Route](screenshots/dashboard/modal-drive-time-edit.png) |
-| Traffic overview                                           | Route details                                                        | Route configuration                                            |
 
 ### Modal Screenshots
 
-|                                                           |                                               |                                                                 |
-| --------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
-| ![Kasa](screenshots/dashboard/modal-kasa.png)             | ![WoL](screenshots/dashboard/modal-wol.png)   | ![Timer](screenshots/dashboard/modal-timer.png)                 |
-| Smart Devices                                             | Wake on LAN                                   | Timer                                                           |
-| ![Brightness](screenshots/dashboard/modal-brightness.png) | ![MQTT](screenshots/dashboard/modal-mqtt.png) | ![Calendar Jump](screenshots/dashboard/modal-calendar-jump.png) |
+| Smart Devices                                 | Wake on LAN                                 | Timer                                           |
+| --------------------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| ![Kasa](screenshots/dashboard/modal-kasa.png) | ![WoL](screenshots/dashboard/modal-wol.png) | ![Timer](screenshots/dashboard/modal-timer.png) |
+
 | Brightness                                                | Zigbee/MQTT Devices                           | Jump to Date                                                    |
+| --------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| ![Brightness](screenshots/dashboard/modal-brightness.png) | ![MQTT](screenshots/dashboard/modal-mqtt.png) | ![Calendar Jump](screenshots/dashboard/modal-calendar-jump.png) |
 
 ### Edit Mode
 
 Tap the gear icon to enter edit mode. Add widgets, drag to reposition, resize with corner handles. Create multiple screen layouts and configure global settings (location, voice, calendars). Changes sync instantly to all connected devices.
 
-|                                                           |                                                               |
+| Global Settings                                           | Add Widget                                                    |
 | --------------------------------------------------------- | ------------------------------------------------------------- |
 | ![Settings](screenshots/dashboard/edit-mode-settings.png) | ![Add Widget](screenshots/dashboard/edit-mode-add-widget.png) |
-| Global Settings                                           | Add Widget                                                    |
 
 ## Backend
 

@@ -54,8 +54,24 @@
 
 - [ ] climate-display/app.png
 - [ ] kasa-controller/app.png
-- [ ] family-chores/app.png
-- [ ] health-tracker/app.png
+- ~~family-chores/app.png~~ (untested, skipped)
+
+### Health Tracker (`health-tracker/`)
+
+**Main Screens:**
+
+- [ ] home.png - Dashboard with upcoming shots, active medicine, recent PRN
+- [ ] people.png - Family member management
+- [ ] shots.png - Shot schedule list with history
+- [ ] medicine.png - Active and completed medicine courses
+- [ ] prn.png - As-needed medication tracking with status indicators
+
+**Modals/Actions:**
+
+- [ ] modal-add-shot.png - Add new shot schedule
+- [ ] modal-log-shot.png - Log a shot with dose/notes
+- [ ] modal-add-course.png - Add new medicine course
+- [ ] modal-add-prn.png - Add new as-needed medication
 
 ### Future (not yet)
 
