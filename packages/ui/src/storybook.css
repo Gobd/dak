@@ -5,6 +5,8 @@
 @import './roller.css';
 
 /* Storybook preview background */
-html, body, #storybook-root {
+html,
+body,
+#storybook-root {
   background: #1e1e1e;
 }
