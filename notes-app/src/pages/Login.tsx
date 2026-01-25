@@ -24,11 +24,11 @@ export function Login() {
       return;
     }
 
-    try {
-      await signIn(email.trim().toLowerCase(), password);
+    const { error: signInError } = await signIn(email.trim().toLowerCase(), password);
+    if (signInError) {
+      setError(signInError.message);
+    } else {
       navigate('/', { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
     }
   };
 

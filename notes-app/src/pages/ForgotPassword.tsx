@@ -7,7 +7,7 @@ export function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const { sendPasswordReset, isLoading } = useAuthStore();
+  const { resetPassword, isLoading } = useAuthStore();
 
   const handleSendReset = async () => {
     setError('');
@@ -22,11 +22,11 @@ export function ForgotPassword() {
       return;
     }
 
-    try {
-      await sendPasswordReset(email.trim().toLowerCase());
+    const { error: resetError } = await resetPassword(email.trim().toLowerCase());
+    if (resetError) {
+      setError(resetError.message);
+    } else {
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send reset link');
     }
   };
 

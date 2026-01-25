@@ -22,11 +22,11 @@ export function Register() {
       return;
     }
 
-    try {
-      await register(email.trim().toLowerCase());
+    const { error: registerError } = await register(email.trim().toLowerCase());
+    if (registerError) {
+      setError(registerError.message);
+    } else {
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
     }
   };
 

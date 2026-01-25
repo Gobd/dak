@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './stores/auth-store';
+import { ProtectedRoute } from '@dak/ui';
 import { Login } from './Login';
 import { SignUp } from './SignUp';
 import { ForgotPassword } from './ForgotPassword';
@@ -14,8 +15,8 @@ import { usePointsStore } from './stores/points-store';
 import { useSettingsStore } from './stores/settings-store';
 import { useGoalsStore } from './stores/goals-store';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuthStore();
+function AuthenticatedApp({ children }: { children: React.ReactNode }) {
+  const { session } = useAuthStore();
 
   // Subscribe to realtime sync when logged in
   useRealtimeSync(session?.user?.id);
@@ -38,18 +39,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
   }, [session]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-text-muted">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
-
   return <>{children}</>;
 }
 
@@ -68,6 +57,8 @@ export default function App() {
     }
   }, []);
 
+  const { session, loading } = useAuthStore();
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -77,8 +68,10 @@ export default function App() {
       <Route
         path="/*"
         element={
-          <ProtectedRoute>
-            <Dashboard />
+          <ProtectedRoute session={session} loading={loading}>
+            <AuthenticatedApp>
+              <Dashboard />
+            </AuthenticatedApp>
           </ProtectedRoute>
         }
       />

@@ -41,11 +41,11 @@ export function SetPassword() {
       return;
     }
 
-    try {
-      await updatePassword(password);
+    const { error: setPasswordError } = await updatePassword(password);
+    if (setPasswordError) {
+      setError(setPasswordError.message);
+    } else {
       navigate('/', { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set password');
     }
   };
 

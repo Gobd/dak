@@ -17,9 +17,11 @@ export { Avatar } from './components/Avatar';
 export { Input } from './components/Input';
 export { PasswordRequirements } from './components/PasswordRequirements';
 export { isPasswordValid } from './lib/password-validation';
+export { createSupabaseClient } from './lib/supabase';
 
 // Auth
 export { createAuthStore } from './auth/auth-store';
+export { ProtectedRoute } from './auth/ProtectedRoute';
 export { Login } from './auth/Login';
 export { SignUp } from './auth/SignUp';
 export { ForgotPassword } from './auth/ForgotPassword';

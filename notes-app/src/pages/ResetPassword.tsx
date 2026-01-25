@@ -8,7 +8,7 @@ export function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const { resetPassword, isLoading } = useAuthStore();
+  const { updatePassword, isLoading } = useAuthStore();
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
   const handleResetPassword = async () => {
@@ -29,11 +29,11 @@ export function ResetPassword() {
       return;
     }
 
-    try {
-      await resetPassword(password);
+    const { error: updateError } = await updatePassword(password);
+    if (updateError) {
+      setError(updateError.message);
+    } else {
       navigate('/login', { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reset password');
     }
   };
 
