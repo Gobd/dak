@@ -1,9 +1,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useMedicineStore } from '../stores/medicine-store';
-import { ConfirmModal, Modal, DatePickerCompact, NumberPickerCompact, Input, Button } from '@dak/ui';
+import {
+  ConfirmModal,
+  Modal,
+  DatePickerCompact,
+  NumberPickerCompact,
+  Input,
+  Button,
+} from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, addDays, isAfter } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export function Courses() {
   const { people, fetchPeople } = usePeopleStore();
@@ -79,23 +86,13 @@ export function Courses() {
     setNotes('');
   };
 
-  const now = new Date();
   const isAllDosesTaken = (courseId: string) => {
     const courseDoses = doses[courseId] || [];
     return courseDoses.length > 0 && courseDoses.every((d) => d.taken);
   };
-  const activeCourses = courses.filter((c) => {
-    const endDate = addDays(new Date(c.start_date + 'T00:00:00'), c.duration_days);
-    const dateActive =
-      isAfter(endDate, now) || format(endDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
-    return dateActive && !isAllDosesTaken(c.id);
-  });
-  const completedCourses = courses.filter((c) => {
-    const endDate = addDays(new Date(c.start_date + 'T00:00:00'), c.duration_days);
-    const dateEnded =
-      !isAfter(endDate, now) && format(endDate, 'yyyy-MM-dd') !== format(now, 'yyyy-MM-dd');
-    return dateEnded || isAllDosesTaken(c.id);
-  });
+  // Course is active until all doses are taken (ignore end date so missed doses can still be tracked)
+  const activeCourses = courses.filter((c) => !isAllDosesTaken(c.id));
+  const completedCourses = courses.filter((c) => isAllDosesTaken(c.id));
 
   const getDosesByDate = (courseId: string) => {
     const courseDoses = doses[courseId] || [];
@@ -215,7 +212,7 @@ export function Courses() {
       </Modal>
 
       {activeCourses.length === 0 && completedCourses.length === 0 ? (
-        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
           No medicine courses yet. Create one to start tracking.
         </div>
       ) : (
@@ -226,14 +223,17 @@ export function Courses() {
             const dates = Object.keys(dosesByDate).sort();
 
             return (
-              <div key={course.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
+              <div
+                key={course.id}
+                className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
+              >
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Pill className="text-success" size={24} />
                       <div>
                         <div className="font-semibold">{course.person?.name}</div>
-                        <div className="text-text-secondary text-text-muted">{course.name}</div>
+                        <div className="text-text-muted">{course.name}</div>
                       </div>
                     </div>
                     <button
@@ -243,7 +243,7 @@ export function Courses() {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <div className="mt-2 text-sm text-text-secondary text-text-muted">
+                  <div className="mt-2 text-sm text-text-muted">
                     {course.doses_per_day}x/day for {course.duration_days} days • Started{' '}
                     {format(new Date(course.start_date + 'T00:00:00'), 'MMM d')}
                   </div>
@@ -313,7 +313,7 @@ export function Courses() {
                   const dosesByDate = getDosesByDate(course.id);
                   const dates = Object.keys(dosesByDate).sort();
                   return (
-                    <div key={course.id} className="bg-surface-sunken rounded-lg overflow-hidden">
+                    <div key={course.id} className="bg-surface-raised rounded-lg overflow-hidden">
                       <button
                         onClick={() => toggleCompleted(course.id)}
                         className="w-full p-4 flex items-center justify-between hover:bg-surface-sunken dark:hover:bg-surface-raised transition-colors"
@@ -363,7 +363,7 @@ export function Courses() {
                             const dayDoses = dosesByDate[date];
                             return (
                               <div key={date} className="flex items-center gap-4 p-2 rounded-lg">
-                                <div className="w-20 text-sm font-medium text-text-secondary text-text-muted">
+                                <div className="w-20 text-sm font-medium text-text-muted">
                                   {format(new Date(date + 'T00:00:00'), 'MMM d')}
                                 </div>
                                 <div className="flex gap-3">

@@ -320,7 +320,9 @@ export default function Wol({ panel }: WidgetComponentProps) {
             placeholder="e.g., 192.168.1.100"
           />
           <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">MAC Address</label>
+            <label className="block text-sm font-medium mb-1 text-text-secondary">
+              MAC Address
+            </label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
@@ -329,10 +331,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
                   placeholder="e.g., AA:BB:CC:DD:EE:FF"
                 />
               </div>
-              <Button
-                onClick={handleDetectMac}
-                disabled={detectingMac.value || !addForm.ip.trim()}
-              >
+              <Button onClick={handleDetectMac} disabled={detectingMac.value || !addForm.ip.trim()}>
                 {detectingMac.value ? 'Detecting...' : 'Detect'}
               </Button>
             </div>

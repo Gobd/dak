@@ -202,20 +202,23 @@ export function Shots() {
       </Modal>
 
       {schedules.length === 0 ? (
-        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
           No shot schedules yet. Create one to start tracking.
         </div>
       ) : (
         <div className="space-y-4">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
+            <div
+              key={schedule.id}
+              className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
+            >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <Syringe className="text-accent" size={24} />
                     <div>
                       <div className="font-semibold">{schedule.person?.name}</div>
-                      <div className="text-text-secondary text-text-muted">{schedule.name}</div>
+                      <div className="text-text-muted">{schedule.name}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -225,7 +228,7 @@ export function Shots() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-text-secondary text-text-muted mb-4">
+                <div className="flex items-center gap-4 text-sm text-text-muted mb-4">
                   <span>Every {schedule.interval_days} days</span>
                   <span>•</span>
                   <span>{schedule.current_dose}</span>
@@ -236,7 +239,7 @@ export function Shots() {
                       setLogDose(schedule.current_dose);
                       setShowLogForm(schedule.id);
                     }}
-                    className="bg-success text-text px-4 py-2 rounded-lg hover:bg-success-hover font-medium"
+                    className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover font-medium"
                   >
                     Log Shot
                   </button>
@@ -274,7 +277,7 @@ export function Shots() {
               </div>
 
               {showHistory === schedule.id && (
-                <div className="border-t border-border bg-surface p-4">
+                <div className="border-t border-border bg-surface-raised p-4">
                   <h3 className="font-medium mb-2">Shot History</h3>
                   {(logs[schedule.id] || []).length === 0 ? (
                     <p className="text-text-muted text-sm">No shots logged yet.</p>
@@ -285,9 +288,7 @@ export function Shots() {
                           <div className="flex items-center justify-between">
                             <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
                             <div className="flex items-center gap-3">
-                              <span className="text-text-secondary text-text-muted">
-                                {log.dose}
-                              </span>
+                              <span className="text-text-muted">{log.dose}</span>
                               <button
                                 onClick={() =>
                                   setConfirmLogDelete({
@@ -329,7 +330,7 @@ export function Shots() {
                         <button
                           type="button"
                           onClick={() => useCustomTime.toggle()}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime.value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'}`}
+                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime.value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-secondary'}`}
                         >
                           {useCustomTime.value ? 'Custom time' : 'Now'}
                         </button>

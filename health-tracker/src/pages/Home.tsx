@@ -126,11 +126,11 @@ export function Home() {
       <h1 className="text-2xl font-bold">Home</h1>
 
       {people.length === 0 ? (
-        <div className="bg-surface rounded-xl shadow-sm p-6 text-center">
+        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center">
           <p className="text-text-muted mb-4">Get started by adding family members</p>
           <Link
             to="/people"
-            className="inline-block bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
+            className="inline-block bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover"
           >
             Add People
           </Link>
@@ -139,7 +139,7 @@ export function Home() {
         <>
           {/* Upcoming Shots - only show if there are shots */}
           {upcomingShots.length > 0 && (
-            <div className="bg-surface rounded-xl shadow-sm p-4">
+            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Syringe className="text-accent" size={20} />
                 <h2 className="font-semibold">Upcoming Shots</h2>
@@ -170,7 +170,7 @@ export function Home() {
 
           {/* Active Medicine - only show if there are active courses */}
           {activeCourses.length > 0 && (
-            <div className="bg-surface rounded-xl shadow-sm p-4">
+            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Pill className="text-success" size={20} />
                 <h2 className="font-semibold">Active Medicine</h2>
@@ -219,7 +219,7 @@ export function Home() {
 
           {/* Recent As-Needed Meds - only show if there are recent doses */}
           {recentPrnMeds.length > 0 && (
-            <div className="bg-surface rounded-xl shadow-sm p-4">
+            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="text-accent" size={20} />
                 <h2 className="font-semibold">As-Needed (Last 48h)</h2>

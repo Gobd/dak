@@ -69,16 +69,12 @@ export function People() {
           No people yet. Add family members to track their health.
         </div>
       ) : (
-        <div className="bg-surface rounded-xl shadow-sm divide-y divide-border dark:divide-border">
+        <div className="bg-surface-raised rounded-xl shadow-sm divide-y divide-border">
           {people.map((person) => (
             <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
                 <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    autoFocus
-                  />
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
                   <button
                     onClick={handleUpdate}
                     className="p-2 text-success hover:bg-success-light dark:hover:bg-success-light rounded-lg"

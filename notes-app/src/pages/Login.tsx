@@ -3,7 +3,5 @@ import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
 
 export function Login() {
-  return (
-    <SharedLogin appName="Notes" useAuthStore={useAuthStore} useThemeStore={useThemeStore} />
-  );
+  return <SharedLogin appName="Notes" useAuthStore={useAuthStore} useThemeStore={useThemeStore} />;
 }

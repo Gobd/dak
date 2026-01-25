@@ -198,7 +198,7 @@ export function AsNeeded() {
 
       {/* Meds by Person */}
       {medsByPerson.length === 0 ? (
-        <div className="bg-surface rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
           No as-needed set up yet. Add one to start tracking.
         </div>
       ) : (
@@ -206,7 +206,10 @@ export function AsNeeded() {
           {medsByPerson.map(({ person, meds: personMeds }) => {
             const isExpanded = expandedPersons.has(person.id);
             return (
-              <div key={person.id} className="bg-surface rounded-xl shadow-sm overflow-hidden">
+              <div
+                key={person.id}
+                className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
+              >
                 <button
                   onClick={() => togglePerson(person.id)}
                   className="w-full flex items-center justify-between px-4 py-3 bg-surface-raised hover:bg-surface-sunken transition-colors"
@@ -300,7 +303,7 @@ export function AsNeeded() {
                                 }}
                                 className={`text-sm px-3 py-1.5 rounded-full ${
                                   showTimeInput === med.id
-                                    ? 'bg-accent text-text'
+                                    ? 'bg-accent text-white'
                                     : 'bg-surface-sunken text-text-secondary'
                                 }`}
                               >
@@ -318,7 +321,7 @@ export function AsNeeded() {
                                 }}
                                 className={`px-4 py-2 rounded-lg font-medium ${
                                   okToGive
-                                    ? 'bg-success text-text hover:bg-success-hover'
+                                    ? 'bg-success text-white hover:bg-success-hover'
                                     : 'bg-danger-light text-danger hover:opacity-80'
                                 }`}
                               >
