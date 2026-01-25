@@ -13,6 +13,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { useDarkMode } from '@dak/hooks';
+import { Spinner } from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -175,7 +176,7 @@ function ClimateView() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <RefreshCw className="w-10 h-10 animate-spin text-text-muted" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -208,7 +209,7 @@ function ClimateView() {
           className="p-2 rounded-lg bg-surface-raised text-text-secondary hover:bg-border hover:text-text disabled:opacity-50 transition-colors"
           aria-label="Refresh"
         >
-          <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-5 h-5" />}
         </button>
       </div>
 

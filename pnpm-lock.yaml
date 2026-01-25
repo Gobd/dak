@@ -83,6 +83,9 @@ importers:
       '@dak/hooks':
         specifier: workspace:*
         version: link:../packages/hooks
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.19(react@19.2.3)
@@ -293,6 +296,9 @@ importers:
       '@dak/kasa-client':
         specifier: workspace:*
         version: link:../packages/kasa-client
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.19(react@19.2.3)

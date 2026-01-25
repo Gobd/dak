@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react';
-import { validatePassword } from '../../lib/password-validation';
+import { validatePassword } from '../lib/password-validation';
 
 interface PasswordRequirementsProps {
   password: string;

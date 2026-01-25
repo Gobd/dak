@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
-import { Power, Monitor, Trash2, Plus, RefreshCw, AlertCircle } from 'lucide-react';
+import { Power, Monitor, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, Badge } from '@dak/ui';
+import { Modal, Button, ConfirmModal, Badge, Spinner } from '@dak/ui';
 import {
   client,
   healthHealthGet,
@@ -199,9 +199,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
       >
         <Monitor size={24} className={anyOnline ? 'text-success' : 'text-text-muted'} />
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
         {!hasError && !isLoading && devices.length > 0 && (
           <span
             className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded bg-surface-sunken`}
@@ -285,7 +283,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
 
           {isLoading && devices.length > 0 && (
             <div className="flex items-center gap-2 text-text-muted text-sm">
-              <RefreshCw size={14} className="animate-spin" /> Checking status...
+              <Spinner size="sm" /> Checking status...
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, RefreshCw, Eye, EyeOff, BookOpen } from 'lucide-react';
-import { Modal } from '@dak/ui';
+import { Modal, Spinner } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useInstancesStore } from '../../stores/instances-store';
 
@@ -154,7 +154,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
             disabled={refreshing}
             className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? <Spinner size="sm" /> : <RefreshCw size={16} />}
             {refreshing ? 'Refreshing...' : 'Refresh Now'}
           </button>
         </div>

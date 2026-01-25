@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
-import { Sun, Moon, RefreshCw, AlertCircle, MapPin, Clock } from 'lucide-react';
+import { Sun, Moon, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, NumberPickerCompact } from '@dak/ui';
+import { Modal, Button, NumberPickerCompact, Spinner } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import {
@@ -181,9 +181,7 @@ export default function Brightness() {
           <Moon size={24} className={hasError ? 'text-text-muted' : 'text-accent'} />
         )}
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
       </button>
 
       <Modal
@@ -363,7 +361,7 @@ export default function Brightness() {
 
           {isLoading && (
             <div className="flex items-center gap-2 text-text-muted text-sm">
-              <RefreshCw size={14} className="animate-spin" /> Loading...
+              <Spinner size="sm" /> Loading...
             </div>
           )}
         </div>

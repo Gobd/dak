@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { RefreshCw, AlertCircle, Pencil, Trash2, Plus, X, Check, ExternalLink } from 'lucide-react';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import {
   client,
   listDevicesMqttDevicesGet,
@@ -164,7 +164,12 @@ export function MqttModal() {
       actions={
         <>
           <Button onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+            {isLoading ? (
+              <Spinner size="sm" className="mr-1" />
+            ) : (
+              <RefreshCw size={14} className="mr-1" />
+            )}{' '}
+            Refresh
           </Button>
           <Button onClick={handleClose} variant="primary">
             Close
@@ -194,13 +199,7 @@ export function MqttModal() {
               onClick={() => permitJoinMutation.mutate({ enable: !permitJoin, time: 120 })}
               disabled={permitJoinMutation.isPending}
             >
-              {permitJoinMutation.isPending ? (
-                <RefreshCw size={14} className="animate-spin" />
-              ) : permitJoin ? (
-                'Stop'
-              ) : (
-                'Start'
-              )}
+              {permitJoinMutation.isPending ? <Spinner size="sm" /> : permitJoin ? 'Stop' : 'Start'}
             </Button>
           </div>
         </div>
@@ -265,11 +264,7 @@ export function MqttModal() {
                         onClick={() => removeMutation.mutate(device.friendly_name)}
                         disabled={removeMutation.isPending}
                       >
-                        {removeMutation.isPending ? (
-                          <RefreshCw size={14} className="animate-spin" />
-                        ) : (
-                          'Remove'
-                        )}
+                        {removeMutation.isPending ? <Spinner size="sm" /> : 'Remove'}
                       </Button>
                       <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
                     </div>
@@ -318,7 +313,7 @@ export function MqttModal() {
 
         {isLoading && (
           <div className="flex items-center gap-2 text-text-muted text-sm">
-            <RefreshCw size={14} className="animate-spin" /> Loading devices...
+            <Spinner size="sm" /> Loading devices...
           </div>
         )}
 

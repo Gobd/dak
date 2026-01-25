@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings, RefreshCw, AlertCircle } from 'lucide-react';
+import { Shield, ShieldOff, Settings, AlertCircle } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import {
   client,
   getStatusAdguardStatusPost,
@@ -228,9 +228,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         ) : (
           <ShieldOff size={24} className="text-danger" />
         )}
-        {(isLoading || isPending) && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {(isLoading || isPending) && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
       </button>
 
       {/* Countdown text */}

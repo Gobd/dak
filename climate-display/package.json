@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@dak/hooks": "workspace:*",
+    "@dak/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

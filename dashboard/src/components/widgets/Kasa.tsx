@@ -14,7 +14,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge } from '@dak/ui';
+import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge, Spinner } from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,
@@ -213,9 +213,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
       >
         <Power size={24} className={anyOn ? 'text-success' : 'text-text-muted'} />
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
       </button>
 
       {/* Main Modal - Device List */}
@@ -226,7 +224,12 @@ export default function Kasa({ dark }: WidgetComponentProps) {
         actions={
           <>
             <Button onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+              {isLoading ? (
+                <Spinner size="sm" className="mr-1" />
+              ) : (
+                <RefreshCw size={14} className="mr-1" />
+              )}{' '}
+              Refresh
             </Button>
             <Button onClick={() => showModal.setFalse()} variant="primary">
               Close
@@ -306,7 +309,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
 
           {isLoading && (
             <div className="flex items-center gap-2 text-text-muted text-sm">
-              <RefreshCw size={14} className="animate-spin" /> Discovering devices...
+              <Spinner size="sm" /> Discovering devices...
             </div>
           )}
         </div>

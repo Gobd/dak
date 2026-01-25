@@ -6,13 +6,13 @@ import {
   ChevronsRight,
   Plus,
   Settings,
-  RefreshCw,
   LogOut,
+  RefreshCw,
 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
-import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact } from '@dak/ui';
+import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact, Spinner } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync
@@ -809,7 +809,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   if (loading && events.length === 0) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-surface`}>
-        <RefreshCw size={20} className="animate-spin text-text-muted" />
+        <Spinner size="md" />
       </div>
     );
   }

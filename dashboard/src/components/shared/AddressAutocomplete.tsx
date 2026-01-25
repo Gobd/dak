@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { Spinner } from '@dak/ui';
 import {
   fetchPlacesAutocomplete,
   fetchPlaceDetails,
@@ -95,7 +96,7 @@ export function AddressAutocomplete({
       {/* Loading indicator */}
       {loading && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-border border-t-text rounded-full animate-spin" />
+          <Spinner size="sm" />
         </div>
       )}
 
