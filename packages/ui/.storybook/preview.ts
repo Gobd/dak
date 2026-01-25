@@ -4,10 +4,11 @@ import '../src/storybook.css';
 const preview: Preview = {
   parameters: {
     backgrounds: {
-      default: 'light',
+      default: 'dark',
       values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#1a1a1a' },
+        { name: 'dark', value: '#0a0a0a' },
+        { name: 'grey', value: '#333333' },
+        { name: 'light', value: '#f5f5f5' },
       ],
     },
     controls: {
@@ -19,8 +20,9 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      // Toggle dark class based on background
-      const isDark = context.globals.backgrounds?.value === '#1a1a1a';
+      // Toggle dark class based on background selection (default to dark)
+      const bgValue = context.globals.backgrounds?.value;
+      const isDark = !bgValue || bgValue !== '#f5f5f5';
       document.documentElement.classList.toggle('dark', isDark);
       return Story();
     },
