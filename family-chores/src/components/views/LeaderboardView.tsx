@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Trophy, Medal, Award, Users } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { Avatar } from '@dak/ui';
+import { Avatar, Button } from '@dak/ui';
 import { usePointsStore } from '../../stores/points-store';
 import { useMembersStore } from '../../stores/members-store';
 
@@ -102,13 +102,10 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
             <p className="text-text-muted">No family members yet</p>
             <p className="text-sm text-text-muted mt-1">Add your family to track points</p>
           </div>
-          <button
-            onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
-          >
+          <Button onClick={onOpenFamily} className="gap-2">
             <Users size={18} />
             Add Family Members
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">

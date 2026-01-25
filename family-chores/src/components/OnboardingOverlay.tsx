@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Users, ClipboardList, CheckCircle2, ArrowRight, Target } from 'lucide-react';
+import { Button } from '@dak/ui';
 
 interface OnboardingOverlayProps {
   onDismiss: () => void;
@@ -89,28 +90,13 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
 
           {/* Buttons */}
           <div className="flex gap-3">
-            <button
-              onClick={onDismiss}
-              className="flex-1 px-4 py-2.5 border border-border rounded-lg text-text-secondary text-text-muted hover:bg-surface-raised"
-            >
+            <Button onClick={onDismiss} variant="secondary" className="flex-1">
               Skip
-            </button>
-            <button
-              onClick={handleNext}
-              className="flex-1 px-4 py-2.5 bg-accent text-text rounded-lg hover:bg-accent-hover flex items-center justify-center gap-2"
-            >
-              {currentStep === steps.length - 1 ? (
-                <>
-                  Get Started
-                  <ArrowRight size={18} />
-                </>
-              ) : (
-                <>
-                  Next
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
+            </Button>
+            <Button onClick={handleNext} className="flex-1 gap-2">
+              {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
+              <ArrowRight size={18} />
+            </Button>
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ import {
   Edit2,
   ChevronLeft,
 } from 'lucide-react';
-import { Spinner } from '@dak/ui';
+import { Spinner, Button, TimePickerCompact } from '@dak/ui';
 import { useSettingsStore } from '../stores/settings-store';
 import {
   createKasaClient,
@@ -162,12 +162,7 @@ export default function DeviceList() {
           {error instanceof Error ? error.message : 'Failed to load devices'}
         </p>
         <p className="text-text-muted text-sm">Relay: {relayUrl}</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
-        >
-          Retry
-        </button>
+        <Button onClick={() => refetch()}>Retry</Button>
       </div>
     );
   }
@@ -178,12 +173,7 @@ export default function DeviceList() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Wifi className="w-12 h-12 text-text-muted" />
         <p className="text-text-secondary">No devices found</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
-        >
-          Scan Again
-        </button>
+        <Button onClick={() => refetch()}>Scan Again</Button>
       </div>
     );
   }
@@ -194,12 +184,13 @@ export default function DeviceList() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <button
+          <Button
             onClick={() => setSelectedDevice(null)}
-            className="p-2 bg-surface-sunken rounded-lg hover:bg-border"
+            variant="secondary"
+            size="sm"
           >
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
           <h2 className="text-lg font-semibold flex-1 text-text">{selectedDevice.name}</h2>
         </div>
 
@@ -314,7 +305,7 @@ export default function DeviceList() {
               <option value={120}>2 hours</option>
               <option value={240}>4 hours</option>
             </select>
-            <button
+            <Button
               onClick={() =>
                 countdownMutation.mutate({
                   ip: selectedDevice.ip,
@@ -322,15 +313,10 @@ export default function DeviceList() {
                   action: 'off',
                 })
               }
-              disabled={countdownMutation.isPending}
-              className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover disabled:opacity-50"
+              loading={countdownMutation.isPending}
             >
-              {countdownMutation.isPending
-                ? 'Setting...'
-                : countdownStatus === 'success'
-                  ? 'Set!'
-                  : 'Set'}
-            </button>
+              {countdownStatus === 'success' ? 'Set!' : 'Set'}
+            </Button>
           </div>
           {countdownStatus === 'success' && (
             <div className="text-sm text-success mt-2">Timer set for {countdownMins} minutes</div>
@@ -489,11 +475,9 @@ export default function DeviceList() {
                 {/* Time */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-text">Time</label>
-                  <input
-                    type="time"
+                  <TimePickerCompact
                     value={scheduleForm.time}
-                    onChange={(e) => setScheduleForm((f) => ({ ...f, time: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border text-text"
+                    onChange={(time) => setScheduleForm((f) => ({ ...f, time }))}
                   />
                 </div>
 

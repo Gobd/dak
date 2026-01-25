@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Sun, Moon, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, NumberPickerCompact, Spinner } from '@dak/ui';
+import { Modal, Button, NumberPickerCompact, Spinner, Toggle } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import {
@@ -258,15 +258,11 @@ export default function Brightness() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handleToggleEnabled}
+                <Toggle
+                  checked={config?.enabled ?? false}
+                  onChange={handleToggleEnabled}
                   disabled={!hasLocation && !config?.enabled}
-                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-success' : 'bg-surface-sunken'} ${!hasLocation && !config?.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-surface shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
-                  />
-                </button>
+                />
               </div>
 
               {config?.enabled && (

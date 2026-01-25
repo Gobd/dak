@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Settings } from 'lucide-react';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Toggle } from '@dak/ui';
 import { useConfigStore } from '../../stores/config-store';
 import { useSyncedClock } from '../../hooks/useRefreshInterval';
 import type { WidgetComponentProps } from './index';
@@ -94,59 +94,33 @@ export default function Clock({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={use24Hour}
-              onChange={(e) => updateArg('use24Hour', e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm">24-hour format</span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showSeconds}
-              onChange={(e) => updateArg('showSeconds', e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm">Show seconds</span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showDate}
-              onChange={(e) => updateArg('showDate', e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-sm">Show date</span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showWeekday}
-              onChange={(e) => updateArg('showWeekday', e.target.checked)}
-              className="rounded"
-              disabled={!showDate}
-            />
-            <span className={`text-sm ${!showDate ? 'text-text-muted' : ''}`}>
-              Show day of week
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showYear}
-              onChange={(e) => updateArg('showYear', e.target.checked)}
-              className="rounded"
-              disabled={!showDate}
-            />
-            <span className={`text-sm ${!showDate ? 'text-text-muted' : ''}`}>Show year</span>
-          </label>
+          <Toggle
+            checked={use24Hour}
+            onChange={(checked) => updateArg('use24Hour', checked)}
+            label="24-hour format"
+          />
+          <Toggle
+            checked={showSeconds}
+            onChange={(checked) => updateArg('showSeconds', checked)}
+            label="Show seconds"
+          />
+          <Toggle
+            checked={showDate}
+            onChange={(checked) => updateArg('showDate', checked)}
+            label="Show date"
+          />
+          <Toggle
+            checked={showWeekday}
+            onChange={(checked) => updateArg('showWeekday', checked)}
+            label="Show day of week"
+            disabled={!showDate}
+          />
+          <Toggle
+            checked={showYear}
+            onChange={(checked) => updateArg('showYear', checked)}
+            label="Show year"
+            disabled={!showDate}
+          />
         </div>
       </Modal>
     </div>

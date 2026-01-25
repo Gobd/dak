@@ -5,7 +5,7 @@ import { useInstancesStore } from '../../stores/instances-store';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { TaskCard } from '../shared/TaskCard';
-import { Avatar, ProgressRing } from '@dak/ui';
+import { Avatar, ProgressRing, Button } from '@dak/ui';
 
 interface MyTasksViewProps {
   onOpenFamily: () => void;
@@ -154,13 +154,10 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
             <p className="text-text-muted">No family members yet</p>
             <p className="text-sm text-text-muted mt-1">Add your family to start tracking tasks</p>
           </div>
-          <button
-            onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
-          >
+          <Button onClick={onOpenFamily} className="gap-2">
             <Users size={18} />
             Add Family Members
-          </button>
+          </Button>
         </div>
       )}
     </div>

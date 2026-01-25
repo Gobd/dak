@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
-import { Avatar, Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal, Button } from '@dak/ui';
 import { useChoresStore } from '../../stores/chores-store';
 import { useInstancesStore } from '../../stores/instances-store';
 import { ChoreEditModal } from './ChoreEditModal';
@@ -171,14 +171,15 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                 <div className="px-3 pb-3 pt-2 border-t border-border bg-surface-raised/50">
                   <p className="text-xs text-text-muted mb-2">Create task for today:</p>
                   <div className="flex gap-2 flex-wrap">
-                    <button
+                    <Button
                       onClick={() => handleAssign(chore.id)}
                       disabled={assigning}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-text rounded-lg text-sm font-medium hover:bg-accent-hover disabled:opacity-50"
+                      size="sm"
+                      className="gap-1.5"
                     >
                       <Play size={14} />
                       All ({chore.assignments.length})
-                    </button>
+                    </Button>
                     {chore.assignments.map((a) => (
                       <button
                         key={a.member.id}

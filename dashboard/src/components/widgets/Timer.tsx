@@ -17,7 +17,7 @@ import {
   X,
   Check,
 } from 'lucide-react';
-import { Roller, ConfirmModal, Modal, Button } from '@dak/ui';
+import { Roller, ConfirmModal, Modal, Button, Input } from '@dak/ui';
 import { useLocalStorage, useInterval } from '@dak/hooks';
 
 // Time picker options
@@ -393,12 +393,10 @@ export default function Timer() {
           </div>
         ) : createMode === 'timer' ? (
           <div className="space-y-4">
-            <input
-              type="text"
+            <Input
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-surface-sunken rounded-lg overflow-hidden">
@@ -435,12 +433,10 @@ export default function Timer() {
           </div>
         ) : (
           <div className="space-y-4">
-            <input
-              type="text"
+            <Input
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex gap-2">
               <Button onClick={() => setCreateMode(null)}>Back</Button>

@@ -12,7 +12,7 @@ import {
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
-import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact, Spinner } from '@dak/ui';
+import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact, Spinner, Toggle, Input } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync
@@ -1026,19 +1026,18 @@ export default function Calendar({ panel }: WidgetComponentProps) {
               <div className="space-y-3">
                 {calendars.map((cal) => (
                   <div key={cal.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
+                    <Toggle
+                      size="sm"
                       checked={!hiddenCalendarIds.includes(cal.id)}
-                      onChange={(e) => {
+                      onChange={(checked) => {
                         const newHidden = new Set(hiddenCalendarIds);
-                        if (e.target.checked) {
+                        if (checked) {
                           newHidden.delete(cal.id);
                         } else {
                           newHidden.add(cal.id);
                         }
                         updateCalendar({ hidden: [...newHidden] });
                       }}
-                      className="rounded shrink-0"
                     />
                     <div
                       className="w-3 h-3 rounded-full shrink-0"
@@ -1106,17 +1105,13 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       >
         <div className="space-y-3">
           {/* Event title */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              value={newEvent.summary}
-              onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
-              placeholder="Event title"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-              autoFocus
-            />
-          </div>
+          <Input
+            label="Title"
+            value={newEvent.summary}
+            onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
+            placeholder="Event title"
+            autoFocus
+          />
 
           {/* Date picker */}
           <div>
@@ -1125,15 +1120,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           </div>
 
           {/* All day toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={newEvent.allDay}
-              onChange={(e) => setNewEvent({ ...newEvent, allDay: e.target.checked })}
-              className="rounded"
-            />
-            <span className="text-sm">All day</span>
-          </label>
+          <Toggle
+            checked={newEvent.allDay}
+            onChange={(checked) => setNewEvent({ ...newEvent, allDay: checked })}
+            label="All day"
+          />
 
           {/* Time inputs (hidden if all day) */}
           {!newEvent.allDay && (
@@ -1156,16 +1147,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           )}
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={newEvent.location}
-              onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-              placeholder="Add location"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Location"
+            value={newEvent.location}
+            onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+            placeholder="Add location"
+          />
 
           {/* Description */}
           <div>
@@ -1275,15 +1262,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       {/* Edit Event Modal */}
       <Modal open={!!editingEvent} onClose={() => setEditingEvent(null)} title="Edit Event">
         <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              value={editForm.summary}
-              onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Title"
+            value={editForm.summary}
+            onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
+          />
 
           {/* Date picker */}
           <div>
@@ -1296,15 +1279,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             )}
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={editForm.allDay}
-              onChange={(e) => setEditForm({ ...editForm, allDay: e.target.checked })}
-              className="rounded"
-            />
-            <span className="text-sm">All day</span>
-          </label>
+          <Toggle
+            checked={editForm.allDay}
+            onChange={(checked) => setEditForm({ ...editForm, allDay: checked })}
+            label="All day"
+          />
 
           {!editForm.allDay && (
             <div className="flex gap-3">
@@ -1326,16 +1305,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           )}
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={editForm.location}
-              onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-              placeholder="Add location"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Location"
+            value={editForm.location}
+            onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+            placeholder="Add location"
+          />
 
           {/* Description */}
           <div>

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Shield, ShieldOff, Settings, AlertCircle } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Input } from '@dak/ui';
 import {
   client,
   getStatusAdguardStatusPost,
@@ -180,34 +180,23 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           }
         >
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm mb-1">URL</label>
-              <input
-                type="text"
-                placeholder="http://192.168.1.1:3000"
-                value={settingsForm.url}
-                onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Username</label>
-              <input
-                type="text"
-                value={settingsForm.username}
-                onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Password</label>
-              <input
-                type="password"
-                value={settingsForm.password}
-                onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
+            <Input
+              label="URL"
+              placeholder="http://192.168.1.1:3000"
+              value={settingsForm.url}
+              onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+            />
+            <Input
+              label="Username"
+              value={settingsForm.username}
+              onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={settingsForm.password}
+              onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+            />
           </div>
         </Modal>
       </div>
@@ -324,34 +313,23 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1">URL</label>
-            <input
-              type="text"
-              placeholder="http://192.168.1.1:3000"
-              value={settingsForm.url}
-              onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Username</label>
-            <input
-              type="text"
-              value={settingsForm.username}
-              onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input
-              type="password"
-              value={settingsForm.password}
-              onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
+          <Input
+            label="URL"
+            placeholder="http://192.168.1.1:3000"
+            value={settingsForm.url}
+            onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+          />
+          <Input
+            label="Username"
+            value={settingsForm.username}
+            onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={settingsForm.password}
+            onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+          />
         </div>
       </Modal>
     </div>

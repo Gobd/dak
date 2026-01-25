@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom';
 import { Trash2, Settings, Move } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Toggle, Input } from '@dak/ui';
 import type { PanelConfig, AnchorPosition } from '../../types';
 
 const REFRESH_OPTIONS = [
@@ -547,12 +547,10 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
 
           {/* Anchor mode settings */}
           <div className="border-t border-border pt-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2">
+              <Toggle
                 checked={useAnchorMode}
-                onChange={(e) => {
-                  const enabling = e.target.checked;
+                onChange={(enabling) => {
                   setUseAnchorMode(enabling);
                   // When enabling anchor mode, convert current position to pixel values
                   if (enabling && !panel.anchor) {
@@ -563,10 +561,9 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
                     setTempOffsetY(anchorData.offsetY);
                   }
                 }}
-                className="w-4 h-4 rounded border-border bg-surface-sunken accent-accent"
+                label="Fixed pixel positioning"
               />
-              <span className="text-sm font-medium">Fixed pixel positioning</span>
-            </label>
+            </div>
             <p className="text-xs text-text-muted mt-1">
               Anchor to a corner with fixed pixel size (useful for small floating widgets)
             </p>
@@ -598,50 +595,38 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Width (px)</label>
-                  <input
-                    type="number"
-                    value={tempWidthPx}
-                    onChange={(e) => setTempWidthPx(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={20}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Height (px)</label>
-                  <input
-                    type="number"
-                    value={tempHeightPx}
-                    onChange={(e) => setTempHeightPx(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={20}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Offset X (px)</label>
-                  <input
-                    type="number"
-                    value={tempOffsetX}
-                    onChange={(e) => setTempOffsetX(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={0}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Offset Y (px)</label>
-                  <input
-                    type="number"
-                    value={tempOffsetY}
-                    onChange={(e) => setTempOffsetY(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={0}
-                  />
-                </div>
+                <Input
+                  label="Width (px)"
+                  type="number"
+                  value={tempWidthPx}
+                  onChange={(e) => setTempWidthPx(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                />
+                <Input
+                  label="Height (px)"
+                  type="number"
+                  value={tempHeightPx}
+                  onChange={(e) => setTempHeightPx(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                />
+                <Input
+                  label="Offset X (px)"
+                  type="number"
+                  value={tempOffsetX}
+                  onChange={(e) => setTempOffsetX(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={0}
+                />
+                <Input
+                  label="Offset Y (px)"
+                  type="number"
+                  value={tempOffsetY}
+                  onChange={(e) => setTempOffsetY(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={0}
+                />
               </div>
             </div>
           )}

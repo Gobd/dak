@@ -23,7 +23,7 @@ import {
   listModelsVoiceModelsGet,
   listVoicesVoiceTtsVoicesGet,
 } from '@dak/api-client';
-import { Modal, Button, Spinner, Input } from '@dak/ui';
+import { Modal, Button, Spinner, Input, Toggle } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
   ThemeMode,
@@ -414,22 +414,14 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
         </div>
 
         {/* Hide Cursor */}
-        <div>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={hideCursor}
-              onChange={(e) => handleHideCursorChange(e.target.checked)}
-              className="w-5 h-5 rounded border-border
-                         text-accent focus:ring-accent bg-surface-raised"
-            />
-            <div>
-              <span className="text-sm font-medium text-text-secondary">Hide Cursor</span>
-              <p className="text-xs text-text-muted">
-                Hides the mouse cursor for kiosk displays (Ctrl+Shift+H to toggle)
-              </p>
-            </div>
-          </label>
+        <div className="flex items-center gap-3">
+          <Toggle checked={hideCursor} onChange={handleHideCursorChange} />
+          <div>
+            <span className="text-sm font-medium text-text-secondary">Hide Cursor</span>
+            <p className="text-xs text-text-muted">
+              Hides the mouse cursor for kiosk displays (Ctrl+Shift+H to toggle)
+            </p>
+          </div>
         </div>
 
         {/* Volume Control */}
@@ -476,19 +468,16 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
 
         {/* Voice Control */}
         <div>
-          <label className="flex items-center gap-3 cursor-pointer mb-3">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-3 mb-3">
+            <Toggle
               checked={voiceEnabled}
-              onChange={(e) => updateGlobalSettings({ voiceEnabled: e.target.checked })}
-              className="w-5 h-5 rounded border-border
-                         text-accent focus:ring-accent bg-surface-raised"
+              onChange={(checked) => updateGlobalSettings({ voiceEnabled: checked })}
             />
             <div className="flex items-center gap-2">
               <Mic size={18} className="text-text-muted" />
               <span className="text-sm font-medium text-text-secondary">Voice Control</span>
             </div>
-          </label>
+          </div>
           {voiceEnabled && (
             <div className="ml-8">
               <label className="block text-xs text-text-muted mb-1">Wake Word</label>
