@@ -4,8 +4,7 @@ import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
-import { LoadingSpinner } from './ui/loading-spinner';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, Spinner } from '@dak/ui';
 import { useToastStore } from '../stores/toast-store';
 import type { Note } from '../types/note';
 
@@ -213,7 +212,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                         : 'bg-surface-sunken text-text-muted'
                     }`}
                   >
-                    {isAdding.value ? <LoadingSpinner size="small" /> : 'Add'}
+                    {isAdding.value ? <Spinner size="sm" /> : 'Add'}
                   </button>
                   <button
                     onClick={() => {

@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Trash2, Clock, SquareCheck, Square, X } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, Spinner } from '@dak/ui';
 import { getNoteTitle } from '../types/note';
 import type { Note } from '../types/note';
 
@@ -108,7 +107,7 @@ export function Trash() {
     ownedNoteIds.length > 0 && ownedNoteIds.every((id) => selectedNoteIds.has(id));
 
   if (isLoading && trashedNotes.length === 0) {
-    return <LoadingSpinner fullScreen />;
+    return <Spinner size="lg" fullScreen />;
   }
 
   return (

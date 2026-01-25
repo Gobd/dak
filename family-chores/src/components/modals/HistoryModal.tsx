@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Filter } from 'lucide-react';
 import { format } from 'date-fns';
-import { Modal } from '@dak/ui';
+import { Avatar, Modal } from '@dak/ui';
 import { usePointsStore } from '../../stores/points-store';
 import { useMembersStore } from '../../stores/members-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 
 interface HistoryModalProps {
   onClose: () => void;
@@ -79,7 +78,7 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
                   className="flex items-center gap-3 p-4 hover:bg-surface-raised/50"
                 >
                   {member && (
-                    <MemberAvatar
+                    <Avatar
                       name={member.name}
                       emoji={member.avatar_emoji}
                       color={member.color}

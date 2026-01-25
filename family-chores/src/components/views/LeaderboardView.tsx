@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Trophy, Medal, Award, Users } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { Avatar } from '@dak/ui';
 import { usePointsStore } from '../../stores/points-store';
 import { useMembersStore } from '../../stores/members-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 
 interface LeaderboardViewProps {
   onOpenFamily: () => void;
@@ -128,7 +128,7 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
                 <div className="flex-shrink-0 w-8">{getRankIcon(index)}</div>
 
                 {/* Avatar */}
-                <MemberAvatar
+                <Avatar
                   name={member.name}
                   emoji={member.avatar_emoji}
                   color={member.color}

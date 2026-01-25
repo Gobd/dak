@@ -1,6 +1,6 @@
 import { Plus, Minus, Check } from 'lucide-react';
 import type { GoalProgress } from '../../types';
-import { MemberAvatar } from './MemberAvatar';
+import { Avatar } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 
 interface GoalCardProps {
@@ -62,12 +62,7 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <MemberAvatar
-            name={member.name}
-            emoji={member.avatar_emoji}
-            color={member.color}
-            size="sm"
-          />
+          <Avatar name={member.name} emoji={member.avatar_emoji} color={member.color} size="sm" />
           <h3
             className={`font-medium text-base truncate ${
               is_complete ? 'text-text-muted' : 'text-text'

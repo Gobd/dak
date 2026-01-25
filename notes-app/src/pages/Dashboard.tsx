@@ -17,8 +17,7 @@ import { DesktopSidebar } from '../components/DesktopSidebar';
 import { MobileHeader } from '../components/MobileHeader';
 import { NoteEditor } from '../components/NoteEditor';
 import { NotesList } from '../components/NotesList';
-import { ConfirmModal, SearchInput } from '@dak/ui';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { ConfirmModal, SearchInput, Spinner } from '@dak/ui';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
@@ -316,7 +315,7 @@ export function Dashboard() {
   };
 
   if (isLoading && notes.length === 0) {
-    return <LoadingSpinner fullScreen />;
+    return <Spinner size="lg" fullScreen />;
   }
 
   // Mobile: show either list or editor

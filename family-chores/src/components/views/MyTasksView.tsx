@@ -5,8 +5,7 @@ import { useInstancesStore } from '../../stores/instances-store';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 import { TaskCard } from '../shared/TaskCard';
-import { MemberAvatar } from '../shared/MemberAvatar';
-import { ProgressRing } from '@dak/ui';
+import { Avatar, ProgressRing } from '@dak/ui';
 
 interface MyTasksViewProps {
   onOpenFamily: () => void;
@@ -48,7 +47,7 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {members.map((member) => (
-          <MemberAvatar
+          <Avatar
             key={member.id}
             name={member.name}
             emoji={member.avatar_emoji}

@@ -16,8 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ConfirmModal } from '@dak/ui';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { ConfirmModal, Spinner } from '@dak/ui';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
 import { notesApi } from '../lib/api/notes';
@@ -374,7 +373,7 @@ export function Settings() {
                   className="p-2 rounded-md bg-warning"
                 >
                   {isSavingName ? (
-                    <LoadingSpinner size="small" />
+                    <Spinner size="sm" />
                   ) : (
                     <Check size={18} className="text-black" />
                   )}
@@ -504,7 +503,7 @@ export function Settings() {
                   }`}
                 >
                   {isAddingShare ? (
-                    <LoadingSpinner size="small" />
+                    <Spinner size="sm" />
                   ) : (
                     <Plus
                       size={20}
@@ -554,7 +553,7 @@ export function Settings() {
               className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
             >
               {isExporting ? (
-                <LoadingSpinner size="small" />
+                <Spinner size="sm" />
               ) : (
                 <>
                   <Download size={18} className="text-warning" />
@@ -569,7 +568,7 @@ export function Settings() {
               className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
             >
               {isImporting ? (
-                <LoadingSpinner size="small" />
+                <Spinner size="sm" />
               ) : (
                 <>
                   <Upload size={18} className="text-warning" />

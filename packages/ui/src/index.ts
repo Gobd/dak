@@ -12,6 +12,8 @@ export { Badge } from './components/Badge';
 export { SearchInput } from './components/SearchInput';
 export { EmptyState } from './components/EmptyState';
 export { ProgressRing } from './components/ProgressRing';
+export { Spinner } from './components/Spinner';
+export { Avatar } from './components/Avatar';
 
 // Auth
 export { createAuthStore } from './auth/auth-store';
