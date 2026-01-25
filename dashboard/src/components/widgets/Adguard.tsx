@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings, AlertCircle } from 'lucide-react';
+import { Shield, ShieldOff, Settings } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, Spinner, Input } from '@dak/ui';
+import { Modal, Button, Spinner, Input, Alert } from '@dak/ui';
 import {
   client,
   getStatusAdguardStatusPost,
@@ -272,11 +272,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-2">
-          {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
+          {error && <Alert variant="error">{error}</Alert>}
 
           {protectionEnabled ? (
             DURATION_OPTIONS.map((opt) => (

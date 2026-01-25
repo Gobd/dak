@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePeopleStore } from '../stores/people-store';
-import { ConfirmModal, Input, Button } from '@dak/ui';
+import { ConfirmModal, Input, Button, Card } from '@dak/ui';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 export function People() {
@@ -69,7 +69,7 @@ export function People() {
           No people yet. Add family members to track their health.
         </div>
       ) : (
-        <div className="bg-surface-raised rounded-xl shadow-sm divide-y divide-border">
+        <Card padding="none" className="shadow-sm divide-y divide-border">
           {people.map((person) => (
             <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
@@ -111,7 +111,7 @@ export function People() {
               )}
             </div>
           ))}
-        </div>
+        </Card>
       )}
     </div>
   );

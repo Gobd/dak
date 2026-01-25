@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact, Input, Button } from '@dak/ui';
+import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact, Input, Button, Card } from '@dak/ui';
 import {
   Plus,
   Clock,
@@ -198,17 +198,18 @@ export function AsNeeded() {
 
       {/* Meds by Person */}
       {medsByPerson.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <Card padding="lg" className="text-center text-text-muted shadow-sm">
           No as-needed set up yet. Add one to start tracking.
-        </div>
+        </Card>
       ) : (
         <div className="space-y-3">
           {medsByPerson.map(({ person, meds: personMeds }) => {
             const isExpanded = expandedPersons.has(person.id);
             return (
-              <div
+              <Card
                 key={person.id}
-                className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
+                padding="none"
+                className="shadow-sm overflow-hidden"
               >
                 <Button
                   variant="ghost"
@@ -345,7 +346,7 @@ export function AsNeeded() {
                     })}
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })}
         </div>

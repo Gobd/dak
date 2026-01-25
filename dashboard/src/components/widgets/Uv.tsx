@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Slider } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Open-Meteo API - free, no API key needed
@@ -352,13 +352,12 @@ export default function Uv({ panel }: WidgetComponentProps) {
             <label className="block text-sm text-text-muted mb-2">
               Safe UV threshold: <span className="font-bold">{tempThreshold}</span>
             </label>
-            <input
-              type="range"
-              min="1"
-              max="10"
+            <Slider
+              min={1}
+              max={10}
               value={tempThreshold}
-              onChange={(e) => setTempThreshold(parseInt(e.target.value))}
-              className="w-full accent-blue-500"
+              onChange={setTempThreshold}
+              thumbColor="warning"
             />
             <p className="text-xs text-text-muted mt-1">
               Times above UV {tempThreshold} will be highlighted

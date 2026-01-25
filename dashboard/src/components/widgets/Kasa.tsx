@@ -14,7 +14,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge, Spinner } from '@dak/ui';
+import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge, Spinner, Alert, Slider } from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,
@@ -241,12 +241,12 @@ export default function Kasa({ dark }: WidgetComponentProps) {
       >
         <div className="space-y-3">
           {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
+            <Alert variant="error">
+              {error}
               {error === 'Relay offline' && (
                 <span className="text-text-muted text-xs ml-2">Is home-relay running?</span>
               )}
-            </div>
+            </Alert>
           )}
 
           {devices.length === 0 && !error && !isLoading && (
@@ -384,15 +384,14 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                 {mutationError && mutationError.includes('brightness') && (
                   <div className="text-xs text-danger mb-2">{mutationError}</div>
                 )}
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
+                <Slider
+                  min={1}
+                  max={100}
                   value={selectedDevice.brightness}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setSelectedDevice({
                       ...selectedDevice,
-                      brightness: parseInt(e.target.value, 10),
+                      brightness: value,
                     })
                   }
                   onMouseUp={(e) => {
@@ -403,8 +402,8 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                     const val = parseInt((e.target as HTMLInputElement).value, 10);
                     brightnessMutation.mutate({ ip: selectedDevice.ip, brightness: val });
                   }}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken"
                   disabled={!selectedDevice.on}
+                  thumbColor="warning"
                 />
               </div>
             )}

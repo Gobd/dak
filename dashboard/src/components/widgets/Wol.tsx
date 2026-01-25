@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Power, Monitor, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, Badge, Spinner, Input } from '@dak/ui';
+import { Modal, Button, ConfirmModal, Badge, Spinner, Input, Alert } from '@dak/ui';
 import {
   client,
   healthHealthGet,
@@ -226,11 +226,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-3">
-          {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
+          {error && <Alert variant="error">{error}</Alert>}
 
           {devices.length === 0 ? (
             <p className="text-text-muted text-center py-4">

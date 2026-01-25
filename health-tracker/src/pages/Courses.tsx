@@ -8,6 +8,7 @@ import {
   NumberPickerCompact,
   Input,
   Button,
+  Card,
 } from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, addDays } from 'date-fns';
@@ -212,9 +213,9 @@ export function Courses() {
       </Modal>
 
       {activeCourses.length === 0 && completedCourses.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <Card padding="lg" className="shadow-sm text-center text-text-muted">
           No medicine courses yet. Create one to start tracking.
-        </div>
+        </Card>
       ) : (
         <>
           {activeCourses.map((course) => {
@@ -223,9 +224,10 @@ export function Courses() {
             const dates = Object.keys(dosesByDate).sort();
 
             return (
-              <div
+              <Card
                 key={course.id}
-                className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
+                padding="none"
+                className="shadow-sm overflow-hidden"
               >
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
@@ -301,7 +303,7 @@ export function Courses() {
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             );
           })}
 
@@ -315,7 +317,7 @@ export function Courses() {
                   const dosesByDate = getDosesByDate(course.id);
                   const dates = Object.keys(dosesByDate).sort();
                   return (
-                    <div key={course.id} className="bg-surface-raised rounded-lg overflow-hidden">
+                    <Card key={course.id} padding="none" className="overflow-hidden">
                       <Button
                         variant="ghost"
                         onClick={() => toggleCompleted(course.id)}
@@ -396,7 +398,7 @@ export function Courses() {
                           })}
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
                 })}
               </div>

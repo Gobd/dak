@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Sun, Moon, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, NumberPickerCompact, Spinner, Toggle, Slider } from '@dak/ui';
+import { Modal, Button, NumberPickerCompact, Spinner, Toggle, Slider, Alert } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import {
@@ -198,12 +198,12 @@ export default function Brightness() {
       >
         <div className="space-y-4">
           {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
+            <Alert variant="error">
+              {error}
               {error === 'Relay offline' && (
                 <span className="text-text-muted text-xs ml-2">Is home-relay running?</span>
               )}
-            </div>
+            </Alert>
           )}
 
           {!error && (

@@ -23,7 +23,7 @@ import {
   listModelsVoiceModelsGet,
   listVoicesVoiceTtsVoicesGet,
 } from '@dak/api-client';
-import { Modal, Button, Spinner, Input, Toggle } from '@dak/ui';
+import { Modal, Button, Spinner, Input, Toggle, Slider } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
   ThemeMode,
@@ -436,15 +436,13 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               <Minus size={16} />
             </Button>
             <div className="flex-1 relative">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
+              <Slider
+                min={0}
+                max={100}
+                step={5}
                 value={volume}
-                onChange={(e) => changeVolume(parseInt(e.target.value, 10))}
+                onChange={changeVolume}
                 disabled={volumeLoading}
-                className="w-full h-2 bg-surface-sunken rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-text-muted">
                 {volume}%
@@ -643,16 +641,12 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 Max Recording Duration
               </label>
               <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="5"
-                  max="30"
-                  step="1"
+                <Slider
+                  min={5}
+                  max={30}
                   value={maxRecordingDuration}
-                  onChange={(e) =>
-                    updateGlobalSettings({ maxRecordingDuration: parseInt(e.target.value, 10) })
-                  }
-                  className="flex-1 h-2 bg-surface-sunken rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  onChange={(value) => updateGlobalSettings({ maxRecordingDuration: value })}
+                  className="flex-1"
                 />
                 <span className="text-sm text-text-secondary w-12 text-right">
                   {maxRecordingDuration}s

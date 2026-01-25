@@ -21,6 +21,7 @@ import {
   Spinner,
   Toggle,
   Input,
+  Slider,
 } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
@@ -1000,14 +1001,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             <label className="block text-sm font-medium mb-2">
               Header Height: {headerHeight}px
             </label>
-            <input
-              type="range"
-              min="0"
-              max="200"
-              step="10"
+            <Slider
+              min={0}
+              max={200}
+              step={10}
               value={headerHeight}
-              onChange={(e) => updateCalendar({ headerHeight: parseInt(e.target.value, 10) })}
-              className="w-full"
+              onChange={(value) => updateCalendar({ headerHeight: value })}
             />
             <p className="text-xs text-text-muted mt-1">
               Extra space in header for overlaying other widgets

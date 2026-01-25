@@ -1,4 +1,5 @@
 // Components
+export { Alert } from './components/Alert';
 export { Button } from './components/Button';
 export { Modal } from './components/Modal';
 export { ConfirmModal } from './components/ConfirmModal';

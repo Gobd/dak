@@ -15,7 +15,7 @@ import {
   Edit2,
   ChevronLeft,
 } from 'lucide-react';
-import { Spinner, Button, TimePickerCompact, Card, Toggle } from '@dak/ui';
+import { Spinner, Button, TimePickerCompact, Card, Toggle, Slider } from '@dak/ui';
 import { useSettingsStore } from '../stores/settings-store';
 import {
   createKasaClient,
@@ -231,15 +231,14 @@ export default function DeviceList() {
                 {brightnessMutation.isPending ? '...' : `${selectedDevice.brightness}%`}
               </span>
             </div>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={selectedDevice.brightness}
-              onChange={(e) =>
+            <Slider
+              min={1}
+              max={100}
+              value={selectedDevice.brightness ?? 100}
+              onChange={(value) =>
                 setSelectedDevice({
                   ...selectedDevice,
-                  brightness: parseInt(e.target.value, 10),
+                  brightness: value,
                 })
               }
               onMouseUp={(e) => {
@@ -250,8 +249,8 @@ export default function DeviceList() {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
                 brightnessMutation.mutate({ ip: selectedDevice.ip, brightness: val });
               }}
-              className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken"
               disabled={!selectedDevice.on}
+              thumbColor="warning"
             />
           </Card>
         )}
