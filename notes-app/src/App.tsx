@@ -9,6 +9,7 @@ import { Register } from './pages/Register';
 import { SetPassword } from './pages/SetPassword';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { SignUp } from './pages/SignUp';
 import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { Trash } from './pages/Trash';
@@ -75,6 +76,14 @@ export default function App() {
           element={
             <AuthRoute>
               <Register />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <AuthRoute>
+              <SignUp />
             </AuthRoute>
           }
         />
