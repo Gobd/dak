@@ -13,6 +13,7 @@ from typing import Union
 from astral import LocationInfo
 from astral.sun import sun as calc_sun
 from fastapi import APIRouter, HTTPException
+from timezonefinder import TimezoneFinder
 
 from app.models.brightness import (
     AutoBrightnessResponse,
@@ -121,7 +122,11 @@ def _fetch_sun_times() -> dict:
         return _sun_cache
 
     try:
-        location = LocationInfo(latitude=lat, longitude=lon)
+        # Get timezone from coordinates
+        tf = TimezoneFinder()
+        tz_name = tf.timezone_at(lat=lat, lng=lon) or "UTC"
+
+        location = LocationInfo(timezone=tz_name, latitude=lat, longitude=lon)
         s = calc_sun(location.observer, date=date.today())
 
         _sun_cache = {

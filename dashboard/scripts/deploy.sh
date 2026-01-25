@@ -102,7 +102,7 @@ grep -q 'EDITOR=nano' ~/.bashrc || echo 'export EDITOR=nano' >> ~/.bashrc
 echo "=== Setting up auto brightness cron ==="
 chmod +x ~/dashboard/scripts/brightness.sh
 (crontab -l 2>/dev/null | grep -v brightness || true
- echo "@reboot sleep 30 && curl -s http://localhost:5111/brightness/auto > /dev/null"
+ echo "@reboot sleep 30 && (curl -sf http://localhost:5111/brightness/auto || ddcutil setvcp 10 100)"
  echo "*/2 * * * * curl -s http://localhost:5111/brightness/auto > /dev/null"
 ) | crontab -
 
