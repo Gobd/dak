@@ -12,6 +12,8 @@
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
+    "@dak/hooks": "workspace:*",
+    "@dak/ui": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "@tiptap/core": "^3.17.0",
     "@tiptap/extension-placeholder": "^3.17.0",

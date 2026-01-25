@@ -28,6 +28,8 @@ interface MobileHeaderProps {
   // View toggle
   showPrivate: boolean;
   toggleShowPrivate: () => void;
+  // Kiosk mode - locks to public only
+  isPublicOnly?: boolean;
   // Create menu
   showCreateMenu: boolean;
   setShowCreateMenu: (show: boolean) => void;
@@ -56,6 +58,7 @@ export function MobileHeader({
   enterSelectionMode,
   showPrivate,
   toggleShowPrivate,
+  isPublicOnly = false,
   showCreateMenu,
   setShowCreateMenu,
   onCreateNote,
@@ -102,17 +105,23 @@ export function MobileHeader({
 
   return (
     <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-border">
-      <button onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2">
-        {!showPrivate && <Lock size={16} className="text-warning" />}
-        <span className="text-xl font-bold text-text">{showPrivate ? 'All Notes' : 'Public'}</span>
-        <ChevronDown size={18} className="text-text-muted" />
-      </button>
+      {isPublicOnly ? (
+        <span className="text-xl font-bold text-text">Notes</span>
+      ) : (
+        <button onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2">
+          {!showPrivate && <Lock size={16} className="text-warning" />}
+          <span className="text-xl font-bold text-text">
+            {showPrivate ? 'All Notes' : 'Public'}
+          </span>
+          <ChevronDown size={18} className="text-text-muted" />
+        </button>
+      )}
       <div className="flex items-center gap-2">
         {/* Create Note Button */}
         <div className="relative z-[11]">
           <button
             onClick={() => {
-              if (!showPrivate) {
+              if (isPublicOnly || !showPrivate) {
                 onCreateNote(false);
               } else {
                 setShowMobileMenu(false);
@@ -123,7 +132,7 @@ export function MobileHeader({
           >
             <Plus size={20} className="text-black" />
           </button>
-          {showCreateMenu && showPrivate && (
+          {showCreateMenu && showPrivate && !isPublicOnly && (
             <div className="absolute top-11 right-0 rounded-lg border min-w-[160px] z-[100] bg-surface-sunken border-border">
               <button
                 onClick={() => onCreateNote(false)}

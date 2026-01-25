@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 
 interface RedeemModalProps {
   onClose: () => void;
@@ -83,7 +82,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                       : 'bg-surface-raised'
                   }`}
                 >
-                  <MemberAvatar
+                  <Avatar
                     name={member.name}
                     emoji={member.avatar_emoji}
                     color={member.color}

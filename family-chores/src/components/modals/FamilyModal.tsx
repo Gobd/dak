@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, Check } from 'lucide-react';
-import { Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 
 interface FamilyModalProps {
   onClose: () => void;
@@ -135,7 +134,7 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
             ) : (
               /* Display mode */
               <>
-                <MemberAvatar
+                <Avatar
                   name={member.name}
                   emoji={member.avatar_emoji}
                   color={member.color}

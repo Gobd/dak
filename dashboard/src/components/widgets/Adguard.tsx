@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings, RefreshCw, AlertCircle } from 'lucide-react';
+import { Shield, ShieldOff, Settings, AlertCircle } from 'lucide-react';
+import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import {
   client,
   getStatusAdguardStatusPost,
@@ -66,8 +67,8 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   const config = getWidgetData<AdguardConfig>(panel.id) ?? { url: '', username: '', password: '' };
   const isConfigured = !!(config.url && config.username && config.password);
 
-  const [showSettings, setShowSettings] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const showSettings = useToggle(false);
+  const showMenu = useToggle(false);
   const [settingsForm, setSettingsForm] = useState(config);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
       setProtection(config, enabled, duration),
     onSuccess: () => {
       setError(null);
-      setShowMenu(false);
+      showMenu.setFalse();
       queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
     },
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed'),
@@ -134,7 +135,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
 
   function handleSaveSettings() {
     updateWidgetData(panel.id, settingsForm);
-    setShowSettings(false);
+    showSettings.setFalse();
     setError(null);
     queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
   }
@@ -157,7 +158,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         <button
           onClick={() => {
             setSettingsForm(config);
-            setShowSettings(true);
+            showSettings.setTrue();
           }}
           className={`p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
           title="Configure AdGuard"
@@ -166,12 +167,12 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         </button>
 
         <Modal
-          open={showSettings}
-          onClose={() => setShowSettings(false)}
+          open={showSettings.value}
+          onClose={() => showSettings.setFalse()}
           title="AdGuard Home Settings"
           actions={
             <>
-              <Button onClick={() => setShowSettings(false)}>Cancel</Button>
+              <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
               <Button onClick={handleSaveSettings} variant="primary">
                 Save
               </Button>
@@ -217,7 +218,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
     <div className="w-full h-full flex items-center justify-center relative">
       {/* Main button */}
       <button
-        onClick={() => setShowMenu(true)}
+        onClick={() => showMenu.setTrue()}
         disabled={isPending}
         className="relative p-2"
         title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
@@ -227,9 +228,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         ) : (
           <ShieldOff size={24} className="text-danger" />
         )}
-        {(isLoading || isPending) && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {(isLoading || isPending) && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
       </button>
 
       {/* Countdown text */}
@@ -243,7 +242,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
       <button
         onClick={() => {
           setSettingsForm(config);
-          setShowSettings(true);
+          showSettings.setTrue();
         }}
         className="absolute top-0 right-0 p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
         title="Settings"
@@ -253,9 +252,9 @@ export default function Adguard({ panel }: WidgetComponentProps) {
 
       {/* Control menu */}
       <Modal
-        open={showMenu}
+        open={showMenu.value}
         onClose={() => {
-          setShowMenu(false);
+          showMenu.setFalse();
           setError(null);
         }}
         title={protectionEnabled ? 'Disable Protection' : 'Protection Disabled'}
@@ -263,16 +262,16 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           <>
             <button
               onClick={() => {
-                setShowMenu(false);
+                showMenu.setFalse();
                 setSettingsForm(config);
-                setShowSettings(true);
+                showSettings.setTrue();
               }}
               className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
               title="Settings"
             >
               <Settings size={14} className="text-text-muted" />
             </button>
-            <Button onClick={() => setShowMenu(false)}>Cancel</Button>
+            <Button onClick={() => showMenu.setFalse()}>Cancel</Button>
           </>
         }
       >
@@ -312,12 +311,12 @@ export default function Adguard({ panel }: WidgetComponentProps) {
 
       {/* Settings modal */}
       <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
+        open={showSettings.value}
+        onClose={() => showSettings.setFalse()}
         title="AdGuard Home Settings"
         actions={
           <>
-            <Button onClick={() => setShowSettings(false)}>Cancel</Button>
+            <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
             <Button onClick={handleSaveSettings} variant="primary">
               Save
             </Button>

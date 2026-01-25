@@ -24,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             setIsFocused(false);
             onBlur?.(e);
           }}
-          className={`w-full px-4 py-3 rounded-lg text-base outline-none transition-colors border bg-surface-sunken text-text placeholder:text-text-muted placeholder:text-text-muted disabled:opacity-50 ${
+          className={`w-full px-4 py-3 rounded-lg text-base outline-none transition-colors border bg-surface-sunken text-text placeholder:text-text-muted disabled:opacity-50 ${
             error ? 'border-danger' : isFocused ? 'border-accent' : 'border-border'
           } ${className || ''}`}
           {...props}

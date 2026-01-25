@@ -15,6 +15,7 @@ import {
   Edit2,
   ChevronLeft,
 } from 'lucide-react';
+import { Spinner } from '@dak/ui';
 import { useSettingsStore } from '../stores/settings-store';
 import {
   createKasaClient,
@@ -147,7 +148,7 @@ export default function DeviceList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-accent" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -617,7 +618,7 @@ export default function DeviceList() {
           className="p-2 bg-surface-sunken rounded-lg hover:bg-border transition-colors disabled:opacity-50"
           aria-label="Refresh devices"
         >
-          <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-5 h-5" />}
         </button>
       </div>
 

@@ -1,5 +1,4 @@
-import { Modal } from '@dak/ui';
-import { MemberAvatar } from '../shared/MemberAvatar';
+import { Avatar, Modal } from '@dak/ui';
 import type { FamilyMember } from '../../types';
 
 interface MemberPickerModalProps {
@@ -24,12 +23,7 @@ export function MemberPickerModal({
             onClick={() => onSelect(member.id)}
             className="w-full flex items-center gap-4 p-4 rounded-xl bg-surface-raised hover:bg-surface-sunken transition-colors"
           >
-            <MemberAvatar
-              name={member.name}
-              emoji={member.avatar_emoji}
-              color={member.color}
-              size="lg"
-            />
+            <Avatar name={member.name} emoji={member.avatar_emoji} color={member.color} size="lg" />
             <span className="font-medium text-text">{member.name}</span>
           </button>
         ))}

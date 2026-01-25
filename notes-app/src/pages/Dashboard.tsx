@@ -12,20 +12,19 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useToggle } from '@dak/hooks';
 import { DesktopSidebar } from '../components/DesktopSidebar';
 import { MobileHeader } from '../components/MobileHeader';
 import { NoteEditor } from '../components/NoteEditor';
 import { NotesList } from '../components/NotesList';
-import { SearchBar } from '../components/SearchBar';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { ConfirmModal, SearchInput, Spinner } from '@dak/ui';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
 import { useTagsStore } from '../stores/tags-store';
 import { useToastStore } from '../stores/toast-store';
 import { useUserStore } from '../stores/user-store';
-import { useViewStore } from '../stores/view-store';
+import { isPublicOnly, useViewStore } from '../stores/view-store';
 import { getNoteTitle } from '../types/note';
 
 export function Dashboard() {
@@ -72,17 +71,17 @@ export function Dashboard() {
   const [showNotesSidebar, setShowNotesSidebar] = useState(true);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSortMenu, setShowSortMenu] = useState(false);
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showMobileTagsMenu, setShowMobileTagsMenu] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const showSortMenu = useToggle(false);
+  const showCreateMenu = useToggle(false);
+  const showMobileMenu = useToggle(false);
+  const showMobileTagsMenu = useToggle(false);
+  const showLogoutConfirm = useToggle(false);
+  const showDeleteConfirm = useToggle(false);
 
   // Selection mode for bulk delete
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const isSelectionMode = useToggle(false);
   const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const showBulkDeleteConfirm = useToggle(false);
 
   // Fetch notes, tags, and profile on mount
   useEffect(() => {
@@ -189,7 +188,7 @@ export function Dashboard() {
 
   const handleCreateNote = async (isPrivate: boolean = false) => {
     if (!user?.id) return;
-    setShowCreateMenu(false);
+    showCreateMenu.setFalse();
     await createNote(user.id, isPrivate);
     // On mobile, navigate to the new note by hiding sidebar
     if (!isDesktop) {
@@ -234,14 +233,14 @@ export function Dashboard() {
       return;
     }
 
-    setShowDeleteConfirm(true);
+    showDeleteConfirm.setTrue();
   };
 
   const handleConfirmTrash = async () => {
     if (!user?.id || !currentNote) return;
 
     await trashNote(currentNote.id, user.id);
-    setShowDeleteConfirm(false);
+    showDeleteConfirm.setFalse();
     setCurrentNote(null);
     // On mobile, return to list view
     if (!isDesktop) {
@@ -251,12 +250,12 @@ export function Dashboard() {
 
   // Selection mode handlers
   const enterSelectionMode = () => {
-    setIsSelectionMode(true);
+    isSelectionMode.setTrue();
     setSelectedNoteIds(new Set());
   };
 
   const exitSelectionMode = () => {
-    setIsSelectionMode(false);
+    isSelectionMode.setFalse();
     setSelectedNoteIds(new Set());
   };
 
@@ -291,7 +290,7 @@ export function Dashboard() {
       await trashNote(noteId, user.id);
     }
 
-    setShowBulkDeleteConfirm(false);
+    showBulkDeleteConfirm.setFalse();
     exitSelectionMode();
     setCurrentNote(null);
   };
@@ -303,8 +302,8 @@ export function Dashboard() {
 
   const handleSelectNote = (note: typeof currentNote) => {
     setCurrentNote(note);
-    setShowCreateMenu(false);
-    setShowMobileMenu(false);
+    showCreateMenu.setFalse();
+    showMobileMenu.setFalse();
     if (!isDesktop) {
       setShowSidebar(false);
     }
@@ -316,7 +315,7 @@ export function Dashboard() {
   };
 
   if (isLoading && notes.length === 0) {
-    return <LoadingSpinner fullScreen />;
+    return <Spinner size="lg" fullScreen />;
   }
 
   // Mobile: show either list or editor
@@ -343,43 +342,49 @@ export function Dashboard() {
     return (
       <div className="flex flex-col min-h-screen relative bg-surface">
         {/* Backdrop to close menus when tapping outside */}
-        {(showMobileMenu || showSortMenu || showCreateMenu) && (
+        {(showMobileMenu.value || showSortMenu.value || showCreateMenu.value) && (
           <div
             onClick={() => {
-              setShowMobileMenu(false);
-              setShowMobileTagsMenu(false);
-              setShowSortMenu(false);
-              setShowCreateMenu(false);
+              showMobileMenu.setFalse();
+              showMobileTagsMenu.setFalse();
+              showSortMenu.setFalse();
+              showCreateMenu.setFalse();
             }}
             className="absolute inset-0 z-[5]"
           />
         )}
         {/* Mobile Header */}
         <MobileHeader
-          isSelectionMode={isSelectionMode}
+          isSelectionMode={isSelectionMode.value}
           allOwnedSelected={allOwnedSelected}
           selectedNoteIds={selectedNoteIds}
           toggleSelectAll={toggleSelectAll}
-          onBulkDelete={() => setShowBulkDeleteConfirm(true)}
+          onBulkDelete={() => showBulkDeleteConfirm.setTrue()}
           exitSelectionMode={exitSelectionMode}
           enterSelectionMode={enterSelectionMode}
           showPrivate={showPrivate}
           toggleShowPrivate={toggleShowPrivate}
-          showCreateMenu={showCreateMenu}
-          setShowCreateMenu={setShowCreateMenu}
+          isPublicOnly={isPublicOnly}
+          showCreateMenu={showCreateMenu.value}
+          setShowCreateMenu={showCreateMenu.set}
           onCreateNote={handleCreateNote}
-          showMobileMenu={showMobileMenu}
-          setShowMobileMenu={setShowMobileMenu}
+          showMobileMenu={showMobileMenu.value}
+          setShowMobileMenu={showMobileMenu.set}
           tags={tags}
           selectedTagId={selectedTagId}
           setSelectedTagId={setSelectedTagId}
           tagCounts={tagCounts}
-          showMobileTagsMenu={showMobileTagsMenu}
-          setShowMobileTagsMenu={setShowMobileTagsMenu}
-          onLogout={() => setShowLogoutConfirm(true)}
+          showMobileTagsMenu={showMobileTagsMenu.value}
+          setShowMobileTagsMenu={showMobileTagsMenu.set}
+          onLogout={() => showLogoutConfirm.setTrue()}
         />
         {/* Mobile Search */}
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search notes..."
+          className="mx-4 my-2"
+        />
         {/* Active Tag Filter */}
         {selectedTagId && (
           <button
@@ -400,10 +405,7 @@ export function Dashboard() {
         )}
         {/* Mobile Sort Options */}
         <div className="px-4 py-2 border-b border-border">
-          <button
-            onClick={() => setShowSortMenu(!showSortMenu)}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
             <ArrowUpDown size={14} className="text-text-muted" />
             <span className="text-xs text-text-muted">
               {sortBy === 'updated'
@@ -413,14 +415,14 @@ export function Dashboard() {
                   : 'Title'}
             </span>
           </button>
-          {showSortMenu && (
+          {showSortMenu.value && (
             <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
               {(['updated', 'created', 'title'] as const).map((option) => (
                 <button
                   key={option}
                   onClick={() => {
                     setSortBy(option);
-                    setShowSortMenu(false);
+                    showSortMenu.setFalse();
                   }}
                   className={`w-full px-3 py-2 text-left ${
                     sortBy === option ? 'bg-surface-sunken' : ''
@@ -446,40 +448,40 @@ export function Dashboard() {
           onSelectNote={handleSelectNote}
           emptyStateType={emptyStateType}
           searchQuery={searchQuery}
-          selectionMode={isSelectionMode}
+          selectionMode={isSelectionMode.value}
           selectedIds={selectedNoteIds}
           onToggleSelect={toggleNoteSelection}
           currentUserId={user?.id}
         />
-        <ConfirmDialog
-          visible={showLogoutConfirm}
+        <ConfirmModal
+          open={showLogoutConfirm.value}
           title="Log out"
           message="Are you sure you want to log out?"
           confirmText="Log out"
-          destructive
+          variant="danger"
           onConfirm={() => {
-            setShowLogoutConfirm(false);
+            showLogoutConfirm.setFalse();
             signOut();
           }}
-          onCancel={() => setShowLogoutConfirm(false)}
+          onClose={() => showLogoutConfirm.setFalse()}
         />
-        <ConfirmDialog
-          visible={showDeleteConfirm}
+        <ConfirmModal
+          open={showDeleteConfirm.value}
           title="Delete note?"
           message="This will move the note to trash."
           confirmText="Delete"
-          destructive
+          variant="danger"
           onConfirm={handleConfirmTrash}
-          onCancel={() => setShowDeleteConfirm(false)}
+          onClose={() => showDeleteConfirm.setFalse()}
         />
-        <ConfirmDialog
-          visible={showBulkDeleteConfirm}
+        <ConfirmModal
+          open={showBulkDeleteConfirm.value}
           title={`Delete ${selectedNoteIds.size} notes?`}
           message={`This will move ${selectedNoteIds.size} note${selectedNoteIds.size === 1 ? '' : 's'} to trash.`}
           confirmText="Delete"
-          destructive
+          variant="danger"
           onConfirm={handleBulkTrash}
-          onCancel={() => setShowBulkDeleteConfirm(false)}
+          onClose={() => showBulkDeleteConfirm.setFalse()}
         />
       </div>
     );
@@ -489,11 +491,11 @@ export function Dashboard() {
   return (
     <div className="flex h-screen overflow-hidden relative bg-surface">
       {/* Backdrop to close menus when clicking/tapping outside */}
-      {(showSortMenu || showCreateMenu) && (
+      {(showSortMenu.value || showCreateMenu.value) && (
         <div
           onClick={() => {
-            setShowSortMenu(false);
-            setShowCreateMenu(false);
+            showSortMenu.setFalse();
+            showCreateMenu.setFalse();
           }}
           className="absolute inset-0 z-[5]"
         />
@@ -507,7 +509,7 @@ export function Dashboard() {
           onSelectTag={setSelectedTagId}
           tagCounts={tagCounts}
           userEmail={user?.email}
-          onLogout={() => setShowLogoutConfirm(true)}
+          onLogout={() => showLogoutConfirm.setTrue()}
         />
       )}
 
@@ -515,7 +517,7 @@ export function Dashboard() {
       {showNotesSidebar && (
         <div className="w-72 border-r border-border flex flex-col min-h-0 z-10">
           {/* Notes Header */}
-          {isSelectionMode ? (
+          {isSelectionMode.value ? (
             <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border bg-surface-sunken">
               <button onClick={toggleSelectAll} className="flex items-center gap-2">
                 {allOwnedSelected ? (
@@ -528,7 +530,7 @@ export function Dashboard() {
               <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => selectedNoteIds.size > 0 && setShowBulkDeleteConfirm(true)}
+                  onClick={() => selectedNoteIds.size > 0 && showBulkDeleteConfirm.setTrue()}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium ${
                     selectedNoteIds.size > 0
                       ? 'bg-danger text-text'
@@ -553,6 +555,8 @@ export function Dashboard() {
                 <span className="text-base font-medium flex-1 text-text">
                   {tags.find((t) => t.id === selectedTagId)?.name || 'Notes'}
                 </span>
+              ) : isPublicOnly ? (
+                <span className="text-base font-medium flex-1 text-text">Notes</span>
               ) : (
                 <button
                   onClick={toggleShowPrivate}
@@ -571,18 +575,18 @@ export function Dashboard() {
               <div className="relative z-10">
                 <button
                   onClick={() => {
-                    // In public-only mode, just create a public note directly
-                    if (!showPrivate) {
+                    // In public-only mode or kiosk mode, just create a public note directly
+                    if (isPublicOnly || !showPrivate) {
                       handleCreateNote(false);
                     } else {
-                      setShowCreateMenu(!showCreateMenu);
+                      showCreateMenu.toggle();
                     }
                   }}
                   className="p-1.5 rounded-md mr-2 bg-warning"
                 >
                   <Plus size={18} className="text-black" />
                 </button>
-                {showCreateMenu && showPrivate && (
+                {showCreateMenu.value && showPrivate && !isPublicOnly && (
                   <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-surface-sunken border-border">
                     <button
                       onClick={() => handleCreateNote(false)}
@@ -608,7 +612,12 @@ export function Dashboard() {
           )}
 
           {/* Desktop Search */}
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search notes..."
+            className="mx-4 my-2"
+          />
 
           {/* Active Tag Filter */}
           {selectedTagId && (
@@ -631,10 +640,7 @@ export function Dashboard() {
 
           {/* Sort Options */}
           <div className="px-4 py-2 border-b border-border">
-            <button
-              onClick={() => setShowSortMenu(!showSortMenu)}
-              className="flex items-center gap-1"
-            >
+            <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
               <ArrowUpDown size={14} className="text-text-muted" />
               <span className="text-xs text-text-muted">
                 {sortBy === 'updated'
@@ -644,14 +650,14 @@ export function Dashboard() {
                     : 'Title'}
               </span>
             </button>
-            {showSortMenu && (
+            {showSortMenu.value && (
               <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
                 {(['updated', 'created', 'title'] as const).map((option) => (
                   <button
                     key={option}
                     onClick={() => {
                       setSortBy(option);
-                      setShowSortMenu(false);
+                      showSortMenu.setFalse();
                     }}
                     className={`w-full px-3 py-2 text-left ${
                       sortBy === option ? 'bg-surface-sunken' : ''
@@ -679,7 +685,7 @@ export function Dashboard() {
             onSelectNote={handleSelectNote}
             emptyStateType={emptyStateType}
             searchQuery={searchQuery}
-            selectionMode={isSelectionMode}
+            selectionMode={isSelectionMode.value}
             selectedIds={selectedNoteIds}
             onToggleSelect={toggleNoteSelection}
             currentUserId={user?.id}
@@ -745,35 +751,35 @@ export function Dashboard() {
           </div>
         )}
       </div>
-      <ConfirmDialog
-        visible={showLogoutConfirm}
+      <ConfirmModal
+        open={showLogoutConfirm.value}
         title="Log out"
         message="Are you sure you want to log out?"
         confirmText="Log out"
-        destructive
+        variant="danger"
         onConfirm={() => {
-          setShowLogoutConfirm(false);
+          showLogoutConfirm.setFalse();
           signOut();
         }}
-        onCancel={() => setShowLogoutConfirm(false)}
+        onClose={() => showLogoutConfirm.setFalse()}
       />
-      <ConfirmDialog
-        visible={showDeleteConfirm}
+      <ConfirmModal
+        open={showDeleteConfirm.value}
         title="Delete note?"
         message="This will move the note to trash."
         confirmText="Delete"
-        destructive
+        variant="danger"
         onConfirm={handleConfirmTrash}
-        onCancel={() => setShowDeleteConfirm(false)}
+        onClose={() => showDeleteConfirm.setFalse()}
       />
-      <ConfirmDialog
-        visible={showBulkDeleteConfirm}
+      <ConfirmModal
+        open={showBulkDeleteConfirm.value}
         title={`Delete ${selectedNoteIds.size} notes?`}
         message={`This will move ${selectedNoteIds.size} note${selectedNoteIds.size === 1 ? '' : 's'} to trash.`}
         confirmText="Delete"
-        destructive
+        variant="danger"
         onConfirm={handleBulkTrash}
-        onCancel={() => setShowBulkDeleteConfirm(false)}
+        onClose={() => showBulkDeleteConfirm.setFalse()}
       />
     </div>
   );

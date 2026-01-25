@@ -1,6 +1,6 @@
 import { Check, Trophy, User } from 'lucide-react';
 import type { ChoreInstanceWithDetails } from '../../types';
-import { MemberAvatar } from './MemberAvatar';
+import { Avatar } from '@dak/ui';
 import { format } from 'date-fns';
 import { useSettingsStore } from '../../stores/settings-store';
 
@@ -132,7 +132,7 @@ export function TaskCard({
             <div className="flex items-center gap-1">
               {completed && completed_by_member ? (
                 <>
-                  <MemberAvatar
+                  <Avatar
                     name={completed_by_member.name}
                     emoji={completed_by_member.avatar_emoji}
                     color={completed_by_member.color}
@@ -142,7 +142,7 @@ export function TaskCard({
                 </>
               ) : (
                 assignees.map((member) => (
-                  <MemberAvatar
+                  <Avatar
                     key={member.id}
                     name={member.name}
                     emoji={member.avatar_emoji}

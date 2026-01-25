@@ -14,10 +14,24 @@ interface ViewStore {
   setTouchscreenMode: (enabled: boolean) => void;
 }
 
+// Check for publicOnly query param (used when embedded in dashboard iframe)
+function getPublicOnlyFromQueryParam(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('publicOnly') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+// Exported so components can hide the privacy toggle in publicOnly mode
+export const isPublicOnly = getPublicOnlyFromQueryParam();
+
 export const useViewStore = create<ViewStore>()(
   persist(
     (set, get) => ({
-      showPrivate: true,
+      // When publicOnly query param is set, hide private notes
+      showPrivate: isPublicOnly ? false : true,
       setShowPrivate: (show) => set({ showPrivate: show }),
       toggleShowPrivate: () => set({ showPrivate: !get().showPrivate }),
       sortBy: 'updated',
@@ -27,6 +41,9 @@ export const useViewStore = create<ViewStore>()(
     }),
     {
       name: 'view-storage',
+      // Skip persisting showPrivate when publicOnly is active (so it doesn't override the query param on reload)
+      partialize: (state) =>
+        isPublicOnly ? { sortBy: state.sortBy, touchscreenMode: state.touchscreenMode } : state,
     },
   ),
 );

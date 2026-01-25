@@ -2,6 +2,11 @@
 
 Rich-text note-taking app with real-time sync, sharing, and organization features.
 
+|                                                     |                                                       |
+| --------------------------------------------------- | ----------------------------------------------------- |
+| ![Notes List](screenshots/notes-app/notes-list.png) | ![Note Detail](screenshots/notes-app/note-detail.png) |
+| Notes list                                          | Note editor with sharing                              |
+
 ## Features
 
 - Rich text editing with Tiptap (markdown, task lists, formatting)

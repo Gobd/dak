@@ -13,6 +13,7 @@ apps/
 
 packages/
   ui/               # Shared UI components (@dak/ui)
+  hooks/            # Shared React hooks (@dak/hooks)
   vite-shared-react/ # Shared Vite config & theme
   api-client/       # Generated home-relay API client (@dak/api-client)
   kasa-client/      # Kasa smart plug client
@@ -54,10 +55,33 @@ All colors come from `/packages/vite-shared-react/theme/theme.css`. Never use ha
 
 ### @dak/ui
 
-Shared components: `Button`, `Modal`, `Input`, `DatePicker`, `TimePicker`, etc.
+Shared components for forms, layout, and feedback:
+
+- **Buttons & inputs:** `Button`, `Input`, `Toggle`, `SearchInput`
+- **Modals:** `Modal`, `ConfirmModal`
+- **Pickers:** `DatePicker`, `DatePickerCompact`, `TimePickerCompact`, `DateTimePicker`, `NumberPickerCompact`
+- **Feedback:** `Spinner`, `Badge`, `EmptyState`, `ProgressRing`
+- **Auth:** `Login`, `SignUp`, `ForgotPassword`, `ResetPassword`, `createAuthStore`
+- **Utilities:** `Avatar`, `PasswordRequirements`, `Roller`, `RealtimeSync`, `createThemeStore`
 
 ```tsx
-import { Button, Modal } from '@dak/ui';
+import { Button, Modal, Spinner, Toggle } from '@dak/ui';
+```
+
+### @dak/hooks
+
+Shared React hooks for common patterns:
+
+- `useLocalStorage` - Persist state to localStorage
+- `useInterval` - setInterval with cleanup
+- `useMediaQuery` - Responsive breakpoint detection
+- `useKeyPress` - Keyboard event handling
+- `useToggle` - Boolean state with toggle/on/off
+- `useCopyToClipboard` - Clipboard API wrapper
+- `useDarkMode` - Dark mode state and detection
+
+```tsx
+import { useLocalStorage, useToggle, useDarkMode } from '@dak/hooks';
 ```
 
 ### vite-shared-react

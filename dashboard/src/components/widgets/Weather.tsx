@@ -4,7 +4,7 @@ import { Settings, RefreshCw, AlertTriangle, Wind } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 import type { LocationConfig } from '../../types';
 
@@ -174,7 +174,11 @@ function WeatherSettingsModal({
         <div>
           <label className="block text-sm font-medium mb-2">Data</label>
           <Button onClick={onRefresh} disabled={isRefreshing}>
-            <RefreshCw size={14} className={isRefreshing ? 'animate-spin mr-2' : 'mr-2'} />
+            {isRefreshing ? (
+              <Spinner size="sm" className="mr-2" />
+            ) : (
+              <RefreshCw size={14} className="mr-2" />
+            )}
             {isRefreshing ? 'Refreshing...' : 'Refresh Now'}
           </Button>
         </div>
@@ -255,7 +259,7 @@ export default function Weather({ panel }: WidgetComponentProps) {
   if (isLoading && !weather) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-surface text-text`}>
-        <RefreshCw size={20} className="animate-spin text-text-muted" />
+        <Spinner size="md" />
       </div>
     );
   }

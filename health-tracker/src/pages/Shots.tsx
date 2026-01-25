@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useToggle } from '@dak/hooks';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
 import {
@@ -25,7 +26,7 @@ export function Shots() {
     deleteSchedule,
     deleteLog,
   } = useShotsStore();
-  const [showAddForm, setShowAddForm] = useState(false);
+  const showAddForm = useToggle(false);
   const [showLogForm, setShowLogForm] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function Shots() {
   const [logDose, setLogDose] = useState('');
   const [logNotes, setLogNotes] = useState('');
   const [logTime, setLogTime] = useState<Date | null>(null);
-  const [useCustomTime, setUseCustomTime] = useState(false);
+  const useCustomTime = useToggle(false);
 
   useEffect(() => {
     fetchPeople();
@@ -59,7 +60,7 @@ export function Shots() {
       current_dose: currentDose,
       next_due: format(nextDue, 'yyyy-MM-dd'),
     });
-    setShowAddForm(false);
+    showAddForm.setFalse();
     setPersonId('');
     setName('');
     setIntervalDays(7);
@@ -69,13 +70,13 @@ export function Shots() {
 
   const handleLogShot = async (scheduleId: string) => {
     if (!logDose) return;
-    const takenAt = useCustomTime && logTime ? logTime : undefined;
+    const takenAt = useCustomTime.value && logTime ? logTime : undefined;
     await logShot(scheduleId, logDose, logNotes || undefined, takenAt);
     setShowLogForm(null);
     setLogDose('');
     setLogNotes('');
     setLogTime(null);
-    setUseCustomTime(false);
+    useCustomTime.setFalse();
   };
 
   const handleTimeChange = useCallback((date: Date) => {
@@ -105,7 +106,7 @@ export function Shots() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Shot Tracking</h1>
         <button
-          onClick={() => setShowAddForm(true)}
+          onClick={() => showAddForm.setTrue()}
           className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
         >
           <Plus size={18} /> Add
@@ -133,14 +134,14 @@ export function Shots() {
       />
 
       <Modal
-        open={showAddForm}
-        onClose={() => setShowAddForm(false)}
+        open={showAddForm.value}
+        onClose={() => showAddForm.setFalse()}
         title="New Shot Schedule"
         actions={
           <>
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
+              onClick={() => showAddForm.setFalse()}
               className={`flex-1 ${btnSecondary}`}
             >
               Cancel
@@ -354,13 +355,13 @@ export function Shots() {
                         </label>
                         <button
                           type="button"
-                          onClick={() => setUseCustomTime(!useCustomTime)}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'}`}
+                          onClick={() => useCustomTime.toggle()}
+                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime.value ? 'bg-accent text-text' : 'bg-surface-sunken text-text-secondary'}`}
                         >
-                          {useCustomTime ? 'Custom time' : 'Now'}
+                          {useCustomTime.value ? 'Custom time' : 'Now'}
                         </button>
                       </div>
-                      {useCustomTime && (
+                      {useCustomTime.value && (
                         <DateTimePicker value={logTime} onChange={handleTimeChange} />
                       )}
                     </div>
@@ -380,7 +381,7 @@ export function Shots() {
                       <button
                         onClick={() => {
                           setShowLogForm(null);
-                          setUseCustomTime(false);
+                          useCustomTime.setFalse();
                         }}
                         className={btnSecondary}
                       >

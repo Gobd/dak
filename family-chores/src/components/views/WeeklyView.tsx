@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { Modal } from '@dak/ui';
+import { Avatar, Modal } from '@dak/ui';
 import { supabase } from '../../lib/supabase';
 import { useChoresStore } from '../../stores/chores-store';
 import { useMembersStore } from '../../stores/members-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 import type { ChoreInstance } from '../../types';
 
 export function WeeklyView() {
@@ -217,7 +216,7 @@ export function WeeklyView() {
                       <div className="flex items-center gap-2 mt-2">
                         {instance.completed && completedByMember ? (
                           <>
-                            <MemberAvatar
+                            <Avatar
                               name={completedByMember.name}
                               emoji={completedByMember.avatar_emoji}
                               color={completedByMember.color}
@@ -232,7 +231,7 @@ export function WeeklyView() {
                           </>
                         ) : assignedMember ? (
                           <>
-                            <MemberAvatar
+                            <Avatar
                               name={assignedMember.name}
                               emoji={assignedMember.avatar_emoji}
                               color={assignedMember.color}

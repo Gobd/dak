@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, Play, Trophy, User } from 'lucide-react';
-import { Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal } from '@dak/ui';
 import { useChoresStore } from '../../stores/chores-store';
 import { useInstancesStore } from '../../stores/instances-store';
-import { MemberAvatar } from '../shared/MemberAvatar';
 import { ChoreEditModal } from './ChoreEditModal';
 import type { ChoreWithAssignments } from '../../types';
 
@@ -124,7 +123,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                     <span className="text-text-secondary">•</span>
                     <div className="flex -space-x-1">
                       {chore.assignments.slice(0, 3).map((a) => (
-                        <MemberAvatar
+                        <Avatar
                           key={a.id}
                           name={a.member.name}
                           emoji={a.member.avatar_emoji}
@@ -187,7 +186,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                         disabled={assigning}
                         className="flex items-center gap-1.5 px-2 py-1.5 bg-surface-sunken rounded-lg hover:bg-surface-sunken disabled:opacity-50"
                       >
-                        <MemberAvatar
+                        <Avatar
                           name={a.member.name}
                           emoji={a.member.avatar_emoji}
                           color={a.member.color}

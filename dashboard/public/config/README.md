@@ -68,7 +68,33 @@ Each panel supports:
 | `kasa`       | Kasa smart device toggles  | -                                                                               |
 | `wol`        | Wake on LAN                | -                                                                               |
 | `brightness` | Auto-brightness settings   | -                                                                               |
-| `iframe`     | Embedded URL               | `src: string`                                                                   |
+| `iframe`     | Embedded URL               | `src: string` + any other args passed as query params                           |
+
+### iframe Widget
+
+The iframe widget embeds external URLs. All args (except `src`) are passed as query parameters:
+
+```json
+{
+  "widget": "iframe",
+  "args": {
+    "src": "/notes-app/",
+    "publicOnly": true,
+    "tags": ["work", "personal"]
+  }
+}
+```
+
+Generates URL: `/notes-app/?publicOnly=true&tags=work&tags=personal`
+
+**Dark mode**: `?dark=true` is automatically appended when the dashboard is in dark mode. Supported apps are hardcoded in `Iframe.tsx`: `/notes-app/`, `/health-tracker/`, `/family-chores/`.
+
+**Supported arg types**:
+
+- `string` - passed as-is
+- `number` - converted to string
+- `boolean` - converted to `"true"` or `"false"`
+- `array` - multiple params with same key (e.g., `tags=a&tags=b`)
 
 ### brightness
 

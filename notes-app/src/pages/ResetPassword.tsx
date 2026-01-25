@@ -1,10 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { PasswordRequirements } from '../components/ui/password-requirements';
-import { isPasswordValid } from '../lib/password-validation';
+import { Button, Input, PasswordRequirements, isPasswordValid } from '@dak/ui';
 
 export function ResetPassword() {
   const navigate = useNavigate();

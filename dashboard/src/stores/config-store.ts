@@ -118,6 +118,10 @@ interface ConfigState extends DashboardConfig {
   isEditMode: boolean;
   setEditMode: (editing: boolean) => void;
 
+  // Global modals (UI state, not persisted)
+  mqttModalOpen: boolean;
+  setMqttModalOpen: (open: boolean) => void;
+
   // Screen actions
   addScreen: (name: string) => void;
   removeScreen: (index: number) => void;
@@ -166,8 +170,10 @@ export const useConfigStore = create<ConfigState>()(
       (set, get) => ({
         ...DEFAULT_CONFIG,
         isEditMode: initialEditMode,
+        mqttModalOpen: false,
 
         setEditMode: (editing) => set({ isEditMode: editing }),
+        setMqttModalOpen: (open) => set({ mqttModalOpen: open }),
 
         addScreen: (name) =>
           set((state) => ({
