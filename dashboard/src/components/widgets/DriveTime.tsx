@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Car, X, Settings, Plus, Trash2 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact, NumberPickerCompact } from '@dak/ui';
+import { Modal, Button, ConfirmModal, TimePickerCompact, NumberPickerCompact, Input } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import type { DriveTimeRoute } from '../../types';
@@ -636,11 +636,9 @@ function RouteManagerModal({
                 {editingLocation === name ? (
                   <div className="space-y-2">
                     <div className="text-sm font-medium">{name}</div>
-                    <input
-                      type="text"
+                    <Input
                       value={editAddress}
                       onChange={(e) => setEditAddress(e.target.value)}
-                      className="w-full p-2 text-sm rounded bg-surface-sunken border border-border"
                       placeholder="Address"
                     />
                     <div className="flex gap-2">
@@ -900,12 +898,10 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           </select>
           {form.origin === '__new__' && (
             <div className="mt-2 space-y-2">
-              <input
-                type="text"
+              <Input
                 value={form.newOriginName}
                 onChange={(e) => setForm((f) => ({ ...f, newOriginName: e.target.value }))}
                 placeholder="Name (e.g., home)"
-                className="w-full p-2 rounded bg-surface-sunken border border-border"
               />
               <AddressAutocomplete
                 value={form.newOriginAddr}
@@ -939,12 +935,10 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           </select>
           {form.destination === '__new__' && (
             <div className="mt-2 space-y-2">
-              <input
-                type="text"
+              <Input
                 value={form.newDestName}
                 onChange={(e) => setForm((f) => ({ ...f, newDestName: e.target.value }))}
                 placeholder="Name (e.g., work)"
-                className="w-full p-2 rounded bg-surface-sunken border border-border"
               />
               <AddressAutocomplete
                 value={form.newDestAddr}
@@ -1057,16 +1051,12 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
         </div>
 
         {/* Label */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Label (optional)</label>
-          <input
-            type="text"
-            value={form.label}
-            onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-            placeholder="e.g., Dad to Office"
-            className="w-full p-2 rounded bg-surface-sunken border border-border"
-          />
-        </div>
+        <Input
+          label="Label (optional)"
+          value={form.label}
+          onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+          placeholder="e.g., Dad to Office"
+        />
 
         {/* Min time to show */}
         <div>

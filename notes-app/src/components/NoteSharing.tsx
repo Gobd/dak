@@ -4,7 +4,7 @@ import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
-import { ConfirmModal, Spinner, Input, Button } from '@dak/ui';
+import { ConfirmModal, Input, Button } from '@dak/ui';
 import { useToastStore } from '../stores/toast-store';
 import type { Note } from '../types/note';
 

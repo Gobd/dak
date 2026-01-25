@@ -80,12 +80,10 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
             {editingId === member.id ? (
               /* Edit mode */
               <div className="flex-1 space-y-3">
-                <input
-                  type="text"
+                <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Name"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                   autoFocus
                 />
                 <div className="flex gap-2 flex-wrap">

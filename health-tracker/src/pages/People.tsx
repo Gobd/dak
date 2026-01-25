@@ -74,11 +74,9 @@ export function People() {
             <div key={person.id} className="flex items-center justify-between p-4">
               {editingId === person.id ? (
                 <div className="flex items-center gap-2 flex-1">
-                  <input
-                    type="text"
+                  <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="flex-1 px-3 py-1 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
                     autoFocus
                   />
                   <button

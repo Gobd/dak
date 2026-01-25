@@ -358,15 +358,15 @@ export function Settings() {
             <span className="block text-xs mb-1 text-text-muted">Display Name</span>
             {isEditingName ? (
               <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
-                  placeholder="Enter your name"
-                  autoFocus
-                  className="flex-1 rounded-md px-2.5 py-2 text-base outline-none bg-surface-sunken text-text"
-                />
+                <div className="flex-1">
+                  <Input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
+                    placeholder="Enter your name"
+                    autoFocus
+                  />
+                </div>
                 <button
                   onClick={handleSaveDisplayName}
                   disabled={isSavingName}
