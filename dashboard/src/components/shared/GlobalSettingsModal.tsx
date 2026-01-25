@@ -5,7 +5,6 @@ import {
   Monitor,
   CheckCircle,
   XCircle,
-  Loader2,
   Mic,
   Volume2,
   Plus,
@@ -24,7 +23,7 @@ import {
   listModelsVoiceModelsGet,
   listVoicesVoiceTtsVoicesGet,
 } from '@dak/api-client';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import { AddressAutocomplete } from './AddressAutocomplete';
 import type {
   ThemeMode,
@@ -552,7 +551,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   if (isDownloading) {
                     return (
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-light text-accent min-w-[80px]">
-                        <Loader2 size={16} className="animate-spin" />
+                        <Spinner size="sm" />
                         <span className="text-xs">{downloadProgress}%</span>
                       </div>
                     );
@@ -616,7 +615,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   if (isDownloading) {
                     return (
                       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-light text-accent min-w-[80px]">
-                        <Loader2 size={16} className="animate-spin" />
+                        <Spinner size="sm" />
                         <span className="text-xs">{ttsDownloadProgress}%</span>
                       </div>
                     );
@@ -724,7 +723,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               disabled={relayStatus === 'testing'}
             >
               {relayStatus === 'testing' ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Spinner size="sm" />
               ) : relayStatus === 'success' ? (
                 <CheckCircle size={18} className="text-success" />
               ) : relayStatus === 'error' ? (
@@ -770,7 +769,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
               disabled={zigbeeStatus === 'testing'}
             >
               {zigbeeStatus === 'testing' ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Spinner size="sm" />
               ) : zigbeeStatus === 'success' ? (
                 <CheckCircle size={18} className="text-success" />
               ) : zigbeeStatus === 'error' ? (

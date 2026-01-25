@@ -10,7 +10,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, SearchInput, EmptyState } from '@dak/ui';
 import { GlobalSettingsModal } from '../shared/GlobalSettingsModal';
 import { WIDGET_DEFAULTS, type WidgetType } from '../../types';
 
@@ -228,18 +228,12 @@ export function EditToolbar() {
         }}
         title="Add Widget"
       >
-        <input
-          type="text"
+        <SearchInput
           value={widgetSearch}
-          onChange={(e) => setWidgetSearch(e.target.value)}
+          onChange={setWidgetSearch}
           placeholder="Search widgets..."
           autoFocus
-          className="w-full mb-3 px-3 py-2 rounded-lg
-                     bg-surface-sunken
-                     border border-border
-                     text-text
-                     placeholder:text-text-muted
-                     focus:outline-none focus:ring-2 focus:ring-accent"
+          className="mb-3"
         />
         <div className="grid gap-2 max-h-80 overflow-y-auto custom-scrollbar">
           {filteredWidgets.map(({ type, label, description }) => (
@@ -255,9 +249,7 @@ export function EditToolbar() {
               <span className="text-sm text-text-muted">{description}</span>
             </button>
           ))}
-          {filteredWidgets.length === 0 && (
-            <p className="text-center text-text-muted py-4">No widgets match your search</p>
-          )}
+          {filteredWidgets.length === 0 && <EmptyState title="No widgets match your search" />}
         </div>
       </Modal>
 

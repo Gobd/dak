@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, RefreshCw, Eye, EyeOff, BookOpen } from 'lucide-react';
-import { Modal } from '@dak/ui';
+import { Modal, Spinner, Toggle } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useInstancesStore } from '../../stores/instances-store';
 
@@ -125,18 +125,10 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                 <p className="text-sm text-text-muted">Hide all points, leaderboard, and rewards</p>
               </div>
             </div>
-            <button
-              onClick={() => setHidePoints(!settings?.hide_points)}
-              className={`relative w-12 h-7 rounded-full transition-colors ${
-                settings?.hide_points ? 'bg-accent' : 'bg-surface-sunken'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-6 h-6 bg-surface rounded-full shadow transition-transform ${
-                  settings?.hide_points ? 'translate-x-5' : ''
-                }`}
-              />
-            </button>
+            <Toggle
+              checked={settings?.hide_points ?? false}
+              onChange={(checked) => setHidePoints(checked)}
+            />
           </div>
         </div>
 
@@ -154,7 +146,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
             disabled={refreshing}
             className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? <Spinner size="sm" /> : <RefreshCw size={16} />}
             {refreshing ? 'Refreshing...' : 'Refresh Now'}
           </button>
         </div>

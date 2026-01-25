@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useToggle } from '@dak/hooks';
 import {
   Power,
   RefreshCw,
@@ -13,7 +14,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, TimePickerCompact } from '@dak/ui';
+import { Modal, Button, ConfirmModal, TimePickerCompact, Toggle, Badge, Spinner } from '@dak/ui';
 import {
   createKasaClient,
   hasBrightness,
@@ -29,7 +30,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
   const client = useMemo(() => createKasaClient(relayUrl), [relayUrl]);
   const prevDevicesRef = useRef<KasaDevice[]>([]);
-  const [showModal, setShowModal] = useState(false);
+  const showModal = useToggle(false);
   const [selectedDevice, setSelectedDevice] = useState<KasaDevice | null>(null);
   const [countdownMins, setCountdownMins] = useState(30);
   const [countdownAction, setCountdownAction] = useState<'on' | 'off'>('off');
@@ -37,7 +38,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   // Schedule state
-  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const showScheduleForm = useToggle(false);
   const [editingRule, setEditingRule] = useState<ScheduleRule | null>(null);
   const [deleteRule, setDeleteRule] = useState<ScheduleRule | null>(null);
   const [scheduleForm, setScheduleForm] = useState({
@@ -81,7 +82,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
         return { devices: prevDevicesRef.current, error: 'Failed to discover devices' };
       }
     },
-    refetchInterval: showModal ? 5_000 : 60_000,
+    refetchInterval: showModal.value ? 5_000 : 60_000,
     staleTime: 5000,
   });
 
@@ -155,7 +156,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kasa-schedule', relayUrl, selectedDevice?.ip] });
-      setShowScheduleForm(false);
+      showScheduleForm.setFalse();
       setEditingRule(null);
       setDeleteRule(null);
     },
@@ -206,28 +207,31 @@ export default function Kasa({ dark }: WidgetComponentProps) {
     <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => showModal.setTrue()}
         className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
         title={`Smart Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Power size={24} className={anyOn ? 'text-success' : 'text-text-muted'} />
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
       </button>
 
       {/* Main Modal - Device List */}
       <Modal
-        open={showModal && !selectedDevice}
-        onClose={() => setShowModal(false)}
+        open={showModal.value && !selectedDevice}
+        onClose={() => showModal.setFalse()}
         title="Smart Devices"
         actions={
           <>
             <Button onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
+              {isLoading ? (
+                <Spinner size="sm" className="mr-1" />
+              ) : (
+                <RefreshCw size={14} className="mr-1" />
+              )}{' '}
+              Refresh
             </Button>
-            <Button onClick={() => setShowModal(false)} variant="primary">
+            <Button onClick={() => showModal.setFalse()} variant="primary">
               Close
             </Button>
           </>
@@ -305,7 +309,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
 
           {isLoading && (
             <div className="flex items-center gap-2 text-text-muted text-sm">
-              <RefreshCw size={14} className="animate-spin" /> Discovering devices...
+              <Spinner size="sm" /> Discovering devices...
             </div>
           )}
         </div>
@@ -510,7 +514,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                       offsetMins: 0,
                       days: ['mon', 'tue', 'wed', 'thu', 'fri'],
                     });
-                    setShowScheduleForm(true);
+                    showScheduleForm.setTrue();
                   }}
                 >
                   <Plus size={14} className="mr-1" /> Add
@@ -532,15 +536,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs px-1.5 py-0.5 rounded ${
-                              rule.action === 'on'
-                                ? 'bg-success/30 text-success'
-                                : 'bg-danger/30 text-danger'
-                            }`}
-                          >
+                          <Badge variant={rule.action === 'on' ? 'success' : 'danger'} size="sm">
                             {rule.action.toUpperCase()}
-                          </span>
+                          </Badge>
                           <span className="font-medium">{formatScheduleTime(rule)}</span>
                         </div>
                         <div className="text-xs text-text-muted mt-0.5">
@@ -550,8 +548,10 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() =>
+                        <Toggle
+                          size="sm"
+                          checked={rule.enabled}
+                          onChange={() =>
                             scheduleMutation.mutate({
                               type: 'toggle',
                               ip: selectedDevice.ip,
@@ -559,17 +559,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                               enabled: !rule.enabled,
                             })
                           }
-                          className={`w-8 h-4 rounded-full transition-colors ${
-                            rule.enabled ? 'bg-success' : 'bg-surface'
-                          }`}
-                          title={rule.enabled ? 'Disable' : 'Enable'}
-                        >
-                          <div
-                            className={`w-3 h-3 rounded-full bg-surface shadow transform transition-transform ${
-                              rule.enabled ? 'translate-x-4' : 'translate-x-0.5'
-                            }`}
-                          />
-                        </button>
+                        />
                         <button
                           onClick={() => {
                             setEditingRule(rule);
@@ -582,7 +572,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                               offsetMins: rule.offset_mins ?? 0,
                               days: rule.days,
                             });
-                            setShowScheduleForm(true);
+                            showScheduleForm.setTrue();
                           }}
                           className="p-1 rounded hover:bg-surface/50"
                           title="Edit"
@@ -619,9 +609,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
 
       {/* Schedule Form Modal */}
       <Modal
-        open={showScheduleForm}
+        open={showScheduleForm.value}
         onClose={() => {
-          setShowScheduleForm(false);
+          showScheduleForm.setFalse();
           setEditingRule(null);
         }}
         title={editingRule ? 'Edit Schedule' : 'Add Schedule'}
@@ -629,7 +619,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
           <>
             <Button
               onClick={() => {
-                setShowScheduleForm(false);
+                showScheduleForm.setFalse();
                 setEditingRule(null);
               }}
             >

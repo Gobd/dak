@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Settings, AlertCircle, Radio } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useToggle } from '@dak/hooks';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { Modal, Button } from '@dak/ui';
@@ -30,7 +30,7 @@ const TREND_ICON = { rising: '↑', falling: '↓', steady: '→' } as const;
 
 export default function Climate({ dark }: WidgetComponentProps) {
   const relayUrl = getRelayUrl();
-  const [showSettings, setShowSettings] = useState(false);
+  const showSettings = useToggle(false);
   const climateConfig = useConfigStore((s) => s.climate);
   const updateClimate = useConfigStore((s) => s.updateClimate);
 
@@ -64,7 +64,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
       const result = await devicesSensorsDevicesGet({ throwOnError: true });
       return result.data;
     },
-    { enabled: !!relayUrl && showSettings && relayUp !== false, staleTime: 10_000 },
+    { enabled: !!relayUrl && showSettings.value && relayUp !== false, staleTime: 10_000 },
   );
 
   const devices = devicesData?.devices ?? [];
@@ -177,7 +177,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
           </div>
         )}
         <button
-          onClick={() => setShowSettings(true)}
+          onClick={() => showSettings.setTrue()}
           className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all ml-2"
           title="Settings"
         >
@@ -194,11 +194,11 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
       {/* Settings Modal */}
       <Modal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
+        open={showSettings.value}
+        onClose={() => showSettings.setFalse()}
         title="Climate Settings"
         actions={
-          <Button onClick={() => setShowSettings(false)} variant="primary">
+          <Button onClick={() => showSettings.setFalse()} variant="primary">
             Close
           </Button>
         }
@@ -262,7 +262,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
           <div>
             <button
               onClick={() => {
-                setShowSettings(false);
+                showSettings.setFalse();
                 useConfigStore.getState().setMqttModalOpen(true);
               }}
               className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded transition-colors text-sm bg-surface-sunken text-text-secondary hover:bg-border"

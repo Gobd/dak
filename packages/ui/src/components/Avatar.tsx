@@ -1,7 +1,7 @@
-interface MemberAvatarProps {
+interface AvatarProps {
   name: string;
-  emoji: string;
-  color: string;
+  emoji?: string;
+  color?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showName?: boolean;
   onClick?: () => void;
@@ -16,16 +16,23 @@ const sizeClasses = {
   xl: 'w-16 h-16 text-3xl',
 };
 
-export function MemberAvatar({
+/**
+ * Avatar circle with emoji or initials.
+ * Can optionally show the name below and be clickable.
+ */
+export function Avatar({
   name,
   emoji,
-  color,
+  color = 'var(--color-accent)',
   size = 'md',
   showName = false,
   onClick,
   selected,
-}: MemberAvatarProps) {
+}: AvatarProps) {
   const Component = onClick ? 'button' : 'div';
+
+  // Generate initials if no emoji
+  const display = emoji || name.slice(0, 2).toUpperCase();
 
   return (
     <Component
@@ -38,13 +45,9 @@ export function MemberAvatar({
         }`}
         style={{ backgroundColor: color }}
       >
-        {emoji}
+        {display}
       </div>
-      {showName && (
-        <span className="text-xs text-text-secondary text-text-muted truncate max-w-[60px]">
-          {name}
-        </span>
-      )}
+      {showName && <span className="text-xs text-text-muted truncate max-w-[60px]">{name}</span>}
     </Component>
   );
 }

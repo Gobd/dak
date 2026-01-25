@@ -25,8 +25,14 @@
     "packages/api-client": {
       "ignore": ["src/generated/**", "openapi-ts.config.ts"]
     },
+    "packages/hooks": {
+      "includeEntryExports": true
+    },
     "packages/kasa-client": {},
-    "packages/ui": {},
+    "packages/ui": {
+      "includeEntryExports": true,
+      "ignore": ["**/*.stories.tsx"]
+    },
     "packages/vite-shared-react": {
       "ignoreDependencies": ["react", "react-dom", "zustand"],
       "ignore": ["fonts/**"]

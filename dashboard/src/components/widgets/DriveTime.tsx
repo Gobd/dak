@@ -265,7 +265,10 @@ export default function DriveTime() {
         className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
-        <Car size={24} className={hasActiveData ? 'text-success' : hasRoutes ? 'text-accent' : 'text-text-muted'} />
+        <Car
+          size={24}
+          className={hasActiveData ? 'text-success' : hasRoutes ? 'text-accent' : 'text-text-muted'}
+        />
         {hasRoutes && (
           <span className="absolute -top-1 -right-1 bg-accent text-text text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
             {routes.length}

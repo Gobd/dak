@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@dak/api-client": "workspace:*",
+    "@dak/hooks": "workspace:*",
     "@dak/kasa-client": "workspace:*",
     "@dak/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",

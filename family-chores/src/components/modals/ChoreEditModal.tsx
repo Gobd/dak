@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Check, HelpCircle } from 'lucide-react';
-import { Modal } from '@dak/ui';
+import { Avatar, Modal } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { useSettingsStore } from '../../stores/settings-store';
 import { SchedulePicker, type ScheduleConfig } from '../shared/SchedulePicker';
-import { MemberAvatar } from '../shared/MemberAvatar';
 import type { ChoreWithAssignments } from '../../types';
 
 interface ChoreEditModalProps {
@@ -214,7 +213,7 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
                     : 'bg-surface-sunken hover:bg-surface-sunken'
                 }`}
               >
-                <MemberAvatar
+                <Avatar
                   name={member.name}
                   emoji={member.avatar_emoji}
                   color={member.color}

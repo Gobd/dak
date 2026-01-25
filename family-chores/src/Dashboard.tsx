@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useToggle } from '@dak/hooks';
 import { TabBar } from './components/TabBar';
 import { ActionBar } from './components/ActionBar';
 import { TodayView } from './components/views/TodayView';
@@ -24,7 +25,7 @@ export function Dashboard() {
   const [activeView, setActiveView] = useState<DashboardView>('today');
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [pendingModal, setPendingModal] = useState<ModalType>(null);
-  const [showPinModal, setShowPinModal] = useState(false);
+  const showPinModal = useToggle(false);
   // For member picker when completing tasks
   const [memberPickerData, setMemberPickerData] = useState<{
     instanceId: string;
@@ -39,7 +40,7 @@ export function Dashboard() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => localStorage.getItem('onboarding_dismissed') === 'true',
   );
-  const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const showWalkthrough = useToggle(false);
 
   // Show onboarding if no members and hasn't been dismissed
   const showOnboarding = !membersLoading && members.length === 0 && !onboardingDismissed;
@@ -50,11 +51,11 @@ export function Dashboard() {
   };
 
   const handleShowWalkthrough = () => {
-    setShowWalkthrough(true);
+    showWalkthrough.setTrue();
   };
 
   const handleDismissWalkthrough = () => {
-    setShowWalkthrough(false);
+    showWalkthrough.setFalse();
   };
 
   // PIN-protected modals
@@ -65,7 +66,7 @@ export function Dashboard() {
       // Check if PIN is required
       if (settings?.parent_pin && !pinVerified) {
         setPendingModal(modal);
-        setShowPinModal(true);
+        showPinModal.setTrue();
         return;
       }
     }
@@ -73,7 +74,7 @@ export function Dashboard() {
   };
 
   const handlePinSuccess = () => {
-    setShowPinModal(false);
+    showPinModal.setFalse();
     if (pendingModal) {
       setActiveModal(pendingModal);
       setPendingModal(null);
@@ -81,7 +82,7 @@ export function Dashboard() {
   };
 
   const handlePinCancel = () => {
-    setShowPinModal(false);
+    showPinModal.setFalse();
     setPendingModal(null);
   };
 
@@ -152,7 +153,7 @@ export function Dashboard() {
       />
 
       {/* PIN Modal */}
-      {showPinModal && (
+      {showPinModal.value && (
         <PinModal
           onSuccess={handlePinSuccess}
           onCancel={handlePinCancel}
@@ -190,7 +191,7 @@ export function Dashboard() {
       )}
 
       {/* Manual Walkthrough (from Settings) */}
-      {showWalkthrough && (
+      {showWalkthrough.value && (
         <OnboardingOverlay
           onDismiss={handleDismissWalkthrough}
           onOpenFamily={() => {

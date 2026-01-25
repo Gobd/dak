@@ -58,7 +58,7 @@ function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: bool
   );
 }
 
-export function TimePicker({ value, onChange, minuteStep = 5 }: TimePickerProps) {
+function TimePicker({ value, onChange, minuteStep = 5 }: TimePickerProps) {
   const minutes = useMemo(() => generateMinutes(minuteStep), [minuteStep]);
 
   // Fully controlled - derive state from props

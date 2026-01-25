@@ -16,8 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
-import { LoadingSpinner } from '../components/ui/loading-spinner';
+import { ConfirmModal, Spinner } from '@dak/ui';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
 import { notesApi } from '../lib/api/notes';
@@ -374,7 +373,7 @@ export function Settings() {
                   className="p-2 rounded-md bg-warning"
                 >
                   {isSavingName ? (
-                    <LoadingSpinner size="small" />
+                    <Spinner size="sm" />
                   ) : (
                     <Check size={18} className="text-black" />
                   )}
@@ -504,7 +503,7 @@ export function Settings() {
                   }`}
                 >
                   {isAddingShare ? (
-                    <LoadingSpinner size="small" />
+                    <Spinner size="sm" />
                   ) : (
                     <Plus
                       size={20}
@@ -554,7 +553,7 @@ export function Settings() {
               className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
             >
               {isExporting ? (
-                <LoadingSpinner size="small" />
+                <Spinner size="sm" />
               ) : (
                 <>
                   <Download size={18} className="text-warning" />
@@ -569,7 +568,7 @@ export function Settings() {
               className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
             >
               {isImporting ? (
-                <LoadingSpinner size="small" />
+                <Spinner size="sm" />
               ) : (
                 <>
                   <Upload size={18} className="text-warning" />
@@ -593,24 +592,25 @@ export function Settings() {
       </div>
 
       {/* Remove share confirmation */}
-      <ConfirmDialog
-        visible={removeShareConfirm !== null}
+      <ConfirmModal
+        open={removeShareConfirm !== null}
         title="Remove from auto-share?"
         message="This person will no longer receive new notes automatically. Existing shared notes are not affected."
         confirmText="Remove"
-        destructive
+        variant="danger"
         onConfirm={confirmRemoveShare}
-        onCancel={() => setRemoveShareConfirm(null)}
+        onClose={() => setRemoveShareConfirm(null)}
       />
 
       {/* Import confirmation */}
-      <ConfirmDialog
-        visible={importConfirm !== null}
+      <ConfirmModal
+        open={importConfirm !== null}
         title="Import Notes"
         message={importConfirm?.message || ''}
         confirmText="Import"
+        variant="primary"
         onConfirm={confirmImport}
-        onCancel={cancelImport}
+        onClose={cancelImport}
       />
     </div>
   );

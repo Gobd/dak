@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Roller, ConfirmModal, Modal, Button } from '@dak/ui';
+import { useLocalStorage, useInterval } from '@dak/hooks';
 
 // Time picker options
 const HOURS = Array.from({ length: 13 }, (_, i) => i);
@@ -46,21 +47,6 @@ interface StopwatchData {
 
 type ItemData = TimerData | StopwatchData;
 
-const STORAGE_KEY = 'dashboard-timers-v2';
-
-function loadItems(): ItemData[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveItems(items: ItemData[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
-
 function formatTime(seconds: number): string {
   if (seconds <= 0) return '0:00';
   const h = Math.floor(seconds / 3600);
@@ -73,7 +59,7 @@ function formatTime(seconds: number): string {
 }
 
 export default function Timer() {
-  const [items, setItems] = useState<ItemData[]>(loadItems);
+  const [items, setItems] = useLocalStorage<ItemData[]>('dashboard-timers-v2', []);
   const [now, setNow] = useState(() => Date.now());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -91,15 +77,7 @@ export default function Timer() {
   const itemToDelete = items.find((t) => t.id === deleteId);
 
   // Update time every second
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Save items when they change
-  useEffect(() => {
-    saveItems(items);
-  }, [items]);
+  useInterval(() => setNow(Date.now()), 1000);
 
   // Compute alerting timers
   const alertingTimerIds = useMemo(() => {

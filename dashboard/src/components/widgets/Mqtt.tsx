@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Radio, RefreshCw } from 'lucide-react';
+import { Radio } from 'lucide-react';
+import { Spinner } from '@dak/ui';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { client, listDevicesMqttDevicesGet, type DeviceListResponse } from '@dak/api-client';
 
@@ -33,9 +34,7 @@ export default function Mqtt() {
           size={24}
           className={permitJoin ? 'text-success animate-pulse' : 'text-text-muted'}
         />
-        {isLoading && (
-          <RefreshCw size={10} className="absolute top-0.5 right-0.5 text-accent animate-spin" />
-        )}
+        {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
         {devices.length > 0 && (
           <span className="absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded bg-surface-sunken">
             {devices.length}

@@ -1,39 +1,55 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode, type ButtonHTMLAttributes } from 'react';
+import { Spinner } from './Spinner';
 
-interface ButtonProps {
-  onClick?: () => void;
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: 'default' | 'primary' | 'danger';
-  disabled?: boolean;
-  type?: 'button' | 'submit';
-  className?: string;
+  variant?: 'default' | 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
 }
 
-export function Button({
-  onClick,
-  children,
-  variant = 'default',
-  disabled,
-  type = 'button',
-  className = '',
-}: ButtonProps) {
-  const baseClasses =
-    'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+const sizeClasses = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-base',
+  lg: 'px-6 py-3 text-lg',
+};
 
-  const variantClasses = {
-    default: 'bg-surface-sunken text-text hover:bg-border',
-    primary: 'bg-accent text-text hover:bg-accent-hover',
-    danger: 'bg-danger text-text hover:opacity-90',
-  };
+const variantClasses = {
+  default: 'bg-surface-sunken text-text hover:bg-border',
+  primary: 'bg-accent text-text hover:bg-accent-hover',
+  secondary: 'bg-surface-sunken text-text hover:bg-border',
+  ghost: 'bg-transparent text-accent hover:bg-surface-sunken',
+  danger: 'bg-danger text-text hover:opacity-90',
+};
 
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      variant = 'default',
+      size = 'md',
+      loading = false,
+      disabled,
+      type = 'button',
+      className = '',
+      ...props
+    },
+    ref,
+  ) => {
+    const isDisabled = disabled || loading;
+
+    return (
+      <button
+        ref={ref}
+        type={type}
+        disabled={isDisabled}
+        className={`rounded-lg font-medium transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+        {...props}
+      >
+        {loading ? <Spinner size="sm" /> : children}
+      </button>
+    );
+  },
+);
+
+Button.displayName = 'Button';

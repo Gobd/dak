@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Settings, RefreshCw } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Spinner } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Open-Meteo Air Quality API - free, no API key needed
@@ -165,7 +165,7 @@ export default function Aqi({ panel }: WidgetComponentProps) {
   if (isLoading && !aqiData) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-surface text-text`}>
-        <RefreshCw size={16} className="animate-spin text-text-muted" />
+        <Spinner size="md" />
       </div>
     );
   }

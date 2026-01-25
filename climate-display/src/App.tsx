@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Thermometer,
@@ -12,6 +12,8 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { useDarkMode } from '@dak/hooks';
+import { Spinner } from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -37,21 +39,6 @@ interface ClimateData {
 }
 
 type View = 'climate' | 'settings';
-
-function useDarkMode() {
-  const [isDark, setIsDark] = useState(() => {
-    const stored = localStorage.getItem('climate-dark-mode');
-    if (stored !== null) return stored === 'true';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('climate-dark-mode', String(isDark));
-  }, [isDark]);
-
-  return [isDark, setIsDark] as const;
-}
 
 function celsiusToFahrenheit(c: number): number {
   return (c * 9) / 5 + 32;
@@ -189,7 +176,7 @@ function ClimateView() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <RefreshCw className="w-10 h-10 animate-spin text-text-muted" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -222,7 +209,7 @@ function ClimateView() {
           className="p-2 rounded-lg bg-surface-raised text-text-secondary hover:bg-border hover:text-text disabled:opacity-50 transition-colors"
           aria-label="Refresh"
         >
-          <RefreshCw className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-5 h-5" />}
         </button>
       </div>
 
@@ -242,7 +229,7 @@ function ClimateView() {
 
 export default function App() {
   const [view, setView] = useState<View>('climate');
-  const [isDark, setIsDark] = useDarkMode();
+  const [isDark, setIsDark] = useDarkMode('climate-dark-mode');
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">

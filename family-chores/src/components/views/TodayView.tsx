@@ -6,8 +6,7 @@ import { useMembersStore } from '../../stores/members-store';
 import { useGoalsStore } from '../../stores/goals-store';
 import { TaskCard } from '../shared/TaskCard';
 import { GoalCard } from '../shared/GoalCard';
-import { MemberAvatar } from '../shared/MemberAvatar';
-import { ProgressRing } from '../shared/ProgressRing';
+import { Avatar, ProgressRing } from '@dak/ui';
 import type { FamilyMember, ChoreInstanceWithDetails } from '../../types';
 
 interface TodayViewProps {
@@ -82,7 +81,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
             </p>
             <p className="text-xs text-text-muted">tasks done</p>
           </div>
-          <ProgressRing percent={progressPercent} size={56} />
+          <ProgressRing value={progressPercent} size={56} showValue colorByProgress />
         </div>
       </div>
 
@@ -169,7 +168,7 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
                 <div key={member.id} className="bg-surface rounded-2xl p-4">
                   {/* Member header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <MemberAvatar
+                    <Avatar
                       name={member.name}
                       emoji={member.avatar_emoji}
                       color={member.color}
@@ -181,7 +180,13 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
                         {memberCompleted}/{memberTasks.length} done
                       </p>
                     </div>
-                    <ProgressRing percent={memberPercent} size={40} strokeWidth={3} />
+                    <ProgressRing
+                      value={memberPercent}
+                      size={40}
+                      strokeWidth={3}
+                      showValue
+                      colorByProgress
+                    />
                   </div>
 
                   {/* Tasks */}

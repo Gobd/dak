@@ -14,13 +14,13 @@ import { Settings } from './pages/Settings';
 import { Trash } from './pages/Trash';
 import { About } from './pages/About';
 import { ToastContainer } from './components/ui/toast';
-import { LoadingSpinner } from './components/ui/loading-spinner';
+import { Spinner } from '@dak/ui';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, isInitialized } = useAuthStore();
 
   if (!isInitialized) {
-    return <LoadingSpinner fullScreen />;
+    return <Spinner size="lg" fullScreen />;
   }
 
   if (!session) {
@@ -34,7 +34,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   const { session, isInitialized } = useAuthStore();
 
   if (!isInitialized) {
-    return <LoadingSpinner fullScreen />;
+    return <Spinner size="lg" fullScreen />;
   }
 
   // If logged in, redirect to dashboard
