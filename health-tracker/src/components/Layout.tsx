@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Home, Syringe, Pill, Clock, Users, LogOut, Moon, Sun, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, Button } from '@dak/ui';
 
 const navItems = [
   { to: '/shots', icon: Syringe, label: 'Shots' },
@@ -54,27 +54,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ))}
           </div>
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => window.location.reload()}
-              className="p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
               title="Reload"
             >
               <RefreshCw size={18} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggle}
-              className="p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
               title={dark ? 'Light mode' : 'Dark mode'}
             >
               {dark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowSignOutModal(true)}
-              className="p-2 rounded-lg text-text-secondary hover:bg-surface-sunken"
               title="Sign Out"
             >
               <LogOut size={18} />
-            </button>
+            </Button>
           </div>
         </div>
       </nav>

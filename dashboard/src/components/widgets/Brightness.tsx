@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Sun, Moon, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, NumberPickerCompact, Spinner, Toggle } from '@dak/ui';
+import { Modal, Button, NumberPickerCompact, Spinner, Toggle, Slider } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import {
@@ -222,28 +222,14 @@ export default function Brightness() {
               </div>
 
               {/* Set brightness now */}
-              <div>
-                <label className="block text-sm text-text-muted mb-2">Set Now</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={currentBrightness}
-                  onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer
-                             bg-surface-sunken
-                             [&::-webkit-slider-thumb]:appearance-none
-                             [&::-webkit-slider-thumb]:w-5
-                             [&::-webkit-slider-thumb]:h-5
-                             [&::-webkit-slider-thumb]:rounded-full
-                             [&::-webkit-slider-thumb]:bg-surface
-                             [&::-webkit-slider-thumb]:shadow-md"
-                />
-                <div className="flex justify-between text-xs text-text-muted mt-1">
-                  <span>1%</span>
-                  <span>100%</span>
-                </div>
-              </div>
+              <Slider
+                label="Set Now"
+                min={1}
+                max={100}
+                value={currentBrightness}
+                onChange={handleBrightnessChange}
+                showRange
+              />
 
               {/* Divider */}
               <div className="border-t border-border" />
@@ -299,18 +285,12 @@ export default function Brightness() {
                       <Sun size={14} className="inline mr-1 text-warning" />
                       Day: {config.dayBrightness ?? 100}%
                     </label>
-                    <input
-                      type="range"
+                    <Slider
                       min={1}
                       max={100}
                       value={config.dayBrightness ?? 100}
-                      onChange={(e) => handleDayBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
-                                 [&::-webkit-slider-thumb]:appearance-none
-                                 [&::-webkit-slider-thumb]:w-4
-                                 [&::-webkit-slider-thumb]:h-4
-                                 [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-warning"
+                      onChange={handleDayBrightnessChange}
+                      thumbColor="warning"
                     />
                   </div>
 
@@ -320,18 +300,12 @@ export default function Brightness() {
                       <Moon size={14} className="inline mr-1 text-accent" />
                       Night: {config.nightBrightness ?? 1}%
                     </label>
-                    <input
-                      type="range"
+                    <Slider
                       min={1}
                       max={100}
                       value={config.nightBrightness ?? 1}
-                      onChange={(e) => handleNightBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
-                                 [&::-webkit-slider-thumb]:appearance-none
-                                 [&::-webkit-slider-thumb]:w-4
-                                 [&::-webkit-slider-thumb]:h-4
-                                 [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-accent"
+                      onChange={handleNightBrightnessChange}
+                      thumbColor="accent"
                     />
                   </div>
 

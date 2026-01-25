@@ -17,7 +17,7 @@ import { DesktopSidebar } from '../components/DesktopSidebar';
 import { MobileHeader } from '../components/MobileHeader';
 import { NoteEditor } from '../components/NoteEditor';
 import { NotesList } from '../components/NotesList';
-import { ConfirmModal, SearchInput, Spinner } from '@dak/ui';
+import { Button, ConfirmModal, SearchInput, Spinner } from '@dak/ui';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
@@ -387,7 +387,9 @@ export function Dashboard() {
         />
         {/* Active Tag Filter */}
         {selectedTagId && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setSelectedTagId(null)}
             className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
           >
@@ -401,11 +403,11 @@ export function Dashboard() {
               {tags.find((t) => t.id === selectedTagId)?.name}
             </span>
             <span className="text-sm ml-0.5 text-text-muted">×</span>
-          </button>
+          </Button>
         )}
         {/* Mobile Sort Options */}
         <div className="px-4 py-2 border-b border-border">
-          <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => showSortMenu.toggle()} className="flex items-center gap-1 p-0">
             <ArrowUpDown size={14} className="text-text-muted" />
             <span className="text-xs text-text-muted">
               {sortBy === 'updated'
@@ -414,17 +416,18 @@ export function Dashboard() {
                   ? 'Date created'
                   : 'Title'}
             </span>
-          </button>
+          </Button>
           {showSortMenu.value && (
             <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
               {(['updated', 'created', 'title'] as const).map((option) => (
-                <button
+                <Button
                   key={option}
+                  variant="ghost"
                   onClick={() => {
                     setSortBy(option);
                     showSortMenu.setFalse();
                   }}
-                  className={`w-full px-3 py-2 text-left ${
+                  className={`w-full px-3 py-2 text-left rounded-none justify-start ${
                     sortBy === option ? 'bg-surface-sunken' : ''
                   }`}
                 >
@@ -437,7 +440,7 @@ export function Dashboard() {
                         ? 'Date created'
                         : 'Title (A-Z)'}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -519,37 +522,34 @@ export function Dashboard() {
           {/* Notes Header */}
           {isSelectionMode.value ? (
             <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border bg-surface-sunken">
-              <button onClick={toggleSelectAll} className="flex items-center gap-2">
+              <Button variant="ghost" onClick={toggleSelectAll} className="flex items-center gap-2 p-0">
                 {allOwnedSelected ? (
                   <SquareCheck size={18} className="text-warning" />
                 ) : (
                   <Square size={18} className="text-text-muted" />
                 )}
                 <span className="text-sm text-text">All</span>
-              </button>
+              </Button>
               <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant={selectedNoteIds.size > 0 ? 'danger' : 'secondary'}
+                  size="sm"
                   onClick={() => selectedNoteIds.size > 0 && showBulkDeleteConfirm.setTrue()}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                    selectedNoteIds.size > 0
-                      ? 'bg-danger text-text'
-                      : 'bg-surface-sunken text-text-muted'
-                  }`}
                 >
                   Delete
-                </button>
-                <button onClick={exitSelectionMode} className="p-1">
+                </Button>
+                <Button variant="ghost" size="icon-sm" onClick={exitSelectionMode}>
                   <X size={18} className="text-text-muted" />
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between px-4 py-[7px] border-b z-10 border-border">
               {!showNavSidebar && (
-                <button onClick={() => setShowNavSidebar(true)} className="p-1 mr-2">
+                <Button variant="ghost" size="icon-sm" onClick={() => setShowNavSidebar(true)} className="mr-2">
                   <PanelLeft size={18} className="text-text-muted" />
-                </button>
+                </Button>
               )}
               {selectedTagId ? (
                 <span className="text-base font-medium flex-1 text-text">
@@ -558,22 +558,25 @@ export function Dashboard() {
               ) : isPublicOnly ? (
                 <span className="text-base font-medium flex-1 text-text">Notes</span>
               ) : (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={toggleShowPrivate}
-                  className="flex items-center flex-1 gap-1 py-1 pr-2"
+                  className="flex items-center flex-1 gap-1 py-1 pr-2 p-0 justify-start"
                 >
                   {!showPrivate && <Lock size={14} className="text-warning" />}
                   <span className="text-base font-medium text-text">
                     {showPrivate ? 'All Notes' : 'Public'}
                   </span>
                   <ChevronDown size={16} className="text-text-muted" />
-                </button>
+                </Button>
               )}
-              <button onClick={enterSelectionMode} className="p-1.5 mr-1 shrink-0">
+              <Button variant="ghost" size="icon-sm" onClick={enterSelectionMode} className="mr-1 shrink-0">
                 <SquareCheck size={18} className="text-text-muted" />
-              </button>
+              </Button>
               <div className="relative z-10">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => {
                     // In public-only mode or kiosk mode, just create a public note directly
                     if (isPublicOnly || !showPrivate) {
@@ -582,32 +585,34 @@ export function Dashboard() {
                       showCreateMenu.toggle();
                     }
                   }}
-                  className="p-1.5 rounded-md mr-2 bg-warning"
+                  className="mr-2 bg-warning hover:bg-warning"
                 >
                   <Plus size={18} className="text-black" />
-                </button>
+                </Button>
                 {showCreateMenu.value && showPrivate && !isPublicOnly && (
                   <div className="absolute top-9 right-2 rounded-lg border min-w-40 z-[100] bg-surface-sunken border-border">
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => handleCreateNote(false)}
-                      className="flex items-center gap-2 w-full p-3 border-b border-border"
+                      className="flex items-center gap-2 w-full p-3 border-b border-border rounded-none justify-start"
                     >
                       <Plus size={16} className="text-text-muted" />
                       <span className="text-sm text-text">New Note</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => handleCreateNote(true)}
-                      className="flex items-center gap-2 w-full p-3"
+                      className="flex items-center gap-2 w-full p-3 rounded-none justify-start"
                     >
                       <Lock size={16} className="text-text-muted" />
                       <span className="text-sm text-text">Private Note</span>
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
-              <button onClick={() => setShowNotesSidebar(false)} className="p-1">
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowNotesSidebar(false)}>
                 <PanelLeftClose size={18} className="text-text-muted" />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -621,7 +626,9 @@ export function Dashboard() {
 
           {/* Active Tag Filter */}
           {selectedTagId && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setSelectedTagId(null)}
               className="flex items-center gap-1.5 mx-4 mt-2 px-2.5 py-1.5 rounded-full self-start bg-surface-sunken"
             >
@@ -635,12 +642,12 @@ export function Dashboard() {
                 {tags.find((t) => t.id === selectedTagId)?.name}
               </span>
               <span className="text-sm ml-0.5 text-text-muted">×</span>
-            </button>
+            </Button>
           )}
 
           {/* Sort Options */}
           <div className="px-4 py-2 border-b border-border">
-            <button onClick={() => showSortMenu.toggle()} className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => showSortMenu.toggle()} className="flex items-center gap-1 p-0">
               <ArrowUpDown size={14} className="text-text-muted" />
               <span className="text-xs text-text-muted">
                 {sortBy === 'updated'
@@ -649,17 +656,18 @@ export function Dashboard() {
                     ? 'Date created'
                     : 'Title'}
               </span>
-            </button>
+            </Button>
             {showSortMenu.value && (
               <div className="mt-2 rounded-lg overflow-hidden bg-surface-sunken">
                 {(['updated', 'created', 'title'] as const).map((option) => (
-                  <button
+                  <Button
                     key={option}
+                    variant="ghost"
                     onClick={() => {
                       setSortBy(option);
                       showSortMenu.setFalse();
                     }}
-                    className={`w-full px-3 py-2 text-left ${
+                    className={`w-full px-3 py-2 text-left rounded-none justify-start ${
                       sortBy === option ? 'bg-surface-sunken' : ''
                     }`}
                   >
@@ -672,7 +680,7 @@ export function Dashboard() {
                           ? 'Date created'
                           : 'Title (A-Z)'}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -700,32 +708,34 @@ export function Dashboard() {
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
-                <button
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
                   onClick={() => setShowNavSidebar(true)}
-                  className="p-1.5 rounded bg-surface-sunken"
                 >
                   <PanelLeft size={18} className="text-text-muted" />
-                </button>
+                </Button>
               )}
               {!showNotesSidebar && (
-                <button
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
                   onClick={() => setShowNotesSidebar(true)}
-                  className="p-1.5 rounded bg-surface-sunken"
                 >
                   <PanelLeft size={18} className="text-text-muted" />
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex items-center gap-2">
               {!showNavSidebar && (
-                <button onClick={() => window.location.reload()} className="p-2">
+                <Button variant="ghost" size="icon" onClick={() => window.location.reload()}>
                   <RefreshCw size={18} className="text-text-muted" />
-                </button>
+                </Button>
               )}
               {currentNote && (
-                <button onClick={handleTrashNote} className="p-2">
+                <Button variant="ghost" size="icon" onClick={handleTrashNote}>
                   <Trash2 size={18} className="text-text-muted" />
-                </button>
+                </Button>
               )}
             </div>
           </div>

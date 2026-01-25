@@ -1,3 +1,5 @@
+import { Button } from '@dak/ui';
+
 interface ScheduleConfig {
   type: 'daily' | 'every_x_days' | 'weekly' | 'monthly' | 'as_needed' | 'goal';
   intervalDays?: number;
@@ -61,18 +63,15 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
             { value: 'as_needed', label: 'As Needed' },
             { value: 'goal', label: 'Goal/Habit' },
           ].map((option) => (
-            <button
+            <Button
               key={option.value}
               type="button"
+              variant={value.type === option.value ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => handleTypeChange(option.value as ScheduleConfig['type'])}
-              className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                value.type === option.value
-                  ? 'bg-accent text-text'
-                  : 'bg-surface-sunken text-text-secondary'
-              }`}
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -84,33 +83,35 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
             Every how many days?
           </label>
           <div className="flex items-center gap-3">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() =>
                 onChange({
                   ...value,
                   intervalDays: Math.max(1, (value.intervalDays ?? 2) - 1),
                 })
               }
-              className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium"
+              className="w-10 h-10 text-xl font-medium"
             >
               −
-            </button>
+            </Button>
             <span className="text-2xl font-semibold w-12 text-center">
               {value.intervalDays ?? 2}
             </span>
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() =>
                 onChange({
                   ...value,
                   intervalDays: Math.min(30, (value.intervalDays ?? 2) + 1),
                 })
               }
-              className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium"
+              className="w-10 h-10 text-xl font-medium"
             >
               +
-            </button>
+            </Button>
             <span className="text-text-muted">days</span>
           </div>
         </div>
@@ -124,18 +125,15 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
           </label>
           <div className="flex gap-1 flex-wrap">
             {DAYS_OF_WEEK.map((day) => (
-              <button
+              <Button
                 key={day.value}
                 type="button"
+                variant={(value.weeklyDays ?? []).includes(day.value) ? 'primary' : 'secondary'}
                 onClick={() => toggleWeeklyDay(day.value)}
-                className={`w-11 h-11 rounded-lg text-sm font-medium ${
-                  (value.weeklyDays ?? []).includes(day.value)
-                    ? 'bg-accent text-text'
-                    : 'bg-surface-sunken text-text-secondary'
-                }`}
+                className="w-11 h-11 p-0"
               >
                 {day.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -179,23 +177,20 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                 { value: 'weekly', label: 'Weekly' },
                 { value: 'monthly', label: 'Monthly' },
               ].map((option) => (
-                <button
+                <Button
                   key={option.value}
                   type="button"
+                  variant={value.goalPeriod === option.value ? 'primary' : 'secondary'}
+                  size="sm"
                   onClick={() =>
                     onChange({
                       ...value,
                       goalPeriod: option.value as 'daily' | 'weekly' | 'monthly',
                     })
                   }
-                  className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                    value.goalPeriod === option.value
-                      ? 'bg-accent text-text'
-                      : 'bg-surface-sunken text-text-secondary'
-                  }`}
                 >
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -211,33 +206,35 @@ export function SchedulePicker({ value, onChange }: SchedulePickerProps) {
                   : 'month'}
             </label>
             <div className="flex items-center gap-3">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() =>
                   onChange({
                     ...value,
                     targetCount: Math.max(1, (value.targetCount ?? 3) - 1),
                   })
                 }
-                className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium border border-border"
+                className="w-10 h-10 text-xl font-medium"
               >
                 −
-              </button>
+              </Button>
               <span className="text-2xl font-semibold w-12 text-center text-text">
                 {value.targetCount ?? 3}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() =>
                   onChange({
                     ...value,
                     targetCount: Math.min(31, (value.targetCount ?? 3) + 1),
                   })
                 }
-                className="w-10 h-10 rounded-lg bg-surface-sunken text-xl font-medium border border-border"
+                className="w-10 h-10 text-xl font-medium"
               >
                 +
-              </button>
+              </Button>
               <span className="text-text-muted">times</span>
             </div>
           </div>

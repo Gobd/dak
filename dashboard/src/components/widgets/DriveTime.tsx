@@ -267,9 +267,11 @@ export default function DriveTime() {
   return (
     <div className="h-full w-full flex items-center justify-center">
       {/* Trigger button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => (hasRoutes ? setFloatingOpen(true) : setShowManager(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
+        className="relative"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
         <Car
@@ -281,7 +283,7 @@ export default function DriveTime() {
             {routes.length}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Floating traffic window */}
       {floatingOpen && hasRoutes && (
@@ -297,20 +299,22 @@ export default function DriveTime() {
           >
             <span className="text-sm font-medium text-text-secondary dark:text-text">Traffic</span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="icon-sm"
                 onClick={() => setShowManager(true)}
-                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon-sm"
                 onClick={() => setFloatingOpen(false)}
-                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Close"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -608,20 +612,24 @@ function RouteManagerModal({
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onEditRoute(route)}
-                    className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+                    className="opacity-70 hover:opacity-100"
                     title="Edit"
                   >
                     <Settings size={14} className="text-text-muted" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onDeleteRoute(route)}
-                    className="p-1.5 rounded hover:bg-danger/50"
+                    className="hover:bg-danger/50"
                     title="Delete"
                   >
                     <Trash2 size={14} className="text-danger" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -662,21 +670,25 @@ function RouteManagerModal({
                       <div className="text-xs text-text-muted truncate">{address}</div>
                     </div>
                     <div className="flex gap-1">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleEditLocation(name)}
-                        className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+                        className="opacity-70 hover:opacity-100"
                         title="Edit address"
                       >
                         <Settings size={14} className="text-text-muted" />
-                      </button>
+                      </Button>
                       {!isLocationUsed(name) && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleDeleteLocation(name)}
-                          className="p-1.5 rounded hover:bg-danger/50"
+                          className="hover:bg-danger/50"
                           title="Delete location"
                         >
                           <Trash2 size={14} className="text-danger" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>

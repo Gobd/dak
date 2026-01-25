@@ -75,35 +75,41 @@ export function People() {
               {editingId === person.id ? (
                 <div className="flex items-center gap-2 flex-1">
                   <Input value={editName} onChange={(e) => setEditName(e.target.value)} autoFocus />
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={handleUpdate}
-                    className="p-2 text-success hover:bg-success-light dark:hover:bg-success-light rounded-lg"
+                    className="text-success hover:bg-success-light"
                   >
                     <Check size={18} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setEditingId(null)}
-                    className="p-2 text-text-secondary text-text-muted hover:bg-surface-sunken rounded-lg"
                   >
                     <X size={18} />
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <>
                   <span className="font-medium">{person.name}</span>
                   <div className="flex items-center gap-1">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => startEdit(person.id, person.name)}
-                      className="p-2 text-text-secondary text-text-muted hover:bg-surface-sunken rounded-lg"
                     >
                       <Pencil size={18} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setConfirmDelete(person.id)}
-                      className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
+                      className="text-danger hover:bg-danger-light"
                     >
                       <Trash2 size={18} />
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}

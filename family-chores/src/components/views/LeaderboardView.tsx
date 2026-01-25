@@ -73,17 +73,15 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
       <div className="space-y-2">
         <div className="flex bg-surface-sunken rounded-lg p-1">
           {(['week', 'month', 'all'] as Period[]).map((period) => (
-            <button
+            <Button
               key={period}
+              variant={currentPeriod === period ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setPeriod(period)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                currentPeriod === period
-                  ? 'bg-surface-sunken text-text shadow-sm'
-                  : 'text-text-secondary text-text-muted hover:text-text dark:hover:text-text'
-              }`}
+              className="flex-1"
             >
               {periodLabels[period]}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="text-xs text-center text-text-muted">{dateRange}</p>

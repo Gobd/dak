@@ -375,19 +375,15 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
           <label className="block text-sm font-medium text-text-secondary mb-2">Theme</label>
           <div className="flex gap-2">
             {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
-              <button
+              <Button
                 key={value}
                 onClick={() => handleThemeChange(value)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg
-                           border transition-colors ${
-                             currentTheme === value
-                               ? 'bg-accent border-accent text-text'
-                               : 'bg-surface-sunken border-border text-text-secondary hover:bg-border'
-                           }`}
+                variant={currentTheme === value ? 'primary' : 'secondary'}
+                className="flex-1"
               >
                 <Icon size={18} />
                 <span className="text-sm font-medium">{label}</span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -431,13 +427,14 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
             Volume
           </label>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="secondary"
+              size="icon"
               onClick={() => changeVolume(volume - 10)}
               disabled={volumeLoading || volume <= 0}
-              className="p-2 rounded-lg bg-surface-sunken hover:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Minus size={16} />
-            </button>
+            </Button>
             <div className="flex-1 relative">
               <input
                 type="range"
@@ -453,13 +450,14 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                 {volume}%
               </div>
             </div>
-            <button
+            <Button
+              variant="secondary"
+              size="icon"
               onClick={() => changeVolume(volume + 10)}
               disabled={volumeLoading || volume >= 100}
-              className="p-2 rounded-lg bg-surface-sunken hover:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
-            </button>
+            </Button>
           </div>
           <p className="mt-2 text-xs text-text-muted">
             Plays a test sound when changed. Controls kiosk speaker volume.
@@ -547,13 +545,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   }
 
                   return (
-                    <button
-                      onClick={() => downloadModel(voiceModel)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-text hover:bg-accent text-sm"
-                    >
+                    <Button onClick={() => downloadModel(voiceModel)} size="sm">
                       <Download size={16} />
                       Download
-                    </button>
+                    </Button>
                   );
                 })()}
               </div>
@@ -611,13 +606,10 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
                   }
 
                   return (
-                    <button
-                      onClick={() => downloadTtsVoice(ttsVoice)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent text-text hover:bg-accent text-sm"
-                    >
+                    <Button onClick={() => downloadTtsVoice(ttsVoice)} size="sm">
                       <Download size={16} />
                       Download
-                    </button>
+                    </Button>
                   );
                 })()}
               </div>

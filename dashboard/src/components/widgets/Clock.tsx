@@ -64,13 +64,15 @@ export default function Clock({ panel }: WidgetComponentProps) {
   return (
     <div ref={containerRef} className="relative w-full h-full">
       {/* Settings cog */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={() => setShowSettings(true)}
-        className="absolute top-0.5 right-0.5 p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+        className="absolute top-0.5 right-0.5 opacity-70 hover:opacity-100"
         title="Clock settings"
       >
         <Settings size={14} className="text-text-muted" />
-      </button>
+      </Button>
 
       {/* Clock display */}
       <div

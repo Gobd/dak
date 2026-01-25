@@ -1,4 +1,4 @@
-import { ConfirmModal } from '@dak/ui';
+import { Button, ConfirmModal } from '@dak/ui';
 import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor, type RichNoteEditorRef } from './RichNoteEditor';
@@ -128,7 +128,9 @@ export function NoteEditor({
         <div className="flex items-center gap-2 px-4 flex-wrap">
           {/* Back Button (narrow view) */}
           {onBack && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 editorRef.current?.blur();
                 setTimeout(onBack, 50);
@@ -137,13 +139,15 @@ export function NoteEditor({
             >
               <ChevronLeft size={20} />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
           )}
           {/* Pinned Toggle */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onUpdate({ pinned: !note.pinned })}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-md flex-shrink-0 ${
-              note.pinned ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+            className={`flex items-center gap-1 flex-shrink-0 ${
+              note.pinned ? 'bg-warning/20 dark:bg-warning/20' : ''
             }`}
           >
             <Pin size={16} className={note.pinned ? 'text-warning' : 'text-text-muted'} />
@@ -152,13 +156,15 @@ export function NoteEditor({
                 {note.pinned ? 'Pinned' : 'Pin'}
               </span>
             )}
-          </button>
+          </Button>
 
           {/* Private Toggle */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onUpdate({ is_private: !note.is_private })}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-md flex-shrink-0 ${
-              note.is_private ? 'bg-surface-sunken' : 'bg-success/15 dark:bg-success/20'
+            className={`flex items-center gap-1 flex-shrink-0 ${
+              note.is_private ? '' : 'bg-success/15 dark:bg-success/20'
             }`}
           >
             {note.is_private ? (
@@ -172,20 +178,22 @@ export function NoteEditor({
                 {!isNarrow && <span className="text-sm text-success">Shared</span>}
               </>
             )}
-          </button>
+          </Button>
 
           {/* Separator */}
           <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
           {/* Read-only Toggle */}
-          <button
+          <Button
+            variant="secondary"
+            size="icon-sm"
             onClick={() => {
               const newState = !isReadOnly.value;
               isReadOnly.set(newState);
               editorRef.current?.setEditable(!newState);
             }}
-            className={`p-1.5 rounded-md flex-shrink-0 ${
-              isReadOnly.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+            className={`flex-shrink-0 ${
+              isReadOnly.value ? 'bg-warning/20 dark:bg-warning/20' : ''
             }`}
           >
             {isReadOnly.value ? (
@@ -193,18 +201,20 @@ export function NoteEditor({
             ) : (
               <EyeOff size={16} className="text-text-muted" />
             )}
-          </button>
+          </Button>
 
           <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
           {/* Checkbox dropdown trigger */}
           <div className="relative">
-            <button
+            <Button
+              variant="secondary"
+              size="icon-sm"
               onClick={() => showCheckboxDropdown.toggle()}
-              className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
+              className={`flex items-center gap-0.5 flex-shrink-0 ${
                 showCheckboxDropdown.value
                   ? 'bg-warning/20 dark:bg-warning/20'
-                  : 'bg-surface-sunken'
+                  : ''
               }`}
             >
               <SquareCheck
@@ -215,7 +225,7 @@ export function NoteEditor({
                 size={12}
                 className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
-            </button>
+            </Button>
             {showCheckboxDropdown.value && (
               <>
                 <div
@@ -223,33 +233,36 @@ export function NoteEditor({
                   onClick={() => showCheckboxDropdown.setFalse()}
                 />
                 <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       editorRef.current?.toggleTaskList();
                       showCheckboxDropdown.setFalse();
                     }}
-                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
+                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
                   >
                     Insert checkbox
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       showCheckboxDropdown.setFalse();
                       showDeleteCheckedConfirm.setTrue();
                     }}
-                    className="w-full px-3 py-2 text-left text-sm border-b hover:bg-surface-sunken hover:bg-surface-sunken border-border text-text"
+                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
                   >
                     Delete checked lines
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       showCheckboxDropdown.setFalse();
                       showUncheckAllConfirm.setTrue();
                     }}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-surface-sunken hover:bg-surface-sunken text-text"
+                    className="w-full px-3 py-2 text-left text-sm text-text rounded-none justify-start"
                   >
                     Uncheck all
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -259,10 +272,12 @@ export function NoteEditor({
 
           {/* Heading dropdown trigger */}
           <div className="relative">
-            <button
+            <Button
+              variant="secondary"
+              size="icon-sm"
               onClick={() => showHeadingDropdown.toggle()}
-              className={`flex items-center gap-0.5 p-1.5 rounded-md flex-shrink-0 ${
-                showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : 'bg-surface-sunken'
+              className={`flex items-center gap-0.5 flex-shrink-0 ${
+                showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
               }`}
             >
               <Heading
@@ -273,7 +288,7 @@ export function NoteEditor({
                 size={12}
                 className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
-            </button>
+            </Button>
             {showHeadingDropdown.value && (
               <>
                 <div
@@ -282,13 +297,14 @@ export function NoteEditor({
                 />
                 <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[120px] bg-surface-sunken border-border">
                   {[1, 2, 3].map((level) => (
-                    <button
+                    <Button
                       key={level}
+                      variant="ghost"
                       onClick={() => {
                         editorRef.current?.toggleHeading(level as 1 | 2 | 3);
                         showHeadingDropdown.setFalse();
                       }}
-                      className={`w-full px-3 py-2 text-left hover:bg-surface-sunken hover:bg-surface-sunken ${
+                      className={`w-full px-3 py-2 text-left rounded-none justify-start ${
                         level < 3 ? 'border-b border-border' : ''
                       }`}
                     >
@@ -298,30 +314,32 @@ export function NoteEditor({
                       >
                         Heading {level}
                       </span>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </>
             )}
           </div>
 
-          <button
+          <Button
+            variant="secondary"
+            size="icon-sm"
             onClick={() => editorRef.current?.toggleBulletList()}
-            className="p-1.5 rounded-md flex-shrink-0 bg-surface-sunken"
+            className="flex-shrink-0"
           >
             <List size={16} className="text-text-muted" />
-          </button>
+          </Button>
 
           <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
 
-          <button
+          <Button
+            variant="secondary"
+            size="icon-sm"
             onClick={handleCopyMarkdown}
-            className={`p-1.5 rounded-md flex-shrink-0 ${
-              copied ? 'bg-success/20' : 'bg-surface-sunken'
-            }`}
+            className={`flex-shrink-0 ${copied ? 'bg-success/20' : ''}`}
           >
             <Copy size={16} className={copied ? 'text-success' : 'text-text-muted'} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -430,9 +448,9 @@ export function NoteEditor({
           {note.updated_at !== note.created_at && ` · Updated ${formatDate(note.updated_at)}`}
         </span>
         {onTrash && (
-          <button onClick={onTrash} className="p-1 hover:opacity-70">
+          <Button variant="ghost" size="icon-sm" onClick={onTrash}>
             <Trash2 size={16} className="text-text-muted" />
-          </button>
+          </Button>
         )}
       </div>
 

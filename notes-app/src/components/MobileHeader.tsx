@@ -14,6 +14,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { Button } from '@dak/ui';
 import type { Tag as TagType } from '../types/tag';
 
 interface MobileHeaderProps {
@@ -77,27 +78,26 @@ export function MobileHeader({
   if (isSelectionMode) {
     return (
       <div className="flex items-center justify-between px-4 py-3 border-b z-10 border-border bg-surface-sunken">
-        <button onClick={toggleSelectAll} className="flex items-center gap-2">
+        <Button variant="ghost" onClick={toggleSelectAll} className="flex items-center gap-2 p-0">
           {allOwnedSelected ? (
             <SquareCheck size={20} className="text-warning" />
           ) : (
             <Square size={20} className="text-text-muted" />
           )}
           <span className="text-sm text-text">All</span>
-        </button>
+        </Button>
         <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant={selectedNoteIds.size > 0 ? 'danger' : 'secondary'}
+            size="sm"
             onClick={() => selectedNoteIds.size > 0 && onBulkDelete()}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-              selectedNoteIds.size > 0 ? 'bg-danger text-text' : 'bg-surface-sunken text-text-muted'
-            }`}
           >
             Delete
-          </button>
-          <button onClick={exitSelectionMode} className="p-1">
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={exitSelectionMode}>
             <X size={20} className="text-text-muted" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -108,18 +108,20 @@ export function MobileHeader({
       {isPublicOnly ? (
         <span className="text-xl font-bold text-text">Notes</span>
       ) : (
-        <button onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2">
+        <Button variant="ghost" onClick={toggleShowPrivate} className="flex items-center gap-1 py-1 pr-2 p-0">
           {!showPrivate && <Lock size={16} className="text-warning" />}
           <span className="text-xl font-bold text-text">
             {showPrivate ? 'All Notes' : 'Public'}
           </span>
           <ChevronDown size={18} className="text-text-muted" />
-        </button>
+        </Button>
       )}
       <div className="flex items-center gap-2">
         {/* Create Note Button */}
         <div className="relative z-[11]">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               if (isPublicOnly || !showPrivate) {
                 onCreateNote(false);
@@ -128,46 +130,50 @@ export function MobileHeader({
                 setShowCreateMenu(!showCreateMenu);
               }
             }}
-            className="p-2 rounded-lg bg-warning"
+            className="bg-warning hover:bg-warning"
           >
             <Plus size={20} className="text-black" />
-          </button>
+          </Button>
           {showCreateMenu && showPrivate && !isPublicOnly && (
             <div className="absolute top-11 right-0 rounded-lg border min-w-[160px] z-[100] bg-surface-sunken border-border">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => onCreateNote(false)}
-                className="w-full flex items-center gap-2 p-3 border-b border-border"
+                className="w-full flex items-center gap-2 p-3 border-b border-border rounded-none justify-start"
               >
                 <Plus size={16} className="text-text-muted" />
                 <span className="text-sm text-text">New Note</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => onCreateNote(true)}
-                className="w-full flex items-center gap-2 p-3"
+                className="w-full flex items-center gap-2 p-3 rounded-none justify-start"
               >
                 <Lock size={16} className="text-text-muted" />
                 <span className="text-sm text-text">Private Note</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
         {/* Menu Button */}
         <div className="relative z-10">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               setShowCreateMenu(false);
               setShowMobileMenu(!showMobileMenu);
             }}
-            className="p-2"
           >
             <Menu size={20} className="text-text-muted" />
-          </button>
+          </Button>
           {showMobileMenu && (
             <div className="absolute top-11 right-0 rounded-lg border min-w-[200px] max-h-[400px] z-[100] bg-surface-sunken border-border">
               {/* Tags Section */}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setShowMobileTagsMenu(!showMobileTagsMenu)}
-                className="w-full flex items-center justify-between p-3 border-b border-border"
+                className="w-full flex items-center justify-between p-3 border-b border-border rounded-none"
               >
                 <div className="flex items-center gap-2">
                   <Tag size={16} className="text-text-muted" />
@@ -179,49 +185,53 @@ export function MobileHeader({
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedTagId && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedTagId(null);
                         setShowMobileTagsMenu(false);
                         setShowMobileMenu(false);
                       }}
-                      className="px-1 py-0.5 rounded text-xs bg-surface-sunken text-text-muted"
+                      className="px-1 py-0.5 text-xs bg-surface-sunken text-text-muted"
                     >
                       Clear
-                    </button>
+                    </Button>
                   )}
                   <ChevronRight
                     size={16}
                     className={`text-text-muted transition-transform ${showMobileTagsMenu ? 'rotate-90' : ''}`}
                   />
                 </div>
-              </button>
+              </Button>
               {showMobileTagsMenu && (
                 <div className="max-h-[200px] overflow-auto">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setSelectedTagId(null);
                       setShowMobileTagsMenu(false);
                       setShowMobileMenu(false);
                     }}
-                    className={`w-full flex items-center gap-2 py-2.5 px-4 ${
+                    className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-none justify-start ${
                       !selectedTagId ? 'bg-surface-sunken' : ''
                     }`}
                   >
                     <span className={`text-sm ${!selectedTagId ? 'text-text' : 'text-text-muted'}`}>
                       All notes
                     </span>
-                  </button>
+                  </Button>
                   {tags.map((tag) => (
-                    <button
+                    <Button
                       key={tag.id}
+                      variant="ghost"
                       onClick={() => {
                         setSelectedTagId(tag.id);
                         setShowMobileTagsMenu(false);
                         setShowMobileMenu(false);
                       }}
-                      className={`w-full flex items-center gap-2 py-2.5 px-4 ${
+                      className={`w-full flex items-center gap-2 py-2.5 px-4 rounded-none justify-start ${
                         selectedTagId === tag.id ? 'bg-surface-sunken' : ''
                       }`}
                     >
@@ -239,60 +249,65 @@ export function MobileHeader({
                       {tagCounts[tag.id] && (
                         <span className="text-xs text-text-muted">{tagCounts[tag.id]}</span>
                       )}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowMobileMenu(false);
                   window.location.reload();
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-border"
+                className="w-full flex items-center gap-2 p-3 border-b border-border rounded-none justify-start"
               >
                 <RefreshCw size={16} className="text-text-muted" />
                 <span className="text-sm text-text">Refresh</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowMobileMenu(false);
                   navigate('/settings');
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-border"
+                className="w-full flex items-center gap-2 p-3 border-b border-border rounded-none justify-start"
               >
                 <Settings size={16} className="text-text-muted" />
                 <span className="text-sm text-text">Settings</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowMobileMenu(false);
                   navigate('/trash');
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-border"
+                className="w-full flex items-center gap-2 p-3 border-b border-border rounded-none justify-start"
               >
                 <Trash2 size={16} className="text-text-muted" />
                 <span className="text-sm text-text">Trash</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowMobileMenu(false);
                   enterSelectionMode();
                 }}
-                className="w-full flex items-center gap-2 p-3 border-b border-border"
+                className="w-full flex items-center gap-2 p-3 border-b border-border rounded-none justify-start"
               >
                 <SquareCheck size={16} className="text-text-muted" />
                 <span className="text-sm text-text">Select</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowMobileMenu(false);
                   onLogout();
                 }}
-                className="w-full flex items-center gap-2 p-3"
+                className="w-full flex items-center gap-2 p-3 rounded-none justify-start"
               >
                 <LogOut size={16} className="text-danger" />
                 <span className="text-sm text-danger">Log out</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>

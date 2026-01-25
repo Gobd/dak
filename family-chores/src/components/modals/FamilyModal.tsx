@@ -88,23 +88,23 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                 />
                 <div className="flex gap-2 flex-wrap">
                   {EMOJI_OPTIONS.map((e) => (
-                    <button
+                    <Button
                       key={e}
+                      variant={emoji === e ? 'primary' : 'secondary'}
                       onClick={() => setEmoji(e)}
-                      className={`w-10 h-10 text-xl rounded-lg ${
-                        emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
-                      }`}
+                      className={`w-10 h-10 text-xl p-0 ${emoji === e ? 'bg-accent-light' : ''}`}
                     >
                       {e}
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   {COLOR_OPTIONS.map((c) => (
-                    <button
+                    <Button
                       key={c}
+                      variant="ghost"
                       onClick={() => setColor(c)}
-                      className={`w-8 h-8 rounded-full ${
+                      className={`w-8 h-8 p-0 rounded-full ${
                         color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                       }`}
                       style={{ backgroundColor: c }}
@@ -137,18 +137,21 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   size="lg"
                 />
                 <span className="flex-1 font-medium text-text">{member.name}</span>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => handleEdit(member)}
-                  className="p-2 rounded-lg hover:bg-surface-sunken"
                 >
                   <Edit2 size={18} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => setDeleteConfirm(member.id)}
-                  className="p-2 rounded-lg hover:bg-danger-light dark:hover:bg-danger-light text-danger"
+                  className="text-danger hover:bg-danger-light"
                 >
                   <Trash2 size={18} />
-                </button>
+                </Button>
               </>
             )}
           </div>
@@ -165,23 +168,23 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
             />
             <div className="flex gap-2 flex-wrap">
               {EMOJI_OPTIONS.map((e) => (
-                <button
+                <Button
                   key={e}
+                  variant={emoji === e ? 'primary' : 'secondary'}
                   onClick={() => setEmoji(e)}
-                  className={`w-10 h-10 text-xl rounded-lg ${
-                    emoji === e ? 'bg-accent-light' : 'bg-surface-sunken'
-                  }`}
+                  className={`w-10 h-10 text-xl p-0 ${emoji === e ? 'bg-accent-light' : ''}`}
                 >
                   {e}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="flex gap-2 flex-wrap">
               {COLOR_OPTIONS.map((c) => (
-                <button
+                <Button
                   key={c}
+                  variant="ghost"
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full ${
+                  className={`w-8 h-8 p-0 rounded-full ${
                     color === c ? 'ring-2 ring-offset-2 ring-accent' : ''
                   }`}
                   style={{ backgroundColor: c }}
@@ -205,13 +208,14 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
             </div>
           </div>
         ) : (
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsAdding(true)}
             disabled={isEditing}
-            className="w-full p-4 border-2 border-dashed border-border rounded-xl text-text-muted hover:bg-surface-raised flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full p-4 border-2 border-dashed border-border"
           >
             <Plus size={20} /> Add Family Member
-          </button>
+          </Button>
         )}
       </div>
 

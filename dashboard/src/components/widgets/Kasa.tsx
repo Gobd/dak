@@ -206,15 +206,17 @@ export default function Kasa({ dark }: WidgetComponentProps) {
   return (
     <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => showModal.setTrue()}
-        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
+        className="relative"
         title={`Smart Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Power size={24} className={anyOn ? 'text-success' : 'text-text-muted'} />
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
-      </button>
+      </Button>
 
       {/* Main Modal - Device List */}
       <Modal
@@ -260,12 +262,13 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                              ${device.on ? 'bg-success/20' : 'bg-surface-sunken/40'}`}
                 >
                   <div className="flex items-center justify-between">
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => setSelectedDevice(device)}
-                      className="font-medium truncate text-left hover:underline"
+                      className="font-medium truncate text-left hover:underline p-0 h-auto"
                     >
                       {device.name}
-                    </button>
+                    </Button>
                     <div className="flex items-center gap-2">
                       {/* Countdown timer takes priority */}
                       {device.countdown_remaining && device.countdown_remaining > 0 ? (
@@ -285,21 +288,24 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                           {device.power_watts!.toFixed(1)}W
                         </span>
                       )}
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        rounded
                         onClick={() => handleToggle(device)}
-                        className={`p-1.5 rounded-full transition-colors ${
+                        className={
                           device.on
                             ? 'bg-success/30 hover:bg-success/50'
                             : dark
                               ? 'bg-surface-sunken hover:bg-surface'
                               : 'bg-surface-sunken hover:bg-border'
-                        }`}
+                        }
                       >
                         <Power
                           size={16}
                           className={device.on ? 'text-success' : 'text-text-muted'}
                         />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -334,22 +340,20 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium">Power</span>
-                <button
+                <Button
+                  size="sm"
                   onClick={() => {
                     handleToggle(selectedDevice);
                     // Update local state
                     setSelectedDevice({ ...selectedDevice, on: !selectedDevice.on });
                   }}
-                  className={`px-3 py-1 rounded ${
-                    selectedDevice.on
-                      ? 'bg-success/30 text-success'
-                      : dark
-                        ? 'bg-surface-sunken text-text-secondary'
-                        : 'bg-surface-sunken text-text-secondary'
-                  }`}
+                  className={
+                    selectedDevice.on ? 'bg-success/30 text-success hover:bg-success/40' : ''
+                  }
+                  variant={selectedDevice.on ? 'secondary' : 'secondary'}
                 >
                   {selectedDevice.on ? 'On' : 'Off'}
-                </button>
+                </Button>
               </div>
               {/* Next action info - countdown takes priority */}
               {selectedDevice.countdown_remaining && selectedDevice.countdown_remaining > 0 ? (
@@ -434,30 +438,22 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                 <Timer size={16} className="text-accent" /> Timer
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <button
+                <Button
+                  size="sm"
                   onClick={() => setCountdownAction('off')}
-                  className={`flex-1 py-1 rounded text-sm font-medium ${
-                    countdownAction === 'off'
-                      ? 'bg-danger text-text'
-                      : dark
-                        ? 'bg-surface-sunken text-text-secondary'
-                        : 'bg-surface-sunken text-text-secondary'
-                  }`}
+                  className={`flex-1 ${countdownAction === 'off' ? 'bg-danger hover:bg-danger' : ''}`}
+                  variant={countdownAction === 'off' ? 'danger' : 'secondary'}
                 >
                   Turn Off
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
                   onClick={() => setCountdownAction('on')}
-                  className={`flex-1 py-1 rounded text-sm font-medium ${
-                    countdownAction === 'on'
-                      ? 'bg-success text-text'
-                      : dark
-                        ? 'bg-surface-sunken text-text-secondary'
-                        : 'bg-surface-sunken text-text-secondary'
-                  }`}
+                  className={`flex-1 ${countdownAction === 'on' ? 'bg-success hover:bg-success' : ''}`}
+                  variant="secondary"
                 >
                   Turn On
-                </button>
+                </Button>
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -560,7 +556,9 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                             })
                           }
                         />
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => {
                             setEditingRule(rule);
                             const isSunrise = rule.time === 'sunrise';
@@ -574,18 +572,19 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                             });
                             showScheduleForm.setTrue();
                           }}
-                          className="p-1 rounded hover:bg-surface/50"
                           title="Edit"
                         >
                           <Edit2 size={14} />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setDeleteRule(rule)}
-                          className="p-1 rounded hover:bg-danger/50"
+                          className="hover:bg-danger/50"
                           title="Delete"
                         >
                           <Trash2 size={14} className="text-danger" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -665,30 +664,20 @@ export default function Kasa({ dark }: WidgetComponentProps) {
           <div>
             <label className="block text-sm font-medium mb-1">Action</label>
             <div className="flex gap-2">
-              <button
+              <Button
                 onClick={() => setScheduleForm((f) => ({ ...f, action: 'on' }))}
-                className={`flex-1 py-2 rounded font-medium ${
-                  scheduleForm.action === 'on'
-                    ? 'bg-success text-text'
-                    : dark
-                      ? 'bg-surface-sunken text-text-secondary'
-                      : 'bg-surface-sunken text-text-secondary'
-                }`}
+                variant={scheduleForm.action === 'on' ? 'primary' : 'secondary'}
+                className={`flex-1 ${scheduleForm.action === 'on' ? 'bg-success hover:bg-success' : ''}`}
               >
                 Turn On
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setScheduleForm((f) => ({ ...f, action: 'off' }))}
-                className={`flex-1 py-2 rounded font-medium ${
-                  scheduleForm.action === 'off'
-                    ? 'bg-danger text-text'
-                    : dark
-                      ? 'bg-surface-sunken text-text-secondary'
-                      : 'bg-surface-sunken text-text-secondary'
-                }`}
+                variant={scheduleForm.action === 'off' ? 'danger' : 'secondary'}
+                className="flex-1"
               >
                 Turn Off
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -697,19 +686,15 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             <label className="block text-sm font-medium mb-1">Time</label>
             <div className="flex gap-2 mb-2">
               {(['specific', 'sunrise', 'sunset'] as const).map((type) => (
-                <button
+                <Button
                   key={type}
                   onClick={() => setScheduleForm((f) => ({ ...f, timeType: type }))}
-                  className={`flex-1 py-1.5 rounded text-sm font-medium ${
-                    scheduleForm.timeType === type
-                      ? 'bg-accent text-text'
-                      : dark
-                        ? 'bg-surface-sunken text-text-secondary'
-                        : 'bg-surface-sunken text-text-secondary'
-                  }`}
+                  variant={scheduleForm.timeType === type ? 'primary' : 'secondary'}
+                  size="sm"
+                  className="flex-1"
                 >
                   {type === 'specific' ? 'Time' : type.charAt(0).toUpperCase() + type.slice(1)}
-                </button>
+                </Button>
               ))}
             </div>
             {scheduleForm.timeType === 'specific' ? (
@@ -741,7 +726,7 @@ export default function Kasa({ dark }: WidgetComponentProps) {
             <label className="block text-sm font-medium mb-1">Days</label>
             <div className="flex gap-1">
               {(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const).map((day) => (
-                <button
+                <Button
                   key={day}
                   onClick={() =>
                     setScheduleForm((f) => ({
@@ -751,16 +736,11 @@ export default function Kasa({ dark }: WidgetComponentProps) {
                         : [...f.days, day],
                     }))
                   }
-                  className={`w-9 h-9 rounded text-sm font-medium ${
-                    scheduleForm.days.includes(day)
-                      ? 'bg-accent text-text'
-                      : dark
-                        ? 'bg-surface-sunken text-text-muted'
-                        : 'bg-surface-sunken text-text-secondary'
-                  }`}
+                  variant={scheduleForm.days.includes(day) ? 'primary' : 'secondary'}
+                  className="w-9 h-9 p-0"
                 >
                   {day.charAt(0).toUpperCase()}
-                </button>
+                </Button>
               ))}
             </div>
             {scheduleForm.days.length === 0 && (

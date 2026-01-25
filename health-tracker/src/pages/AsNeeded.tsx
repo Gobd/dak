@@ -210,16 +210,17 @@ export function AsNeeded() {
                 key={person.id}
                 className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
               >
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => togglePerson(person.id)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-surface-raised hover:bg-surface-sunken transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 h-auto"
                 >
                   <h2 className="font-semibold text-lg">{person.name}</h2>
                   <div className="flex items-center gap-2 text-text-muted">
                     <span className="text-sm">({personMeds.length})</span>
                     {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                   </div>
-                </button>
+                </Button>
                 {isExpanded && (
                   <div className="divide-y divide-border dark:divide-border">
                     {personMeds.map((med) => {
@@ -239,12 +240,14 @@ export function AsNeeded() {
                                 </div>
                               </div>
                             </div>
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
                               onClick={() => setConfirmDelete(med.id)}
-                              className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
+                              className="text-danger hover:bg-danger-light"
                             >
                               <Trash2 size={16} />
-                            </button>
+                            </Button>
                           </div>
 
                           <div className="flex items-center justify-between mt-3 p-3 bg-surface-raised rounded-lg">
@@ -282,16 +285,19 @@ export function AsNeeded() {
 
                             <div className="flex items-center gap-2">
                               {lastDose && (
-                                <button
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   onClick={() => undoLastDose(med.id)}
-                                  className="flex items-center gap-1 px-3 py-2 text-sm border border-border rounded-lg hover:bg-surface-sunken text-text-secondary"
                                   title="Undo last dose"
                                 >
                                   <Undo2 size={16} />
                                   Undo
-                                </button>
+                                </Button>
                               )}
-                              <button
+                              <Button
+                                variant={showTimeInput === med.id ? 'primary' : 'secondary'}
+                                size="sm"
                                 onClick={() => {
                                   if (showTimeInput === med.id) {
                                     setShowTimeInput(null);
@@ -301,15 +307,12 @@ export function AsNeeded() {
                                     setCustomTime(null);
                                   }
                                 }}
-                                className={`text-sm px-3 py-1.5 rounded-full ${
-                                  showTimeInput === med.id
-                                    ? 'bg-accent text-white'
-                                    : 'bg-surface-sunken text-text-secondary'
-                                }`}
+                                className="rounded-full"
                               >
                                 {showTimeInput === med.id ? 'Custom time' : 'Now'}
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant={okToGive ? 'primary' : 'danger'}
                                 onClick={() => {
                                   if (showTimeInput === med.id && customTime) {
                                     giveMed(med.id, customTime);
@@ -319,14 +322,10 @@ export function AsNeeded() {
                                   setShowTimeInput(null);
                                   setCustomTime(null);
                                 }}
-                                className={`px-4 py-2 rounded-lg font-medium ${
-                                  okToGive
-                                    ? 'bg-success text-white hover:bg-success-hover'
-                                    : 'bg-danger-light text-danger hover:opacity-80'
-                                }`}
+                                className={okToGive ? 'bg-success hover:bg-success-hover' : 'bg-danger-light text-danger'}
                               >
                                 Give
-                              </button>
+                              </Button>
                             </div>
                           </div>
                           {showTimeInput === med.id && (

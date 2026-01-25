@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { Avatar, Modal } from '@dak/ui';
+import { Avatar, Modal, Button } from '@dak/ui';
 import { supabase } from '../../lib/supabase';
 import { useChoresStore } from '../../stores/chores-store';
 import { useMembersStore } from '../../stores/members-store';
@@ -62,26 +62,20 @@ export function WeeklyView() {
     <div className="p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button
-          onClick={goToPrevWeek}
-          className="p-2 rounded-lg hover:bg-surface-sunken dark:hover:bg-surface-raised"
-        >
+        <Button variant="ghost" size="icon" onClick={goToPrevWeek}>
           <ChevronLeft size={24} />
-        </button>
+        </Button>
 
         <div className="text-center">
           <h2 className="text-lg font-semibold text-text">{format(weekStart, 'MMMM yyyy')}</h2>
-          <button onClick={goToThisWeek} className="text-sm text-accent hover:underline">
+          <Button variant="ghost" size="sm" onClick={goToThisWeek} className="text-accent p-0 h-auto">
             Today
-          </button>
+          </Button>
         </div>
 
-        <button
-          onClick={goToNextWeek}
-          className="p-2 rounded-lg hover:bg-surface-sunken dark:hover:bg-surface-raised"
-        >
+        <Button variant="ghost" size="icon" onClick={goToNextWeek}>
           <ChevronRight size={24} />
-        </button>
+        </Button>
       </div>
 
       {loading ? (
@@ -113,17 +107,18 @@ export function WeeklyView() {
             const total = dayInstances.length;
 
             return (
-              <button
+              <Button
                 key={`content-${day.toISOString()}`}
+                variant="ghost"
                 onClick={() => setSelectedDay(day)}
-                className={`min-h-[100px] p-2 rounded-lg border text-left transition-all hover:ring-2 hover:ring-accent ${
+                className={`min-h-[100px] p-2 rounded-lg border text-left h-auto items-start justify-start hover:ring-2 hover:ring-accent ${
                   isToday(day)
                     ? 'border-accent bg-accent-light/50'
                     : 'border-border bg-surface-raised'
                 }`}
               >
                 {total > 0 ? (
-                  <div className="space-y-1">
+                  <div className="space-y-1 w-full">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-text-muted">
                         {completed}/{total}
@@ -152,9 +147,9 @@ export function WeeklyView() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-text-muted text-center mt-4">No tasks</p>
+                  <p className="text-xs text-text-muted text-center mt-4 w-full">No tasks</p>
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>

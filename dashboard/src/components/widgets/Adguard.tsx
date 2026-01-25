@@ -155,16 +155,17 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   if (!isConfigured) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => {
             setSettingsForm(config);
             showSettings.setTrue();
           }}
-          className={`p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
           title="Configure AdGuard"
         >
           <Shield size={24} className="text-text-muted" />
-        </button>
+        </Button>
 
         <Modal
           open={showSettings.value}
@@ -228,16 +229,18 @@ export default function Adguard({ panel }: WidgetComponentProps) {
       )}
 
       {/* Settings gear */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={() => {
           setSettingsForm(config);
           showSettings.setTrue();
         }}
-        className="absolute top-0 right-0 p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+        className="absolute top-0 right-0 opacity-70 hover:opacity-100"
         title="Settings"
       >
         <Settings size={14} className="text-text-muted" />
-      </button>
+      </Button>
 
       {/* Control menu */}
       <Modal

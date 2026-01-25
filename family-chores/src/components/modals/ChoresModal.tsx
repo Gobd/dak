@@ -142,27 +142,32 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setEditingChore(chore)}
-                    className="p-2 rounded-lg hover:bg-surface-sunken text-text-muted"
                     title="Edit"
                   >
                     <Edit2 size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setDeleteConfirm(chore.id)}
-                    className="p-2 rounded-lg hover:bg-danger-light dark:hover:bg-danger-light text-text-muted hover:text-danger"
+                    className="text-text-muted hover:text-danger hover:bg-danger-light"
                     title="Delete"
                   >
                     <Trash2 size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon-sm"
                     onClick={() => setAssigningId(assigningId === chore.id ? null : chore.id)}
-                    className="p-2 rounded-lg bg-accent-light text-accent hover:bg-accent-light"
+                    className="bg-accent-light text-accent"
                     title="Assign now"
                   >
                     <Play size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -181,11 +186,13 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                       All ({chore.assignments.length})
                     </Button>
                     {chore.assignments.map((a) => (
-                      <button
+                      <Button
                         key={a.member.id}
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleAssign(chore.id, [a.member.id])}
                         disabled={assigning}
-                        className="flex items-center gap-1.5 px-2 py-1.5 bg-surface-sunken rounded-lg hover:bg-surface-sunken disabled:opacity-50"
+                        className="flex items-center gap-1.5"
                       >
                         <Avatar
                           name={a.member.name}
@@ -194,7 +201,7 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                           size="xs"
                         />
                         <span className="text-sm text-text">{a.member.name}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -216,30 +223,35 @@ export function ChoresModal({ onClose }: ChoresModalProps) {
                       {chore.name}
                     </h3>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => toggleActive(chore.id)}
-                    className="px-3 py-1 text-sm text-success hover:bg-success-light dark:hover:bg-success-light rounded-lg"
+                    className="text-success hover:bg-success-light"
                   >
                     Enable
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setDeleteConfirm(chore.id)}
-                    className="p-2 rounded-lg hover:bg-danger-light dark:hover:bg-danger-light text-text-muted hover:text-danger"
+                    className="text-text-muted hover:text-danger hover:bg-danger-light"
                   >
                     <Trash2 size={16} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
           )}
 
           {/* Add button */}
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setIsAddingNew(true)}
-            className="w-full p-4 border-2 border-dashed border-border rounded-xl text-text-muted hover:bg-surface-raised flex items-center justify-center gap-2 transition-colors"
+            className="w-full p-4 border-2 border-dashed border-border"
           >
             <Plus size={20} /> Add Chore
-          </button>
+          </Button>
         </div>
       </Modal>
 

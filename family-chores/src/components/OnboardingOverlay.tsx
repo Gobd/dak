@@ -53,12 +53,9 @@ export function OnboardingOverlay({ onDismiss, onOpenFamily }: OnboardingOverlay
       <div className="bg-surface rounded-2xl w-full max-w-sm overflow-hidden">
         {/* Header */}
         <div className="flex justify-end p-2">
-          <button
-            onClick={onDismiss}
-            className="p-2 rounded-lg text-text-muted hover:text-text-secondary dark:hover:text-text-secondary hover:bg-surface-sunken dark:hover:bg-surface-raised"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={onDismiss}>
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}

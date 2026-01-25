@@ -12,7 +12,16 @@ import {
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
-import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact, Spinner, Toggle, Input } from '@dak/ui';
+import {
+  Modal,
+  Button,
+  DatePicker,
+  DatePickerCompact,
+  TimePickerCompact,
+  Spinner,
+  Toggle,
+  Input,
+} from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync
@@ -823,74 +832,80 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       >
         <div className="flex items-center gap-0.5">
           {/* Month navigation - separated with gap */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handlePrevMonth}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Previous month"
           >
             <ChevronsLeft size={18} />
-          </button>
+          </Button>
           <div className="w-2" /> {/* Spacer between month and week buttons */}
           {/* Week navigation */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handlePrevWeek}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Previous week"
           >
             <ChevronLeft size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={todayInView ? 'primary' : 'ghost'}
+            size="sm"
             onClick={() => setShowJumpToDate(true)}
-            className={`px-2 py-1 text-sm rounded ${
-              todayInView ? 'bg-accent/30 text-accent' : 'hover:bg-surface-sunken/50'
-            }`}
+            className={todayInView ? 'bg-accent/30 text-accent' : ''}
             title="Jump to date"
           >
             {dateRange}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handleNextWeek}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Next week"
           >
             <ChevronRight size={18} />
-          </button>
+          </Button>
           <div className="w-2" /> {/* Spacer between week and month buttons */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handleNextMonth}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Next month"
           >
             <ChevronsRight size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={todayInView ? 'primary' : 'ghost'}
+            size="sm"
             onClick={handleToday}
-            className={`ml-2 px-2 py-1 text-xs rounded ${
-              todayInView ? 'bg-accent text-text' : 'hover:bg-surface-sunken/50'
-            }`}
+            className="ml-2"
           >
             Today
-          </button>
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowSettings(true)}
-            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
             title="Settings"
           >
             <Settings size={14} className="text-text-muted" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               setSelectedDate(new Date());
               setShowAddEvent(true);
             }}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Add event"
           >
             <Plus size={16} />
-          </button>
+          </Button>
         </div>
       </div>
 

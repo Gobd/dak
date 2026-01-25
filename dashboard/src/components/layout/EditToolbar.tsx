@@ -133,90 +133,75 @@ export function EditToolbar() {
                       flex items-center gap-2 shadow-xl border border-border"
       >
         {/* Screen navigation */}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
           onClick={() => {
             const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
             setActiveScreen(prevIndex);
           }}
-          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Previous screen"
         >
-          <ChevronLeft size={20} className="text-text" />
-        </button>
+          <ChevronLeft size={20} />
+        </Button>
 
         <span className="text-text text-sm px-2 min-w-[80px] text-center">
           {screens[activeScreenIndex]?.name ?? 'Screen'}
         </span>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          rounded
           onClick={() => {
             const nextIndex = activeScreenIndex === screens.length - 1 ? 0 : activeScreenIndex + 1;
             setActiveScreen(nextIndex);
           }}
-          className="p-2 rounded-full hover:bg-surface-sunken"
           title="Next screen"
         >
-          <ChevronRight size={20} className="text-text" />
-        </button>
+          <ChevronRight size={20} />
+        </Button>
 
         <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Add widget */}
-        <button
-          onClick={() => setShowAddWidget(true)}
-          className="p-2 rounded-full hover:bg-surface-sunken"
-          title="Add widget"
-        >
-          <Plus size={20} className="text-text" />
-        </button>
+        <Button variant="ghost" size="icon" rounded onClick={() => setShowAddWidget(true)} title="Add widget">
+          <Plus size={20} />
+        </Button>
 
         {/* Settings */}
-        <button
-          onClick={() => setShowSettingsModal(true)}
-          className="p-2 rounded-full hover:bg-surface-sunken"
-          title="Settings"
-        >
-          <Settings2 size={20} className="text-text" />
-        </button>
+        <Button variant="ghost" size="icon" rounded onClick={() => setShowSettingsModal(true)} title="Settings">
+          <Settings2 size={20} />
+        </Button>
 
         <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Import/Export */}
-        <button
-          onClick={() => setShowExportModal(true)}
-          className="p-2 rounded-full hover:bg-surface-sunken"
-          title="Export config"
-        >
-          <Download size={20} className="text-text" />
-        </button>
+        <Button variant="ghost" size="icon" rounded onClick={() => setShowExportModal(true)} title="Export config">
+          <Download size={20} />
+        </Button>
 
-        <button
-          onClick={() => setShowImportModal(true)}
-          className="p-2 rounded-full hover:bg-surface-sunken"
-          title="Import config"
-        >
-          <Upload size={20} className="text-text" />
-        </button>
+        <Button variant="ghost" size="icon" rounded onClick={() => setShowImportModal(true)} title="Import config">
+          <Upload size={20} />
+        </Button>
 
-        <button
-          onClick={() => setShowResetModal(true)}
-          className="p-2 rounded-full hover:bg-surface-sunken"
-          title="Reset config"
-        >
-          <RotateCcw size={20} className="text-text" />
-        </button>
+        <Button variant="ghost" size="icon" rounded onClick={() => setShowResetModal(true)} title="Reset config">
+          <RotateCcw size={20} />
+        </Button>
 
         <div className="w-px h-6 bg-surface-sunken" />
 
         {/* Done button */}
-        <button
+        <Button
           onClick={() => setEditMode(false)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                     bg-success hover:bg-success text-text text-sm font-medium"
+          rounded
+          size="sm"
+          className="bg-success hover:bg-success gap-1.5"
         >
           <Check size={16} />
           Done
-        </button>
+        </Button>
       </div>
 
       {/* Add Widget Modal */}

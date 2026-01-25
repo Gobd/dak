@@ -4,14 +4,17 @@ import { Spinner } from './Spinner';
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'default' | 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm';
   loading?: boolean;
+  rounded?: boolean;
 }
 
 const sizeClasses = {
   sm: 'px-3 py-1.5 text-sm',
   md: 'px-4 py-2 text-base',
   lg: 'px-6 py-3 text-lg',
+  icon: 'p-2',
+  'icon-sm': 'p-1.5',
 };
 
 const variantClasses = {
@@ -32,18 +35,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       type = 'button',
       className = '',
+      rounded = false,
       ...props
     },
     ref,
   ) => {
     const isDisabled = disabled || loading;
+    const roundedClass = rounded ? 'rounded-full' : 'rounded-lg';
 
     return (
       <button
         ref={ref}
         type={type}
         disabled={isDisabled}
-        className={`rounded-lg font-medium transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+        className={`${roundedClass} font-medium transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
         {...props}
       >
         {loading ? <Spinner size="sm" /> : children}

@@ -268,9 +268,9 @@ export default function Weather({ panel }: WidgetComponentProps) {
     return (
       <div className={`w-full h-full p-4 bg-surface text-text`}>
         <p className="text-danger text-sm mb-2">{error.message}</p>
-        <button onClick={() => refetch()} className="text-sm text-accent hover:underline">
+        <Button variant="ghost" size="sm" onClick={() => refetch()}>
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -286,13 +286,15 @@ export default function Weather({ panel }: WidgetComponentProps) {
         <span className="text-sm text-text-muted truncate">
           {formatLocation(location.city, location.state)}
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setShowSettings(true)}
-          className="p-1 rounded shrink-0 opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+          className="shrink-0 opacity-70 hover:opacity-100"
           title="Settings"
         >
           <Settings size={14} className="text-text-muted" />
-        </button>
+        </Button>
       </div>
 
       {/* Alerts */}

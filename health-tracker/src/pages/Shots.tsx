@@ -10,6 +10,7 @@ import {
   NumberPickerCompact,
   Input,
   Button,
+  Card,
 } from '@dak/ui';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -100,8 +101,6 @@ export function Shots() {
 
   const inputClass =
     'w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent';
-  const btnSecondary =
-    'px-3 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary';
 
   return (
     <div className="space-y-6">
@@ -202,78 +201,61 @@ export function Shots() {
       </Modal>
 
       {schedules.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <Card padding="lg" className="text-center text-text-muted">
           No shot schedules yet. Create one to start tracking.
-        </div>
+        </Card>
       ) : (
         <div className="space-y-4">
           {schedules.map((schedule) => (
-            <div
-              key={schedule.id}
-              className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
-            >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <Syringe className="text-accent" size={24} />
-                    <div>
-                      <div className="font-semibold">{schedule.person?.name}</div>
-                      <div className="text-text-muted">{schedule.name}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-text-muted">Next due</div>
-                    <div className="font-bold text-lg">
-                      {format(new Date(schedule.next_due + 'T00:00:00'), 'EEE, MMM d')}
-                    </div>
+            <Card key={schedule.id} className="overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Syringe className="text-accent" size={24} />
+                  <div>
+                    <div className="font-semibold">{schedule.person?.name}</div>
+                    <div className="text-text-muted">{schedule.name}</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-text-muted mb-4">
-                  <span>Every {schedule.interval_days} days</span>
-                  <span>•</span>
-                  <span>{schedule.current_dose}</span>
+                <div className="text-right">
+                  <div className="text-sm text-text-muted">Next due</div>
+                  <div className="font-bold text-lg">
+                    {format(new Date(schedule.next_due + 'T00:00:00'), 'EEE, MMM d')}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => {
-                      setLogDose(schedule.current_dose);
-                      setShowLogForm(schedule.id);
-                    }}
-                    className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover font-medium"
-                  >
-                    Log Shot
-                  </button>
-                  <button
-                    onClick={() => pushNextDue(schedule.id, 1)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
-                  >
-                    <ChevronRight size={16} />
-                    +1 day
-                  </button>
-                  <button
-                    onClick={() => pushNextDue(schedule.id, -1)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
-                  >
-                    <ChevronLeft size={16} />
-                    -1 day
-                  </button>
-                  <button
-                    onClick={() => handleShowHistory(schedule.id)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
-                  >
-                    <History size={16} />
-                    History
-                  </button>
-                  <button onClick={() => setShowEditForm(schedule.id)} className={btnSecondary}>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(schedule.id)}
-                    className="px-3 py-2 text-danger border border-danger rounded-lg hover:bg-danger-light dark:hover:bg-danger-light"
-                  >
-                    Delete
-                  </button>
-                </div>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-text-muted mb-4">
+                <span>Every {schedule.interval_days} days</span>
+                <span>•</span>
+                <span>{schedule.current_dose}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => {
+                    setLogDose(schedule.current_dose);
+                    setShowLogForm(schedule.id);
+                  }}
+                  className="bg-success hover:bg-success-hover"
+                >
+                  Log Shot
+                </Button>
+                <Button variant="secondary" onClick={() => pushNextDue(schedule.id, 1)} className="gap-1">
+                  <ChevronRight size={16} />
+                  +1 day
+                </Button>
+                <Button variant="secondary" onClick={() => pushNextDue(schedule.id, -1)} className="gap-1">
+                  <ChevronLeft size={16} />
+                  -1 day
+                </Button>
+                <Button variant="secondary" onClick={() => handleShowHistory(schedule.id)} className="gap-1">
+                  <History size={16} />
+                  History
+                </Button>
+                <Button variant="secondary" onClick={() => setShowEditForm(schedule.id)}>
+                  Edit
+                </Button>
+                <Button variant="danger" onClick={() => setConfirmDelete(schedule.id)}>
+                  Delete
+                </Button>
               </div>
 
               {showHistory === schedule.id && (
@@ -289,18 +271,20 @@ export function Shots() {
                             <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-text-muted">{log.dose}</span>
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
                                 onClick={() =>
                                   setConfirmLogDelete({
                                     scheduleId: schedule.id,
                                     logId: log.id,
                                   })
                                 }
-                                className="p-1 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded"
+                                className="text-danger hover:bg-danger-light"
                                 title="Delete this entry"
                               >
                                 <Trash2 size={14} />
-                              </button>
+                              </Button>
                             </div>
                           </div>
                           {log.notes && (
@@ -327,13 +311,15 @@ export function Shots() {
                         <label className="block text-sm font-medium text-text-secondary">
                           Time
                         </label>
-                        <button
+                        <Button
                           type="button"
+                          variant={useCustomTime.value ? 'primary' : 'secondary'}
+                          size="sm"
+                          rounded
                           onClick={() => useCustomTime.toggle()}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime.value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-secondary'}`}
                         >
                           {useCustomTime.value ? 'Custom time' : 'Now'}
-                        </button>
+                        </Button>
                       </div>
                       {useCustomTime.value && (
                         <DateTimePicker value={logTime} onChange={handleTimeChange} />
@@ -355,12 +341,12 @@ export function Shots() {
                       >
                         Cancel
                       </Button>
-                      <button
+                      <Button
                         onClick={() => handleLogShot(schedule.id)}
-                        className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover"
+                        className="bg-success hover:bg-success-hover"
                       >
                         Log Shot
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -408,7 +394,7 @@ export function Shots() {
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}

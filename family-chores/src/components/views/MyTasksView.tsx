@@ -81,13 +81,10 @@ export function MyTasksView({ onOpenFamily, onOpenChores }: MyTasksViewProps) {
           {allMemberTasks.length === 0 ? (
             <div className="text-center py-8 space-y-3">
               <p className="text-text-muted">No tasks for {selectedMember.name} today</p>
-              <button
-                onClick={onOpenChores}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-accent hover:bg-accent-light rounded-lg"
-              >
+              <Button variant="ghost" size="sm" onClick={onOpenChores} className="text-accent">
                 <ClipboardList size={16} />
                 Add Chores
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
