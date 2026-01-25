@@ -16,7 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ConfirmModal, Spinner } from '@dak/ui';
+import { ConfirmModal, Spinner, Input, Button } from '@dak/ui';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
 import { notesApi } from '../lib/api/notes';
@@ -486,31 +486,23 @@ export function Settings() {
           ) : (
             <>
               {/* Add new share */}
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddDefaultShare()}
-                  placeholder="Email address"
-                  className="flex-1 rounded-lg px-3 py-2.5 text-base outline-none bg-surface-sunken text-text"
-                />
-                <button
+              <div className="flex gap-2 mb-3 items-end">
+                <div className="flex-1">
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddDefaultShare()}
+                    placeholder="Email address"
+                  />
+                </div>
+                <Button
                   onClick={handleAddDefaultShare}
                   disabled={isAddingShare || !newEmail.trim()}
-                  className={`px-4 rounded-lg flex items-center justify-center ${
-                    newEmail.trim() ? 'bg-warning' : 'bg-surface-sunken'
-                  }`}
+                  loading={isAddingShare}
                 >
-                  {isAddingShare ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    <Plus
-                      size={20}
-                      className={newEmail.trim() ? 'text-black' : 'text-text-muted'}
-                    />
-                  )}
-                </button>
+                  <Plus size={20} />
+                </Button>
               </div>
 
               {/* Share list */}

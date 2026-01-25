@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit2, Trash2, Check } from 'lucide-react';
-import { Avatar, Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal, Input, Button } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 
 interface FamilyModalProps {
@@ -114,21 +114,19 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => {
                       setEditingId(null);
                       resetForm();
                     }}
-                    className="flex-1 px-3 py-2 border border-border rounded-lg"
+                    className="flex-1"
                   >
                     Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveEdit}
-                    className="flex-1 bg-accent text-text px-3 py-2 rounded-lg flex items-center justify-center gap-2"
-                  >
+                  </Button>
+                  <Button onClick={handleSaveEdit} className="flex-1">
                     <Check size={18} /> Save
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -161,12 +159,10 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
         {/* Add new member form */}
         {isAdding ? (
           <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <input
-              type="text"
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Name"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
               autoFocus
             />
             <div className="flex gap-2 flex-wrap">
@@ -195,22 +191,19 @@ export function FamilyModal({ onClose }: FamilyModalProps) {
               ))}
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setIsAdding(false);
                   resetForm();
                 }}
-                className="flex-1 px-3 py-2 border border-border rounded-lg"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleAdd}
-                disabled={!name.trim()}
-                className="flex-1 bg-accent text-text px-3 py-2 rounded-lg disabled:opacity-50"
-              >
+              </Button>
+              <Button onClick={handleAdd} disabled={!name.trim()} className="flex-1">
                 Add
-              </button>
+              </Button>
             </div>
           </div>
         ) : (

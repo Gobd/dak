@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { Avatar, Modal, ConfirmModal } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal, Input } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 
@@ -150,18 +150,12 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
             </div>
 
             {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                What for?
-              </label>
-              <input
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g., 30 min screen time, ice cream, etc."
-                className="w-full px-3 py-3 border border-border rounded-lg bg-surface-sunken text-text"
-              />
-            </div>
+            <Input
+              label="What for?"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g., 30 min screen time, ice cream, etc."
+            />
 
             {error && <p className="text-danger text-sm text-center">{error}</p>}
 

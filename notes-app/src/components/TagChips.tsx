@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Hash } from 'lucide-react';
+import { Input } from '@dak/ui';
 import type { Tag } from '../types/tag';
 
 interface TagsSidebarSectionProps {
@@ -28,12 +29,10 @@ export function TagsSidebarSection({
 
       {tagsWithNotes.length > 3 && (
         <div className="px-3 mb-2">
-          <input
-            type="text"
+          <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter tags..."
-            className="w-full px-2.5 py-1.5 rounded-md text-[13px] outline-none bg-surface-sunken text-text"
           />
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useMedicineStore } from '../stores/medicine-store';
-import { ConfirmModal, Modal, DatePickerCompact, NumberPickerCompact } from '@dak/ui';
+import { ConfirmModal, Modal, DatePickerCompact, NumberPickerCompact, Input, Button } from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, addDays, isAfter } from 'date-fns';
 
@@ -115,21 +115,13 @@ export function Courses() {
     };
   };
 
-  const inputClass =
-    'w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent';
-  const btnSecondary =
-    'flex-1 px-4 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary';
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Courses Tracking</h1>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-        >
+        <Button onClick={() => setShowAddForm(true)}>
           <Plus size={18} /> Add
-        </button>
+        </Button>
       </div>
 
       <ConfirmModal
@@ -148,16 +140,12 @@ export function Courses() {
         title="New Medicine Course"
         actions={
           <>
-            <button type="button" onClick={() => setShowAddForm(false)} className={btnSecondary}>
+            <Button variant="secondary" onClick={() => setShowAddForm(false)} className="flex-1">
               Cancel
-            </button>
-            <button
-              type="submit"
-              form="add-course-form"
-              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-            >
+            </Button>
+            <Button type="submit" form="add-course-form" className="flex-1">
               Create
-            </button>
+            </Button>
           </>
         }
       >
@@ -167,7 +155,7 @@ export function Courses() {
             <select
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
-              className={inputClass}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
               required
             >
               <option value="">Select person...</option>
@@ -178,19 +166,13 @@ export function Courses() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">
-              Medicine Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Amoxicillin"
-              className={inputClass}
-              required
-            />
-          </div>
+          <Input
+            label="Medicine Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Amoxicillin"
+            required
+          />
           <div>
             <label className="block text-sm font-medium mb-1 text-text-secondary">Start Date</label>
             <DatePickerCompact value={startDate} onChange={setStartDate} allowFuture={true} />
@@ -223,18 +205,12 @@ export function Courses() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">
-              Notes (optional)
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any notes..."
-              className={inputClass}
-            />
-          </div>
+          <Input
+            label="Notes (optional)"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Any notes..."
+          />
         </form>
       </Modal>
 

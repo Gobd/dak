@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
-import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact } from '@dak/ui';
+import { ConfirmModal, Modal, DateTimePicker, NumberPickerCompact, Input, Button } from '@dak/ui';
 import {
   Plus,
   Clock,
@@ -121,13 +121,10 @@ export function AsNeeded() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">As-Needed Tracking</h1>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-        >
+        <Button onClick={() => setShowAddForm(true)}>
           <Plus size={18} />
           Add
-        </button>
+        </Button>
       </div>
 
       <ConfirmModal
@@ -147,20 +144,12 @@ export function AsNeeded() {
         title="Add As-Needed"
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className="flex-1 px-4 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary"
-            >
+            <Button variant="secondary" onClick={() => setShowAddForm(false)} className="flex-1">
               Cancel
-            </button>
-            <button
-              type="submit"
-              form="add-med-form"
-              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-            >
+            </Button>
+            <Button type="submit" form="add-med-form" className="flex-1">
               Add
-            </button>
+            </Button>
           </>
         }
       >
@@ -181,17 +170,13 @@ export function AsNeeded() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Ibuprofen, Tylenol, Zyrtec"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent"
-              required
-            />
-          </div>
+          <Input
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Ibuprofen, Tylenol, Zyrtec"
+            required
+          />
           <div>
             <label className="block text-sm font-medium mb-1 text-text-secondary">
               Minimum Hours Between Doses

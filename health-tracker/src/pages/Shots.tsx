@@ -8,6 +8,8 @@ import {
   DateTimePicker,
   DatePickerCompact,
   NumberPickerCompact,
+  Input,
+  Button,
 } from '@dak/ui';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -105,12 +107,9 @@ export function Shots() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Shot Tracking</h1>
-        <button
-          onClick={() => showAddForm.setTrue()}
-          className="flex items-center gap-2 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-        >
+        <Button onClick={() => showAddForm.setTrue()}>
           <Plus size={18} /> Add
-        </button>
+        </Button>
       </div>
 
       <ConfirmModal
@@ -139,20 +138,12 @@ export function Shots() {
         title="New Shot Schedule"
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => showAddForm.setFalse()}
-              className={`flex-1 ${btnSecondary}`}
-            >
+            <Button variant="secondary" onClick={() => showAddForm.setFalse()} className="flex-1">
               Cancel
-            </button>
-            <button
-              type="submit"
-              form="add-schedule-form"
-              className="flex-1 bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
-            >
+            </Button>
+            <Button type="submit" form="add-schedule-form" className="flex-1">
               Create
-            </button>
+            </Button>
           </>
         }
       >
@@ -173,19 +164,13 @@ export function Shots() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-secondary">
-              Medicine Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Ozempic, Mounjaro"
-              className={inputClass}
-              required
-            />
-          </div>
+          <Input
+            label="Medicine Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Ozempic, Mounjaro"
+            required
+          />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-text-secondary">
@@ -200,18 +185,12 @@ export function Shots() {
                 zeroLabel=""
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-text-secondary">
-                Starting Dose (optional)
-              </label>
-              <input
-                type="text"
-                value={currentDose}
-                onChange={(e) => setCurrentDose(e.target.value)}
-                placeholder="e.g., 0.5mg"
-                className={inputClass}
-              />
-            </div>
+            <Input
+              label="Starting Dose (optional)"
+              value={currentDose}
+              onChange={(e) => setCurrentDose(e.target.value)}
+              placeholder="e.g., 0.5mg"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-text-secondary">
@@ -337,17 +316,11 @@ export function Shots() {
                 <div className="border-t border-border bg-surface-raised p-4">
                   <h3 className="font-medium mb-3">Log Shot</h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-text-secondary">
-                        Dose
-                      </label>
-                      <input
-                        type="text"
-                        value={logDose}
-                        onChange={(e) => setLogDose(e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
+                    <Input
+                      label="Dose"
+                      value={logDose}
+                      onChange={(e) => setLogDose(e.target.value)}
+                    />
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-text-secondary">
@@ -365,31 +338,25 @@ export function Shots() {
                         <DateTimePicker value={logTime} onChange={handleTimeChange} />
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-text-secondary">
-                        Notes (optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={logNotes}
-                        onChange={(e) => setLogNotes(e.target.value)}
-                        placeholder="Any notes..."
-                        className={inputClass}
-                      />
-                    </div>
+                    <Input
+                      label="Notes (optional)"
+                      value={logNotes}
+                      onChange={(e) => setLogNotes(e.target.value)}
+                      placeholder="Any notes..."
+                    />
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="secondary"
                         onClick={() => {
                           setShowLogForm(null);
                           useCustomTime.setFalse();
                         }}
-                        className={btnSecondary}
                       >
                         Cancel
-                      </button>
+                      </Button>
                       <button
                         onClick={() => handleLogShot(schedule.id)}
-                        className="bg-success text-text px-4 py-2 rounded-lg hover:bg-success-hover"
+                        className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover"
                       >
                         Log Shot
                       </button>
@@ -403,35 +370,24 @@ export function Shots() {
                   <h3 className="font-medium mb-3">Edit Schedule</h3>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-text-secondary">
-                          Interval (days)
-                        </label>
-                        <input
-                          type="number"
-                          defaultValue={schedule.interval_days}
-                          id={`interval-${schedule.id}`}
-                          min={1}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1 text-text-secondary">
-                          Current Dose
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue={schedule.current_dose}
-                          id={`dose-${schedule.id}`}
-                          className={inputClass}
-                        />
-                      </div>
+                      <Input
+                        label="Interval (days)"
+                        type="number"
+                        defaultValue={schedule.interval_days}
+                        id={`interval-${schedule.id}`}
+                        min={1}
+                      />
+                      <Input
+                        label="Current Dose"
+                        defaultValue={schedule.current_dose}
+                        id={`dose-${schedule.id}`}
+                      />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setShowEditForm(null)} className={btnSecondary}>
+                      <Button variant="secondary" onClick={() => setShowEditForm(null)}>
                         Cancel
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           const interval = (
                             document.getElementById(`interval-${schedule.id}`) as HTMLInputElement
@@ -444,10 +400,9 @@ export function Shots() {
                             current_dose: dose,
                           });
                         }}
-                        className="bg-accent text-text px-4 py-2 rounded-lg hover:bg-accent-hover"
                       >
                         Save
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

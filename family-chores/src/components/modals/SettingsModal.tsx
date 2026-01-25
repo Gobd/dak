@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, RefreshCw, Eye, EyeOff, BookOpen } from 'lucide-react';
-import { Modal, Spinner, Toggle } from '@dak/ui';
+import { Modal, Spinner, Toggle, Input, Button } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useInstancesStore } from '../../stores/instances-store';
 
@@ -58,7 +58,7 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
 
           {showPinChange ? (
             <div className="space-y-3">
-              <input
+              <Input
                 type="password"
                 value={newPin}
                 onChange={(e) => {
@@ -66,10 +66,9 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                   setPinError('');
                 }}
                 placeholder="New PIN (4-6 digits)"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                 inputMode="numeric"
               />
-              <input
+              <Input
                 type="password"
                 value={confirmPin}
                 onChange={(e) => {
@@ -77,37 +76,31 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                   setPinError('');
                 }}
                 placeholder="Confirm PIN"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
                 inputMode="numeric"
+                error={pinError}
               />
-              {pinError && <p className="text-danger text-sm">{pinError}</p>}
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setShowPinChange(false);
                     setNewPin('');
                     setConfirmPin('');
                     setPinError('');
                   }}
-                  className="flex-1 px-3 py-2 border border-border rounded-lg"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={handleChangePin}
-                  className="flex-1 bg-accent text-text px-3 py-2 rounded-lg"
-                >
+                </Button>
+                <Button onClick={handleChangePin} className="flex-1">
                   Save
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
-            <button
-              onClick={() => setShowPinChange(true)}
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface"
-            >
+            <Button variant="secondary" onClick={() => setShowPinChange(true)} className="w-full">
               {settings?.parent_pin ? 'Change PIN' : 'Set PIN'}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -141,14 +134,15 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
               <p className="text-sm text-text-muted">Regenerate today's task list</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="secondary"
             onClick={handleRefreshTasks}
             disabled={refreshing}
-            className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full"
           >
             {refreshing ? <Spinner size="sm" /> : <RefreshCw size={16} />}
             {refreshing ? 'Refreshing...' : 'Refresh Now'}
-          </button>
+          </Button>
         </div>
 
         {/* Review Walkthrough */}
@@ -161,16 +155,17 @@ export function SettingsModal({ onClose, onShowWalkthrough }: SettingsModalProps
                 <p className="text-sm text-text-muted">Learn about chores, habits, and goals</p>
               </div>
             </div>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => {
                 onClose();
                 onShowWalkthrough();
               }}
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg hover:bg-surface flex items-center justify-center gap-2"
+              className="w-full"
             >
               <BookOpen size={16} />
               Show Walkthrough
-            </button>
+            </Button>
           </div>
         )}
       </div>

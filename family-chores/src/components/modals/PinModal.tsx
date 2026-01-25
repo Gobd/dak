@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Delete } from 'lucide-react';
-import { Modal } from '@dak/ui';
+import { Modal, Button } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 
 interface PinModalProps {
@@ -86,13 +86,9 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
       onClose={onCancel}
       title={isSettingNewPin ? (step === 'enter' ? 'Set PIN' : 'Confirm PIN') : 'Enter PIN'}
       actions={
-        <button
-          onClick={handleSubmit}
-          disabled={currentPin.length < 4}
-          className="w-full bg-accent text-text py-3 rounded-xl font-medium hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button onClick={handleSubmit} disabled={currentPin.length < 4} className="w-full">
           {isSettingNewPin ? (step === 'enter' ? 'Continue' : 'Set PIN') : 'Unlock'}
-        </button>
+        </Button>
       }
     >
       {/* PIN display */}

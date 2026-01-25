@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, HelpCircle } from 'lucide-react';
-import { Avatar, Modal } from '@dak/ui';
+import { Avatar, Modal, Input, Button } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { useSettingsStore } from '../../stores/settings-store';
 import { SchedulePicker, type ScheduleConfig } from '../shared/SchedulePicker';
@@ -94,50 +94,37 @@ export function ChoreEditModal({ chore, onSave, onClose }: ChoreEditModalProps) 
       title={isEditing ? 'Edit Chore' : 'New Chore'}
       actions={
         <>
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-border rounded-lg hover:bg-surface-raised text-text-secondary"
-          >
+          <Button variant="secondary" onClick={onClose} className="flex-1">
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={!name.trim() || assigneeIds.length === 0 || saving}
-            className="flex-1 bg-accent text-text px-4 py-2.5 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-accent-hover"
+            className="flex-1"
           >
             <Check size={18} />
             {saving ? 'Saving...' : isEditing ? 'Save' : 'Create'}
-          </button>
+          </Button>
         </>
       }
     >
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Make bed, Take vitamins"
-            maxLength={100}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
-            autoFocus
-          />
-        </div>
+        <Input
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Make bed, Take vitamins"
+          maxLength={100}
+          autoFocus
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Description (optional)
-          </label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add details..."
-            maxLength={200}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text"
-          />
-        </div>
+        <Input
+          label="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Add details..."
+          maxLength={200}
+        />
 
         {/* Points - hidden when hide_points is enabled */}
         {!hidePoints && (
