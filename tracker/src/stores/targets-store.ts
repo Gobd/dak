@@ -43,7 +43,7 @@ export const useTargetsStore = create<TargetsState>((set, get) => ({
       }
     } else {
       // Create new target
-      const { error } = await supabase.from('targets').insert({
+      const { error } = await supabase.from('tracker_targets').insert({
         user_id: userData.user.id,
         daily_limit: dailyLimit,
       });

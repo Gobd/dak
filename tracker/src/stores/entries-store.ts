@@ -94,7 +94,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
 
     const units = calculateUnits(volumeMl, percentage);
 
-    const { error } = await supabase.from('entries').insert({
+    const { error } = await supabase.from('tracker_entries').insert({
       user_id: userData.user.id,
       volume_ml: volumeMl,
       percentage,
@@ -111,7 +111,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
   },
 
   deleteEntry: async (id: string) => {
-    const { error } = await supabase.from('entries').delete().eq('id', id);
+    const { error } = await supabase.from('tracker_entries').delete().eq('id', id);
 
     if (!error) {
       get().fetchTodayEntries();

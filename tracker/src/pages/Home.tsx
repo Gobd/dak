@@ -280,10 +280,10 @@ export function Home() {
                   onChange={(e) => setVolumeInput(e.target.value)}
                   className="flex-1"
                 />
-                <div className="flex rounded-lg overflow-hidden border border-border">
+                <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
                   <button
                     type="button"
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                       volumeUnit === 'ml'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
@@ -294,7 +294,7 @@ export function Home() {
                   </button>
                   <button
                     type="button"
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                       volumeUnit === 'oz'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'

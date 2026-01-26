@@ -177,10 +177,10 @@ export function Settings() {
                     onChange={(e) => setCalcVolume(e.target.value)}
                     className="flex-1"
                   />
-                  <div className="flex rounded-lg overflow-hidden border border-border">
+                  <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
                     <button
                       type="button"
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 text-sm font-medium transition-colors ${
                         calcVolumeUnit === 'ml'
                           ? 'bg-accent text-white'
                           : 'bg-surface text-text-secondary hover:bg-surface-sunken'
@@ -191,7 +191,7 @@ export function Settings() {
                     </button>
                     <button
                       type="button"
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 text-sm font-medium transition-colors ${
                         calcVolumeUnit === 'oz'
                           ? 'bg-accent text-white'
                           : 'bg-surface text-text-secondary hover:bg-surface-sunken'
@@ -318,10 +318,10 @@ export function Settings() {
                   onChange={(e) => setPresetVolume(e.target.value)}
                   className="flex-1"
                 />
-                <div className="flex rounded-lg overflow-hidden border border-border">
+                <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
                   <button
                     type="button"
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                       presetVolumeUnit === 'ml'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
@@ -332,7 +332,7 @@ export function Settings() {
                   </button>
                   <button
                     type="button"
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
                       presetVolumeUnit === 'oz'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'

@@ -42,7 +42,7 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
 
     const maxSortOrder = Math.max(...get().presets.map((p) => p.sort_order), -1);
 
-    const { error } = await supabase.from('presets').insert({
+    const { error } = await supabase.from('tracker_presets').insert({
       user_id: userData.user.id,
       name,
       volume_ml: volumeMl,
@@ -69,7 +69,7 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
   },
 
   deletePreset: async (id: string) => {
-    const { error } = await supabase.from('presets').delete().eq('id', id);
+    const { error } = await supabase.from('tracker_presets').delete().eq('id', id);
 
     if (!error) {
       get().fetchPresets();
@@ -86,7 +86,7 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
       user_id: userData.user.id,
     }));
 
-    const { error } = await supabase.from('presets').insert(presetsToInsert);
+    const { error } = await supabase.from('tracker_presets').insert(presetsToInsert);
 
     if (!error) {
       get().fetchPresets();
