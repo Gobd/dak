@@ -30,6 +30,7 @@ CREATE TABLE tracker_targets (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   daily_limit NUMERIC(4, 2) NOT NULL DEFAULT 14.0, -- units per day
   cost_per_unit NUMERIC(6, 2), -- optional: for cost tracking (e.g., 2.50 = $2.50/unit)
+  presets_seeded BOOLEAN NOT NULL DEFAULT FALSE, -- track if default presets have been created
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(user_id) -- one target per user

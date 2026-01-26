@@ -21,6 +21,12 @@ interface EntriesState {
     dailyLimit: number,
     notes?: string,
   ) => Promise<void>;
+  updateEntry: (
+    id: string,
+    volumeMl: number,
+    percentage: number,
+    notes?: string,
+  ) => Promise<boolean>;
   deleteEntry: (id: string) => Promise<void>;
   getTodayTotal: () => number;
 }
@@ -114,6 +120,34 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
       get().fetchEntries();
       broadcastSync({ type: 'entries' });
     }
+  },
+
+  updateEntry: async (id: string, volumeMl: number, percentage: number, notes?: string) => {
+    // Only allow editing today's entries
+    const entry = get().todayEntries.find((e) => e.id === id);
+    if (!entry) {
+      return false;
+    }
+
+    const units = calculateUnits(volumeMl, percentage);
+
+    const { error } = await supabase
+      .from('tracker_entries')
+      .update({
+        volume_ml: volumeMl,
+        percentage,
+        units,
+        notes: notes || null,
+      })
+      .eq('id', id);
+
+    if (!error) {
+      get().fetchTodayEntries();
+      get().fetchEntries();
+      broadcastSync({ type: 'entries' });
+      return true;
+    }
+    return false;
   },
 
   deleteEntry: async (id: string) => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, X, Trash2, Eye } from 'lucide-react';
+import { Plus, X, Trash2, Eye, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, Button, Input, Modal } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
@@ -10,7 +10,7 @@ import { MotivationBanner } from '../components/MotivationBanner';
 import { calculateUnits, formatUnits, formatVolume, formatVolumeUnit, ozToMl } from '../lib/units';
 import { usePreferencesStore } from '../stores/preferences-store';
 import { getRingColor } from '../lib/motivation';
-import type { Preset } from '../types';
+import type { Entry, Preset } from '../types';
 
 interface PreviewState {
   units: number;
@@ -27,6 +27,7 @@ export function Home() {
     fetchTodayEntries,
     fetchStreaks,
     addEntry,
+    updateEntry,
     deleteEntry,
     getTodayTotal,
   } = useEntriesStore();
@@ -35,6 +36,7 @@ export function Home() {
   const { volumeUnit } = usePreferencesStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [volumeInput, setVolumeInput] = useState('');
   const [inputUnit, setInputUnit] = useState<'ml' | 'oz'>('oz');
   const [percentageInput, setPercentageInput] = useState('');
@@ -119,6 +121,37 @@ export function Home() {
 
   const handleDelete = async (id: string) => {
     await deleteEntry(id);
+    if (target) {
+      fetchStreaks(target.daily_limit);
+    }
+  };
+
+  // Open edit modal for an entry
+  const handleEditEntry = (entry: Entry) => {
+    setEditingEntry(entry);
+    setVolumeInput(String(entry.volume_ml));
+    setInputUnit('ml');
+    setPercentageInput(String(entry.percentage));
+    setNotesInput(entry.notes || '');
+  };
+
+  // Save edited entry
+  const handleSaveEdit = async () => {
+    if (!editingEntry) return;
+
+    const volume = parseFloat(volumeInput);
+    const percentage = parseFloat(percentageInput);
+
+    if (isNaN(volume) || isNaN(percentage) || volume <= 0 || percentage <= 0) {
+      return;
+    }
+
+    const volumeMl = inputUnit === 'oz' ? ozToMl(volume) : volume;
+    await updateEntry(editingEntry.id, volumeMl, percentage, notesInput || undefined);
+
+    setEditingEntry(null);
+    resetCustomForm();
+
     if (target) {
       fetchStreaks(target.daily_limit);
     }
@@ -236,7 +269,7 @@ export function Home() {
                 key={entry.id}
                 className="flex items-center justify-between p-3 bg-surface-raised rounded-lg"
               >
-                <div>
+                <div className="flex-1 cursor-pointer" onClick={() => handleEditEntry(entry)}>
                   <div className="font-medium">{formatUnits(entry.units)} units</div>
                   <div className="text-sm text-text-muted">
                     {formatVolume(entry.volume_ml)} @ {entry.percentage}%
@@ -246,19 +279,146 @@ export function Home() {
                     {format(new Date(entry.logged_at), 'h:mm a')}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(entry.id)}
-                  title="Delete"
-                >
-                  <Trash2 size={16} className="text-text-muted hover:text-danger" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditEntry(entry)}
+                    title="Edit"
+                  >
+                    <Pencil size={16} className="text-text-muted hover:text-accent" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(entry.id)}
+                    title="Delete"
+                  >
+                    <Trash2 size={16} className="text-text-muted hover:text-danger" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         </Card>
       )}
+
+      {/* Edit Entry Modal */}
+      <Modal
+        open={editingEntry !== null}
+        onClose={() => {
+          setEditingEntry(null);
+          resetCustomForm();
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Edit Entry</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setEditingEntry(null);
+                resetCustomForm();
+              }}
+            >
+              <X size={20} />
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Volume</label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="Amount"
+                  value={volumeInput}
+                  onChange={(e) => setVolumeInput(e.target.value)}
+                  className="flex-1"
+                />
+                <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
+                  <button
+                    type="button"
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      inputUnit === 'ml'
+                        ? 'bg-accent text-white'
+                        : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+                    }`}
+                    onClick={() => setInputUnit('ml')}
+                  >
+                    ml
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      inputUnit === 'oz'
+                        ? 'bg-accent text-white'
+                        : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+                    }`}
+                    onClick={() => setInputUnit('oz')}
+                  >
+                    oz
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Strength %</label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                placeholder="e.g. 5.0"
+                value={percentageInput}
+                onChange={(e) => setPercentageInput(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+              <Input
+                type="text"
+                placeholder="What was it?"
+                value={notesInput}
+                onChange={(e) => setNotesInput(e.target.value)}
+              />
+            </div>
+
+            {/* Live preview of units */}
+            {previewUnits !== null && !isNaN(previewUnits) && (
+              <div className="p-3 bg-surface-raised rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Updated serving:</span>
+                  <span className="font-bold">{formatUnits(previewUnits)} units</span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  setEditingEntry(null);
+                  resetCustomForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={handleSaveEdit}
+                disabled={!volumeInput || !percentageInput}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* Manual Add Modal */}
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>

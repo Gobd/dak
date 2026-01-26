@@ -1,13 +1,5 @@
 import { useEffect } from 'react';
-import {
-  format,
-  subDays,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  parseISO,
-} from 'date-fns';
+import { format, startOfWeek, startOfMonth, parseISO } from 'date-fns';
 import { Flame, Target, TrendingDown, Calendar, Award, Lightbulb } from 'lucide-react';
 import { Card } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
@@ -35,10 +27,18 @@ export function Stats() {
 
   // Calculate weekly stats
   const now = new Date();
+  const today = format(now, 'yyyy-MM-dd');
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
   const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+
+  // Find first entry date to avoid counting days before tracking started
+  const firstEntryDate =
+    entries.length > 0
+      ? entries.reduce((earliest, e) => {
+          const date = e.logged_at.split('T')[0];
+          return date < earliest ? date : earliest;
+        }, entries[0].logged_at.split('T')[0])
+      : today;
 
   const entriesInRange = (start: Date, end: Date) =>
     entries.filter((e) => {
@@ -55,36 +55,44 @@ export function Stats() {
     return dailyMap;
   };
 
+  // Generate array of days from start to today (inclusive), respecting first entry date
+  const getDaysInRange = (periodStart: Date) => {
+    const effectiveStart = format(periodStart, 'yyyy-MM-dd');
+    const rangeStart = effectiveStart > firstEntryDate ? effectiveStart : firstEntryDate;
+    const days: string[] = [];
+    let current = rangeStart;
+    while (current <= today) {
+      days.push(current);
+      const nextDate = new Date(current + 'T12:00:00');
+      nextDate.setDate(nextDate.getDate() + 1);
+      current = format(nextDate, 'yyyy-MM-dd');
+    }
+    return days;
+  };
+
   // This week
-  const weekEntries = entriesInRange(weekStart, weekEnd);
+  const weekDays = getDaysInRange(weekStart);
+  const weekEntries = entriesInRange(weekStart, now);
   const weekDailyTotals = getDailyTotalsInRange(weekEntries);
   const weekTotalUnits = weekEntries.reduce((sum, e) => sum + e.units, 0);
-  const weekZeroDays = Array.from({ length: 7 }, (_, i) => {
-    const day = format(subDays(weekEnd, 6 - i), 'yyyy-MM-dd');
-    return (weekDailyTotals.get(day) || 0) === 0;
-  }).filter(Boolean).length;
-  const weekUnderDays = Array.from({ length: 7 }, (_, i) => {
-    const day = format(subDays(weekEnd, 6 - i), 'yyyy-MM-dd');
-    return (weekDailyTotals.get(day) || 0) <= dailyLimit;
-  }).filter(Boolean).length;
+  const weekZeroDays = weekDays.filter((day) => (weekDailyTotals.get(day) || 0) === 0).length;
+  const weekUnderDays = weekDays.filter(
+    (day) => (weekDailyTotals.get(day) || 0) <= dailyLimit,
+  ).length;
 
   // This month
-  const monthEntries = entriesInRange(monthStart, monthEnd);
+  const monthDays = getDaysInRange(monthStart);
+  const monthEntries = entriesInRange(monthStart, now);
   const monthDailyTotals = getDailyTotalsInRange(monthEntries);
   const monthTotalUnits = monthEntries.reduce((sum, e) => sum + e.units, 0);
-  const daysInMonth = now.getDate();
-  const monthZeroDays = Array.from({ length: daysInMonth }, (_, i) => {
-    const day = format(subDays(now, daysInMonth - 1 - i), 'yyyy-MM-dd');
-    return (monthDailyTotals.get(day) || 0) === 0;
-  }).filter(Boolean).length;
-  const monthUnderDays = Array.from({ length: daysInMonth }, (_, i) => {
-    const day = format(subDays(now, daysInMonth - 1 - i), 'yyyy-MM-dd');
-    return (monthDailyTotals.get(day) || 0) <= dailyLimit;
-  }).filter(Boolean).length;
+  const monthZeroDays = monthDays.filter((day) => (monthDailyTotals.get(day) || 0) === 0).length;
+  const monthUnderDays = monthDays.filter(
+    (day) => (monthDailyTotals.get(day) || 0) <= dailyLimit,
+  ).length;
 
-  // Averages
-  const weekAverage = weekTotalUnits / 7;
-  const monthAverage = monthTotalUnits / daysInMonth;
+  // Averages (use actual tracked days)
+  const weekAverage = weekDays.length > 0 ? weekTotalUnits / weekDays.length : 0;
+  const monthAverage = monthDays.length > 0 ? monthTotalUnits / monthDays.length : 0;
 
   // Insight based on patterns
   const insight = getInsight(streaks);
@@ -169,7 +177,9 @@ export function Stats() {
             <div className="text-sm text-text-muted">Zero days</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-accent">{weekUnderDays}/7</div>
+            <div className="text-2xl font-bold text-accent">
+              {weekUnderDays}/{weekDays.length}
+            </div>
             <div className="text-sm text-text-muted">Under target</div>
           </div>
         </div>
@@ -196,7 +206,7 @@ export function Stats() {
           </div>
           <div>
             <div className="text-2xl font-bold text-accent">
-              {Math.round((monthUnderDays / daysInMonth) * 100)}%
+              {monthDays.length > 0 ? Math.round((monthUnderDays / monthDays.length) * 100) : 0}%
             </div>
             <div className="text-sm text-text-muted">Under target</div>
           </div>

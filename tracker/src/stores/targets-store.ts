@@ -16,7 +16,7 @@ export const useTargetsStore = create<TargetsState>((set, get) => ({
 
   fetchTarget: async () => {
     set({ loading: true });
-    const { data, error } = await supabase.from('tracker_targets').select('*').single();
+    const { data, error } = await supabase.from('tracker_targets').select('*').maybeSingle();
 
     if (!error && data) {
       set({ target: data });
