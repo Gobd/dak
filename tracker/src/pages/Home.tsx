@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Trash2, Eye, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
-import { Card, Button, Input, Modal } from '@dak/ui';
+import { Card, Button, Input, Modal, ConfirmModal } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
 import { ProgressRing } from '../components/ProgressRing';
 import { MotivationBanner } from '../components/MotivationBanner';
-import { calculateUnits, formatUnits, formatVolume, formatVolumeUnit, ozToMl } from '../lib/units';
+import { calculateUnits, formatUnits, formatVolumeUnit, mlToOz, ozToMl } from '../lib/units';
 import { usePreferencesStore } from '../stores/preferences-store';
 import { getRingColor } from '../lib/motivation';
 import type { Entry, Preset } from '../types';
@@ -45,6 +45,9 @@ export function Home() {
   // Preview state - shows what adding a drink would do
   const [preview, setPreview] = useState<PreviewState | null>(null);
 
+  // Delete confirmation
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchTarget();
     fetchTodayEntries();
@@ -76,7 +79,9 @@ export function Home() {
   const handleConfirmAdd = async () => {
     if (!preview) return;
 
-    await addEntry(preview.volumeMl, preview.percentage, dailyLimit, preview.notes);
+    // Use preset name as notes if no custom notes provided
+    const notes = preview.notes || (preview.name !== 'Custom' ? preview.name : undefined);
+    await addEntry(preview.volumeMl, preview.percentage, dailyLimit, notes);
     setPreview(null);
 
     if (target) {
@@ -119,8 +124,10 @@ export function Home() {
     setNotesInput('');
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteEntry(id);
+  const handleDelete = async () => {
+    if (!deleteEntryId) return;
+    await deleteEntry(deleteEntryId);
+    setDeleteEntryId(null);
     if (target) {
       fetchStreaks(target.daily_limit);
     }
@@ -129,8 +136,14 @@ export function Home() {
   // Open edit modal for an entry
   const handleEditEntry = (entry: Entry) => {
     setEditingEntry(entry);
-    setVolumeInput(String(entry.volume_ml));
-    setInputUnit('ml');
+    // Show in user's preferred unit
+    if (volumeUnit === 'oz') {
+      setVolumeInput(String(mlToOz(entry.volume_ml)));
+      setInputUnit('oz');
+    } else {
+      setVolumeInput(String(entry.volume_ml));
+      setInputUnit('ml');
+    }
     setPercentageInput(String(entry.percentage));
     setNotesInput(entry.notes || '');
   };
@@ -272,7 +285,7 @@ export function Home() {
                 <div className="flex-1 cursor-pointer" onClick={() => handleEditEntry(entry)}>
                   <div className="font-medium">{formatUnits(entry.units)} units</div>
                   <div className="text-sm text-text-muted">
-                    {formatVolume(entry.volume_ml)} @ {entry.percentage}%
+                    {formatVolumeUnit(entry.volume_ml, volumeUnit)} @ {entry.percentage}%
                     {entry.notes && ` - ${entry.notes}`}
                   </div>
                   <div className="text-xs text-text-muted">
@@ -291,7 +304,7 @@ export function Home() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(entry.id)}
+                    onClick={() => setDeleteEntryId(entry.id)}
                     title="Delete"
                   >
                     <Trash2 size={16} className="text-text-muted hover:text-danger" />
@@ -536,6 +549,16 @@ export function Home() {
           </div>
         </div>
       </Modal>
+
+      {/* Delete Entry Confirmation */}
+      <ConfirmModal
+        open={deleteEntryId !== null}
+        onClose={() => setDeleteEntryId(null)}
+        onConfirm={handleDelete}
+        title="Delete Entry"
+        message="Are you sure you want to delete this entry?"
+        confirmText="Delete"
+      />
     </div>
   );
 }

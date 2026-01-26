@@ -24,7 +24,8 @@ import {
 import { Card, Button } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
 import { useTargetsStore } from '../stores/targets-store';
-import { formatUnits, formatVolume } from '../lib/units';
+import { formatUnits, formatVolumeUnit } from '../lib/units';
+import { usePreferencesStore } from '../stores/preferences-store';
 import type { Entry } from '../types';
 
 interface DayGroup {
@@ -40,6 +41,7 @@ const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 export function History() {
   const { entries, fetchEntries } = useEntriesStore();
   const { target, fetchTarget } = useTargetsStore();
+  const { volumeUnit } = usePreferencesStore();
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -287,7 +289,7 @@ export function History() {
                       <div>
                         <div className="font-medium">{formatUnits(entry.units)} units</div>
                         <div className="text-sm text-text-muted">
-                          {formatVolume(entry.volume_ml)} @ {entry.percentage}%
+                          {formatVolumeUnit(entry.volume_ml, volumeUnit)} @ {entry.percentage}%
                           {entry.notes && ` - ${entry.notes}`}
                         </div>
                       </div>

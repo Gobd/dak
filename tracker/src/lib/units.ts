@@ -35,14 +35,6 @@ export function formatUnits(units: number): string {
 }
 
 /**
- * Format volume for display (shows both ml and oz)
- */
-export function formatVolume(ml: number): string {
-  const oz = mlToOz(ml);
-  return `${ml}ml (${oz}oz)`;
-}
-
-/**
  * Format volume for display in a specific unit
  */
 export function formatVolumeUnit(ml: number, unit: 'ml' | 'oz'): string {
