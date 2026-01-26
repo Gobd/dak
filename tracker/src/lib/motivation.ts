@@ -80,8 +80,16 @@ const EXTENDED_OVER_MESSAGES = [
   'This is becoming a pattern. What can you do differently?',
 ];
 
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+/**
+ * Pick a "random" item that's stable for the current day
+ * Uses the day of year as a seed so messages don't flash on re-render
+ */
+function pickDaily<T>(arr: T[]): T {
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  return arr[dayOfYear % arr.length];
 }
 
 function isMilestone(days: number): boolean {
@@ -155,7 +163,7 @@ export function getMotivation(
 
     // Single zero day or first day
     return {
-      message: pickRandom(ZERO_DAY_MESSAGES),
+      message: pickDaily(ZERO_DAY_MESSAGES),
       level: 'great',
     };
   }
@@ -165,7 +173,7 @@ export function getMotivation(
     // Extended over-target streak - needs attention
     if (streaks && streaks.current_over_streak >= 3) {
       return {
-        message: pickRandom(EXTENDED_OVER_MESSAGES),
+        message: pickDaily(EXTENDED_OVER_MESSAGES),
         level: 'bad',
         subMessage: `${streaks.current_over_streak} days over target. Consider adjusting your strategy.`,
       };
@@ -174,7 +182,7 @@ export function getMotivation(
     // First day over after a streak - self-compassion
     if (streaks && streaks.current_over_streak === 1 && streaks.longest_under_streak >= 3) {
       return {
-        message: pickRandom(SLIP_RECOVERY_MESSAGES),
+        message: pickDaily(SLIP_RECOVERY_MESSAGES),
         level: 'bad',
         subMessage: `You had ${streaks.longest_under_streak} days under target. That's not gone.`,
       };
@@ -191,7 +199,7 @@ export function getMotivation(
 
     // Just over
     return {
-      message: pickRandom(OVER_TARGET_WARNINGS),
+      message: pickDaily(OVER_TARGET_WARNINGS),
       level: 'bad',
     };
   }
@@ -233,7 +241,7 @@ export function getMotivation(
   // Well under target (25-75%)
   if (percentage > 25) {
     return {
-      message: pickRandom(UNDER_TARGET_MESSAGES),
+      message: pickDaily(UNDER_TARGET_MESSAGES),
       level: 'good',
       subMessage: `${underAmount.toFixed(1)} units remaining.`,
     };

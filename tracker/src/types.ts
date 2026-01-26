@@ -12,6 +12,7 @@ export interface Entry {
   volume_ml: number;
   percentage: number; // strength (e.g., 5.0 for 5%)
   units: number; // calculated: (volume_ml * percentage / 100) / 10
+  daily_limit: number; // snapshot of target at time of entry
   logged_at: string;
   notes: string | null;
   created_at: string;

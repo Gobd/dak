@@ -7,7 +7,8 @@ import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
 import { ProgressRing } from '../components/ProgressRing';
 import { MotivationBanner } from '../components/MotivationBanner';
-import { calculateUnits, formatUnits, formatVolume, ozToMl } from '../lib/units';
+import { calculateUnits, formatUnits, formatVolume, formatVolumeUnit, ozToMl } from '../lib/units';
+import { usePreferencesStore } from '../stores/preferences-store';
 import { getRingColor } from '../lib/motivation';
 import type { Preset } from '../types';
 
@@ -31,10 +32,11 @@ export function Home() {
   } = useEntriesStore();
   const { target, fetchTarget } = useTargetsStore();
   const { presets, fetchPresets } = usePresetsStore();
+  const { volumeUnit } = usePreferencesStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [volumeInput, setVolumeInput] = useState('');
-  const [volumeUnit, setVolumeUnit] = useState<'ml' | 'oz'>('oz');
+  const [inputUnit, setInputUnit] = useState<'ml' | 'oz'>('oz');
   const [percentageInput, setPercentageInput] = useState('');
   const [notesInput, setNotesInput] = useState('');
 
@@ -72,7 +74,7 @@ export function Home() {
   const handleConfirmAdd = async () => {
     if (!preview) return;
 
-    await addEntry(preview.volumeMl, preview.percentage, preview.notes);
+    await addEntry(preview.volumeMl, preview.percentage, dailyLimit, preview.notes);
     setPreview(null);
 
     if (target) {
@@ -94,7 +96,7 @@ export function Home() {
       return;
     }
 
-    const volumeMl = volumeUnit === 'oz' ? ozToMl(volume) : volume;
+    const volumeMl = inputUnit === 'oz' ? ozToMl(volume) : volume;
     const units = calculateUnits(volumeMl, percentage);
 
     setPreview({
@@ -126,7 +128,7 @@ export function Home() {
   const previewUnits =
     volumeInput && percentageInput
       ? calculateUnits(
-          volumeUnit === 'oz' ? ozToMl(parseFloat(volumeInput)) : parseFloat(volumeInput),
+          inputUnit === 'oz' ? ozToMl(parseFloat(volumeInput)) : parseFloat(volumeInput),
           parseFloat(percentageInput),
         )
       : null;
@@ -204,12 +206,12 @@ export function Home() {
             <Button
               key={preset.id}
               variant="secondary"
-              className="justify-between text-left h-auto py-2 px-3"
+              className="flex-col items-start text-left h-auto py-2 px-3"
               onClick={() => handlePresetPreview(preset)}
             >
               <span className="font-medium">{preset.name}</span>
               <span className="text-text-muted text-sm">
-                {formatUnits(calculateUnits(preset.volume_ml, preset.percentage))}u
+                {preset.percentage}% · {formatVolumeUnit(preset.volume_ml, volumeUnit)}
               </span>
             </Button>
           ))}
@@ -284,22 +286,22 @@ export function Home() {
                   <button
                     type="button"
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      volumeUnit === 'ml'
+                      inputUnit === 'ml'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
                     }`}
-                    onClick={() => setVolumeUnit('ml')}
+                    onClick={() => setInputUnit('ml')}
                   >
                     ml
                   </button>
                   <button
                     type="button"
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      volumeUnit === 'oz'
+                      inputUnit === 'oz'
                         ? 'bg-accent text-white'
                         : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
                     }`}
-                    onClick={() => setVolumeUnit('oz')}
+                    onClick={() => setInputUnit('oz')}
                   >
                     oz
                   </button>
