@@ -178,8 +178,7 @@ export function Home() {
                 <span
                   className={`text-sm font-medium ${getRingColor(projectedPercentage).replace('stroke-', 'text-')}`}
                 >
-                  {Math.round(projectedPercentage)}%
-                  {projectedPercentage > 100 && ' (OVER)'}
+                  {Math.round(projectedPercentage)}%{projectedPercentage > 100 && ' (OVER)'}
                 </span>
               </div>
             </div>
@@ -214,7 +213,11 @@ export function Home() {
               </span>
             </Button>
           ))}
-          <Button variant="secondary" className="justify-center" onClick={() => setShowAddModal(true)}>
+          <Button
+            variant="secondary"
+            className="justify-center"
+            onClick={() => setShowAddModal(true)}
+          >
             <Plus size={18} className="mr-1" />
             Custom
           </Button>
