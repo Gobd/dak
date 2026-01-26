@@ -41,3 +41,13 @@ export function formatVolume(ml: number): string {
   const oz = mlToOz(ml);
   return `${ml}ml (${oz}oz)`;
 }
+
+/**
+ * Format volume for display in a specific unit
+ */
+export function formatVolumeUnit(ml: number, unit: 'ml' | 'oz'): string {
+  if (unit === 'oz') {
+    return `${mlToOz(ml)}oz`;
+  }
+  return `${ml}ml`;
+}

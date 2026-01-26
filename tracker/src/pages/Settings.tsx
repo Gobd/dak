@@ -4,6 +4,7 @@ import { Card, Button, Input, Modal } from '@dak/ui';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
 import { useAuthStore } from '../stores/auth-store';
+import { usePreferencesStore } from '../stores/preferences-store';
 import { calculateUnits, formatUnits, ozToMl, mlToOz } from '../lib/units';
 import type { Preset } from '../types';
 
@@ -11,10 +12,12 @@ export function Settings() {
   const { target, fetchTarget, setTarget } = useTargetsStore();
   const { presets, fetchPresets, addPreset, updatePreset, deletePreset } = usePresetsStore();
   const { user } = useAuthStore();
+  const { volumeUnit, setVolumeUnit } = usePreferencesStore();
 
   // Target state
   const [targetInput, setTargetInput] = useState('');
   const [showTargetCalculator, setShowTargetCalculator] = useState(false);
+  const [savedFeedback, setSavedFeedback] = useState(false);
   const [calcCount, setCalcCount] = useState('');
   const [calcVolume, setCalcVolume] = useState('');
   const [calcVolumeUnit, setCalcVolumeUnit] = useState<'ml' | 'oz'>('ml');
@@ -53,12 +56,18 @@ export function Settings() {
     const value = parseFloat(targetInput);
     if (!isNaN(value) && value > 0) {
       await setTarget(value);
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 2000);
     }
   };
 
-  const handleUseCalculatedTarget = () => {
+  const handleUseCalculatedTarget = async () => {
     if (calculatedTarget) {
-      setTargetInput(calculatedTarget.toFixed(1));
+      const value = parseFloat(calculatedTarget.toFixed(1));
+      setTargetInput(value.toString());
+      await setTarget(value);
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 2000);
       setShowTargetCalculator(false);
       setCalcCount('');
       setCalcVolume('');
@@ -134,7 +143,7 @@ export function Settings() {
                 className="flex-1"
               />
               <Button variant="primary" onClick={handleSaveTarget}>
-                Save
+                {savedFeedback ? 'Saved!' : 'Save'}
               </Button>
             </div>
             <p className="text-sm text-text-muted mt-1">1 unit = 10ml ethanol</p>
@@ -229,6 +238,41 @@ export function Settings() {
               )}
             </div>
           )}
+        </div>
+      </Card>
+
+      {/* Preferences */}
+      <Card>
+        <h2 className="font-semibold mb-4">Preferences</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-medium">Volume unit</div>
+            <div className="text-sm text-text-muted">Display volumes in oz or ml</div>
+          </div>
+          <div className="flex rounded-lg overflow-hidden border border-border">
+            <button
+              type="button"
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                volumeUnit === 'ml'
+                  ? 'bg-accent text-white'
+                  : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+              }`}
+              onClick={() => setVolumeUnit('ml')}
+            >
+              ml
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                volumeUnit === 'oz'
+                  ? 'bg-accent text-white'
+                  : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+              }`}
+              onClick={() => setVolumeUnit('oz')}
+            >
+              oz
+            </button>
+          </div>
         </div>
       </Card>
 
