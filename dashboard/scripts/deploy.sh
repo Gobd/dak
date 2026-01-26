@@ -148,8 +148,14 @@ tar -xzf /tmp/zigbee2mqtt.tar.gz -C /opt/zigbee2mqtt --strip-components=1
 rm /tmp/zigbee2mqtt.tar.gz
 cd /opt/zigbee2mqtt && sudo corepack enable pnpm && COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile
 
-mkdir -p /opt/zigbee2mqtt/data
-cp ~/dashboard/services/zigbee2mqtt/configuration.yaml /opt/zigbee2mqtt/data/configuration.yaml
+# Preserve existing Zigbee2MQTT data (paired devices, network key, etc.)
+# To start fresh: sudo rm -rf /opt/zigbee2mqtt/data && sudo systemctl restart zigbee2mqtt
+if [ -d /opt/zigbee2mqtt/data ] && [ -f /opt/zigbee2mqtt/data/database.db ]; then
+  echo "Preserving existing Zigbee2MQTT data (paired devices)"
+else
+  mkdir -p /opt/zigbee2mqtt/data
+  cp ~/dashboard/services/zigbee2mqtt/configuration.yaml /opt/zigbee2mqtt/data/configuration.yaml
+fi
 
 sudo usermod -a -G dialout "$USER"
 
