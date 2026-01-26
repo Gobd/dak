@@ -32,7 +32,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     { content, onUpdate, maxLength = 50000, placeholder = 'Start writing...' },
     ref,
   ) {
-    const lastContentRef = useRef(content);
+    const lastContentRef = useRef(content.trimEnd());
     const isInitPhaseRef = useRef(true);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onUpdateRef = useRef(onUpdate);
@@ -59,7 +59,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
           },
         }),
       ],
-      content,
+      content: content.trimEnd(),
       contentType: 'markdown',
       autofocus: 'end',
       editorProps: {
@@ -80,7 +80,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }
 
         debounceTimerRef.current = setTimeout(() => {
-          const markdown = editor.getMarkdown();
+          const markdown = editor.getMarkdown().trimEnd();
           if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
             lastContentRef.current = markdown;
             onUpdate(markdown);
@@ -100,14 +100,16 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
 
     // Update content when it changes externally
     useEffect(() => {
-      if (editor && content !== lastContentRef.current) {
-        lastContentRef.current = content;
+      // Trim trailing whitespace so focus('end') lands on actual text, not an empty line
+      const trimmedContent = content.trimEnd();
+      if (editor && trimmedContent !== lastContentRef.current) {
+        lastContentRef.current = trimmedContent;
         isInitPhaseRef.current = true;
 
-        if (content) {
+        if (trimmedContent) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (editor as any).commands.setContent(content, { contentType: 'markdown' });
-          editor.commands.focus('start');
+          (editor as any).commands.setContent(trimmedContent, { contentType: 'markdown' });
+          editor.commands.focus('end');
         } else {
           // Empty note: initialize with an empty H1 and focus inside it
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,7 +133,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }
         // Flush any pending changes before unmount
         if (editorInstance && !isInitPhaseRef.current) {
-          const markdown = editorInstance.getMarkdown?.();
+          const markdown = editorInstance.getMarkdown?.()?.trimEnd();
           if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
             onUpdateRef.current(markdown);
           }

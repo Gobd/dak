@@ -8,7 +8,8 @@
   "exports": {
     ".": "./index.js",
     "./fonts.css": "./fonts/fonts.css",
-    "./theme.css": "./theme/theme.css"
+    "./theme.css": "./theme/theme.css",
+    "./pwa-refresh": "./pwa-refresh.js"
   },
   "scripts": {
     "build:vendor": "node build-vendor.js"

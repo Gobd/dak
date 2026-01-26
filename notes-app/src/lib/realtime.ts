@@ -25,9 +25,8 @@ const onlineUsers = new Set<string>();
 // Reconnection state
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_BASE_DELAY_MS = 1000;
-const RECONNECT_MAX_DELAY_MS = 30000;
+const RECONNECT_MAX_DELAY_MS = 300000; // 5 minutes - keeps trying forever at this interval
 
 // Heartbeat to detect silent disconnects (important for kiosk/long-running apps)
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -126,19 +125,15 @@ function stopHeartbeat() {
 }
 
 /**
- * Schedule a reconnection attempt with exponential backoff
+ * Schedule a reconnection attempt with exponential backoff.
+ * Never gives up - keeps trying at max interval (2 min) indefinitely.
  */
 function scheduleReconnect(userId: string) {
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
   }
 
-  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.error('[realtime] Max reconnection attempts reached, giving up');
-    return;
-  }
-
-  // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+  // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 2 min, then stays at 2 min forever
   const delay = Math.min(
     RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
     RECONNECT_MAX_DELAY_MS,

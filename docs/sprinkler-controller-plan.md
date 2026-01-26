@@ -36,6 +36,7 @@ app/
 Wraps `rachiopy` library for Rachio cloud API.
 
 **Endpoints:**
+
 - `GET /rachio/devices` - List controllers
 - `GET /rachio/zones` - List zones with status
 - `POST /rachio/zone/start` - Run zone for X minutes
@@ -52,6 +53,7 @@ Smart scheduling logic.
 - Background scheduler thread for automated runs
 
 **Endpoints:**
+
 - `GET /sprinkler/status` - Current state, next run, moisture
 - `GET /sprinkler/config` - Get schedule config
 - `PUT /sprinkler/config` - Update config
@@ -65,6 +67,7 @@ Smart scheduling logic.
 Extend `mqtt_service.py` to subscribe to soil sensors (similar to climate sensors).
 
 Expected MQTT payload from `zigbee2mqtt/soil_sensor_xxx`:
+
 ```json
 {
   "soil_moisture": 42,
@@ -176,6 +179,7 @@ def calculate_zone_durations(config: dict, scale: float) -> dict[str, int]:
 Frameless icon button (like Kasa widget) with modal for quick control.
 
 ### Widget Icon States
+
 - 💧 Blue pulse: Currently watering
 - 🌱 Green: Ready, soil moisture good
 - 🏜️ Orange: Soil dry, watering soon
@@ -204,17 +208,20 @@ Frameless icon button (like Kasa widget) with modal for quick control.
 Full configuration app with tabs (like `kasa-controller/`).
 
 ### Status Tab
+
 - Current moisture/temp with trend graph
 - Zone status (running/idle/last run)
 - Recent run history with scale factors
 
 ### Zones Tab
+
 - Configure each zone's base duration
 - Enable/disable individual zones
 - Designate sensor zone
 - Test run individual zones
 
 ### Schedule Tab
+
 - Mode selection:
   - **Manual**: Only run when user triggers
   - **Scheduled**: Fixed interval (every X days at Y time)
@@ -224,6 +231,7 @@ Full configuration app with tabs (like `kasa-controller/`).
 - Threshold sliders with live preview of scale curve
 
 ### Settings Tab
+
 - Rachio API key input
 - Rachio device selection (if multiple)
 - Sensor device selection (from Zigbee devices)
@@ -334,6 +342,7 @@ def should_skip_for_weather(forecast: dict, config: dict) -> tuple[bool, str]:
 ### UI
 
 **Widget Status:**
+
 - "Skipping - Rain forecast (85%)"
 - Manual override button if user disagrees with skip
 

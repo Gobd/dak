@@ -54,9 +54,8 @@ export class RealtimeSync<TEvent> {
   // Reconnection state
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
-  private readonly MAX_RECONNECT_ATTEMPTS = 10;
   private readonly RECONNECT_BASE_DELAY_MS = 1000;
-  private readonly RECONNECT_MAX_DELAY_MS = 30000;
+  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 minutes - keeps trying forever at this interval
 
   // Heartbeat to detect silent disconnects
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -232,18 +231,14 @@ export class RealtimeSync<TEvent> {
 
   /**
    * Schedule a reconnection attempt with exponential backoff.
+   * Never gives up - keeps trying at max interval (2 min) indefinitely.
    */
   private scheduleReconnect(userId: string): void {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
 
-    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      console.error('[realtime] Max reconnection attempts reached, giving up');
-      return;
-    }
-
-    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 2 min, then stays at 2 min forever
     const delay = Math.min(
       this.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts),
       this.RECONNECT_MAX_DELAY_MS,

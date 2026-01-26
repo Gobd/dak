@@ -306,13 +306,37 @@ export function Dashboard() {
     showMobileMenu.setFalse();
     if (!isDesktop) {
       setShowSidebar(false);
+      // Push history state so back gesture returns to list instead of exiting PWA
+      window.history.pushState({ view: 'note' }, '');
     }
   };
 
   const handleBack = () => {
-    setCurrentNote(null);
-    setShowSidebar(true);
+    // Use history.back() on mobile to keep history stack in sync
+    // The popstate handler will update state
+    if (!isDesktop) {
+      window.history.back();
+    } else {
+      setCurrentNote(null);
+      setShowSidebar(true);
+    }
   };
+
+  // Handle browser back button/gesture on mobile
+  useEffect(() => {
+    if (isDesktop) return;
+
+    const handlePopState = () => {
+      // If we're viewing a note, go back to list
+      if (currentNote && !showSidebar) {
+        setCurrentNote(null);
+        setShowSidebar(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isDesktop, currentNote, showSidebar, setCurrentNote]);
 
   if (isLoading && notes.length === 0) {
     return <Spinner size="lg" fullScreen />;
