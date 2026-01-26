@@ -13,7 +13,7 @@ export interface RealtimeSyncOptions<TEvent> {
  * Robust realtime sync manager with automatic reconnection.
  *
  * Features:
- * - Exponential backoff reconnection (1s → 30s max, 10 attempts)
+ * - Exponential backoff reconnection (1s → 5 min max, retries indefinitely)
  * - Heartbeat detection for silent disconnects (every 30s)
  * - Visibility change handling (reconnects when app returns to foreground)
  * - Online event handling (reconnects when browser regains network)
@@ -54,13 +54,16 @@ export class RealtimeSync<TEvent> {
   // Reconnection state
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
-  private readonly MAX_RECONNECT_ATTEMPTS = 10;
   private readonly RECONNECT_BASE_DELAY_MS = 1000;
-  private readonly RECONNECT_MAX_DELAY_MS = 30000;
+  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 min - keeps trying forever at this interval
 
   // Heartbeat to detect silent disconnects
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private readonly HEARTBEAT_INTERVAL_MS = 30000;
+
+  // Track when app was last visible (for staleness detection)
+  private lastVisibleAt: number = Date.now();
+  private readonly STALE_THRESHOLD_MS = 60000; // 1 minute - force reconnect after this long in background
 
   // Track if browser event listeners are registered
   private listenersRegistered = false;
@@ -157,13 +160,25 @@ export class RealtimeSync<TEvent> {
    * Critical for mobile browsers that suspend JS when backgrounded.
    */
   private handleVisibilityChange(): void {
-    if (document.visibilityState === 'visible' && this.currentUserId) {
-      const channelState = this.channel?.state;
+    if (document.visibilityState === 'hidden') {
+      // Track when we went to background
+      this.lastVisibleAt = Date.now();
+      return;
+    }
 
-      // Only reconnect if channel is unhealthy
-      if (channelState !== 'joined' && channelState !== 'joining') {
-        console.log('[realtime] App became visible with unhealthy channel, reconnecting...');
-        this.reconnectAttempts = 0; // Reset so we don't stay in "given up" state
+    if (document.visibilityState === 'visible' && this.currentUserId) {
+      const timeInBackground = Date.now() - this.lastVisibleAt;
+      const isStale = timeInBackground > this.STALE_THRESHOLD_MS;
+      const channelState = this.channel?.state;
+      const isUnhealthy = channelState !== 'joined' && channelState !== 'joining';
+
+      // Force reconnect if stale (long background) OR channel is unhealthy
+      if (isStale || isUnhealthy) {
+        console.log(
+          `[realtime] App became visible after ${Math.round(timeInBackground / 1000)}s, ` +
+            `channel=${channelState}, forcing reconnect...`,
+        );
+        this.reconnectAttempts = 0;
         this.reconnectChannel(this.currentUserId);
       }
     }
@@ -232,18 +247,14 @@ export class RealtimeSync<TEvent> {
 
   /**
    * Schedule a reconnection attempt with exponential backoff.
+   * Never gives up - keeps trying at max interval (5 min) indefinitely.
    */
   private scheduleReconnect(userId: string): void {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
 
-    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      console.error('[realtime] Max reconnection attempts reached, giving up');
-      return;
-    }
-
-    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 5 min, then stays at 5 min forever
     const delay = Math.min(
       this.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts),
       this.RECONNECT_MAX_DELAY_MS,
