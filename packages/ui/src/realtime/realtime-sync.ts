@@ -13,7 +13,7 @@ export interface RealtimeSyncOptions<TEvent> {
  * Robust realtime sync manager with automatic reconnection.
  *
  * Features:
- * - Exponential backoff reconnection (1s → 30s max, 10 attempts)
+ * - Exponential backoff reconnection (1s → 5 min max, retries indefinitely)
  * - Heartbeat detection for silent disconnects (every 30s)
  * - Visibility change handling (reconnects when app returns to foreground)
  * - Online event handling (reconnects when browser regains network)
@@ -55,7 +55,7 @@ export class RealtimeSync<TEvent> {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
   private readonly RECONNECT_BASE_DELAY_MS = 1000;
-  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 minutes - keeps trying forever at this interval
+  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 min - keeps trying forever at this interval
 
   // Heartbeat to detect silent disconnects
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -231,14 +231,14 @@ export class RealtimeSync<TEvent> {
 
   /**
    * Schedule a reconnection attempt with exponential backoff.
-   * Never gives up - keeps trying at max interval (2 min) indefinitely.
+   * Never gives up - keeps trying at max interval (5 min) indefinitely.
    */
   private scheduleReconnect(userId: string): void {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
 
-    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 2 min, then stays at 2 min forever
+    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 5 min, then stays at 5 min forever
     const delay = Math.min(
       this.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts),
       this.RECONNECT_MAX_DELAY_MS,
