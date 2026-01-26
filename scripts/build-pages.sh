@@ -23,6 +23,7 @@ apps=(
   health-tracker
   kasa-controller
   notes-app
+  tracker
 )
 
 for app in "${apps[@]}"; do
