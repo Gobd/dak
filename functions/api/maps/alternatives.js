@@ -67,7 +67,8 @@ function extractWaypointCoords(route) {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const corsHeaders = getCorsHeaders(request, env);
+  // Cache traffic data for 3 minutes to reduce API calls
+  const corsHeaders = getCorsHeaders(request, env, { cacheSeconds: 180 });
 
   try {
     const { origin, destination } = await request.json();

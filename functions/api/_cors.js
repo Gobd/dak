@@ -3,7 +3,7 @@
 
 const LOCALHOST_ORIGINS = ['http://localhost:8080', 'http://127.0.0.1:8080'];
 
-export function getCorsHeaders(request, env) {
+export function getCorsHeaders(request, env, options = {}) {
   const origin = request.headers.get('Origin') || '';
 
   // Build allowed origins list from env var + localhost for dev
@@ -15,12 +15,18 @@ export function getCorsHeaders(request, env) {
     ? origin
     : allowedOrigins[0];
 
-  return {
+  const headers = {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Cache-Control': 'public, max-age=600',
   };
+
+  // Optional caching for static data endpoints
+  if (options.cacheSeconds) {
+    headers['Cache-Control'] = `public, max-age=${options.cacheSeconds}`;
+  }
+
+  return headers;
 }
 
 export function handleOptions(request, env) {

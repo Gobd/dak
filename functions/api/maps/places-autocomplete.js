@@ -6,7 +6,8 @@ import { getCorsHeaders, handleOptions } from '../_cors.js';
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  const corsHeaders = getCorsHeaders(request, env);
+  // Cache autocomplete results for 1 hour - helps if same address searched again
+  const corsHeaders = getCorsHeaders(request, env, { cacheSeconds: 3600 });
 
   try {
     const url = new URL(request.url);

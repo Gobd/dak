@@ -6,7 +6,8 @@ import { getCorsHeaders, handleOptions } from '../_cors.js';
 export async function onRequestGet(context) {
   const { request, env } = context;
 
-  const corsHeaders = getCorsHeaders(request, env);
+  // Place details are static - cache for 1 day
+  const corsHeaders = getCorsHeaders(request, env, { cacheSeconds: 86400 });
 
   try {
     const url = new URL(request.url);

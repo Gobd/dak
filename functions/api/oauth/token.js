@@ -1,15 +1,11 @@
 // Cloudflare Pages Function for OAuth token exchange
 // Keeps client_secret server-side
 
+import { getCorsHeaders, handleOptions } from '../_cors.js';
+
 export async function onRequestPost(context) {
   const { request, env } = context;
-
-  // CORS headers
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+  const corsHeaders = getCorsHeaders(request, env);
 
   try {
     const body = await request.json();
@@ -73,13 +69,6 @@ export async function onRequestPost(context) {
 }
 
 // Handle CORS preflight
-export async function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+export async function onRequestOptions(context) {
+  return handleOptions(context.request, context.env);
 }
