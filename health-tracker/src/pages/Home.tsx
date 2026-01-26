@@ -184,7 +184,7 @@ export function Home() {
                   return (
                     <Link
                       key={course.id}
-                      to="/courses"
+                      to="/medicine"
                       className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
@@ -231,7 +231,7 @@ export function Home() {
                   return (
                     <Link
                       key={med.id}
-                      to="/as-needed"
+                      to="/prn"
                       className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
