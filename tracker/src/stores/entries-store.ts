@@ -18,8 +18,8 @@ interface EntriesState {
   addEntry: (
     volumeMl: number,
     percentage: number,
+    dailyLimit: number,
     notes?: string,
-    dailyLimit?: number,
   ) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
   getTodayTotal: () => number;
@@ -93,7 +93,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
     }
   },
 
-  addEntry: async (volumeMl: number, percentage: number, notes?: string, dailyLimit?: number) => {
+  addEntry: async (volumeMl: number, percentage: number, dailyLimit: number, notes?: string) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
 
@@ -104,7 +104,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
       volume_ml: volumeMl,
       percentage,
       units,
-      daily_limit: dailyLimit ?? null,
+      daily_limit: dailyLimit,
       notes: notes || null,
       logged_at: new Date().toISOString(),
     });

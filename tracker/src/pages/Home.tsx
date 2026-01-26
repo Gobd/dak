@@ -74,7 +74,7 @@ export function Home() {
   const handleConfirmAdd = async () => {
     if (!preview) return;
 
-    await addEntry(preview.volumeMl, preview.percentage, preview.notes, dailyLimit);
+    await addEntry(preview.volumeMl, preview.percentage, dailyLimit, preview.notes);
     setPreview(null);
 
     if (target) {

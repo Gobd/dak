@@ -42,7 +42,7 @@ CREATE TABLE tracker_entries (
   volume_ml INTEGER NOT NULL,           -- volume in milliliters
   percentage NUMERIC(4, 1) NOT NULL,    -- strength (e.g., 5.0 for 5%)
   units NUMERIC(5, 2) NOT NULL,         -- calculated: (volume_ml * percentage / 100) / 10
-  daily_limit NUMERIC(4, 2),            -- snapshot of target at time of entry (for historical accuracy)
+  daily_limit NUMERIC(4, 2) NOT NULL,   -- snapshot of target at time of entry (for historical accuracy)
   logged_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -148,7 +148,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Get streak stats for a user
 -- Tracks: zero days, under-target days, and over-target days
 -- Only counts from user's first entry date (not arbitrary 365 days back)
--- Uses stored daily_limit from entries for historical accuracy (falls back to p_daily_limit)
+-- Uses stored daily_limit from entries for historical accuracy
 CREATE OR REPLACE FUNCTION tracker_get_streak_stats(p_user_id UUID, p_daily_limit NUMERIC)
 RETURNS TABLE (
   current_under_streak INTEGER,
@@ -187,12 +187,11 @@ BEGIN
   END IF;
 
   -- Iterate through days from first entry to today
-  -- Uses stored daily_limit from entries, falls back to p_daily_limit for old entries
   FOR r IN
     SELECT
       d.day::date,
       COALESCE(SUM(e.units), 0) AS total_units,
-      MAX(e.daily_limit) AS day_limit  -- Use the stored limit from that day's entries
+      MAX(e.daily_limit) AS day_limit
     FROM generate_series(
       v_first_entry_date,
       CURRENT_DATE,
@@ -204,8 +203,7 @@ BEGIN
     ORDER BY d.day ASC
   LOOP
     v_days_tracked := v_days_tracked + 1;
-    -- Use stored daily_limit if available, otherwise fall back to current target
-    v_day_limit := COALESCE(r.day_limit, p_daily_limit);
+    v_day_limit := r.day_limit;
 
     -- Zero day tracking
     IF r.total_units = 0 THEN
