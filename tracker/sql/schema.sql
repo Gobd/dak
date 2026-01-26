@@ -9,11 +9,11 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- DROP EXISTING OBJECTS (in reverse dependency order)
 --------------------------------------------------------------------------------
 
--- Drop functions first (they may depend on tables)
-DROP FUNCTION IF EXISTS tracker_get_streak_stats(UUID, NUMERIC);
-DROP FUNCTION IF EXISTS tracker_get_daily_totals(UUID, DATE, DATE);
-DROP FUNCTION IF EXISTS tracker_calculate_units(INTEGER, NUMERIC);
-DROP FUNCTION IF EXISTS tracker_logged_at_to_date(TIMESTAMPTZ);
+-- Drop functions first (CASCADE needed for tracker_logged_at_to_date which has dependent index)
+DROP FUNCTION IF EXISTS tracker_get_streak_stats(UUID, NUMERIC) CASCADE;
+DROP FUNCTION IF EXISTS tracker_get_daily_totals(UUID, DATE, DATE) CASCADE;
+DROP FUNCTION IF EXISTS tracker_calculate_units(INTEGER, NUMERIC) CASCADE;
+DROP FUNCTION IF EXISTS tracker_logged_at_to_date(TIMESTAMPTZ) CASCADE;
 
 -- Drop tables (entries/presets before targets due to potential future FKs)
 DROP TABLE IF EXISTS tracker_entries CASCADE;
