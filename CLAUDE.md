@@ -57,16 +57,19 @@ All colors come from `/packages/vite-shared-react/theme/theme.css`. Never use ha
 
 Shared components for forms, layout, and feedback:
 
-- **Buttons & inputs:** `Button`, `Input`, `Toggle`, `SearchInput`
+- **Buttons & inputs:** `Button`, `Input`, `Toggle`, `SearchInput`, `Slider`
+- **Layout:** `Card`, `Chip`
 - **Modals:** `Modal`, `ConfirmModal`
 - **Pickers:** `DatePicker`, `DatePickerCompact`, `TimePickerCompact`, `DateTimePicker`, `NumberPickerCompact`
-- **Feedback:** `Spinner`, `Badge`, `EmptyState`, `ProgressRing`
+- **Feedback:** `Spinner`, `Badge`, `EmptyState`, `ProgressRing`, `Alert`
 - **Auth:** `Login`, `SignUp`, `ForgotPassword`, `ResetPassword`, `ProtectedRoute`, `createAuthStore`
 - **Utilities:** `Avatar`, `PasswordRequirements`, `Roller`, `RealtimeSync`, `createThemeStore`, `createSupabaseClient`, `isPasswordValid`
 
 ```tsx
 import { Button, Modal, Spinner, Toggle, ProtectedRoute } from '@dak/ui';
 ```
+
+**Storybook:** All UI components should have a `.stories.tsx` file. Run `pnpm storybook` from `packages/ui` to view. When adding new components, create a story file alongside the component.
 
 #### Auth Store
 
