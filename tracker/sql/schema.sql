@@ -67,7 +67,7 @@ CREATE TABLE tracker_presets (
 CREATE OR REPLACE FUNCTION tracker_logged_at_to_date(ts TIMESTAMPTZ)
 RETURNS DATE AS $$
   SELECT (ts AT TIME ZONE 'UTC')::date;
-$$ LANGUAGE SQL IMMUTABLE;
+$$ LANGUAGE SQL IMMUTABLE SET search_path = '';
 
 --------------------------------------------------------------------------------
 -- INDEXES
@@ -118,7 +118,7 @@ RETURNS NUMERIC AS $$
 BEGIN
   RETURN ROUND((volume_ml * percentage / 100.0) / 10.0, 2);
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql IMMUTABLE SET search_path = '';
 
 -- Get daily totals for a user within a date range
 CREATE OR REPLACE FUNCTION tracker_get_daily_totals(
@@ -143,7 +143,7 @@ BEGIN
   GROUP BY d.day
   ORDER BY d.day DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Get streak stats for a user
 -- Tracks: zero days, under-target days, and over-target days
@@ -243,7 +243,7 @@ BEGIN
     v_total_under,
     v_days_tracked;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 --------------------------------------------------------------------------------
 -- COMMENTS (documentation)
