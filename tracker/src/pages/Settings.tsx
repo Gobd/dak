@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Calculator, Edit2, X, Check } from 'lucide-react';
-import { Card, Button, Input, Modal, SegmentedControl } from '@dak/ui';
+import { Card, Button, Input, Modal, ConfirmModal, SegmentedControl } from '@dak/ui';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
 import { useAuthStore } from '../stores/auth-store';
 import { usePreferencesStore } from '../stores/preferences-store';
-import { calculateUnits, formatUnits, ozToMl, mlToOz } from '../lib/units';
+import { calculateUnits, formatUnits, formatVolumeUnit, ozToMl, mlToOz } from '../lib/units';
 import type { Preset } from '../types';
 
 export function Settings() {
@@ -20,7 +20,7 @@ export function Settings() {
   const [savedFeedback, setSavedFeedback] = useState(false);
   const [calcCount, setCalcCount] = useState('');
   const [calcVolume, setCalcVolume] = useState('');
-  const [calcVolumeUnit, setCalcVolumeUnit] = useState<'ml' | 'oz'>('ml');
+  const [calcVolumeUnit, setCalcVolumeUnit] = useState<'ml' | 'oz'>(volumeUnit);
   const [calcPercentage, setCalcPercentage] = useState('');
 
   // Preset state
@@ -30,6 +30,7 @@ export function Settings() {
   const [presetVolume, setPresetVolume] = useState('');
   const [presetVolumeUnit, setPresetVolumeUnit] = useState<'ml' | 'oz'>('ml');
   const [presetPercentage, setPresetPercentage] = useState('');
+  const [deletePresetId, setDeletePresetId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTarget();
@@ -62,10 +63,17 @@ export function Settings() {
   };
 
   const handleUseCalculatedTarget = async () => {
-    if (calculatedTarget) {
+    if (calculatedTarget && calcCount && calcVolume && calcPercentage) {
       const value = parseFloat(calculatedTarget.toFixed(1));
+      const volumeMl =
+        calcVolumeUnit === 'oz' ? ozToMl(parseFloat(calcVolume)) : parseFloat(calcVolume);
+
       setTargetInput(value.toString());
-      await setTarget(value);
+      await setTarget(value, {
+        count: parseFloat(calcCount),
+        volumeMl,
+        percentage: parseFloat(calcPercentage),
+      });
       setSavedFeedback(true);
       setTimeout(() => setSavedFeedback(false), 2000);
       setShowTargetCalculator(false);
@@ -80,14 +88,20 @@ export function Settings() {
     if (preset) {
       setEditingPreset(preset);
       setPresetName(preset.name);
-      setPresetVolume(preset.volume_ml.toString());
-      setPresetVolumeUnit('ml');
+      // Show in user's preferred unit
+      if (volumeUnit === 'oz') {
+        setPresetVolume(mlToOz(preset.volume_ml).toString());
+        setPresetVolumeUnit('oz');
+      } else {
+        setPresetVolume(preset.volume_ml.toString());
+        setPresetVolumeUnit('ml');
+      }
       setPresetPercentage(preset.percentage.toString());
     } else {
       setEditingPreset(null);
       setPresetName('');
       setPresetVolume('');
-      setPresetVolumeUnit('ml');
+      setPresetVolumeUnit(volumeUnit); // Default to user's preferred unit
       setPresetPercentage('');
     }
     setShowPresetModal(true);
@@ -112,8 +126,10 @@ export function Settings() {
     setShowPresetModal(false);
   };
 
-  const handleDeletePreset = async (id: string) => {
-    await deletePreset(id);
+  const handleDeletePreset = async () => {
+    if (!deletePresetId) return;
+    await deletePreset(deletePresetId);
+    setDeletePresetId(null);
   };
 
   const presetPreviewUnits =
@@ -147,12 +163,23 @@ export function Settings() {
               </Button>
             </div>
             <p className="text-sm text-text-muted mt-1">1 unit = 10ml ethanol</p>
+            {target?.calc_count && target?.calc_volume_ml && target?.calc_percentage && (
+              <p className="text-sm text-text-muted mt-1">
+                Based on: {target.calc_count} ×{' '}
+                {formatVolumeUnit(target.calc_volume_ml, volumeUnit)} @ {target.calc_percentage}%
+              </p>
+            )}
           </div>
 
           <Button
             variant="secondary"
             className="w-full"
-            onClick={() => setShowTargetCalculator(!showTargetCalculator)}
+            onClick={() => {
+              if (!showTargetCalculator) {
+                setCalcVolumeUnit(volumeUnit);
+              }
+              setShowTargetCalculator(!showTargetCalculator);
+            }}
           >
             <Calculator size={18} className="mr-2" />
             {showTargetCalculator ? 'Hide' : 'Show'} Target Calculator
@@ -186,14 +213,16 @@ export function Settings() {
                     onChange={(e) => setCalcVolume(e.target.value)}
                     className="flex-1"
                   />
-                  <SegmentedControl
-                    options={[
-                      { value: 'ml', label: 'ml' },
-                      { value: 'oz', label: 'oz' },
-                    ]}
-                    value={calcVolumeUnit}
-                    onChange={setCalcVolumeUnit}
-                  />
+                  <div className="shrink-0">
+                    <SegmentedControl
+                      options={[
+                        { value: 'ml', label: 'ml' },
+                        { value: 'oz', label: 'oz' },
+                      ]}
+                      value={calcVolumeUnit}
+                      onChange={setCalcVolumeUnit}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -279,7 +308,7 @@ export function Settings() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeletePreset(preset.id)}
+                  onClick={() => setDeletePresetId(preset.id)}
                   title="Delete"
                 >
                   <Trash2 size={16} className="text-danger" />
@@ -297,7 +326,7 @@ export function Settings() {
       </Card>
 
       {/* Preset Modal */}
-      <Modal open={showPresetModal} onClose={() => setShowPresetModal(false)}>
+      <Modal open={showPresetModal} onClose={() => setShowPresetModal(false)} wide>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">
@@ -330,14 +359,16 @@ export function Settings() {
                   onChange={(e) => setPresetVolume(e.target.value)}
                   className="flex-1"
                 />
-                <SegmentedControl
-                  options={[
-                    { value: 'ml', label: 'ml' },
-                    { value: 'oz', label: 'oz' },
-                  ]}
-                  value={presetVolumeUnit}
-                  onChange={setPresetVolumeUnit}
-                />
+                <div className="shrink-0">
+                  <SegmentedControl
+                    options={[
+                      { value: 'ml', label: 'ml' },
+                      { value: 'oz', label: 'oz' },
+                    ]}
+                    value={presetVolumeUnit}
+                    onChange={setPresetVolumeUnit}
+                  />
+                </div>
               </div>
             </div>
 
@@ -370,6 +401,16 @@ export function Settings() {
           </div>
         </div>
       </Modal>
+
+      {/* Delete Preset Confirmation */}
+      <ConfirmModal
+        open={deletePresetId !== null}
+        onClose={() => setDeletePresetId(null)}
+        onConfirm={handleDeletePreset}
+        title="Delete Preset"
+        message="Are you sure you want to delete this preset?"
+        confirmText="Delete"
+      />
     </div>
   );
 }

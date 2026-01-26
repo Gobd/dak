@@ -2,6 +2,10 @@ export interface Target {
   id: string;
   user_id: string;
   daily_limit: number; // units per day
+  // Calculator inputs (optional - for remembering how target was calculated)
+  calc_count: number | null;
+  calc_volume_ml: number | null;
+  calc_percentage: number | null;
   created_at: string;
   updated_at: string;
 }
