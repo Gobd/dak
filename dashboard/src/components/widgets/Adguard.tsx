@@ -71,6 +71,8 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   const showMenu = useToggle(false);
   const [settingsForm, setSettingsForm] = useState(config);
   const [error, setError] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
   const [countdown, setCountdown] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -133,11 +135,28 @@ export default function Adguard({ panel }: WidgetComponentProps) {
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed'),
   });
 
-  function handleSaveSettings() {
-    updateWidgetData(panel.id, settingsForm);
-    showSettings.setFalse();
-    setError(null);
-    queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
+  async function handleSaveSettings() {
+    if (!settingsForm.url || !settingsForm.username || !settingsForm.password) {
+      setSettingsError('All fields are required');
+      return;
+    }
+
+    setIsTesting(true);
+    setSettingsError(null);
+
+    try {
+      await fetchStatus(settingsForm);
+      updateWidgetData(panel.id, settingsForm);
+      showSettings.setFalse();
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
+    } catch (err) {
+      setSettingsError(
+        err instanceof Error ? err.message : 'Connection failed. Check URL and credentials.',
+      );
+    } finally {
+      setIsTesting(false);
+    }
   }
 
   function handleDisable(durationMs: number) {
@@ -169,34 +188,49 @@ export default function Adguard({ panel }: WidgetComponentProps) {
 
         <Modal
           open={showSettings.value}
-          onClose={() => showSettings.setFalse()}
+          onClose={() => {
+            showSettings.setFalse();
+            setSettingsError(null);
+          }}
           title="AdGuard Home Settings"
           actions={
             <>
-              <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
-              <Button onClick={handleSaveSettings} variant="primary">
-                Save
+              <Button
+                onClick={() => {
+                  showSettings.setFalse();
+                  setSettingsError(null);
+                }}
+                disabled={isTesting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveSettings} variant="primary" disabled={isTesting}>
+                {isTesting ? 'Testing...' : 'Save'}
               </Button>
             </>
           }
         >
           <div className="space-y-4">
+            {settingsError && <Alert variant="error">{settingsError}</Alert>}
             <Input
               label="URL"
               placeholder="http://192.168.1.1:3000"
               value={settingsForm.url}
               onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+              disabled={isTesting}
             />
             <Input
               label="Username"
               value={settingsForm.username}
               onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+              disabled={isTesting}
             />
             <Input
               label="Password"
               type="password"
               value={settingsForm.password}
               onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+              disabled={isTesting}
             />
           </div>
         </Modal>
@@ -229,20 +263,6 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           {countdown}
         </span>
       )}
-
-      {/* Settings gear */}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => {
-          setSettingsForm(config);
-          showSettings.setTrue();
-        }}
-        className="absolute top-0 right-0 opacity-70 hover:opacity-100"
-        title="Settings"
-      >
-        <Settings size={14} className="text-text-muted" />
-      </Button>
 
       {/* Control menu */}
       <Modal
@@ -305,34 +325,49 @@ export default function Adguard({ panel }: WidgetComponentProps) {
       {/* Settings modal */}
       <Modal
         open={showSettings.value}
-        onClose={() => showSettings.setFalse()}
+        onClose={() => {
+          showSettings.setFalse();
+          setSettingsError(null);
+        }}
         title="AdGuard Home Settings"
         actions={
           <>
-            <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
-            <Button onClick={handleSaveSettings} variant="primary">
-              Save
+            <Button
+              onClick={() => {
+                showSettings.setFalse();
+                setSettingsError(null);
+              }}
+              disabled={isTesting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSettings} variant="primary" disabled={isTesting}>
+              {isTesting ? 'Testing...' : 'Save'}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
+          {settingsError && <Alert variant="error">{settingsError}</Alert>}
           <Input
             label="URL"
             placeholder="http://192.168.1.1:3000"
             value={settingsForm.url}
             onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+            disabled={isTesting}
           />
           <Input
             label="Username"
             value={settingsForm.username}
             onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+            disabled={isTesting}
           />
           <Input
             label="Password"
             type="password"
             value={settingsForm.password}
             onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+            disabled={isTesting}
           />
         </div>
       </Modal>
