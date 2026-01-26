@@ -32,6 +32,10 @@ const RECONNECT_MAX_DELAY_MS = 300000; // 5 min - keeps trying forever at this i
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 const HEARTBEAT_INTERVAL_MS = 30000; // Check every 30 seconds
 
+// Track when app was last visible (for staleness detection)
+let lastVisibleAt = Date.now();
+const STALE_THRESHOLD_MS = 60000; // 1 minute - force reconnect after this long in background
+
 // Track if browser event listeners are registered
 let listenersRegistered = false;
 
@@ -40,17 +44,28 @@ let listenersRegistered = false;
  * This is critical for mobile browsers that suspend JS when backgrounded
  */
 function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    // Track when we went to background
+    lastVisibleAt = Date.now();
+    return;
+  }
+
   if (document.visibilityState === 'visible' && currentUserId) {
+    const timeInBackground = Date.now() - lastVisibleAt;
+    const isStale = timeInBackground > STALE_THRESHOLD_MS;
     const userChannelState = userChannel?.state;
     const presenceChannelState = presenceChannel?.state;
-
-    // Only reconnect if channels are unhealthy
-    if (
+    const isUnhealthy =
       (userChannelState !== 'joined' && userChannelState !== 'joining') ||
-      (presenceChannelState !== 'joined' && presenceChannelState !== 'joining')
-    ) {
-      console.log('[realtime] App became visible with unhealthy channels, reconnecting...');
-      reconnectAttempts = 0; // Reset so we don't stay in "given up" state
+      (presenceChannelState !== 'joined' && presenceChannelState !== 'joining');
+
+    // Force reconnect if stale (long background) OR channels are unhealthy
+    if (isStale || isUnhealthy) {
+      console.log(
+        `[realtime] App became visible after ${Math.round(timeInBackground / 1000)}s, ` +
+          `user=${userChannelState}, presence=${presenceChannelState}, forcing reconnect...`,
+      );
+      reconnectAttempts = 0;
       reconnectChannels(currentUserId);
     }
   }

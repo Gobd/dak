@@ -61,6 +61,10 @@ export class RealtimeSync<TEvent> {
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private readonly HEARTBEAT_INTERVAL_MS = 30000;
 
+  // Track when app was last visible (for staleness detection)
+  private lastVisibleAt: number = Date.now();
+  private readonly STALE_THRESHOLD_MS = 60000; // 1 minute - force reconnect after this long in background
+
   // Track if browser event listeners are registered
   private listenersRegistered = false;
 
@@ -156,13 +160,25 @@ export class RealtimeSync<TEvent> {
    * Critical for mobile browsers that suspend JS when backgrounded.
    */
   private handleVisibilityChange(): void {
-    if (document.visibilityState === 'visible' && this.currentUserId) {
-      const channelState = this.channel?.state;
+    if (document.visibilityState === 'hidden') {
+      // Track when we went to background
+      this.lastVisibleAt = Date.now();
+      return;
+    }
 
-      // Only reconnect if channel is unhealthy
-      if (channelState !== 'joined' && channelState !== 'joining') {
-        console.log('[realtime] App became visible with unhealthy channel, reconnecting...');
-        this.reconnectAttempts = 0; // Reset so we don't stay in "given up" state
+    if (document.visibilityState === 'visible' && this.currentUserId) {
+      const timeInBackground = Date.now() - this.lastVisibleAt;
+      const isStale = timeInBackground > this.STALE_THRESHOLD_MS;
+      const channelState = this.channel?.state;
+      const isUnhealthy = channelState !== 'joined' && channelState !== 'joining';
+
+      // Force reconnect if stale (long background) OR channel is unhealthy
+      if (isStale || isUnhealthy) {
+        console.log(
+          `[realtime] App became visible after ${Math.round(timeInBackground / 1000)}s, ` +
+            `channel=${channelState}, forcing reconnect...`,
+        );
+        this.reconnectAttempts = 0;
         this.reconnectChannel(this.currentUserId);
       }
     }
