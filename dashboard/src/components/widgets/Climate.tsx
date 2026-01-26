@@ -176,13 +176,15 @@ export default function Climate({ dark }: WidgetComponentProps) {
             {renderSensorRow('🌳', data?.outdoor)}
           </div>
         )}
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => showSettings.setTrue()}
-          className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all ml-2"
+          className="opacity-70 hover:opacity-100 ml-2"
           title="Settings"
         >
           <Settings size={14} className="text-text-muted" />
-        </button>
+        </Button>
       </div>
 
       {/* Row 2: Recommendation */}
@@ -223,19 +225,14 @@ export default function Climate({ dark }: WidgetComponentProps) {
             </label>
             <div className="flex gap-2">
               {(['C', 'F'] as const).map((unit) => (
-                <button
+                <Button
                   key={unit}
+                  variant={(climateConfig?.unit ?? 'C') === unit ? 'primary' : 'secondary'}
                   onClick={() => saveSensorConfig({ unit })}
-                  className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
-                    (climateConfig?.unit ?? 'C') === unit
-                      ? 'bg-accent text-text'
-                      : dark
-                        ? 'bg-surface-sunken text-text-secondary hover:bg-border'
-                        : 'bg-surface-sunken text-text-secondary hover:bg-surface-sunken'
-                  }`}
+                  className="flex-1"
                 >
                   °{unit}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -260,16 +257,17 @@ export default function Climate({ dark }: WidgetComponentProps) {
 
           {/* Manage Devices Link */}
           <div>
-            <button
+            <Button
+              variant="secondary"
               onClick={() => {
                 showSettings.setFalse();
                 useConfigStore.getState().setMqttModalOpen(true);
               }}
-              className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded transition-colors text-sm bg-surface-sunken text-text-secondary hover:bg-border"
+              className="w-full justify-center gap-2"
             >
               <Radio size={14} />
               Manage Zigbee Devices
-            </button>
+            </Button>
             <p className="text-xs mt-1 text-text-muted">
               Pair new sensors, rename or remove devices
             </p>

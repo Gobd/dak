@@ -114,24 +114,21 @@ export function PinModal({ onSuccess, onCancel, mode = 'verify' }: PinModalProps
 
           if (key === 'back') {
             return (
-              <button
-                key="back"
-                onClick={handleBackspace}
-                className="h-16 rounded-xl bg-surface-sunken flex items-center justify-center hover:bg-surface-sunken"
-              >
+              <Button key="back" variant="secondary" onClick={handleBackspace} className="h-16">
                 <Delete size={24} />
-              </button>
+              </Button>
             );
           }
 
           return (
-            <button
+            <Button
               key={key}
+              variant="secondary"
               onClick={() => handleDigit(key)}
-              className="h-16 rounded-xl bg-surface-sunken text-2xl font-semibold hover:bg-surface-sunken"
+              className="h-16 text-2xl font-semibold"
             >
               {key}
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { Avatar, Modal, ConfirmModal, Input } from '@dak/ui';
+import { Avatar, Modal, ConfirmModal, Input, Button } from '@dak/ui';
 import { useMembersStore } from '../../stores/members-store';
 import { usePointsStore } from '../../stores/points-store';
 
@@ -70,16 +70,15 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
             {members.map((member) => {
               const memberBalance = balances[member.id] ?? 0;
               return (
-                <button
+                <Button
                   key={member.id}
+                  variant="secondary"
                   onClick={() => {
                     setSelectedMemberId(member.id);
                     setAmount(0);
                   }}
-                  className={`flex flex-col items-center p-3 rounded-xl ${
-                    selectedMemberId === member.id
-                      ? 'bg-accent-light ring-2 ring-accent'
-                      : 'bg-surface-raised'
+                  className={`flex flex-col items-center p-3 h-auto ${
+                    selectedMemberId === member.id ? 'ring-2 ring-accent bg-accent-light' : ''
                   }`}
                 >
                   <Avatar
@@ -90,7 +89,7 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                   />
                   <span className="text-sm font-medium mt-1">{member.name}</span>
                   <span className="text-xs text-text-muted">{memberBalance} pts</span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -104,48 +103,48 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
                 Points to Redeem
               </label>
               <div className="flex items-center justify-center gap-4 mb-3">
-                <button
+                <Button
+                  variant="secondary"
+                  size="icon"
                   onClick={() => setAmount(Math.max(0, amount - 5))}
-                  className="w-12 h-12 rounded-xl bg-surface-sunken flex items-center justify-center"
+                  className="w-12 h-12"
                 >
                   <Minus size={24} />
-                </button>
+                </Button>
                 <div className="text-center">
                   <span className="text-4xl font-bold text-text">{amount}</span>
                   <p className="text-sm text-text-muted">of {balance} available</p>
                 </div>
-                <button
+                <Button
+                  variant="secondary"
+                  size="icon"
                   onClick={() => setAmount(Math.min(balance, amount + 5))}
-                  className="w-12 h-12 rounded-xl bg-surface-sunken flex items-center justify-center"
+                  className="w-12 h-12"
                 >
                   <Plus size={24} />
-                </button>
+                </Button>
               </div>
 
               {/* Quick amounts */}
               <div className="flex gap-2 justify-center">
                 {quickAmounts.map((qa) => (
-                  <button
+                  <Button
                     key={qa}
+                    variant={amount === qa ? 'primary' : 'secondary'}
+                    size="sm"
                     onClick={() => setAmount(Math.min(balance, qa))}
                     disabled={qa > balance}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                      amount === qa
-                        ? 'bg-accent text-text'
-                        : 'bg-surface-sunken disabled:opacity-50'
-                    }`}
                   >
                     {qa}
-                  </button>
+                  </Button>
                 ))}
-                <button
+                <Button
+                  variant={amount === balance ? 'primary' : 'secondary'}
+                  size="sm"
                   onClick={() => setAmount(balance)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    amount === balance ? 'bg-accent text-text' : 'bg-surface-sunken'
-                  }`}
                 >
                   All
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -160,13 +159,14 @@ export function RedeemModal({ onClose }: RedeemModalProps) {
             {error && <p className="text-danger text-sm text-center">{error}</p>}
 
             {/* Submit */}
-            <button
+            <Button
+              variant="primary"
               onClick={() => setShowConfirm(true)}
               disabled={amount <= 0 || !notes.trim() || loading}
-              className="w-full bg-success text-text py-3 rounded-xl font-medium hover:bg-success-hover disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-success hover:bg-success-hover"
             >
               {loading ? 'Processing...' : `Redeem ${amount} Points`}
-            </button>
+            </Button>
           </>
         )}
       </div>

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Sun, Moon, AlertCircle, MapPin, Clock } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, NumberPickerCompact, Spinner } from '@dak/ui';
+import { Modal, Button, NumberPickerCompact, Spinner, Toggle, Slider, Alert } from '@dak/ui';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { formatLocation } from '../../hooks/useLocation';
 import {
@@ -170,9 +170,11 @@ export default function Brightness() {
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={showModal.setTrue}
-        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
+        className="relative"
         title={`Brightness: ${currentBrightness}%`}
       >
         {isDay ? (
@@ -182,7 +184,7 @@ export default function Brightness() {
         )}
         {hasError && <AlertCircle size={10} className="absolute top-0.5 right-0.5 text-danger" />}
         {isLoading && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
-      </button>
+      </Button>
 
       <Modal
         open={showModal.value}
@@ -196,12 +198,12 @@ export default function Brightness() {
       >
         <div className="space-y-4">
           {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
+            <Alert variant="error">
+              {error}
               {error === 'Relay offline' && (
                 <span className="text-text-muted text-xs ml-2">Is home-relay running?</span>
               )}
-            </div>
+            </Alert>
           )}
 
           {!error && (
@@ -222,28 +224,14 @@ export default function Brightness() {
               </div>
 
               {/* Set brightness now */}
-              <div>
-                <label className="block text-sm text-text-muted mb-2">Set Now</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={100}
-                  value={currentBrightness}
-                  onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer
-                             bg-surface-sunken
-                             [&::-webkit-slider-thumb]:appearance-none
-                             [&::-webkit-slider-thumb]:w-5
-                             [&::-webkit-slider-thumb]:h-5
-                             [&::-webkit-slider-thumb]:rounded-full
-                             [&::-webkit-slider-thumb]:bg-surface
-                             [&::-webkit-slider-thumb]:shadow-md"
-                />
-                <div className="flex justify-between text-xs text-text-muted mt-1">
-                  <span>1%</span>
-                  <span>100%</span>
-                </div>
-              </div>
+              <Slider
+                label="Set Now"
+                min={1}
+                max={100}
+                value={currentBrightness}
+                onChange={handleBrightnessChange}
+                showRange
+              />
 
               {/* Divider */}
               <div className="border-t border-border" />
@@ -258,15 +246,11 @@ export default function Brightness() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={handleToggleEnabled}
+                <Toggle
+                  checked={config?.enabled ?? false}
+                  onChange={handleToggleEnabled}
                   disabled={!hasLocation && !config?.enabled}
-                  className={`w-12 h-6 rounded-full transition-colors ${config?.enabled ? 'bg-success' : 'bg-surface-sunken'} ${!hasLocation && !config?.enabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-surface shadow transform transition-transform ${config?.enabled ? 'translate-x-6' : 'translate-x-0.5'}`}
-                  />
-                </button>
+                />
               </div>
 
               {config?.enabled && (
@@ -303,18 +287,12 @@ export default function Brightness() {
                       <Sun size={14} className="inline mr-1 text-warning" />
                       Day: {config.dayBrightness ?? 100}%
                     </label>
-                    <input
-                      type="range"
+                    <Slider
                       min={1}
                       max={100}
                       value={config.dayBrightness ?? 100}
-                      onChange={(e) => handleDayBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
-                                 [&::-webkit-slider-thumb]:appearance-none
-                                 [&::-webkit-slider-thumb]:w-4
-                                 [&::-webkit-slider-thumb]:h-4
-                                 [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-warning"
+                      onChange={handleDayBrightnessChange}
+                      thumbColor="warning"
                     />
                   </div>
 
@@ -324,18 +302,12 @@ export default function Brightness() {
                       <Moon size={14} className="inline mr-1 text-accent" />
                       Night: {config.nightBrightness ?? 1}%
                     </label>
-                    <input
-                      type="range"
+                    <Slider
                       min={1}
                       max={100}
                       value={config.nightBrightness ?? 1}
-                      onChange={(e) => handleNightBrightnessChange(parseInt(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken
-                                 [&::-webkit-slider-thumb]:appearance-none
-                                 [&::-webkit-slider-thumb]:w-4
-                                 [&::-webkit-slider-thumb]:h-4
-                                 [&::-webkit-slider-thumb]:rounded-full
-                                 [&::-webkit-slider-thumb]:bg-accent"
+                      onChange={handleNightBrightnessChange}
+                      thumbColor="accent"
                     />
                   </div>
 

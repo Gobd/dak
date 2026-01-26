@@ -3,6 +3,7 @@ import { Panel } from './Panel';
 import { EditToolbar } from './EditToolbar';
 import { WidgetRenderer } from '../widgets';
 import { Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@dak/ui';
 
 /**
  * Screen component - renders all screens, hiding inactive ones to preserve iframe state
@@ -74,13 +75,9 @@ export function Screen() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <p className="text-text-muted mb-4">No widgets on this screen</p>
-              <button
-                onClick={() => setEditMode(true)}
-                className="px-4 py-2 rounded-lg bg-accent hover:bg-accent
-                           text-text font-medium transition-colors"
-              >
+              <Button variant="primary" onClick={() => setEditMode(true)}>
                 Add Widgets
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -92,34 +89,40 @@ export function Screen() {
           {/* Screen navigation */}
           {screens.length > 1 && (
             <>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded
                 onClick={goToPrevScreen}
-                className="p-3 rounded-full bg-surface-raised/60 hover:bg-surface-sunken
-                           text-text/80 hover:text-text shadow-lg backdrop-blur transition-all"
+                className="bg-surface-raised/60 hover:bg-surface-sunken text-text/80 hover:text-text shadow-lg backdrop-blur"
                 title="Previous screen"
               >
                 <ChevronLeft size={20} />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded
                 onClick={goToNextScreen}
-                className="p-3 rounded-full bg-surface-raised/60 hover:bg-surface-sunken
-                           text-text/80 hover:text-text shadow-lg backdrop-blur transition-all"
+                className="bg-surface-raised/60 hover:bg-surface-sunken text-text/80 hover:text-text shadow-lg backdrop-blur"
                 title="Next screen"
               >
                 <ChevronRight size={20} />
-              </button>
+              </Button>
             </>
           )}
 
           {/* Edit button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            rounded
             onClick={() => setEditMode(true)}
-            className="p-3 rounded-full bg-surface-raised/80 hover:bg-surface-sunken
-                       text-text shadow-lg backdrop-blur"
+            className="bg-surface-raised/80 hover:bg-surface-sunken text-text shadow-lg backdrop-blur"
             title="Edit dashboard"
           >
             <Settings size={20} />
-          </button>
+          </Button>
         </div>
       )}
 

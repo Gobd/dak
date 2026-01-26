@@ -17,7 +17,7 @@ import {
   X,
   Check,
 } from 'lucide-react';
-import { Roller, ConfirmModal, Modal, Button } from '@dak/ui';
+import { Roller, ConfirmModal, Modal, Button, Input } from '@dak/ui';
 import { useLocalStorage, useInterval } from '@dak/hooks';
 
 // Time picker options
@@ -351,9 +351,11 @@ export default function Timer() {
       />
 
       {/* Trigger button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => (hasItems ? setFloatingOpen(true) : setShowMenu(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
+        className="relative"
         title={hasItems ? 'Show timers' : 'Add timer or stopwatch'}
       >
         <TimerIcon size={24} className={hasItems ? 'text-accent' : 'text-text-muted'} />
@@ -362,7 +364,7 @@ export default function Timer() {
             {items.length}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Create Modal */}
       <Modal
@@ -376,29 +378,29 @@ export default function Timer() {
       >
         {!createMode ? (
           <div className="flex flex-col gap-3">
-            <button
+            <Button
+              variant="secondary"
               onClick={() => setCreateMode('timer')}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-sunken hover:bg-surface-sunken rounded-lg text-text-secondary dark:text-text text-sm font-medium transition-colors"
+              className="justify-center py-3"
             >
               <TimerIcon className="w-5 h-5" />
               Timer
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => setCreateMode('stopwatch')}
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-surface-sunken hover:bg-surface-sunken rounded-lg text-text-secondary dark:text-text text-sm font-medium transition-colors"
+              className="justify-center py-3"
             >
               <Clock className="w-5 h-5" />
               Stopwatch
-            </button>
+            </Button>
           </div>
         ) : createMode === 'timer' ? (
           <div className="space-y-4">
-            <input
-              type="text"
+            <Input
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-surface-sunken rounded-lg overflow-hidden">
@@ -435,12 +437,10 @@ export default function Timer() {
           </div>
         ) : (
           <div className="space-y-4">
-            <input
-              type="text"
+            <Input
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
               placeholder="Name (optional)"
-              className="w-full px-3 py-2 bg-surface-sunken border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:ring-2 focus:ring-accent"
             />
             <div className="flex gap-2">
               <Button onClick={() => setCreateMode(null)}>Back</Button>
@@ -474,20 +474,23 @@ export default function Timer() {
               {items.length} active
             </span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => setShowMenu(true)}
-                className="p-1.5 rounded-md bg-accent/20 hover:bg-accent/40 text-accent transition-colors"
+                className="bg-accent/20 hover:bg-accent/40 text-accent"
                 title="Add timer or stopwatch"
               >
                 <Plus className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon-sm"
                 onClick={() => setFloatingOpen(false)}
-                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Minimize"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -543,28 +546,33 @@ export default function Timer() {
                       <div className="flex-1 min-w-0">
                         {editingId === timer.id ? (
                           <div className="flex items-center gap-1">
-                            <input
-                              type="text"
+                            <Input
+                              size="sm"
+                              inline
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                              className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
+                              className="flex-1 min-w-0"
                               autoFocus
                             />
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
                               onClick={saveEdit}
-                              className="p-1 bg-success hover:bg-success rounded text-text"
+                              className="bg-success hover:bg-success text-text"
                             >
                               <Check className="w-3 h-3" />
-                            </button>
+                            </Button>
                           </div>
                         ) : (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => startEditing(timer)}
-                            className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text"
+                            className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text p-0 h-auto"
                           >
                             {timer.name}
-                          </button>
+                          </Button>
                         )}
                         <div
                           className={`text-sm font-mono ${isAlerting ? 'text-text' : 'text-text-secondary'}`}
@@ -574,17 +582,29 @@ export default function Timer() {
                       </div>
 
                       {!isAlerting && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => setAdjustingId(isAdjusting ? null : timer.id)}
-                          className={`p-1 rounded ${isAdjusting ? 'bg-accent text-text' : 'text-text-muted hover:text-text hover:bg-surface-sunken'}`}
+                          className={
+                            isAdjusting
+                              ? 'bg-accent text-text'
+                              : 'text-text-muted hover:text-text hover:bg-surface-sunken'
+                          }
                         >
                           <TimerIcon className="w-3 h-3" />
-                        </button>
+                        </Button>
                       )}
 
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => (isAlerting ? deleteItem(timer.id) : setDeleteId(timer.id))}
-                        className={`p-1 rounded ${isAlerting ? 'hover:bg-danger' : 'text-text-muted hover:text-danger hover:bg-danger/10'}`}
+                        className={
+                          isAlerting
+                            ? 'hover:bg-danger'
+                            : 'text-text-muted hover:text-danger hover:bg-danger/10'
+                        }
                         title={isAlerting ? 'Dismiss' : 'Cancel'}
                       >
                         {isAlerting ? (
@@ -592,17 +612,18 @@ export default function Timer() {
                         ) : (
                           <Trash2 className="w-3 h-3" />
                         )}
-                      </button>
+                      </Button>
                     </div>
 
                     {isAdjusting && (
                       <div className="relative z-20 flex items-center gap-1 p-2 bg-surface-sunken/50/50 rounded">
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="icon-sm"
                           onClick={() => adjustTime(timer.id, -adjustMinutes * 60)}
-                          className="p-1.5 bg-surface hover:bg-border dark:hover:bg-surface rounded text-text"
                         >
                           <Minus className="w-3 h-3" />
-                        </button>
+                        </Button>
                         <div className="flex-1 bg-surface-sunken rounded">
                           <Roller
                             items={ADJUST_MINUTES}
@@ -611,19 +632,22 @@ export default function Timer() {
                             format={(v) => `${v}m`}
                           />
                         </div>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => adjustTime(timer.id, adjustMinutes * 60)}
-                          className="p-1.5 bg-accent hover:bg-accent rounded text-text"
+                          className="bg-accent hover:bg-accent text-text"
                         >
                           <Plus className="w-3 h-3" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon-sm"
                           onClick={() => setAdjustingId(null)}
-                          className="p-1.5 bg-border hover:bg-border dark:hover:bg-border rounded text-text"
                           title="Cancel"
                         >
                           <X className="w-3 h-3" />
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -645,49 +669,58 @@ export default function Timer() {
                     <div className="flex-1 min-w-0">
                       {editingId === sw.id ? (
                         <div className="flex items-center gap-1">
-                          <input
-                            type="text"
+                          <Input
+                            size="sm"
+                            inline
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                            className="flex-1 min-w-0 px-1 py-0.5 bg-surface border border-border rounded text-xs text-text outline-none"
+                            className="flex-1 min-w-0"
                             autoFocus
                           />
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={saveEdit}
-                            className="p-1 bg-success hover:bg-success rounded text-text"
+                            className="bg-success hover:bg-success text-text"
                           >
                             <Check className="w-3 h-3" />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => startEditing(sw)}
-                          className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text"
+                          className="text-xs hover:underline text-left truncate w-full text-text-secondary dark:text-text p-0 h-auto"
                         >
                           {sw.name}
-                        </button>
+                        </Button>
                       )}
                       <div className="text-sm font-mono text-text-secondary">
                         {formatTime(elapsedSeconds)}
                       </div>
                     </div>
 
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => toggleStopwatch(sw.id)}
-                      className={`p-1 rounded ${sw.running ? 'bg-warning hover:bg-warning' : 'bg-success hover:bg-success'} text-text`}
+                      className={`${sw.running ? 'bg-warning hover:bg-warning' : 'bg-success hover:bg-success'} text-text`}
                       title={sw.running ? 'Pause' : 'Resume'}
                     >
                       {sw.running ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setDeleteId(sw.id)}
-                      className="p-1 rounded text-text-muted hover:text-danger hover:bg-danger/10"
+                      className="text-text-muted hover:text-danger hover:bg-danger/10"
                       title="Delete"
                     >
                       <Trash2 className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </div>
                 );
               }

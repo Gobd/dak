@@ -10,6 +10,7 @@ import {
   NumberPickerCompact,
   Input,
   Button,
+  Card,
 } from '@dak/ui';
 import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -100,8 +101,6 @@ export function Shots() {
 
   const inputClass =
     'w-full px-3 py-2 border border-border rounded-lg bg-surface-sunken text-text focus:outline-none focus:ring-2 focus:ring-accent';
-  const btnSecondary =
-    'px-3 py-2 border border-border rounded-lg hover:bg-surface-sunken text-text-secondary';
 
   return (
     <div className="space-y-6">
@@ -202,17 +201,20 @@ export function Shots() {
       </Modal>
 
       {schedules.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <Card padding="lg" className="text-center text-text-muted">
           No shot schedules yet. Create one to start tracking.
-        </div>
+        </Card>
       ) : (
         <div className="space-y-4">
-          {schedules.map((schedule) => (
-            <div
-              key={schedule.id}
-              className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
-            >
-              <div className="p-4">
+          {[...schedules]
+            .sort((a, b) => {
+              // Sort by person name first, then shot name
+              const personCompare = (a.person?.name || '').localeCompare(b.person?.name || '');
+              if (personCompare !== 0) return personCompare;
+              return a.name.localeCompare(b.name);
+            })
+            .map((schedule) => (
+              <Card key={schedule.id} className="overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <Syringe className="text-accent" size={24} />
@@ -234,182 +236,185 @@ export function Shots() {
                   <span>{schedule.current_dose}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button
+                  <Button
                     onClick={() => {
                       setLogDose(schedule.current_dose);
                       setShowLogForm(schedule.id);
                     }}
-                    className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover font-medium"
+                    className="bg-success hover:bg-success-hover"
                   >
                     Log Shot
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => pushNextDue(schedule.id, 1)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
+                    className="gap-1"
                   >
                     <ChevronRight size={16} />
                     +1 day
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => pushNextDue(schedule.id, -1)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
+                    className="gap-1"
                   >
                     <ChevronLeft size={16} />
                     -1 day
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => handleShowHistory(schedule.id)}
-                    className={`flex items-center gap-1 ${btnSecondary}`}
+                    className="gap-1"
                   >
                     <History size={16} />
                     History
-                  </button>
-                  <button onClick={() => setShowEditForm(schedule.id)} className={btnSecondary}>
+                  </Button>
+                  <Button variant="secondary" onClick={() => setShowEditForm(schedule.id)}>
                     Edit
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(schedule.id)}
-                    className="px-3 py-2 text-danger border border-danger rounded-lg hover:bg-danger-light dark:hover:bg-danger-light"
-                  >
+                  </Button>
+                  <Button variant="danger" onClick={() => setConfirmDelete(schedule.id)}>
                     Delete
-                  </button>
+                  </Button>
                 </div>
-              </div>
 
-              {showHistory === schedule.id && (
-                <div className="border-t border-border bg-surface-raised p-4">
-                  <h3 className="font-medium mb-2">Shot History</h3>
-                  {(logs[schedule.id] || []).length === 0 ? (
-                    <p className="text-text-muted text-sm">No shots logged yet.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {(logs[schedule.id] || []).map((log) => (
-                        <div key={log.id} className="text-sm">
-                          <div className="flex items-center justify-between">
-                            <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
-                            <div className="flex items-center gap-3">
-                              <span className="text-text-muted">{log.dose}</span>
-                              <button
-                                onClick={() =>
-                                  setConfirmLogDelete({
-                                    scheduleId: schedule.id,
-                                    logId: log.id,
-                                  })
-                                }
-                                className="p-1 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded"
-                                title="Delete this entry"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                {showHistory === schedule.id && (
+                  <div className="border-t border-border bg-surface-raised p-4">
+                    <h3 className="font-medium mb-2">Shot History</h3>
+                    {(logs[schedule.id] || []).length === 0 ? (
+                      <p className="text-text-muted text-sm">No shots logged yet.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {(logs[schedule.id] || []).map((log) => (
+                          <div key={log.id} className="text-sm">
+                            <div className="flex items-center justify-between">
+                              <span>{format(new Date(log.taken_at), 'MMM d, yyyy h:mm a')}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-text-muted">{log.dose}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() =>
+                                    setConfirmLogDelete({
+                                      scheduleId: schedule.id,
+                                      logId: log.id,
+                                    })
+                                  }
+                                  className="text-danger hover:bg-danger-light"
+                                  title="Delete this entry"
+                                >
+                                  <Trash2 size={14} />
+                                </Button>
+                              </div>
                             </div>
+                            {log.notes && (
+                              <p className="text-text-muted text-xs mt-1 ml-1">{log.notes}</p>
+                            )}
                           </div>
-                          {log.notes && (
-                            <p className="text-text-muted text-xs mt-1 ml-1">{log.notes}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {showLogForm === schedule.id && (
-                <div className="border-t border-border bg-surface-raised p-4">
-                  <h3 className="font-medium mb-3">Log Shot</h3>
-                  <div className="space-y-3">
-                    <Input
-                      label="Dose"
-                      value={logDose}
-                      onChange={(e) => setLogDose(e.target.value)}
-                    />
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-text-secondary">
-                          Time
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => useCustomTime.toggle()}
-                          className={`text-sm px-3 py-1 rounded-full ${useCustomTime.value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-secondary'}`}
-                        >
-                          {useCustomTime.value ? 'Custom time' : 'Now'}
-                        </button>
+                        ))}
                       </div>
-                      {useCustomTime.value && (
-                        <DateTimePicker value={logTime} onChange={handleTimeChange} />
-                      )}
-                    </div>
-                    <Input
-                      label="Notes (optional)"
-                      value={logNotes}
-                      onChange={(e) => setLogNotes(e.target.value)}
-                      placeholder="Any notes..."
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setShowLogForm(null);
-                          useCustomTime.setFalse();
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <button
-                        onClick={() => handleLogShot(schedule.id)}
-                        className="bg-success text-white px-4 py-2 rounded-lg hover:bg-success-hover"
-                      >
-                        Log Shot
-                      </button>
-                    </div>
+                    )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {showEditForm === schedule.id && (
-                <div className="border-t border-border bg-surface-raised p-4">
-                  <h3 className="font-medium mb-3">Edit Schedule</h3>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                {showLogForm === schedule.id && (
+                  <div className="border-t border-border bg-surface-raised p-4">
+                    <h3 className="font-medium mb-3">Log Shot</h3>
+                    <div className="space-y-3">
                       <Input
-                        label="Interval (days)"
-                        type="number"
-                        defaultValue={schedule.interval_days}
-                        id={`interval-${schedule.id}`}
-                        min={1}
+                        label="Dose"
+                        value={logDose}
+                        onChange={(e) => setLogDose(e.target.value)}
                       />
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-text-secondary">
+                            Time
+                          </label>
+                          <Button
+                            type="button"
+                            variant={useCustomTime.value ? 'primary' : 'secondary'}
+                            size="sm"
+                            rounded
+                            onClick={() => useCustomTime.toggle()}
+                          >
+                            {useCustomTime.value ? 'Custom time' : 'Now'}
+                          </Button>
+                        </div>
+                        {useCustomTime.value && (
+                          <DateTimePicker value={logTime} onChange={handleTimeChange} />
+                        )}
+                      </div>
                       <Input
-                        label="Current Dose"
-                        defaultValue={schedule.current_dose}
-                        id={`dose-${schedule.id}`}
+                        label="Notes (optional)"
+                        value={logNotes}
+                        onChange={(e) => setLogNotes(e.target.value)}
+                        placeholder="Any notes..."
                       />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="secondary" onClick={() => setShowEditForm(null)}>
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          const interval = (
-                            document.getElementById(`interval-${schedule.id}`) as HTMLInputElement
-                          ).value;
-                          const dose = (
-                            document.getElementById(`dose-${schedule.id}`) as HTMLInputElement
-                          ).value;
-                          handleUpdateSchedule(schedule.id, {
-                            interval_days: Number(interval),
-                            current_dose: dose,
-                          });
-                        }}
-                      >
-                        Save
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setShowLogForm(null);
+                            useCustomTime.setFalse();
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => handleLogShot(schedule.id)}
+                          className="bg-success hover:bg-success-hover"
+                        >
+                          Log Shot
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+
+                {showEditForm === schedule.id && (
+                  <div className="border-t border-border bg-surface-raised p-4">
+                    <h3 className="font-medium mb-3">Edit Schedule</h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          label="Interval (days)"
+                          type="number"
+                          defaultValue={schedule.interval_days}
+                          id={`interval-${schedule.id}`}
+                          min={1}
+                        />
+                        <Input
+                          label="Current Dose"
+                          defaultValue={schedule.current_dose}
+                          id={`dose-${schedule.id}`}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="secondary" onClick={() => setShowEditForm(null)}>
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            const interval = (
+                              document.getElementById(`interval-${schedule.id}`) as HTMLInputElement
+                            ).value;
+                            const dose = (
+                              document.getElementById(`dose-${schedule.id}`) as HTMLInputElement
+                            ).value;
+                            handleUpdateSchedule(schedule.id, {
+                              interval_days: Number(interval),
+                              current_dose: dose,
+                            });
+                          }}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
         </div>
       )}
     </div>

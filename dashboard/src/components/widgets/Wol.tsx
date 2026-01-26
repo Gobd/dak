@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToggle } from '@dak/hooks';
 import { Power, Monitor, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, ConfirmModal, Badge, Spinner, Input } from '@dak/ui';
+import { Modal, Button, ConfirmModal, Badge, Spinner, Input, Alert } from '@dak/ui';
 import {
   client,
   healthHealthGet,
@@ -192,9 +192,11 @@ export default function Wol({ panel }: WidgetComponentProps) {
   return (
     <div className="w-full h-full flex items-center justify-center">
       {/* Compact icon button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => showModal.setTrue()}
-        className={`relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
+        className="relative"
         title={`Wake on LAN${devices.length > 0 ? ` (${devices.length} devices)` : ''}`}
       >
         <Monitor size={24} className={anyOnline ? 'text-success' : 'text-text-muted'} />
@@ -207,7 +209,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
             {devices.length}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Main Modal - Device List */}
       <Modal
@@ -224,11 +226,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
         }
       >
         <div className="space-y-3">
-          {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
+          {error && <Alert variant="error">{error}</Alert>}
 
           {devices.length === 0 ? (
             <p className="text-text-muted text-center py-4">
@@ -258,22 +256,25 @@ export default function Wol({ panel }: WidgetComponentProps) {
                         {online ? 'Online' : 'Offline'}
                       </Badge>
                       {!online && (
-                        <button
+                        <Button
+                          variant="primary"
+                          size="icon-sm"
                           onClick={() => handleWake(device)}
                           disabled={isWaking}
-                          className="p-2 rounded bg-accent/80 hover:bg-accent text-text disabled:opacity-50"
                           title="Wake"
                         >
                           <Power size={16} className={isWaking ? 'animate-pulse' : ''} />
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setDeleteDevice(device)}
-                        className="p-2 rounded hover:bg-danger/30"
+                        className="hover:bg-danger/30"
                         title="Delete"
                       >
                         <Trash2 size={16} className="text-danger" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );

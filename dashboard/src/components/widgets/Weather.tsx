@@ -268,9 +268,9 @@ export default function Weather({ panel }: WidgetComponentProps) {
     return (
       <div className={`w-full h-full p-4 bg-surface text-text`}>
         <p className="text-danger text-sm mb-2">{error.message}</p>
-        <button onClick={() => refetch()} className="text-sm text-accent hover:underline">
+        <Button variant="ghost" size="sm" onClick={() => refetch()}>
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -286,30 +286,33 @@ export default function Weather({ panel }: WidgetComponentProps) {
         <span className="text-sm text-text-muted truncate">
           {formatLocation(location.city, location.state)}
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setShowSettings(true)}
-          className="p-1 rounded shrink-0 opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+          className="shrink-0 opacity-70 hover:opacity-100"
           title="Settings"
         >
           <Settings size={14} className="text-text-muted" />
-        </button>
+        </Button>
       </div>
 
       {/* Alerts */}
       {weather.alerts && weather.alerts.length > 0 && (
         <div className="px-3 pb-2 space-y-1 shrink-0">
           {weather.alerts.slice(0, 3).map((alert, i) => (
-            <button
+            <Button
               key={i}
+              variant="ghost"
               onClick={() => setSelectedAlert(alert)}
-              className={`w-full flex items-center gap-2 px-2 py-1 rounded text-left text-xs text-text ${getAlertSeverityColor(alert.properties.severity)}`}
+              className={`w-full flex items-center gap-2 px-2 py-1 h-auto justify-start text-xs text-text ${getAlertSeverityColor(alert.properties.severity)}`}
             >
               <AlertTriangle size={12} className="shrink-0" />
               <span className="truncate flex-1">{alert.properties.event}</span>
               <span className="shrink-0 opacity-75">
                 {formatAlertTime(alert.properties.expires)}
               </span>
-            </button>
+            </Button>
           ))}
           {weather.alerts && weather.alerts.length > 3 && (
             <div className="text-xs text-text-muted px-2">
@@ -324,10 +327,11 @@ export default function Weather({ panel }: WidgetComponentProps) {
         className={`flex-1 min-h-0 px-2 pb-2 ${isVertical ? 'flex flex-col' : 'flex gap-1 overflow-x-auto'}`}
       >
         {(weather.periods || []).map((period, i) => (
-          <button
+          <Button
             key={i}
+            variant="ghost"
             onClick={() => setSelectedPeriod(period)}
-            className={`flex items-center gap-2 rounded-lg hover:bg-surface-raised/50 transition-colors text-left ${
+            className={`flex items-center gap-2 h-auto justify-start ${
               isVertical ? 'w-full flex-1 min-h-0 px-2' : 'flex-col min-w-[80px] flex-shrink-0 p-2'
             }`}
           >
@@ -349,7 +353,7 @@ export default function Weather({ panel }: WidgetComponentProps) {
             {isVertical && (
               <div className="text-sm text-text-muted truncate flex-1">{period.shortForecast}</div>
             )}
-          </button>
+          </Button>
         ))}
       </div>
 

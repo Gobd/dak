@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom';
 import { Trash2, Settings, Move } from 'lucide-react';
 import { useConfigStore } from '../../stores/config-store';
-import { Modal, Button } from '@dak/ui';
+import { Modal, Button, Toggle, Input } from '@dak/ui';
 import type { PanelConfig, AnchorPosition } from '../../types';
 
 const REFRESH_OPTIONS = [
@@ -414,22 +414,26 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
         <>
           {/* Toolbar */}
           <div className="absolute top-2 right-2 flex gap-1 z-20">
-            <button
+            <Button
+              variant="danger"
+              size="icon-sm"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => removePanel(panel.id)}
-              className="p-1.5 rounded bg-danger/80 hover:bg-danger text-text"
+              className="bg-danger/80 hover:bg-danger"
               title="Delete panel"
             >
               <Trash2 size={14} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon-sm"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => setShowSettings(true)}
-              className="p-1.5 rounded bg-surface/80 hover:bg-surface text-text"
+              className="bg-surface/80 hover:bg-surface"
               title="Panel settings"
             >
               <Settings size={14} />
-            </button>
+            </Button>
             <div
               onMouseDown={handleDragStart}
               onTouchStart={handleDragStart}
@@ -479,26 +483,28 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
+            <Button
+              variant="ghost"
               onClick={() => {
                 setShowSettings(true);
                 setShowContextMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-text hover:bg-surface-sunken flex items-center gap-2"
+              className="w-full px-3 py-2 justify-start text-sm rounded-none"
             >
               <Settings size={14} />
               Settings
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => {
                 removePanel(panel.id);
                 setShowContextMenu(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-sunken flex items-center gap-2"
+              className="w-full px-3 py-2 justify-start text-sm text-danger rounded-none"
             >
               <Trash2 size={14} />
               Delete
-            </button>
+            </Button>
           </div>,
           document.body,
         )}
@@ -547,12 +553,10 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
 
           {/* Anchor mode settings */}
           <div className="border-t border-border pt-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-2">
+              <Toggle
                 checked={useAnchorMode}
-                onChange={(e) => {
-                  const enabling = e.target.checked;
+                onChange={(enabling) => {
                   setUseAnchorMode(enabling);
                   // When enabling anchor mode, convert current position to pixel values
                   if (enabling && !panel.anchor) {
@@ -563,10 +567,9 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
                     setTempOffsetY(anchorData.offsetY);
                   }
                 }}
-                className="w-4 h-4 rounded border-border bg-surface-sunken accent-accent"
+                label="Fixed pixel positioning"
               />
-              <span className="text-sm font-medium">Fixed pixel positioning</span>
-            </label>
+            </div>
             <p className="text-xs text-text-muted mt-1">
               Anchor to a corner with fixed pixel size (useful for small floating widgets)
             </p>
@@ -598,50 +601,38 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Width (px)</label>
-                  <input
-                    type="number"
-                    value={tempWidthPx}
-                    onChange={(e) => setTempWidthPx(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={20}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Height (px)</label>
-                  <input
-                    type="number"
-                    value={tempHeightPx}
-                    onChange={(e) => setTempHeightPx(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={20}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Offset X (px)</label>
-                  <input
-                    type="number"
-                    value={tempOffsetX}
-                    onChange={(e) => setTempOffsetX(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={0}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-text-muted mb-1">Offset Y (px)</label>
-                  <input
-                    type="number"
-                    value={tempOffsetY}
-                    onChange={(e) => setTempOffsetY(parseInt(e.target.value) || 0)}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    className="w-full p-2 rounded bg-surface-sunken border border-border text-sm"
-                    min={0}
-                  />
-                </div>
+                <Input
+                  label="Width (px)"
+                  type="number"
+                  value={tempWidthPx}
+                  onChange={(e) => setTempWidthPx(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                />
+                <Input
+                  label="Height (px)"
+                  type="number"
+                  value={tempHeightPx}
+                  onChange={(e) => setTempHeightPx(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                />
+                <Input
+                  label="Offset X (px)"
+                  type="number"
+                  value={tempOffsetX}
+                  onChange={(e) => setTempOffsetX(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={0}
+                />
+                <Input
+                  label="Offset Y (px)"
+                  type="number"
+                  value={tempOffsetY}
+                  onChange={(e) => setTempOffsetY(parseInt(e.target.value) || 0)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={0}
+                />
               </div>
             </div>
           )}

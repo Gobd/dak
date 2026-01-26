@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings, AlertCircle } from 'lucide-react';
+import { Shield, ShieldOff, Settings } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Input, Alert } from '@dak/ui';
 import {
   client,
   getStatusAdguardStatusPost,
@@ -71,6 +71,8 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   const showMenu = useToggle(false);
   const [settingsForm, setSettingsForm] = useState(config);
   const [error, setError] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
   const [countdown, setCountdown] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -133,11 +135,28 @@ export default function Adguard({ panel }: WidgetComponentProps) {
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed'),
   });
 
-  function handleSaveSettings() {
-    updateWidgetData(panel.id, settingsForm);
-    showSettings.setFalse();
-    setError(null);
-    queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
+  async function handleSaveSettings() {
+    if (!settingsForm.url || !settingsForm.username || !settingsForm.password) {
+      setSettingsError('All fields are required');
+      return;
+    }
+
+    setIsTesting(true);
+    setSettingsError(null);
+
+    try {
+      await fetchStatus(settingsForm);
+      updateWidgetData(panel.id, settingsForm);
+      showSettings.setFalse();
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ['adguard-status', panel.id] });
+    } catch (err) {
+      setSettingsError(
+        err instanceof Error ? err.message : 'Connection failed. Check URL and credentials.',
+      );
+    } finally {
+      setIsTesting(false);
+    }
   }
 
   function handleDisable(durationMs: number) {
@@ -155,59 +174,64 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   if (!isConfigured) {
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => {
             setSettingsForm(config);
             showSettings.setTrue();
           }}
-          className={`p-2 rounded-lg transition-colors hover:bg-surface-sunken/40`}
           title="Configure AdGuard"
         >
           <Shield size={24} className="text-text-muted" />
-        </button>
+        </Button>
 
         <Modal
           open={showSettings.value}
-          onClose={() => showSettings.setFalse()}
+          onClose={() => {
+            showSettings.setFalse();
+            setSettingsError(null);
+          }}
           title="AdGuard Home Settings"
           actions={
             <>
-              <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
-              <Button onClick={handleSaveSettings} variant="primary">
-                Save
+              <Button
+                onClick={() => {
+                  showSettings.setFalse();
+                  setSettingsError(null);
+                }}
+                disabled={isTesting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveSettings} variant="primary" disabled={isTesting}>
+                {isTesting ? 'Testing...' : 'Save'}
               </Button>
             </>
           }
         >
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm mb-1">URL</label>
-              <input
-                type="text"
-                placeholder="http://192.168.1.1:3000"
-                value={settingsForm.url}
-                onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Username</label>
-              <input
-                type="text"
-                value={settingsForm.username}
-                onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Password</label>
-              <input
-                type="password"
-                value={settingsForm.password}
-                onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-                className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-              />
-            </div>
+            {settingsError && <Alert variant="error">{settingsError}</Alert>}
+            <Input
+              label="URL"
+              placeholder="http://192.168.1.1:3000"
+              value={settingsForm.url}
+              onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+              disabled={isTesting}
+            />
+            <Input
+              label="Username"
+              value={settingsForm.username}
+              onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+              disabled={isTesting}
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={settingsForm.password}
+              onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+              disabled={isTesting}
+            />
           </div>
         </Modal>
       </div>
@@ -217,10 +241,12 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   return (
     <div className="w-full h-full flex items-center justify-center relative">
       {/* Main button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => showMenu.setTrue()}
         disabled={isPending}
-        className="relative p-2"
+        className="relative"
         title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
       >
         {protectionEnabled ? (
@@ -229,7 +255,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           <ShieldOff size={24} className="text-danger" />
         )}
         {(isLoading || isPending) && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
-      </button>
+      </Button>
 
       {/* Countdown text */}
       {!protectionEnabled && countdown && (
@@ -237,18 +263,6 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           {countdown}
         </span>
       )}
-
-      {/* Settings gear */}
-      <button
-        onClick={() => {
-          setSettingsForm(config);
-          showSettings.setTrue();
-        }}
-        className="absolute top-0 right-0 p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
-        title="Settings"
-      >
-        <Settings size={14} className="text-text-muted" />
-      </button>
 
       {/* Control menu */}
       <Modal
@@ -260,38 +274,37 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         title={protectionEnabled ? 'Disable Protection' : 'Protection Disabled'}
         actions={
           <>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 showMenu.setFalse();
                 setSettingsForm(config);
                 showSettings.setTrue();
               }}
-              className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+              className="opacity-70 hover:opacity-100"
               title="Settings"
             >
               <Settings size={14} className="text-text-muted" />
-            </button>
+            </Button>
             <Button onClick={() => showMenu.setFalse()}>Cancel</Button>
           </>
         }
       >
         <div className="space-y-2">
-          {error && (
-            <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
+          {error && <Alert variant="error">{error}</Alert>}
 
           {protectionEnabled ? (
             DURATION_OPTIONS.map((opt) => (
-              <button
+              <Button
                 key={opt.value}
+                variant="ghost"
                 onClick={() => handleDisable(opt.value)}
                 disabled={isPending}
-                className="w-full text-left px-3 py-2 rounded transition-colors hover:bg-surface-sunken/50"
+                className="w-full justify-start"
               >
                 {opt.label}
-              </button>
+              </Button>
             ))
           ) : (
             <div className="space-y-3">
@@ -312,46 +325,50 @@ export default function Adguard({ panel }: WidgetComponentProps) {
       {/* Settings modal */}
       <Modal
         open={showSettings.value}
-        onClose={() => showSettings.setFalse()}
+        onClose={() => {
+          showSettings.setFalse();
+          setSettingsError(null);
+        }}
         title="AdGuard Home Settings"
         actions={
           <>
-            <Button onClick={() => showSettings.setFalse()}>Cancel</Button>
-            <Button onClick={handleSaveSettings} variant="primary">
-              Save
+            <Button
+              onClick={() => {
+                showSettings.setFalse();
+                setSettingsError(null);
+              }}
+              disabled={isTesting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSettings} variant="primary" disabled={isTesting}>
+              {isTesting ? 'Testing...' : 'Save'}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1">URL</label>
-            <input
-              type="text"
-              placeholder="http://192.168.1.1:3000"
-              value={settingsForm.url}
-              onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Username</label>
-            <input
-              type="text"
-              value={settingsForm.username}
-              onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input
-              type="password"
-              value={settingsForm.password}
-              onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
-              className={`w-full px-3 py-2 rounded border bg-surface-raised border-border`}
-            />
-          </div>
+          {settingsError && <Alert variant="error">{settingsError}</Alert>}
+          <Input
+            label="URL"
+            placeholder="http://192.168.1.1:3000"
+            value={settingsForm.url}
+            onChange={(e) => setSettingsForm({ ...settingsForm, url: e.target.value })}
+            disabled={isTesting}
+          />
+          <Input
+            label="Username"
+            value={settingsForm.username}
+            onChange={(e) => setSettingsForm({ ...settingsForm, username: e.target.value })}
+            disabled={isTesting}
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={settingsForm.password}
+            onChange={(e) => setSettingsForm({ ...settingsForm, password: e.target.value })}
+            disabled={isTesting}
+          />
         </div>
       </Modal>
     </div>

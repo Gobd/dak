@@ -1,6 +1,6 @@
 import { Check, Trophy, User } from 'lucide-react';
 import type { ChoreInstanceWithDetails } from '../../types';
-import { Avatar } from '@dak/ui';
+import { Avatar, Button } from '@dak/ui';
 import { format } from 'date-fns';
 import { useSettingsStore } from '../../stores/settings-store';
 
@@ -60,16 +60,17 @@ export function TaskCard({
       style={!completed && assigned_member ? { borderLeftColor: assigned_member.color } : undefined}
     >
       {/* Checkbox */}
-      <button
+      <Button
+        variant="ghost"
         onClick={handleToggle}
-        className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
+        className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 p-0 ${
           completed
             ? 'bg-success border-success text-text'
             : 'border-border hover:border-accent hover:bg-accent-light'
         }`}
       >
         {completed && <Check size={28} strokeWidth={3} />}
-      </button>
+      </Button>
 
       {/* Content */}
       <div className="flex-1 min-w-0">

@@ -267,9 +267,11 @@ export default function DriveTime() {
   return (
     <div className="h-full w-full flex items-center justify-center">
       {/* Trigger button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => (hasRoutes ? setFloatingOpen(true) : setShowManager(true))}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/30"
+        className="relative"
         title={hasRoutes ? 'Show traffic' : 'Configure routes'}
       >
         <Car
@@ -281,7 +283,7 @@ export default function DriveTime() {
             {routes.length}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Floating traffic window */}
       {floatingOpen && hasRoutes && (
@@ -297,20 +299,22 @@ export default function DriveTime() {
           >
             <span className="text-sm font-medium text-text-secondary dark:text-text">Traffic</span>
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="icon-sm"
                 onClick={() => setShowManager(true)}
-                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon-sm"
                 onClick={() => setFloatingOpen(false)}
-                className="p-1.5 rounded-md bg-surface hover:bg-border text-text-muted transition-colors"
                 title="Close"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -330,13 +334,14 @@ export default function DriveTime() {
                   const isActive = isInTimeWindow(route);
 
                   return (
-                    <button
+                    <Button
                       key={getRouteId(route)}
+                      variant="ghost"
                       onClick={() => setDetailRoute({ route, driveData })}
-                      className={`w-full text-left flex items-center justify-between p-2 rounded-lg transition-colors ${
+                      className={`w-full text-left flex items-center justify-between p-2 h-auto ${
                         isActive
-                          ? 'bg-surface-sunken/50 bg-surface-sunken/50 hover:bg-surface-sunken/50/50'
-                          : 'bg-surface-sunken/50 bg-surface-raised/50 opacity-60 hover:opacity-80'
+                          ? 'bg-surface-sunken/50 hover:bg-surface-sunken/50'
+                          : 'bg-surface-raised/50 opacity-60 hover:opacity-80'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -357,7 +362,7 @@ export default function DriveTime() {
                           <span className="text-xs text-text-muted">+{delayMinutes}</span>
                         )}
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </>
@@ -608,20 +613,24 @@ function RouteManagerModal({
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onEditRoute(route)}
-                    className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+                    className="opacity-70 hover:opacity-100"
                     title="Edit"
                   >
                     <Settings size={14} className="text-text-muted" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => onDeleteRoute(route)}
-                    className="p-1.5 rounded hover:bg-danger/50"
+                    className="hover:bg-danger/50"
                     title="Delete"
                   >
                     <Trash2 size={14} className="text-danger" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -662,21 +671,25 @@ function RouteManagerModal({
                       <div className="text-xs text-text-muted truncate">{address}</div>
                     </div>
                     <div className="flex gap-1">
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleEditLocation(name)}
-                        className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+                        className="opacity-70 hover:opacity-100"
                         title="Edit address"
                       >
                         <Settings size={14} className="text-text-muted" />
-                      </button>
+                      </Button>
                       {!isLocationUsed(name) && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleDeleteLocation(name)}
-                          className="p-1.5 rounded hover:bg-danger/50"
+                          className="hover:bg-danger/50"
                           title="Delete location"
                         >
                           <Trash2 size={14} className="text-danger" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -993,25 +1006,26 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
                       form.via[0] === `${alt.waypointCoords[0].lat},${alt.waypointCoords[0].lng}`);
 
                   return (
-                    <button
+                    <Button
                       key={alt.index}
+                      variant={isSelected ? 'primary' : 'ghost'}
                       onClick={() => selectRoute(alt)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        isSelected
-                          ? 'bg-accent text-text'
-                          : 'bg-surface-sunken/50 bg-surface-sunken/30 hover:bg-surface-sunken/50/30'
-                      }`}
+                      className="w-full text-left p-3 h-auto"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{alt.summary}</span>
-                        <span className={`text-sm ${isSelected ? 'text-info' : 'text-text-muted'}`}>
-                          {alt.distance}
-                        </span>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{alt.summary}</span>
+                          <span
+                            className={`text-sm ${isSelected ? 'text-info' : 'text-text-muted'}`}
+                          >
+                            {alt.distance}
+                          </span>
+                        </div>
+                        <div className={`text-xs ${isSelected ? 'text-info' : 'text-text-muted'}`}>
+                          {alt.durationInTraffic} (with traffic)
+                        </div>
                       </div>
-                      <div className={`text-xs ${isSelected ? 'text-info' : 'text-text-muted'}`}>
-                        {alt.durationInTraffic} (with traffic)
-                      </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -1024,17 +1038,14 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
           <label className="block text-sm font-medium mb-1">Days</label>
           <div className="flex gap-1">
             {DAY_NAMES.map((day, i) => (
-              <button
+              <Button
                 key={day}
+                variant={form.days.includes(day) ? 'primary' : 'secondary'}
                 onClick={() => toggleDay(day)}
-                className={`w-8 h-8 rounded text-sm font-medium ${
-                  form.days.includes(day)
-                    ? 'bg-accent text-text'
-                    : 'bg-surface-sunken text-text-secondary text-text-muted'
-                }`}
+                className="w-8 h-8 p-0"
               >
                 {DAY_LABELS[i]}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

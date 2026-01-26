@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { Button } from '@dak/ui';
 
 export function About() {
   const handleOpenLink = (url: string) => {
@@ -28,25 +29,31 @@ export function About() {
         {/* Contact */}
         <div className="mb-6">
           <h2 className="text-base font-semibold mb-3 text-text">Contact</h2>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => handleOpenLink('mailto:bkemper@gmail.com')}
-            className="w-full text-left rounded-lg p-4 bg-surface-sunken"
+            className="w-full text-left justify-start h-auto rounded-lg p-4 bg-surface-sunken"
           >
-            <span className="block text-xs mb-1 text-text-muted">Email</span>
-            <span className="block text-base text-accent">bkemper@gmail.com</span>
-          </button>
+            <div>
+              <span className="block text-xs mb-1 text-text-muted">Email</span>
+              <span className="block text-base text-accent">bkemper@gmail.com</span>
+            </div>
+          </Button>
         </div>
 
         {/* Source Code */}
         <div className="mb-6">
           <h2 className="text-base font-semibold mb-3 text-text">Source Code</h2>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => handleOpenLink('https://github.com/Gobd/notes-app')}
-            className="w-full text-left rounded-lg p-4 bg-surface-sunken"
+            className="w-full text-left justify-start h-auto rounded-lg p-4 bg-surface-sunken"
           >
-            <span className="block text-xs mb-1 text-text-muted">GitHub</span>
-            <span className="block text-base text-accent">github.com/Gobd/notes-app</span>
-          </button>
+            <div>
+              <span className="block text-xs mb-1 text-text-muted">GitHub</span>
+              <span className="block text-base text-accent">github.com/Gobd/notes-app</span>
+            </div>
+          </Button>
         </div>
       </div>
     </div>

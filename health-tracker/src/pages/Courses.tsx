@@ -8,6 +8,7 @@ import {
   NumberPickerCompact,
   Input,
   Button,
+  Card,
 } from '@dak/ui';
 import { Plus, Pill, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { format, addDays } from 'date-fns';
@@ -212,9 +213,9 @@ export function Courses() {
       </Modal>
 
       {activeCourses.length === 0 && completedCourses.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center text-text-muted">
+        <Card padding="lg" className="shadow-sm text-center text-text-muted">
           No medicine courses yet. Create one to start tracking.
-        </div>
+        </Card>
       ) : (
         <>
           {activeCourses.map((course) => {
@@ -223,10 +224,7 @@ export function Courses() {
             const dates = Object.keys(dosesByDate).sort();
 
             return (
-              <div
-                key={course.id}
-                className="bg-surface-raised rounded-xl shadow-sm overflow-hidden"
-              >
+              <Card key={course.id} padding="none" className="shadow-sm overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -236,12 +234,14 @@ export function Courses() {
                         <div className="text-text-muted">{course.name}</div>
                       </div>
                     </div>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setConfirmDelete(course.id)}
-                      className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg"
+                      className="text-danger hover:bg-danger-light"
                     >
                       <Trash2 size={18} />
-                    </button>
+                    </Button>
                   </div>
                   <div className="mt-2 text-sm text-text-muted">
                     {course.doses_per_day}x/day for {course.duration_days} days • Started{' '}
@@ -299,7 +299,7 @@ export function Courses() {
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             );
           })}
 
@@ -313,10 +313,11 @@ export function Courses() {
                   const dosesByDate = getDosesByDate(course.id);
                   const dates = Object.keys(dosesByDate).sort();
                   return (
-                    <div key={course.id} className="bg-surface-raised rounded-lg overflow-hidden">
-                      <button
+                    <Card key={course.id} padding="none" className="overflow-hidden">
+                      <Button
+                        variant="ghost"
                         onClick={() => toggleCompleted(course.id)}
-                        className="w-full p-4 flex items-center justify-between hover:bg-surface-sunken dark:hover:bg-surface-raised transition-colors"
+                        className="w-full p-4 flex items-center justify-between h-auto"
                       >
                         <div className="text-left">
                           <div className="font-medium text-text-secondary">
@@ -348,16 +349,18 @@ export function Courses() {
                             <ChevronRight size={20} className="text-text-muted" />
                           )}
                         </div>
-                      </button>
+                      </Button>
                       {isExpanded && (
                         <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
                           <div className="flex justify-end mb-2">
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setConfirmDelete(course.id)}
-                              className="p-2 text-danger hover:bg-danger-light dark:hover:bg-danger-light rounded-lg text-sm flex items-center gap-1"
+                              className="text-danger hover:bg-danger-light"
                             >
                               <Trash2 size={14} /> Delete
-                            </button>
+                            </Button>
                           </div>
                           {dates.map((date) => {
                             const dayDoses = dosesByDate[date];
@@ -391,7 +394,7 @@ export function Courses() {
                           })}
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
                 })}
               </div>

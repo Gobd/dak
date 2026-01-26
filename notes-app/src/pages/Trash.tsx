@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Trash2, Clock, SquareCheck, Square, X } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useNotesStore } from '../stores/notes-store';
-import { ConfirmModal, Spinner } from '@dak/ui';
+import { ConfirmModal, Spinner, Button } from '@dak/ui';
 import { getNoteTitle } from '../types/note';
 import type { Note } from '../types/note';
 
@@ -115,29 +115,26 @@ export function Trash() {
       {/* Header */}
       {isSelectionMode.value ? (
         <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-sunken">
-          <button onClick={toggleSelectAll} className="flex items-center gap-2">
+          <Button variant="ghost" onClick={toggleSelectAll} className="flex items-center gap-2 p-0">
             {allOwnedSelected ? (
               <SquareCheck size={20} className="text-warning" />
             ) : (
               <Square size={20} className="text-text-muted" />
             )}
             <span className="text-sm text-text">All</span>
-          </button>
+          </Button>
           <span className="text-sm font-medium text-text">{selectedNoteIds.size} selected</span>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant={selectedNoteIds.size > 0 ? 'danger' : 'secondary'}
+              size="sm"
               onClick={() => selectedNoteIds.size > 0 && showBulkDeleteConfirm.setTrue()}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                selectedNoteIds.size > 0
-                  ? 'bg-danger text-text'
-                  : 'bg-surface-sunken text-text-muted'
-              }`}
             >
               Delete
-            </button>
-            <button onClick={exitSelectionMode} className="p-1">
+            </Button>
+            <Button variant="ghost" size="icon-sm" onClick={exitSelectionMode}>
               <X size={20} className="text-text-muted" />
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -149,9 +146,9 @@ export function Trash() {
           <span className="text-lg font-semibold ml-2 flex-1 text-text">Trash</span>
           <span className="text-sm mr-2 text-text-muted">({trashedNotes.length})</span>
           {trashedNotes.length > 0 && (
-            <button onClick={enterSelectionMode} className="p-1.5">
+            <Button variant="ghost" size="icon-sm" onClick={enterSelectionMode}>
               <SquareCheck size={20} className="text-text-muted" />
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -215,24 +212,27 @@ export function Trash() {
                 </div>
                 {!isSelectionMode.value && (
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="primary"
+                      size="icon-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRestore(item);
                       }}
-                      className="p-2 rounded-lg bg-success"
+                      className="bg-success hover:bg-success-hover"
                     >
-                      <RotateCcw size={18} color="#ffffff" />
-                    </button>
-                    <button
+                      <RotateCcw size={18} />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="icon-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         setNoteToDelete(item);
                       }}
-                      className="p-2 rounded-lg bg-danger"
                     >
-                      <Trash2 size={18} color="#ffffff" />
-                    </button>
+                      <Trash2 size={18} />
+                    </Button>
                   </div>
                 )}
               </div>

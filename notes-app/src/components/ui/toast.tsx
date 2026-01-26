@@ -1,4 +1,5 @@
 import { X, Check, TriangleAlert } from 'lucide-react';
+import { Button } from '@dak/ui';
 import { useToastStore, type ToastType } from '../../stores/toast-store';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,12 +38,14 @@ export function ToastContainer() {
           >
             <Icon size={18} className={`mr-2.5 flex-shrink-0 ${iconColors[toast.type]}`} />
             <span className="flex-1 text-sm text-text">{toast.message}</span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => hideToast(toast.id)}
-              className="p-1 ml-2 hover:opacity-70 transition-opacity text-text-muted"
+              className="ml-2 text-text-muted"
             >
               <X size={16} />
-            </button>
+            </Button>
           </div>
         );
       })}

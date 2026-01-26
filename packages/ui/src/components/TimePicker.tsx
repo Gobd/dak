@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Roller } from './Roller';
+import { Button } from './Button';
 
 interface TimePickerProps {
   value: string; // "HH:MM" 24-hour format
@@ -36,24 +37,20 @@ function formatTime(hour12: number, minute: number, isPM: boolean): string {
 function AMPMToggle({ value, onChange }: { value: boolean; onChange: (isPM: boolean) => void }) {
   return (
     <div className="flex flex-col gap-1">
-      <button
-        type="button"
+      <Button
+        variant={!value ? 'primary' : 'secondary'}
         onClick={() => onChange(false)}
-        className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          !value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-muted'
-        }`}
+        className="px-4 py-3 text-lg"
       >
         AM
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant={value ? 'primary' : 'secondary'}
         onClick={() => onChange(true)}
-        className={`px-4 py-3 rounded-lg text-lg font-medium transition-colors ${
-          value ? 'bg-accent text-white' : 'bg-surface-sunken text-text-muted'
-        }`}
+        className="px-4 py-3 text-lg"
       >
         PM
-      </button>
+      </Button>
     </div>
   );
 }
@@ -114,25 +111,21 @@ export function TimePickerCompact({ value, onChange, minuteStep = 5 }: TimePicke
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="secondary"
         onClick={() => setShowPicker(true)}
-        type="button"
-        className="w-full p-2 rounded bg-surface-sunken border border-border text-left text-text"
+        className="w-full justify-start"
       >
         {displayTime}
-      </button>
+      </Button>
 
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-surface rounded-xl p-4 shadow-2xl">
             <TimePicker value={value} onChange={onChange} minuteStep={minuteStep} />
-            <button
-              onClick={() => setShowPicker(false)}
-              type="button"
-              className="w-full mt-4 px-4 py-2 rounded-lg bg-accent text-text font-medium"
-            >
+            <Button variant="primary" onClick={() => setShowPicker(false)} className="w-full mt-4">
               Done
-            </button>
+            </Button>
           </div>
         </div>
       )}

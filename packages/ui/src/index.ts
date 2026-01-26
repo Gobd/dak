@@ -1,4 +1,5 @@
 // Components
+export { Alert } from './components/Alert';
 export { Button } from './components/Button';
 export { Modal } from './components/Modal';
 export { ConfirmModal } from './components/ConfirmModal';
@@ -9,12 +10,15 @@ export { NumberPickerCompact } from './components/NumberPicker';
 export { Roller } from './components/Roller';
 export { Toggle } from './components/Toggle';
 export { Badge } from './components/Badge';
+export { Card } from './components/Card';
+export { Chip } from './components/Chip';
 export { SearchInput } from './components/SearchInput';
 export { EmptyState } from './components/EmptyState';
 export { ProgressRing } from './components/ProgressRing';
 export { Spinner } from './components/Spinner';
 export { Avatar } from './components/Avatar';
 export { Input } from './components/Input';
+export { Slider } from './components/Slider';
 export { PasswordRequirements } from './components/PasswordRequirements';
 export { isPasswordValid } from './lib/password-validation';
 export { createSupabaseClient } from './lib/supabase';

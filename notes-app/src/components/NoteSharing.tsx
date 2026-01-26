@@ -101,12 +101,13 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
           <div className="flex-1">
             <p className="text-sm text-text-muted">
               Shared with you by{' '}
-              <button
+              <Button
+                variant="ghost"
                 onClick={hasEmail ? showOwnerEmail.toggle : undefined}
-                className="font-medium text-accent"
+                className="font-medium text-accent p-0 h-auto inline"
               >
                 {ownerDisplay}
-              </button>
+              </Button>
             </p>
             {showOwnerEmail.value && hasEmail && (
               <p className="text-xs mt-0.5 text-text-muted">{note.owner_email}</p>
@@ -133,12 +134,9 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
         </div>
 
         {onTogglePrivate && (
-          <button
-            onClick={() => onTogglePrivate(!note.is_private)}
-            className="px-3 py-1.5 rounded-md text-[13px] bg-surface-sunken text-text-muted"
-          >
+          <Button variant="secondary" size="sm" onClick={() => onTogglePrivate(!note.is_private)}>
             {note.is_private ? 'Make Shared' : 'Make Private'}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -162,29 +160,33 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                         key={share.user_id}
                         className="flex items-center justify-between py-2 border-b border-border"
                       >
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={
                             showName
                               ? () => setExpandedUserId(isExpanded ? null : share.user_id)
                               : undefined
                           }
-                          className="flex-1 text-left"
+                          className="flex-1 text-left justify-start h-auto p-0"
                         >
-                          <span className="text-sm text-text">
-                            {share.display_name || share.email}
-                          </span>
-                          {isExpanded && showName && (
-                            <span className="block text-xs mt-0.5 text-text-muted">
-                              {share.email}
+                          <div>
+                            <span className="text-sm text-text">
+                              {share.display_name || share.email}
                             </span>
-                          )}
-                        </button>
-                        <button
+                            {isExpanded && showName && (
+                              <span className="block text-xs mt-0.5 text-text-muted">
+                                {share.email}
+                              </span>
+                            )}
+                          </div>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => handleRemoveShare(share.user_id, share.email)}
-                          className="p-2 hover:opacity-70"
                         >
                           <X size={16} className="text-text-muted" />
-                        </button>
+                        </Button>
                       </div>
                     );
                   })}
@@ -211,24 +213,26 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
                   >
                     Add
                   </Button>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => {
                       showAddForm.setFalse();
                       setNewEmail('');
                     }}
-                    className="p-2 hover:opacity-70"
                   >
                     <X size={18} className="text-text-muted" />
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => showAddForm.setTrue()}
-                  className="flex items-center gap-1.5 hover:opacity-70 text-warning"
+                  className="flex items-center gap-1.5 text-warning p-0 h-auto"
                 >
                   <Plus size={16} />
                   <span className="text-sm">Share with someone</span>
-                </button>
+                </Button>
               )}
 
               {/* Share count */}

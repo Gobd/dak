@@ -7,12 +7,13 @@ Supports auto-adjustment based on sunrise/sunset times.
 import re
 import subprocess
 import time
-from datetime import date
+from datetime import date, timedelta
 from typing import Union
 
 from astral import LocationInfo
 from astral.sun import sun as calc_sun
 from fastapi import APIRouter, HTTPException
+from timezonefinder import TimezoneFinder
 
 from app.models.brightness import (
     AutoBrightnessResponse,
@@ -28,8 +29,8 @@ from app.services.config_service import load_config
 
 router = APIRouter(prefix="/brightness", tags=["brightness"])
 
-# Cache for sun times (refreshed daily)
-_sun_cache: dict = {"date": None, "sunrise": None, "sunset": None}
+# Cache for sun times (refreshed daily or on location change)
+_sun_cache: dict = {"date": None, "lat": None, "lon": None, "sunrise": None, "sunset": None}
 
 
 def _get_current() -> int | None:
@@ -104,9 +105,6 @@ def _fetch_sun_times() -> dict:
     global _sun_cache
     today = date.today().isoformat()
 
-    if _sun_cache["date"] == today:
-        return _sun_cache
-
     config = load_config()
     brightness = config.get("brightness", {})
     lat = brightness.get("lat")
@@ -115,14 +113,36 @@ def _fetch_sun_times() -> dict:
     if not lat or not lon:
         return {"error": "Location not configured", "date": None, "sunrise": None, "sunset": None}
 
+    # Check cache - invalidate if date or location changed
+    if (
+        _sun_cache["date"] == today
+        and _sun_cache.get("lat") == lat
+        and _sun_cache.get("lon") == lon
+    ):
+        return _sun_cache
+
     try:
-        location = LocationInfo(latitude=lat, longitude=lon)
+        # Get timezone from coordinates
+        tf = TimezoneFinder()
+        tz_name = tf.timezone_at(lat=lat, lng=lon) or "UTC"
+
+        location = LocationInfo(timezone=tz_name, latitude=lat, longitude=lon)
         s = calc_sun(location.observer, date=date.today())
+
+        sunrise_ts = int(s["sunrise"].timestamp())
+        sunset_ts = int(s["sunset"].timestamp())
+
+        # Astral sometimes returns yesterday's sunset - if so, get today's sunset
+        if sunset_ts < sunrise_ts:
+            s_tomorrow = calc_sun(location.observer, date=date.today() + timedelta(days=1))
+            sunset_ts = int(s_tomorrow["sunset"].timestamp())
 
         _sun_cache = {
             "date": today,
-            "sunrise": int(s["sunrise"].timestamp()),
-            "sunset": int(s["sunset"].timestamp()),
+            "lat": lat,
+            "lon": lon,
+            "sunrise": sunrise_ts,
+            "sunset": sunset_ts,
         }
         return _sun_cache
     except Exception as e:

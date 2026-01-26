@@ -6,7 +6,7 @@ import { useMembersStore } from '../../stores/members-store';
 import { useGoalsStore } from '../../stores/goals-store';
 import { TaskCard } from '../shared/TaskCard';
 import { GoalCard } from '../shared/GoalCard';
-import { Avatar, ProgressRing } from '@dak/ui';
+import { Avatar, ProgressRing, Button } from '@dak/ui';
 import type { FamilyMember, ChoreInstanceWithDetails } from '../../types';
 
 interface TodayViewProps {
@@ -94,13 +94,10 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
             <p className="text-text-muted">No family members yet</p>
             <p className="text-sm text-text-muted mt-1">Start by adding your family</p>
           </div>
-          <button
-            onClick={onOpenFamily}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
-          >
+          <Button onClick={onOpenFamily} className="gap-2">
             <Users size={18} />
             Add Family Members
-          </button>
+          </Button>
         </div>
       ) : totalTasks === 0 ? (
         <div className="text-center py-12 space-y-4">
@@ -113,13 +110,10 @@ export function TodayView({ onSelectMemberForTask, onOpenFamily, onOpenChores }:
               Create chores and assign them to family members
             </p>
           </div>
-          <button
-            onClick={onOpenChores}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover"
-          >
+          <Button onClick={onOpenChores} className="gap-2">
             <ClipboardList size={18} />
             Add Chores
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">

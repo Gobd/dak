@@ -12,7 +12,17 @@ import {
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
-import { Modal, Button, DatePicker, DatePickerCompact, TimePickerCompact, Spinner } from '@dak/ui';
+import {
+  Modal,
+  Button,
+  DatePicker,
+  DatePickerCompact,
+  TimePickerCompact,
+  Spinner,
+  Toggle,
+  Input,
+  Slider,
+} from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Sync tokens for incremental calendar sync
@@ -823,74 +833,60 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       >
         <div className="flex items-center gap-0.5">
           {/* Month navigation - separated with gap */}
-          <button
-            onClick={handlePrevMonth}
-            className="p-2 rounded hover:bg-surface-sunken/50"
-            title="Previous month"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handlePrevMonth} title="Previous month">
             <ChevronsLeft size={18} />
-          </button>
+          </Button>
           <div className="w-2" /> {/* Spacer between month and week buttons */}
           {/* Week navigation */}
-          <button
-            onClick={handlePrevWeek}
-            className="p-2 rounded hover:bg-surface-sunken/50"
-            title="Previous week"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handlePrevWeek} title="Previous week">
             <ChevronLeft size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={todayInView ? 'primary' : 'ghost'}
+            size="sm"
             onClick={() => setShowJumpToDate(true)}
-            className={`px-2 py-1 text-sm rounded ${
-              todayInView ? 'bg-accent/30 text-accent' : 'hover:bg-surface-sunken/50'
-            }`}
+            className={todayInView ? 'bg-accent/30 text-accent' : ''}
             title="Jump to date"
           >
             {dateRange}
-          </button>
-          <button
-            onClick={handleNextWeek}
-            className="p-2 rounded hover:bg-surface-sunken/50"
-            title="Next week"
-          >
+          </Button>
+          <Button variant="ghost" size="icon-sm" onClick={handleNextWeek} title="Next week">
             <ChevronRight size={18} />
-          </button>
+          </Button>
           <div className="w-2" /> {/* Spacer between week and month buttons */}
-          <button
-            onClick={handleNextMonth}
-            className="p-2 rounded hover:bg-surface-sunken/50"
-            title="Next month"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handleNextMonth} title="Next month">
             <ChevronsRight size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={todayInView ? 'primary' : 'ghost'}
+            size="sm"
             onClick={handleToday}
-            className={`ml-2 px-2 py-1 text-xs rounded ${
-              todayInView ? 'bg-accent text-text' : 'hover:bg-surface-sunken/50'
-            }`}
+            className="ml-2"
           >
             Today
-          </button>
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowSettings(true)}
-            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
             title="Settings"
           >
             <Settings size={14} className="text-text-muted" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => {
               setSelectedDate(new Date());
               setShowAddEvent(true);
             }}
-            className="p-2 rounded hover:bg-surface-sunken/50"
             title="Add event"
           >
             <Plus size={16} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1005,14 +1001,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             <label className="block text-sm font-medium mb-2">
               Header Height: {headerHeight}px
             </label>
-            <input
-              type="range"
-              min="0"
-              max="200"
-              step="10"
+            <Slider
+              min={0}
+              max={200}
+              step={10}
               value={headerHeight}
-              onChange={(e) => updateCalendar({ headerHeight: parseInt(e.target.value, 10) })}
-              className="w-full"
+              onChange={(value) => updateCalendar({ headerHeight: value })}
             />
             <p className="text-xs text-text-muted mt-1">
               Extra space in header for overlaying other widgets
@@ -1026,27 +1020,27 @@ export default function Calendar({ panel }: WidgetComponentProps) {
               <div className="space-y-3">
                 {calendars.map((cal) => (
                   <div key={cal.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
+                    <Toggle
+                      size="sm"
                       checked={!hiddenCalendarIds.includes(cal.id)}
-                      onChange={(e) => {
+                      onChange={(checked) => {
                         const newHidden = new Set(hiddenCalendarIds);
-                        if (e.target.checked) {
+                        if (checked) {
                           newHidden.delete(cal.id);
                         } else {
                           newHidden.add(cal.id);
                         }
                         updateCalendar({ hidden: [...newHidden] });
                       }}
-                      className="rounded shrink-0"
                     />
                     <div
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: cal.backgroundColor }}
                     />
                     <div className="flex-1 min-w-0">
-                      <input
-                        type="text"
+                      <Input
+                        size="sm"
+                        inline
                         value={calendarNames[cal.id] ?? ''}
                         onChange={(e) => {
                           const newNames = { ...calendarNames };
@@ -1058,7 +1052,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                           updateCalendar({ names: newNames });
                         }}
                         placeholder="Custom name"
-                        className="w-full px-2 py-1 text-sm rounded bg-surface-sunken border border-border placeholder:text-text-muted"
                       />
                       <div className="text-xs text-text-muted mt-0.5 truncate">{cal.summary}</div>
                     </div>
@@ -1106,17 +1099,13 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       >
         <div className="space-y-3">
           {/* Event title */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              value={newEvent.summary}
-              onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
-              placeholder="Event title"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-              autoFocus
-            />
-          </div>
+          <Input
+            label="Title"
+            value={newEvent.summary}
+            onChange={(e) => setNewEvent({ ...newEvent, summary: e.target.value })}
+            placeholder="Event title"
+            autoFocus
+          />
 
           {/* Date picker */}
           <div>
@@ -1125,15 +1114,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           </div>
 
           {/* All day toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={newEvent.allDay}
-              onChange={(e) => setNewEvent({ ...newEvent, allDay: e.target.checked })}
-              className="rounded"
-            />
-            <span className="text-sm">All day</span>
-          </label>
+          <Toggle
+            checked={newEvent.allDay}
+            onChange={(checked) => setNewEvent({ ...newEvent, allDay: checked })}
+            label="All day"
+          />
 
           {/* Time inputs (hidden if all day) */}
           {!newEvent.allDay && (
@@ -1156,16 +1141,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           )}
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={newEvent.location}
-              onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-              placeholder="Add location"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Location"
+            value={newEvent.location}
+            onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+            placeholder="Add location"
+          />
 
           {/* Description */}
           <div>
@@ -1275,15 +1256,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       {/* Edit Event Modal */}
       <Modal open={!!editingEvent} onClose={() => setEditingEvent(null)} title="Edit Event">
         <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input
-              type="text"
-              value={editForm.summary}
-              onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Title"
+            value={editForm.summary}
+            onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
+          />
 
           {/* Date picker */}
           <div>
@@ -1296,15 +1273,11 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             )}
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={editForm.allDay}
-              onChange={(e) => setEditForm({ ...editForm, allDay: e.target.checked })}
-              className="rounded"
-            />
-            <span className="text-sm">All day</span>
-          </label>
+          <Toggle
+            checked={editForm.allDay}
+            onChange={(checked) => setEditForm({ ...editForm, allDay: checked })}
+            label="All day"
+          />
 
           {!editForm.allDay && (
             <div className="flex gap-3">
@@ -1326,16 +1299,12 @@ export default function Calendar({ panel }: WidgetComponentProps) {
           )}
 
           {/* Location */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={editForm.location}
-              onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-              placeholder="Add location"
-              className="w-full p-2 rounded bg-surface-sunken border border-border"
-            />
-          </div>
+          <Input
+            label="Location"
+            value={editForm.location}
+            onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+            placeholder="Add location"
+          />
 
           {/* Description */}
           <div>

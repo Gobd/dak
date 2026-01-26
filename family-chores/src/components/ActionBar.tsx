@@ -1,6 +1,6 @@
 import { Settings, Users, ClipboardList, Gift, History, Moon, Sun, LogOut } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
-import { ConfirmModal } from '@dak/ui';
+import { ConfirmModal, Button } from '@dak/ui';
 import { useThemeStore } from '../stores/theme-store';
 import { useAuthStore } from '../stores/auth-store';
 import { useSettingsStore } from '../stores/settings-store';
@@ -71,35 +71,38 @@ export function ActionBar({
       {buttons.map((btn) => {
         const Icon = btn.icon;
         return (
-          <button
+          <Button
             key={btn.label}
+            variant="ghost"
             onClick={btn.onClick}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-text-secondary text-text-muted hover:bg-surface-sunken dark:hover:bg-surface-raised hover:text-text dark:hover:text-text transition-colors min-w-[48px]"
+            className="flex flex-col items-center gap-1 p-2 h-auto text-text-muted hover:text-text min-w-[48px]"
             title={btn.label}
           >
             <Icon size={18} />
             <span className="text-[10px] sm:text-xs">{btn.label}</span>
-          </button>
+          </Button>
         );
       })}
 
-      <button
+      <Button
+        variant="ghost"
         onClick={toggle}
-        className="flex flex-col items-center gap-1 p-2 rounded-lg text-text-secondary text-text-muted hover:bg-surface-sunken dark:hover:bg-surface-raised hover:text-text dark:hover:text-text transition-colors min-w-[48px]"
+        className="flex flex-col items-center gap-1 p-2 h-auto text-text-muted hover:text-text min-w-[48px]"
         title={dark ? 'Light mode' : 'Dark mode'}
       >
         {dark ? <Sun size={18} /> : <Moon size={18} />}
         <span className="text-[10px] sm:text-xs">Theme</span>
-      </button>
+      </Button>
 
-      <button
+      <Button
+        variant="ghost"
         onClick={() => showLogoutConfirm.setTrue()}
-        className="flex flex-col items-center gap-1 p-2 rounded-lg text-text-secondary text-text-muted hover:bg-danger-light dark:hover:bg-danger-light hover:text-danger transition-colors min-w-[48px]"
+        className="flex flex-col items-center gap-1 p-2 h-auto text-text-muted hover:text-danger hover:bg-danger-light min-w-[48px]"
         title="Sign out"
       >
         <LogOut size={18} />
         <span className="text-[10px] sm:text-xs">Logout</span>
-      </button>
+      </Button>
 
       {/* Logout Confirmation Modal */}
       <ConfirmModal

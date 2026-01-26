@@ -1,6 +1,6 @@
 import { Plus, Minus, Check } from 'lucide-react';
 import type { GoalProgress } from '../../types';
-import { Avatar } from '@dak/ui';
+import { Avatar, Button } from '@dak/ui';
 import { useSettingsStore } from '../../stores/settings-store';
 
 interface GoalCardProps {
@@ -48,16 +48,17 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
       }`}
     >
       {/* Increment button */}
-      <button
+      <Button
+        variant="ghost"
         onClick={onIncrement}
-        className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 flex items-center justify-center transition-all ${
+        className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 p-0 ${
           is_complete
             ? 'bg-success border-success text-text hover:bg-success'
             : 'border-feature text-feature hover:border-feature-hover hover:bg-feature-light'
         }`}
       >
         {is_complete ? <Check size={28} strokeWidth={3} /> : <Plus size={24} />}
-      </button>
+      </Button>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -108,12 +109,14 @@ export function GoalCard({ progress, onIncrement, onDecrement }: GoalCardProps) 
 
         {/* Decrement button - only show if there are completions */}
         {completions_this_period > 0 && (
-          <button
+          <Button
+            variant="secondary"
+            size="icon-sm"
             onClick={onDecrement}
-            className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-muted hover:bg-surface-sunken"
+            className="text-text-muted"
           >
             <Minus size={16} />
-          </button>
+          </Button>
         )}
       </div>
     </div>

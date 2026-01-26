@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle, Pencil, Trash2, Plus, X, Check, ExternalLink } from 'lucide-react';
+import { RefreshCw, Pencil, Trash2, Plus, X, Check, ExternalLink } from 'lucide-react';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Alert, Card, Input } from '@dak/ui';
 import {
   client,
   listDevicesMqttDevicesGet,
@@ -205,11 +205,7 @@ export function MqttModal() {
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div className="p-2 bg-danger/20 rounded text-danger text-sm flex items-center gap-2">
-            <AlertCircle size={14} /> {error}
-          </div>
-        )}
+        {error && <Alert variant="error">{error}</Alert>}
 
         {/* Device List */}
         {devices.length === 0 && !isLoading && (
@@ -219,12 +215,18 @@ export function MqttModal() {
         {devices.length > 0 && (
           <div className="space-y-2">
             {devices.map((device) => (
-              <div key={device.ieee_address} className="p-3 rounded-lg bg-surface-sunken/40">
+              <Card
+                key={device.ieee_address}
+                variant="sunken"
+                padding="sm"
+                className="bg-surface-sunken/40"
+              >
                 {editingDevice === device.friendly_name ? (
                   // Edit Mode
                   <div className="flex items-center gap-2">
-                    <input
-                      type="text"
+                    <Input
+                      size="sm"
+                      inline
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => {
@@ -234,25 +236,29 @@ export function MqttModal() {
                           setEditName('');
                         }
                       }}
-                      className="flex-1 px-2 py-1 rounded border bg-surface-raised border-border"
+                      className="flex-1"
                       autoFocus
                     />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={handleSaveEdit}
-                      className="p-1.5 rounded hover:bg-success/20 text-success"
+                      className="hover:bg-success/20 text-success"
                       disabled={renameMutation.isPending}
                     >
                       <Check size={16} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => {
                         setEditingDevice(null);
                         setEditName('');
                       }}
-                      className="p-1.5 rounded hover:bg-danger/20 text-danger"
+                      className="hover:bg-danger/20 text-danger"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 ) : deleteConfirm === device.friendly_name ? (
                   // Delete Confirmation
@@ -289,24 +295,27 @@ export function MqttModal() {
                       >
                         {device.type}
                       </span>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleStartEdit(device)}
-                        className="p-1.5 rounded hover:bg-surface-sunken"
                         title="Rename"
                       >
                         <Pencil size={14} />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setDeleteConfirm(device.friendly_name)}
-                        className="p-1.5 rounded hover:bg-danger/20 text-danger"
+                        className="hover:bg-danger/20 text-danger"
                         title="Remove"
                       >
                         <Trash2 size={14} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
         )}

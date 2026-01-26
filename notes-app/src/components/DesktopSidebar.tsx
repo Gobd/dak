@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { LogOut, PanelLeftClose, RefreshCw, Settings, Trash2 } from 'lucide-react';
+import { Button } from '@dak/ui';
 import { TagsSidebarSection } from './TagChips';
 import type { Tag } from '../types/tag';
 
@@ -29,9 +30,9 @@ export function DesktopSidebar({
       {/* Nav Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <span className="text-lg font-semibold text-text">SimpleNotes</span>
-        <button onClick={onClose} className="p-1 hover:opacity-70">
+        <Button variant="ghost" size="icon-sm" onClick={onClose}>
           <PanelLeftClose size={18} className="text-text-muted" />
-        </button>
+        </Button>
       </div>
 
       {/* Tags */}
@@ -46,34 +47,38 @@ export function DesktopSidebar({
 
       {/* Sidebar Footer */}
       <div className="border-t border-border p-3">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => window.location.reload()}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
+          className="w-full flex items-center gap-2 p-2 justify-start"
         >
           <RefreshCw size={16} className="text-text-muted" />
           <span className="text-sm text-text-muted">Refresh</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => navigate('/settings')}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
+          className="w-full flex items-center gap-2 p-2 justify-start"
         >
           <Settings size={16} className="text-text-muted" />
           <span className="text-sm text-text-muted">Settings</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => navigate('/trash')}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
+          className="w-full flex items-center gap-2 p-2 justify-start"
         >
           <Trash2 size={16} className="text-text-muted" />
           <span className="text-sm text-text-muted">Trash</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
           onClick={onLogout}
-          className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-surface-sunken hover:bg-surface-sunken"
+          className="w-full flex items-center gap-2 p-2 justify-start"
         >
           <LogOut size={16} className="text-text-muted" />
           <span className="text-sm truncate text-text-muted">{userEmail}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

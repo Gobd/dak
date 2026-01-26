@@ -14,6 +14,7 @@ import {
   addHours,
 } from 'date-fns';
 import { Syringe, Pill, AlertCircle, CheckCircle2, Clock, Check } from 'lucide-react';
+import { Card } from '@dak/ui';
 
 export function Home() {
   const { people, fetchPeople } = usePeopleStore();
@@ -126,20 +127,20 @@ export function Home() {
       <h1 className="text-2xl font-bold">Home</h1>
 
       {people.length === 0 ? (
-        <div className="bg-surface-raised rounded-xl shadow-sm p-6 text-center">
+        <Card padding="lg" className="text-center shadow-sm">
           <p className="text-text-muted mb-4">Get started by adding family members</p>
           <Link
             to="/people"
-            className="inline-block bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover"
+            className="inline-flex items-center justify-center px-4 py-2 text-base font-medium rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors"
           >
             Add People
           </Link>
-        </div>
+        </Card>
       ) : (
         <>
           {/* Upcoming Shots - only show if there are shots */}
           {upcomingShots.length > 0 && (
-            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
+            <Card className="shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Syringe className="text-accent" size={20} />
                 <h2 className="font-semibold">Upcoming Shots</h2>
@@ -165,12 +166,12 @@ export function Home() {
                   </Link>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Active Medicine - only show if there are active courses */}
           {activeCourses.length > 0 && (
-            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
+            <Card className="shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Pill className="text-success" size={20} />
                 <h2 className="font-semibold">Active Medicine</h2>
@@ -183,7 +184,7 @@ export function Home() {
                   return (
                     <Link
                       key={course.id}
-                      to="/courses"
+                      to="/medicine"
                       className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
@@ -214,12 +215,12 @@ export function Home() {
                   );
                 })}
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Recent As-Needed Meds - only show if there are recent doses */}
           {recentPrnMeds.length > 0 && (
-            <div className="bg-surface-raised rounded-xl shadow-sm p-4">
+            <Card className="shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="text-accent" size={20} />
                 <h2 className="font-semibold">As-Needed (Last 48h)</h2>
@@ -230,7 +231,7 @@ export function Home() {
                   return (
                     <Link
                       key={med.id}
-                      to="/as-needed"
+                      to="/prn"
                       className="flex items-center justify-between p-3 bg-surface-raised rounded-lg hover:bg-surface-sunken transition-colors"
                     >
                       <div>
@@ -258,7 +259,7 @@ export function Home() {
                   );
                 })}
               </div>
-            </div>
+            </Card>
           )}
         </>
       )}

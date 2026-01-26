@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Radio } from 'lucide-react';
-import { Spinner } from '@dak/ui';
+import { Spinner, Button } from '@dak/ui';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { client, listDevicesMqttDevicesGet, type DeviceListResponse } from '@dak/api-client';
 
@@ -25,9 +25,11 @@ export default function Mqtt() {
 
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setShowModal(true)}
-        className="relative p-2 rounded-lg transition-colors hover:bg-surface-sunken/40"
+        className="relative"
         title={`Zigbee Devices${devices.length > 0 ? ` (${devices.length})` : ''}`}
       >
         <Radio
@@ -40,7 +42,7 @@ export default function Mqtt() {
             {devices.length}
           </span>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

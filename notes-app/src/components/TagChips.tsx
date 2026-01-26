@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Hash } from 'lucide-react';
-import { Input } from '@dak/ui';
+import { Input, Button } from '@dak/ui';
 import type { Tag } from '../types/tag';
 
 interface TagsSidebarSectionProps {
@@ -40,10 +40,11 @@ export function TagsSidebarSection({
       {filteredTags.map((tag) => {
         const isSelected = selectedTagId === tag.id;
         return (
-          <button
+          <Button
             key={tag.id}
+            variant="ghost"
             onClick={() => onSelectTag(isSelected ? null : tag.id)}
-            className={`w-full flex items-center py-2 px-3 text-left transition-colors ${
+            className={`w-full flex items-center py-2 px-3 h-auto justify-start rounded-none ${
               isSelected ? 'bg-surface-sunken' : ''
             }`}
           >
@@ -62,7 +63,7 @@ export function TagsSidebarSection({
             {tagCounts[tag.id] !== undefined && (
               <span className="text-xs ml-1 text-text-muted">({tagCounts[tag.id]})</span>
             )}
-          </button>
+          </Button>
         );
       })}
 

@@ -15,7 +15,7 @@ import {
   Edit2,
   ChevronLeft,
 } from 'lucide-react';
-import { Spinner } from '@dak/ui';
+import { Spinner, Button, TimePickerCompact, Card, Toggle, Slider } from '@dak/ui';
 import { useSettingsStore } from '../stores/settings-store';
 import {
   createKasaClient,
@@ -162,12 +162,7 @@ export default function DeviceList() {
           {error instanceof Error ? error.message : 'Failed to load devices'}
         </p>
         <p className="text-text-muted text-sm">Relay: {relayUrl}</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
-        >
-          Retry
-        </button>
+        <Button onClick={() => refetch()}>Retry</Button>
       </div>
     );
   }
@@ -178,12 +173,7 @@ export default function DeviceList() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Wifi className="w-12 h-12 text-text-muted" />
         <p className="text-text-secondary">No devices found</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover transition-colors"
-        >
-          Scan Again
-        </button>
+        <Button onClick={() => refetch()}>Scan Again</Button>
       </div>
     );
   }
@@ -194,12 +184,9 @@ export default function DeviceList() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setSelectedDevice(null)}
-            className="p-2 bg-surface-sunken rounded-lg hover:bg-border"
-          >
+          <Button onClick={() => setSelectedDevice(null)} variant="secondary" size="sm">
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
           <h2 className="text-lg font-semibold flex-1 text-text">{selectedDevice.name}</h2>
         </div>
 
@@ -213,19 +200,16 @@ export default function DeviceList() {
         >
           <div className="flex items-center justify-between">
             <span className="font-medium text-text">Power</span>
-            <button
+            <Button
+              variant={selectedDevice.on ? 'primary' : 'secondary'}
               onClick={() => {
                 toggleMutation.mutate(selectedDevice);
                 setSelectedDevice({ ...selectedDevice, on: !selectedDevice.on });
               }}
-              className={`px-4 py-2 rounded-lg font-medium text-text ${
-                selectedDevice.on
-                  ? 'bg-success hover:bg-success-hover'
-                  : 'bg-surface-sunken text-text hover:bg-border'
-              }`}
+              className={selectedDevice.on ? 'bg-success hover:bg-success-hover' : ''}
             >
               {selectedDevice.on ? 'ON' : 'OFF'}
-            </button>
+            </Button>
           </div>
           {selectedDevice.on && selectedDevice.on_since && (
             <div className="text-sm text-text-secondary mt-2 flex items-center gap-1">
@@ -237,7 +221,7 @@ export default function DeviceList() {
 
         {/* Brightness */}
         {hasBrightness(selectedDevice) && selectedDevice.brightness !== null && (
-          <div className="p-4 rounded-xl bg-surface-raised border border-border">
+          <Card className="border border-border">
             <div className="flex items-center justify-between mb-3">
               <span className="font-medium flex items-center gap-2 text-text">
                 <Sun className="w-5 h-5 text-warning" />
@@ -247,15 +231,14 @@ export default function DeviceList() {
                 {brightnessMutation.isPending ? '...' : `${selectedDevice.brightness}%`}
               </span>
             </div>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={selectedDevice.brightness}
-              onChange={(e) =>
+            <Slider
+              min={1}
+              max={100}
+              value={selectedDevice.brightness ?? 100}
+              onChange={(value) =>
                 setSelectedDevice({
                   ...selectedDevice,
-                  brightness: parseInt(e.target.value, 10),
+                  brightness: value,
                 })
               }
               onMouseUp={(e) => {
@@ -266,15 +249,15 @@ export default function DeviceList() {
                 const val = parseInt((e.target as HTMLInputElement).value, 10);
                 brightnessMutation.mutate({ ip: selectedDevice.ip, brightness: val });
               }}
-              className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-surface-sunken"
               disabled={!selectedDevice.on}
+              thumbColor="warning"
             />
-          </div>
+          </Card>
         )}
 
         {/* Energy */}
         {selectedDevice.has_emeter && (
-          <div className="p-4 rounded-xl bg-surface-raised border border-border">
+          <Card className="border border-border">
             <div className="font-medium flex items-center gap-2 mb-3 text-text">
               <Zap className="w-5 h-5 text-warning" />
               Energy
@@ -293,11 +276,11 @@ export default function DeviceList() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Countdown Timer */}
-        <div className="p-4 rounded-xl bg-surface-raised border border-border">
+        <Card className="border border-border">
           <div className="font-medium flex items-center gap-2 mb-3 text-text">
             <Timer className="w-5 h-5 text-accent" />
             Turn Off Timer
@@ -314,7 +297,7 @@ export default function DeviceList() {
               <option value={120}>2 hours</option>
               <option value={240}>4 hours</option>
             </select>
-            <button
+            <Button
               onClick={() =>
                 countdownMutation.mutate({
                   ip: selectedDevice.ip,
@@ -322,15 +305,10 @@ export default function DeviceList() {
                   action: 'off',
                 })
               }
-              disabled={countdownMutation.isPending}
-              className="px-4 py-2 bg-accent text-text rounded-lg hover:bg-accent-hover disabled:opacity-50"
+              loading={countdownMutation.isPending}
             >
-              {countdownMutation.isPending
-                ? 'Setting...'
-                : countdownStatus === 'success'
-                  ? 'Set!'
-                  : 'Set'}
-            </button>
+              {countdownStatus === 'success' ? 'Set!' : 'Set'}
+            </Button>
           </div>
           {countdownStatus === 'success' && (
             <div className="text-sm text-success mt-2">Timer set for {countdownMins} minutes</div>
@@ -338,16 +316,18 @@ export default function DeviceList() {
           {countdownStatus === 'error' && (
             <div className="text-sm text-danger mt-2">Device may not support timers</div>
           )}
-        </div>
+        </Card>
 
         {/* Schedules */}
-        <div className="p-4 rounded-xl bg-surface-raised border border-border">
+        <Card className="border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium flex items-center gap-2 text-text">
               <Calendar className="w-5 h-5 text-accent" />
               Schedules
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 setEditingRule(null);
                 setScheduleForm({
@@ -357,11 +337,10 @@ export default function DeviceList() {
                 });
                 setShowScheduleForm(true);
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-surface-sunken rounded-lg hover:bg-border text-text"
             >
               <Plus className="w-4 h-4" />
               Add
-            </button>
+            </Button>
           </div>
 
           {scheduleLoading ? (
@@ -393,8 +372,9 @@ export default function DeviceList() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
+                    <Toggle
+                      checked={rule.enabled}
+                      onChange={() =>
                         scheduleMutation.mutate({
                           type: 'toggle',
                           ip: selectedDevice.ip,
@@ -402,17 +382,10 @@ export default function DeviceList() {
                           enabled: !rule.enabled,
                         })
                       }
-                      className={`w-10 h-5 rounded-full transition-colors ${
-                        rule.enabled ? 'bg-success' : 'bg-surface-sunken'
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full bg-surface shadow transform transition-transform ${
-                          rule.enabled ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                    <button
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => {
                         setEditingRule(rule);
                         setScheduleForm({
@@ -422,16 +395,18 @@ export default function DeviceList() {
                         });
                         setShowScheduleForm(true);
                       }}
-                      className="p-1.5 rounded hover:bg-border text-text-secondary"
+                      className="text-text-secondary"
                     >
                       <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => setDeleteConfirm(rule)}
-                      className="p-1.5 rounded hover:bg-danger/30 text-danger"
+                      className="text-danger hover:bg-danger/30"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -439,7 +414,7 @@ export default function DeviceList() {
           ) : (
             <div className="text-sm text-text-muted">No schedules configured</div>
           )}
-        </div>
+        </Card>
 
         {/* Device Info */}
         <div className="text-sm text-text-muted space-y-1">
@@ -453,7 +428,7 @@ export default function DeviceList() {
         {/* Schedule Form Modal */}
         {showScheduleForm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-surface-raised rounded-xl p-5 w-full max-w-md">
+            <Card padding="lg" className="w-full max-w-md">
               <h3 className="text-lg font-semibold mb-4 text-text">
                 {editingRule ? 'Edit Schedule' : 'Add Schedule'}
               </h3>
@@ -463,37 +438,29 @@ export default function DeviceList() {
                 <div>
                   <label className="block text-sm font-medium mb-2 text-text">Action</label>
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant={scheduleForm.action === 'on' ? 'primary' : 'secondary'}
                       onClick={() => setScheduleForm((f) => ({ ...f, action: 'on' }))}
-                      className={`flex-1 py-2 rounded-lg font-medium ${
-                        scheduleForm.action === 'on'
-                          ? 'bg-success text-text'
-                          : 'bg-surface-sunken text-text-secondary'
-                      }`}
+                      className={`flex-1 ${scheduleForm.action === 'on' ? 'bg-success hover:bg-success-hover' : ''}`}
                     >
                       Turn On
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant={scheduleForm.action === 'off' ? 'danger' : 'secondary'}
                       onClick={() => setScheduleForm((f) => ({ ...f, action: 'off' }))}
-                      className={`flex-1 py-2 rounded-lg font-medium ${
-                        scheduleForm.action === 'off'
-                          ? 'bg-danger text-text'
-                          : 'bg-surface-sunken text-text-secondary'
-                      }`}
+                      className="flex-1"
                     >
                       Turn Off
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
                 {/* Time */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-text">Time</label>
-                  <input
-                    type="time"
+                  <TimePickerCompact
                     value={scheduleForm.time}
-                    onChange={(e) => setScheduleForm((f) => ({ ...f, time: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-sunken border border-border text-text"
+                    onChange={(time) => setScheduleForm((f) => ({ ...f, time }))}
                   />
                 </div>
 
@@ -502,8 +469,9 @@ export default function DeviceList() {
                   <label className="block text-sm font-medium mb-2 text-text">Days</label>
                   <div className="flex gap-1">
                     {(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const).map((day) => (
-                      <button
+                      <Button
                         key={day}
+                        variant={scheduleForm.days.includes(day) ? 'primary' : 'secondary'}
                         onClick={() =>
                           setScheduleForm((f) => ({
                             ...f,
@@ -512,14 +480,10 @@ export default function DeviceList() {
                               : [...f.days, day],
                           }))
                         }
-                        className={`w-9 h-9 rounded-lg text-sm font-medium ${
-                          scheduleForm.days.includes(day)
-                            ? 'bg-accent text-text'
-                            : 'bg-surface-sunken text-text-secondary'
-                        }`}
+                        className="w-9 h-9 p-0"
                       >
                         {day.charAt(0).toUpperCase()}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   {scheduleForm.days.length === 0 && (
@@ -529,16 +493,18 @@ export default function DeviceList() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setShowScheduleForm(false);
                     setEditingRule(null);
                   }}
-                  className="flex-1 py-2 rounded-lg bg-surface-sunken hover:bg-border text-text"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
                   onClick={() => {
                     if (editingRule) {
                       scheduleMutation.mutate({
@@ -560,31 +526,33 @@ export default function DeviceList() {
                     }
                   }}
                   disabled={scheduleMutation.isPending || scheduleForm.days.length === 0}
-                  className="flex-1 py-2 rounded-lg bg-accent text-text hover:bg-accent-hover disabled:opacity-50"
+                  className="flex-1"
                 >
                   {scheduleMutation.isPending ? 'Saving...' : 'Save'}
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
         {/* Delete Confirmation Modal */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-surface-raised rounded-xl p-5 w-full max-w-sm">
+            <Card padding="lg" className="w-full max-w-sm">
               <h3 className="text-lg font-semibold mb-2 text-text">Delete Schedule</h3>
               <p className="text-text-secondary mb-4">
                 Delete this schedule ({deleteConfirm.action.toUpperCase()} at {deleteConfirm.time})?
               </p>
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 py-2 rounded-lg bg-surface-sunken hover:bg-border text-text"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
                   onClick={() =>
                     scheduleMutation.mutate({
                       type: 'delete',
@@ -593,12 +561,12 @@ export default function DeviceList() {
                     })
                   }
                   disabled={scheduleMutation.isPending}
-                  className="flex-1 py-2 rounded-lg bg-danger text-text hover:opacity-90 disabled:opacity-50"
+                  className="flex-1"
                 >
                   {scheduleMutation.isPending ? 'Deleting...' : 'Delete'}
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           </div>
         )}
       </div>
@@ -612,14 +580,15 @@ export default function DeviceList() {
         <span className="text-text-secondary text-sm">
           {devices.length} device{devices.length !== 1 && 's'}
         </span>
-        <button
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="p-2 bg-surface-sunken rounded-lg hover:bg-border transition-colors disabled:opacity-50"
           aria-label="Refresh devices"
         >
           {isFetching ? <Spinner size="sm" /> : <RefreshCw className="w-5 h-5" />}
-        </button>
+        </Button>
       </div>
 
       {[...devices]
@@ -633,38 +602,40 @@ export default function DeviceList() {
                 : 'bg-surface-raised border border-border'
             }`}
           >
-            <button
+            <Button
+              variant={device.on ? 'primary' : 'secondary'}
+              size="icon"
+              rounded
               onClick={() => toggleMutation.mutate(device)}
               disabled={toggleMutation.isPending}
-              className={`p-3 rounded-full text-text ${
-                device.on
-                  ? 'bg-success hover:bg-success-hover'
-                  : 'bg-surface-sunken hover:bg-border'
-              }`}
+              className={`p-3 ${device.on ? 'bg-success hover:bg-success-hover' : ''}`}
             >
               <Power className={`w-6 h-6 ${device.on ? '' : 'text-text-secondary'}`} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setSelectedDevice(device)}
-              className="flex-1 text-left hover:opacity-80"
+              className="flex-1 text-left justify-start h-auto py-0"
             >
-              <p className="font-medium text-text">{device.name}</p>
-              <div className="flex items-center gap-3 text-sm text-text-secondary">
-                <span>{device.model}</span>
-                {device.on && device.on_since && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDuration(device.on_since)}
-                  </span>
-                )}
-                {device.has_emeter && device.power_watts != null && device.on && (
-                  <span className="flex items-center gap-1 text-warning">
-                    <Zap className="w-3 h-3" />
-                    {device.power_watts.toFixed(1)}W
-                  </span>
-                )}
+              <div>
+                <p className="font-medium text-text">{device.name}</p>
+                <div className="flex items-center gap-3 text-sm text-text-secondary">
+                  <span>{device.model}</span>
+                  {device.on && device.on_since && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatDuration(device.on_since)}
+                    </span>
+                  )}
+                  {device.has_emeter && device.power_watts != null && device.on && (
+                    <span className="flex items-center gap-1 text-warning">
+                      <Zap className="w-3 h-3" />
+                      {device.power_watts.toFixed(1)}W
+                    </span>
+                  )}
+                </div>
               </div>
-            </button>
+            </Button>
             <span
               className={`text-sm font-medium ${device.on ? 'text-success' : 'text-text-muted'}`}
             >

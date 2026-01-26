@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { LocationSettingsModal } from '../shared/LocationSettingsModal';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { Modal, Button, Spinner, Slider } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 
 // Open-Meteo API - free, no API key needed
@@ -288,13 +288,15 @@ export default function Uv({ panel }: WidgetComponentProps) {
           <span className="text-[11px] font-semibold">
             {formatLocation(location.city, location.state) || 'Set Location'}
           </span>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowSettings(true)}
-            className="p-1 rounded opacity-70 hover:opacity-100 hover:bg-surface-sunken/50 transition-all"
+            className="opacity-70 hover:opacity-100"
             title="Settings"
           >
             <Settings size={14} className="text-text-muted" />
-          </button>
+          </Button>
         </div>
 
         <span className="text-[11px] font-bold" style={{ color: getUvColor(currentUv) }}>
@@ -332,15 +334,17 @@ export default function Uv({ panel }: WidgetComponentProps) {
           <div>
             <label className="block text-sm text-text-muted mb-1">Location</label>
             <p className="text-sm">{formatLocation(location.city, location.state) || 'Not set'}</p>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setShowSettings(false);
                 setShowLocationSettings(true);
               }}
-              className="text-sm text-accent hover:underline mt-1"
+              className="text-accent p-0 h-auto mt-1"
             >
               Change location...
-            </button>
+            </Button>
           </div>
 
           {/* Threshold slider */}
@@ -348,13 +352,12 @@ export default function Uv({ panel }: WidgetComponentProps) {
             <label className="block text-sm text-text-muted mb-2">
               Safe UV threshold: <span className="font-bold">{tempThreshold}</span>
             </label>
-            <input
-              type="range"
-              min="1"
-              max="10"
+            <Slider
+              min={1}
+              max={10}
               value={tempThreshold}
-              onChange={(e) => setTempThreshold(parseInt(e.target.value))}
-              className="w-full accent-blue-500"
+              onChange={setTempThreshold}
+              thumbColor="warning"
             />
             <p className="text-xs text-text-muted mt-1">
               Times above UV {tempThreshold} will be highlighted

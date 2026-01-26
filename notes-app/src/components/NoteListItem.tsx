@@ -1,4 +1,5 @@
 import { Pin, Lock, Users, CircleUser, SquareCheck, Square } from 'lucide-react';
+import { Button } from '@dak/ui';
 import type { Note } from '../types/note';
 import { getNoteTitle } from '../types/note';
 
@@ -101,13 +102,14 @@ export function NoteListItem({
   const isSharedWithMe = !!note.owner_email;
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onClick}
-      className={`w-full text-left px-4 py-3 border-b border-border transition-colors ${
+      className={`w-full text-left justify-start px-4 py-3 h-auto rounded-none border-b border-border ${
         isSelected && !selectionMode ? 'bg-surface-sunken' : ''
       } ${selectionMode && !canSelect ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 w-full">
         <div className="flex items-center flex-1 min-w-0 mr-2">
           {selectionMode && canSelect && (
             <span className="mr-2 flex-shrink-0">
@@ -136,6 +138,6 @@ export function NoteListItem({
           {formatRelativeTime(note.updated_at)}
         </span>
       </div>
-    </button>
+    </Button>
   );
 }

@@ -6,6 +6,7 @@ packages:
   - health-tracker
   - kasa-controller
   - notes-app
+  - tracker
   - packages/*
 
 catalog:

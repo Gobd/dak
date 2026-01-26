@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Filter } from 'lucide-react';
 import { format } from 'date-fns';
-import { Avatar, Modal } from '@dak/ui';
+import { Avatar, Modal, Button } from '@dak/ui';
 import { usePointsStore } from '../../stores/points-store';
 import { useMembersStore } from '../../stores/members-store';
 
@@ -33,25 +33,25 @@ export function HistoryModal({ onClose }: HistoryModalProps) {
       <div className="pb-4 border-b border-border mb-4">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
           <Filter size={16} className="text-text-muted flex-shrink-0" />
-          <button
+          <Button
+            variant={filterMemberId === null ? 'primary' : 'secondary'}
+            size="sm"
+            rounded
             onClick={() => setFilterMemberId(null)}
-            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-              filterMemberId === null ? 'bg-accent text-text' : 'bg-surface-sunken'
-            }`}
           >
             All
-          </button>
+          </Button>
           {members.map((member) => (
-            <button
+            <Button
               key={member.id}
+              variant={filterMemberId === member.id ? 'primary' : 'secondary'}
+              size="sm"
+              rounded
               onClick={() => setFilterMemberId(member.id)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap ${
-                filterMemberId === member.id ? 'bg-accent text-text' : 'bg-surface-sunken'
-              }`}
             >
               <span>{member.avatar_emoji}</span>
               <span>{member.name}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>

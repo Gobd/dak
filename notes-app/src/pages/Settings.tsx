@@ -327,9 +327,10 @@ export function Settings() {
         {/* Appearance Section */}
         <div className="mb-6">
           <h2 className="text-base font-semibold mb-3 text-text">Appearance</h2>
-          <button
+          <Button
+            variant="secondary"
             onClick={toggle}
-            className="w-full flex items-center justify-between rounded-lg p-4 bg-surface-sunken"
+            className="w-full flex items-center justify-between rounded-lg p-4"
           >
             <div className="flex items-center gap-3">
               {dark ? (
@@ -340,7 +341,7 @@ export function Settings() {
               <span className="text-base text-text">{dark ? 'Dark mode' : 'Light mode'}</span>
             </div>
             <span className="text-sm text-text-muted">Tap to switch</span>
-          </button>
+          </Button>
         </div>
 
         {/* Profile Section */}
@@ -367,35 +368,39 @@ export function Settings() {
                     autoFocus
                   />
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={handleSaveDisplayName}
                   disabled={isSavingName}
-                  className="p-2 rounded-md bg-warning"
+                  className="bg-warning hover:bg-warning"
                 >
                   {isSavingName ? (
                     <Spinner size="sm" />
                   ) : (
                     <Check size={18} className="text-black" />
                   )}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => {
                     setDisplayName(profile?.display_name || '');
                     setIsEditingName(false);
                   }}
-                  className="p-2"
                 >
                   <X size={18} className="text-text-muted" />
-                </button>
+                </Button>
               </div>
             ) : (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setIsEditingName(true)}
-                className="w-full flex items-center justify-between"
+                className="w-full flex items-center justify-between p-0 h-auto"
               >
                 <span className="text-base text-text">{profile?.display_name || 'Not set'}</span>
                 <User size={16} className="text-text-muted" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -404,11 +409,12 @@ export function Settings() {
         <div className="mb-6">
           <h2 className="text-base font-semibold mb-3 text-text">Your Plan</h2>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={() => setShowPlanPicker(!showPlanPicker)}
-            className="w-full flex items-center justify-between rounded-lg p-4 bg-surface-sunken"
+            className="w-full flex items-center justify-between rounded-lg p-4"
           >
-            <div>
+            <div className="text-left">
               <span className="block text-lg font-semibold capitalize text-text">
                 {profile?.plan || 'free'}
               </span>
@@ -417,28 +423,33 @@ export function Settings() {
               </span>
             </div>
             <ChevronDown size={20} className="text-text-muted" />
-          </button>
+          </Button>
 
           {showPlanPicker && (
             <div className="rounded-lg mt-2 overflow-hidden bg-surface-sunken">
               {(['free', 'starter', 'family'] as Plan[]).map((plan) => (
-                <button
+                <Button
                   key={plan}
+                  variant="ghost"
                   onClick={() => handleChangePlan(plan)}
-                  className={`w-full p-4 text-left border-b last:border-b-0 border-border ${
+                  className={`w-full p-4 text-left rounded-none border-b last:border-b-0 border-border h-auto ${
                     profile?.plan === plan ? 'bg-surface-sunken' : ''
                   }`}
                 >
-                  <span className="block text-base font-medium capitalize text-text">{plan}</span>
-                  <span className="block text-sm mt-1 text-text-muted">
-                    {PLAN_LIMITS[plan].maxNotes === null ? 'Unlimited' : PLAN_LIMITS[plan].maxNotes}{' '}
-                    notes •{' '}
-                    {PLAN_LIMITS[plan].maxSharedUsers === 0
-                      ? 'No sharing'
-                      : `Share with ${PLAN_LIMITS[plan].maxSharedUsers}`}{' '}
-                    • {PLAN_LIMITS[plan].hasLiveSync ? 'Live sync' : 'No live sync'}
-                  </span>
-                </button>
+                  <div className="w-full">
+                    <span className="block text-base font-medium capitalize text-text">{plan}</span>
+                    <span className="block text-sm mt-1 text-text-muted">
+                      {PLAN_LIMITS[plan].maxNotes === null
+                        ? 'Unlimited'
+                        : PLAN_LIMITS[plan].maxNotes}{' '}
+                      notes •{' '}
+                      {PLAN_LIMITS[plan].maxSharedUsers === 0
+                        ? 'No sharing'
+                        : `Share with ${PLAN_LIMITS[plan].maxSharedUsers}`}{' '}
+                      • {PLAN_LIMITS[plan].hasLiveSync ? 'Live sync' : 'No live sync'}
+                    </span>
+                  </div>
+                </Button>
               ))}
             </div>
           )}
@@ -520,9 +531,14 @@ export function Settings() {
                       className="flex items-center justify-between p-3 border-b last:border-b-0 border-border"
                     >
                       <span className="text-base flex-1 text-text">{share.shared_with_email}</span>
-                      <button onClick={() => handleRemoveShare(share.id)} className="p-2 -mr-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleRemoveShare(share.id)}
+                        className="-mr-2"
+                      >
                         <X size={18} className="text-text-muted" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -539,10 +555,11 @@ export function Settings() {
           </p>
 
           <div className="flex gap-3">
-            <button
+            <Button
+              variant="secondary"
               onClick={handleExport}
               disabled={isExporting}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
+              className="flex-1 flex items-center justify-center gap-2 py-3"
             >
               {isExporting ? (
                 <Spinner size="sm" />
@@ -552,12 +569,13 @@ export function Settings() {
                   <span className="text-base font-medium text-text">Export All</span>
                 </>
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="secondary"
               onClick={handleImport}
               disabled={isImporting}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-3 bg-surface-sunken"
+              className="flex-1 flex items-center justify-center gap-2 py-3"
             >
               {isImporting ? (
                 <Spinner size="sm" />
@@ -567,7 +585,7 @@ export function Settings() {
                   <span className="text-base font-medium text-text">Import</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
