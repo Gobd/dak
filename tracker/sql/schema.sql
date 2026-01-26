@@ -13,6 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP FUNCTION IF EXISTS tracker_get_streak_stats(UUID, NUMERIC);
 DROP FUNCTION IF EXISTS tracker_get_daily_totals(UUID, DATE, DATE);
 DROP FUNCTION IF EXISTS tracker_calculate_units(INTEGER, NUMERIC);
+DROP FUNCTION IF EXISTS tracker_logged_at_to_date(TIMESTAMPTZ);
 
 -- Drop tables (entries/presets before targets due to potential future FKs)
 DROP TABLE IF EXISTS tracker_entries CASCADE;
@@ -58,12 +59,22 @@ CREATE TABLE tracker_presets (
 );
 
 --------------------------------------------------------------------------------
+-- HELPER FUNCTIONS (must be created before indexes that use them)
+--------------------------------------------------------------------------------
+
+-- Immutable date extraction for indexing (TIMESTAMPTZ -> DATE in UTC)
+CREATE OR REPLACE FUNCTION tracker_logged_at_to_date(ts TIMESTAMPTZ)
+RETURNS DATE AS $$
+  SELECT (ts AT TIME ZONE 'UTC')::date;
+$$ LANGUAGE SQL IMMUTABLE;
+
+--------------------------------------------------------------------------------
 -- INDEXES
 --------------------------------------------------------------------------------
 
 CREATE INDEX idx_tracker_entries_user_id ON tracker_entries(user_id);
 CREATE INDEX idx_tracker_entries_logged_at ON tracker_entries(logged_at DESC);
-CREATE INDEX idx_tracker_entries_user_date ON tracker_entries(user_id, (logged_at::date));
+CREATE INDEX idx_tracker_entries_user_date ON tracker_entries(user_id, tracker_logged_at_to_date(logged_at));
 CREATE INDEX idx_tracker_presets_user_id ON tracker_presets(user_id);
 CREATE INDEX idx_tracker_presets_sort ON tracker_presets(user_id, sort_order);
 
@@ -126,7 +137,7 @@ BEGIN
     COALESCE(SUM(e.units), 0)::NUMERIC AS total_units,
     COUNT(e.id)::INTEGER AS entry_count
   FROM generate_series(p_start_date, p_end_date, '1 day'::interval) AS d(day)
-  LEFT JOIN tracker_entries e ON (e.logged_at AT TIME ZONE 'UTC')::date = d.day::date
+  LEFT JOIN tracker_entries e ON tracker_logged_at_to_date(e.logged_at) = d.day::date
     AND e.user_id = p_user_id
   GROUP BY d.day
   ORDER BY d.day DESC;
@@ -169,7 +180,7 @@ BEGIN
       CURRENT_DATE,
       '1 day'::interval
     ) AS d(day)
-    LEFT JOIN tracker_entries e ON (e.logged_at AT TIME ZONE 'UTC')::date = d.day::date
+    LEFT JOIN tracker_entries e ON tracker_logged_at_to_date(e.logged_at) = d.day::date
       AND e.user_id = p_user_id
     GROUP BY d.day
     ORDER BY d.day ASC
@@ -231,6 +242,7 @@ COMMENT ON COLUMN tracker_entries.volume_ml IS 'Volume consumed in milliliters';
 COMMENT ON COLUMN tracker_entries.percentage IS 'Strength percentage';
 COMMENT ON COLUMN tracker_entries.units IS 'Calculated units: (volume_ml * percentage / 100) / 10';
 
+COMMENT ON FUNCTION tracker_logged_at_to_date IS 'Immutable UTC date extraction for indexing';
 COMMENT ON FUNCTION tracker_calculate_units IS 'Calculate units from volume (ml) and strength percentage';
 COMMENT ON FUNCTION tracker_get_daily_totals IS 'Get daily consumption totals for a date range';
 COMMENT ON FUNCTION tracker_get_streak_stats IS 'Get streak statistics including zero days, under-target days, and totals';
