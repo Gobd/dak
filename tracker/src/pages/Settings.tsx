@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Calculator, Edit2, X, Check } from 'lucide-react';
-import { Card, Button, Input, Modal } from '@dak/ui';
+import { Card, Button, Input, Modal, SegmentedControl } from '@dak/ui';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
 import { useAuthStore } from '../stores/auth-store';
@@ -186,30 +186,14 @@ export function Settings() {
                     onChange={(e) => setCalcVolume(e.target.value)}
                     className="flex-1"
                   />
-                  <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
-                    <button
-                      type="button"
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        calcVolumeUnit === 'ml'
-                          ? 'bg-accent text-white'
-                          : 'bg-surface text-text-secondary hover:bg-surface-sunken'
-                      }`}
-                      onClick={() => setCalcVolumeUnit('ml')}
-                    >
-                      ml
-                    </button>
-                    <button
-                      type="button"
-                      className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        calcVolumeUnit === 'oz'
-                          ? 'bg-accent text-white'
-                          : 'bg-surface text-text-secondary hover:bg-surface-sunken'
-                      }`}
-                      onClick={() => setCalcVolumeUnit('oz')}
-                    >
-                      oz
-                    </button>
-                  </div>
+                  <SegmentedControl
+                    options={[
+                      { value: 'ml', label: 'ml' },
+                      { value: 'oz', label: 'oz' },
+                    ]}
+                    value={calcVolumeUnit}
+                    onChange={setCalcVolumeUnit}
+                  />
                 </div>
               </div>
 
@@ -249,30 +233,14 @@ export function Settings() {
             <div className="font-medium">Volume unit</div>
             <div className="text-sm text-text-muted">Display volumes in oz or ml</div>
           </div>
-          <div className="flex rounded-lg overflow-hidden border border-border">
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                volumeUnit === 'ml'
-                  ? 'bg-accent text-white'
-                  : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
-              }`}
-              onClick={() => setVolumeUnit('ml')}
-            >
-              ml
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                volumeUnit === 'oz'
-                  ? 'bg-accent text-white'
-                  : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
-              }`}
-              onClick={() => setVolumeUnit('oz')}
-            >
-              oz
-            </button>
-          </div>
+          <SegmentedControl
+            options={[
+              { value: 'ml', label: 'ml' },
+              { value: 'oz', label: 'oz' },
+            ]}
+            value={volumeUnit}
+            onChange={setVolumeUnit}
+          />
         </div>
       </Card>
 
@@ -362,30 +330,14 @@ export function Settings() {
                   onChange={(e) => setPresetVolume(e.target.value)}
                   className="flex-1"
                 />
-                <div className="flex rounded-lg overflow-hidden border border-border shrink-0">
-                  <button
-                    type="button"
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      presetVolumeUnit === 'ml'
-                        ? 'bg-accent text-white'
-                        : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
-                    }`}
-                    onClick={() => setPresetVolumeUnit('ml')}
-                  >
-                    ml
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      presetVolumeUnit === 'oz'
-                        ? 'bg-accent text-white'
-                        : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
-                    }`}
-                    onClick={() => setPresetVolumeUnit('oz')}
-                  >
-                    oz
-                  </button>
-                </div>
+                <SegmentedControl
+                  options={[
+                    { value: 'ml', label: 'ml' },
+                    { value: 'oz', label: 'oz' },
+                  ]}
+                  value={presetVolumeUnit}
+                  onChange={setPresetVolumeUnit}
+                />
               </div>
             </div>
 
