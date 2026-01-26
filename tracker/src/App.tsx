@@ -12,12 +12,19 @@ import { Stats } from './pages/Stats';
 import { Settings } from './pages/Settings';
 import { useEffect } from 'react';
 import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { usePreferencesStore } from './stores/preferences-store';
 
 function AuthenticatedApp({ children }: { children: React.ReactNode }) {
   const { session } = useAuthStore();
+  const { fetchPreferences } = usePreferencesStore();
 
   // Subscribe to realtime sync when logged in
   useRealtimeSync(session?.user?.id);
+
+  // Fetch user preferences on mount
+  useEffect(() => {
+    fetchPreferences();
+  }, [fetchPreferences]);
 
   return <>{children}</>;
 }

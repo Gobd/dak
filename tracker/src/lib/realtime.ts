@@ -1,7 +1,11 @@
 import { RealtimeSync } from '@dak/ui';
 import { supabase } from './supabase';
 
-export type SyncEvent = { type: 'entries' } | { type: 'targets' } | { type: 'presets' };
+export type SyncEvent =
+  | { type: 'entries' }
+  | { type: 'targets' }
+  | { type: 'presets' }
+  | { type: 'preferences' };
 
 type SyncHandler = (event: SyncEvent) => void;
 

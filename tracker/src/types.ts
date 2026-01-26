@@ -1,7 +1,10 @@
+export type VolumeUnit = 'ml' | 'oz';
+
 export interface Target {
   id: string;
   user_id: string;
   daily_limit: number; // units per day
+  volume_unit: VolumeUnit; // display unit preference
   // Calculator inputs (optional - for remembering how target was calculated)
   calc_count: number | null;
   calc_volume_ml: number | null;

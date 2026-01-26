@@ -31,6 +31,7 @@ CREATE TABLE tracker_targets (
   daily_limit NUMERIC(4, 2) NOT NULL DEFAULT 14.0, -- units per day
   cost_per_unit NUMERIC(6, 2), -- optional: for cost tracking (e.g., 2.50 = $2.50/unit)
   presets_seeded BOOLEAN NOT NULL DEFAULT FALSE, -- track if default presets have been created
+  volume_unit TEXT NOT NULL DEFAULT 'ml', -- display unit preference: 'ml' or 'oz'
   -- Calculator inputs (for remembering how target was calculated)
   calc_count NUMERIC,
   calc_volume_ml NUMERIC,
@@ -260,6 +261,7 @@ COMMENT ON TABLE tracker_presets IS 'Quick-add templates for common servings';
 
 COMMENT ON COLUMN tracker_targets.daily_limit IS 'Daily unit limit (1 unit = 10ml ethanol)';
 COMMENT ON COLUMN tracker_targets.cost_per_unit IS 'Optional cost per unit for expense tracking';
+COMMENT ON COLUMN tracker_targets.volume_unit IS 'Display unit preference: ml or oz';
 COMMENT ON COLUMN tracker_targets.calc_count IS 'Calculator input: number of servings';
 COMMENT ON COLUMN tracker_targets.calc_volume_ml IS 'Calculator input: volume per serving in ml';
 COMMENT ON COLUMN tracker_targets.calc_percentage IS 'Calculator input: strength percentage';

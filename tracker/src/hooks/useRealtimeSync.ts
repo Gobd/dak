@@ -3,6 +3,7 @@ import { subscribeToSync } from '../lib/realtime';
 import { useEntriesStore } from '../stores/entries-store';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
+import { usePreferencesStore } from '../stores/preferences-store';
 
 /**
  * Hook to sync data across devices using Supabase Realtime broadcast
@@ -15,6 +16,7 @@ export function useRealtimeSync(userId: string | undefined) {
   const fetchEntries = useEntriesStore((s) => s.fetchEntries);
   const fetchTarget = useTargetsStore((s) => s.fetchTarget);
   const fetchPresets = usePresetsStore((s) => s.fetchPresets);
+  const fetchPreferences = usePreferencesStore((s) => s.fetchPreferences);
 
   useEffect(() => {
     if (!userId) return;
@@ -31,6 +33,9 @@ export function useRealtimeSync(userId: string | undefined) {
         case 'presets':
           fetchPresets();
           break;
+        case 'preferences':
+          fetchPreferences();
+          break;
       }
     });
 
@@ -41,6 +46,7 @@ export function useRealtimeSync(userId: string | undefined) {
         fetchEntries();
         fetchTarget();
         fetchPresets();
+        fetchPreferences();
       }
     };
 
@@ -50,5 +56,5 @@ export function useRealtimeSync(userId: string | undefined) {
       unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userId, fetchTodayEntries, fetchEntries, fetchTarget, fetchPresets]);
+  }, [userId, fetchTodayEntries, fetchEntries, fetchTarget, fetchPresets, fetchPreferences]);
 }
