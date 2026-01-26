@@ -16,7 +16,10 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
 
   fetchPreferences: async () => {
     set({ loading: true });
-    const { data, error } = await supabase.from('tracker_targets').select('volume_unit').maybeSingle();
+    const { data, error } = await supabase
+      .from('tracker_targets')
+      .select('volume_unit')
+      .maybeSingle();
 
     if (!error && data?.volume_unit) {
       set({ volumeUnit: data.volume_unit as VolumeUnit });
