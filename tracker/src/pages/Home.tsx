@@ -269,10 +269,7 @@ export function Home() {
                 key={entry.id}
                 className="flex items-center justify-between p-3 bg-surface-raised rounded-lg"
               >
-                <div
-                  className="flex-1 cursor-pointer"
-                  onClick={() => handleEditEntry(entry)}
-                >
+                <div className="flex-1 cursor-pointer" onClick={() => handleEditEntry(entry)}>
                   <div className="font-medium">{formatUnits(entry.units)} units</div>
                   <div className="text-sm text-text-muted">
                     {formatVolume(entry.volume_ml)} @ {entry.percentage}%

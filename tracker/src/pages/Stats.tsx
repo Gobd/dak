@@ -32,12 +32,13 @@ export function Stats() {
   const monthStart = startOfMonth(now);
 
   // Find first entry date to avoid counting days before tracking started
-  const firstEntryDate = entries.length > 0
-    ? entries.reduce((earliest, e) => {
-        const date = e.logged_at.split('T')[0];
-        return date < earliest ? date : earliest;
-      }, entries[0].logged_at.split('T')[0])
-    : today;
+  const firstEntryDate =
+    entries.length > 0
+      ? entries.reduce((earliest, e) => {
+          const date = e.logged_at.split('T')[0];
+          return date < earliest ? date : earliest;
+        }, entries[0].logged_at.split('T')[0])
+      : today;
 
   const entriesInRange = (start: Date, end: Date) =>
     entries.filter((e) => {
@@ -75,7 +76,9 @@ export function Stats() {
   const weekDailyTotals = getDailyTotalsInRange(weekEntries);
   const weekTotalUnits = weekEntries.reduce((sum, e) => sum + e.units, 0);
   const weekZeroDays = weekDays.filter((day) => (weekDailyTotals.get(day) || 0) === 0).length;
-  const weekUnderDays = weekDays.filter((day) => (weekDailyTotals.get(day) || 0) <= dailyLimit).length;
+  const weekUnderDays = weekDays.filter(
+    (day) => (weekDailyTotals.get(day) || 0) <= dailyLimit,
+  ).length;
 
   // This month
   const monthDays = getDaysInRange(monthStart);
@@ -83,7 +86,9 @@ export function Stats() {
   const monthDailyTotals = getDailyTotalsInRange(monthEntries);
   const monthTotalUnits = monthEntries.reduce((sum, e) => sum + e.units, 0);
   const monthZeroDays = monthDays.filter((day) => (monthDailyTotals.get(day) || 0) === 0).length;
-  const monthUnderDays = monthDays.filter((day) => (monthDailyTotals.get(day) || 0) <= dailyLimit).length;
+  const monthUnderDays = monthDays.filter(
+    (day) => (monthDailyTotals.get(day) || 0) <= dailyLimit,
+  ).length;
 
   // Averages (use actual tracked days)
   const weekAverage = weekDays.length > 0 ? weekTotalUnits / weekDays.length : 0;
@@ -172,7 +177,9 @@ export function Stats() {
             <div className="text-sm text-text-muted">Zero days</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-accent">{weekUnderDays}/{weekDays.length}</div>
+            <div className="text-2xl font-bold text-accent">
+              {weekUnderDays}/{weekDays.length}
+            </div>
             <div className="text-sm text-text-muted">Under target</div>
           </div>
         </div>
