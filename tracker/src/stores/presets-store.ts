@@ -14,6 +14,8 @@ interface PresetsState {
   seedDefaultPresets: () => Promise<void>;
 }
 
+let isSeeding = false; // Guard against concurrent seeding
+
 export const usePresetsStore = create<PresetsState>((set, get) => ({
   presets: [],
   loading: false,
@@ -28,9 +30,16 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
     if (!error && data) {
       set({ presets: data });
 
-      // Seed defaults if user has no presets
-      if (data.length === 0) {
-        get().seedDefaultPresets();
+      // Seed defaults only once per user (check DB flag + guard)
+      if (data.length === 0 && !isSeeding) {
+        const { data: target } = await supabase
+          .from('tracker_targets')
+          .select('presets_seeded')
+          .maybeSingle();
+
+        if (!target?.presets_seeded) {
+          await get().seedDefaultPresets();
+        }
       }
     }
     set({ loading: false });
@@ -71,25 +80,61 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
   deletePreset: async (id: string) => {
     const { error } = await supabase.from('tracker_presets').delete().eq('id', id);
 
-    if (!error) {
-      get().fetchPresets();
-      broadcastSync({ type: 'presets' });
+    if (error) {
+      console.error('Failed to delete preset:', error);
+      return;
     }
+
+    get().fetchPresets();
+    broadcastSync({ type: 'presets' });
   },
 
   seedDefaultPresets: async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+    if (isSeeding) return;
+    isSeeding = true;
 
-    const presetsToInsert = DEFAULT_PRESETS.map((preset) => ({
-      ...preset,
-      user_id: userData.user.id,
-    }));
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
 
-    const { error } = await supabase.from('tracker_presets').insert(presetsToInsert);
+      const presetsToInsert = DEFAULT_PRESETS.map((preset) => ({
+        ...preset,
+        user_id: userData.user.id,
+      }));
 
-    if (!error) {
-      get().fetchPresets();
+      const { error } = await supabase.from('tracker_presets').insert(presetsToInsert);
+
+      if (!error) {
+        // Mark as seeded - update existing or create minimal target row
+        const { data: existingTarget } = await supabase
+          .from('tracker_targets')
+          .select('id')
+          .maybeSingle();
+
+        if (existingTarget) {
+          await supabase
+            .from('tracker_targets')
+            .update({ presets_seeded: true })
+            .eq('id', existingTarget.id);
+        } else {
+          await supabase.from('tracker_targets').insert({
+            user_id: userData.user.id,
+            presets_seeded: true,
+          });
+        }
+
+        // Refetch presets directly (no recursive fetchPresets call)
+        const { data: newPresets } = await supabase
+          .from('tracker_presets')
+          .select('*')
+          .order('sort_order', { ascending: true });
+
+        if (newPresets) {
+          set({ presets: newPresets });
+        }
+      }
+    } finally {
+      isSeeding = false;
     }
   },
 }));

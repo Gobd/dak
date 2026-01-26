@@ -258,16 +258,16 @@ export function Settings() {
           {presets.map((preset) => (
             <div
               key={preset.id}
-              className="flex items-center justify-between p-3 bg-surface-raised rounded-lg"
+              className="flex items-center justify-between gap-2 p-3 bg-surface-raised rounded-lg"
             >
-              <div>
-                <div className="font-medium">{preset.name}</div>
+              <div className="min-w-0">
+                <div className="font-medium truncate">{preset.name}</div>
                 <div className="text-sm text-text-muted">
                   {preset.volume_ml}ml ({mlToOz(preset.volume_ml)}oz) @ {preset.percentage}% ={' '}
                   {formatUnits(calculateUnits(preset.volume_ml, preset.percentage))} units
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
