@@ -9,6 +9,7 @@ export { DateTimePicker } from './components/DateTimePicker';
 export { NumberPickerCompact } from './components/NumberPicker';
 export { Roller } from './components/Roller';
 export { Toggle } from './components/Toggle';
+export { SegmentedControl } from './components/SegmentedControl';
 export { Badge } from './components/Badge';
 export { Card } from './components/Card';
 export { Chip } from './components/Chip';

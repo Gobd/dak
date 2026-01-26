@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.9.0", "pyright>=1.1.390"]
+dev = ["ruff>=0.14.14", "pyright>=1.1.408"]
 voice = ["openwakeword>=0.6.0", "pyaudio>=0.2.14"]
 
 [tool.ruff]
