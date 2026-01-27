@@ -7,6 +7,25 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 import './tiptap-styles.css';
 
+// Strip trailing whitespace, newlines, and &nbsp; entities that create empty paragraphs
+function trimTrailingEmpty(str: string): string {
+  return str.replace(/(\s|&nbsp;|\u00A0)+$/g, '');
+}
+
+// Focus at end of actual content, skipping empty trailing paragraphs that TipTap creates
+function focusAtContentEnd(editor: ReturnType<typeof useEditor>): void {
+  if (!editor) return;
+  const { doc } = editor.state;
+  const lastChild = doc.lastChild;
+  if (lastChild?.type.name === 'paragraph' && lastChild.textContent === '') {
+    const targetPos = doc.content.size - lastChild.nodeSize - 1;
+    editor.commands.setTextSelection(targetPos);
+    editor.commands.focus();
+  } else {
+    editor.commands.focus('end');
+  }
+}
+
 export interface RichNoteEditorRef {
   toggleTaskList: () => void;
   toggleBulletList: () => void;
@@ -32,7 +51,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     { content, onUpdate, maxLength = 50000, placeholder = 'Start writing...' },
     ref,
   ) {
-    const lastContentRef = useRef(content.trimEnd());
+    const lastContentRef = useRef(trimTrailingEmpty(content));
     const isInitPhaseRef = useRef(true);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onUpdateRef = useRef(onUpdate);
@@ -41,6 +60,8 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     useEffect(() => {
       onUpdateRef.current = onUpdate;
     }, [onUpdate]);
+
+    const initialContent = trimTrailingEmpty(content);
 
     const editor = useEditor({
       extensions: [
@@ -55,13 +76,14 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }),
         Markdown.configure({
           markedOptions: {
-            gfm: true, // GitHub Flavored Markdown (task lists, tables, etc.)
+            gfm: true, // GitHub Flavored Markdown (task lists, tasks, etc.)
           },
         }),
       ],
-      content: content.trimEnd(),
+      content: initialContent,
       contentType: 'markdown',
       autofocus: 'end',
+      onCreate: ({ editor }) => focusAtContentEnd(editor),
       editorProps: {
         attributes: {
           id: 'note-editor',
@@ -80,7 +102,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }
 
         debounceTimerRef.current = setTimeout(() => {
-          const markdown = editor.getMarkdown().trimEnd();
+          const markdown = trimTrailingEmpty(editor.getMarkdown());
           if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
             lastContentRef.current = markdown;
             onUpdate(markdown);
@@ -101,18 +123,15 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
     // Update content when it changes externally
     useEffect(() => {
       // Trim trailing whitespace so focus('end') lands on actual text, not an empty line
-      const trimmedContent = content.trimEnd();
+      const trimmedContent = trimTrailingEmpty(content);
       if (editor && trimmedContent !== lastContentRef.current) {
         lastContentRef.current = trimmedContent;
         isInitPhaseRef.current = true;
 
         if (trimmedContent) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (editor as any).commands.setContent(trimmedContent, { contentType: 'markdown' });
-          editor.commands.focus('end');
+          focusAtContentEnd(editor);
         } else {
-          // Empty note: initialize with an empty H1 and focus inside it
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (editor as any).commands.setContent('# ', { contentType: 'markdown' });
           editor.commands.setTextSelection(1);
         }
@@ -133,7 +152,7 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         }
         // Flush any pending changes before unmount
         if (editorInstance && !isInitPhaseRef.current) {
-          const markdown = editorInstance.getMarkdown?.()?.trimEnd();
+          const markdown = trimTrailingEmpty(editorInstance.getMarkdown?.() ?? '');
           if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
             onUpdateRef.current(markdown);
           }
@@ -157,13 +176,12 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         blur: () => editor?.commands.blur(),
         getMarkdown: () => {
           if (!editor) return '';
-          return editor.getMarkdown()?.trimEnd() || '';
+          return trimTrailingEmpty(editor.getMarkdown() ?? '');
         },
         setMarkdown: (markdown: string) => {
           if (!editor) return;
-          const trimmed = markdown.trimEnd();
+          const trimmed = trimTrailingEmpty(markdown);
           lastContentRef.current = trimmed;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (editor as any).commands.setContent(trimmed, { contentType: 'markdown' });
           onUpdateRef.current(trimmed);
         },

@@ -96,7 +96,7 @@ export const notesApi = {
     // Trim trailing whitespace from content (TipTap adds trailing newlines)
     const sanitized = {
       ...note,
-      ...(note.content !== undefined && { content: note.content.trimEnd() }),
+      ...(note.content != null && { content: note.content.trimEnd() }),
     };
     const { data, error } = await supabase.from('notes').insert(sanitized).select().single();
 
@@ -108,7 +108,7 @@ export const notesApi = {
     // Trim trailing whitespace from content (TipTap adds trailing newlines)
     const sanitized = {
       ...updates,
-      ...(updates.content !== undefined && { content: updates.content.trimEnd() }),
+      ...(updates.content != null && { content: updates.content.trimEnd() }),
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase

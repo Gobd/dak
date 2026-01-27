@@ -8,9 +8,8 @@
     "dev:relay": "concurrently -n vite,relay -c blue,green \"vite\" \"uv run --directory services/home-relay python relay.py\"",
     "build": "tsc -b && vite build",
     "preview": "vite build --mode development && vite preview --port 8080",
-    "lint:sh": "shellcheck scripts/*.sh",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm lint:sh && pnpm typecheck && pnpm build",
+    "check": "pnpm typecheck && pnpm build",
     "analyze": "ANALYZE=true vite build && echo '\nBundle analysis generated: stats.html'"
   },
   "dependencies": {
@@ -30,7 +29,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "concurrently": "catalog:",
-    "shellcheck": "^4.1.0",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"

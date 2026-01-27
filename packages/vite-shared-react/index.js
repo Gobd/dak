@@ -100,7 +100,11 @@ export function createViteConfig({ base, port, pwa, rollupInput }) {
   return defineConfig(({ command }) => {
     const plugins = [
       command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
-      react(),
+      react({
+        babel: {
+          plugins: [['babel-plugin-react-compiler', {}]],
+        },
+      }),
       tailwindcss(),
       sharedReact(),
       process.env.ANALYZE &&

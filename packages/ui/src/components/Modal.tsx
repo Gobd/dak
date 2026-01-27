@@ -35,7 +35,6 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
   // Reset position when modal opens
   useEffect(() => {
     if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset drag position on open; this derived state pattern is valid per React docs
       setPosition(null);
     }
   }, [open]);
