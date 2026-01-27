@@ -25,10 +25,11 @@ async function getModuleExports(specifier) {
 
 // Packages that need CJS-style handling (import default, destructure exports)
 // These don't have proper ESM exports field in package.json
-const cjsPackages = new Set(['react', 'react-dom', 'react-dom/client']);
+const cjsPackages = new Set(['react', 'react/compiler-runtime', 'react-dom', 'react-dom/client']);
 
 const entries = [
   { name: 'react', entry: 'react', external: [] },
+  { name: 'react-compiler-runtime', entry: 'react/compiler-runtime', external: ['react'] },
   { name: 'react-dom', entry: 'react-dom', external: ['react'] },
   { name: 'react-dom-client', entry: 'react-dom/client', external: ['react', 'react-dom'] },
   { name: 'zustand', entry: 'zustand', external: ['react'] },
