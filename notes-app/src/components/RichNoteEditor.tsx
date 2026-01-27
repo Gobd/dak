@@ -157,14 +157,15 @@ export const RichNoteEditor = forwardRef<RichNoteEditorRef, RichNoteEditorProps>
         blur: () => editor?.commands.blur(),
         getMarkdown: () => {
           if (!editor) return '';
-          return editor.getMarkdown() || '';
+          return editor.getMarkdown()?.trimEnd() || '';
         },
         setMarkdown: (markdown: string) => {
           if (!editor) return;
-          lastContentRef.current = markdown;
+          const trimmed = markdown.trimEnd();
+          lastContentRef.current = trimmed;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (editor as any).commands.setContent(markdown, { contentType: 'markdown' });
-          onUpdateRef.current(markdown);
+          (editor as any).commands.setContent(trimmed, { contentType: 'markdown' });
+          onUpdateRef.current(trimmed);
         },
       }),
       [editor],

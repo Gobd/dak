@@ -93,19 +93,27 @@ export const notesApi = {
 
   async create(note: NoteInsert): Promise<Note> {
     // Auto-sharing with default shares is handled by database trigger
-    const { data, error } = await supabase.from('notes').insert(note).select().single();
+    // Trim trailing whitespace from content (TipTap adds trailing newlines)
+    const sanitized = {
+      ...note,
+      ...(note.content !== undefined && { content: note.content.trimEnd() }),
+    };
+    const { data, error } = await supabase.from('notes').insert(sanitized).select().single();
 
     if (error) throw error;
     return data;
   },
 
   async update(id: string, updates: NoteUpdate): Promise<Note> {
+    // Trim trailing whitespace from content (TipTap adds trailing newlines)
+    const sanitized = {
+      ...updates,
+      ...(updates.content !== undefined && { content: updates.content.trimEnd() }),
+      updated_at: new Date().toISOString(),
+    };
     const { data, error } = await supabase
       .from('notes')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
+      .update(sanitized)
       .eq('id', id)
       .select()
       .single();
