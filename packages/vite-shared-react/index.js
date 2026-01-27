@@ -102,7 +102,7 @@ export function createViteConfig({ base, port, pwa, rollupInput }) {
       command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
       react({
         babel: {
-          plugins: [['babel-plugin-react-compiler', {}]],
+          plugins: [['babel-plugin-react-compiler', { target: '19' }]],
         },
       }),
       tailwindcss(),
