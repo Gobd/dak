@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { format, startOfWeek, startOfMonth, parseISO } from 'date-fns';
+// date-fns no longer needed - using UTC date strings directly
 import { Flame, Target, TrendingDown, Calendar, Award, Lightbulb } from 'lucide-react';
 import { Card } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
@@ -25,11 +25,18 @@ export function Stats() {
 
   const dailyLimit = target?.daily_limit ?? 14;
 
-  // Calculate weekly stats
+  // Calculate weekly stats using UTC dates to match server
   const now = new Date();
-  const today = format(now, 'yyyy-MM-dd');
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const monthStart = startOfMonth(now);
+  const todayUtc = now.toISOString().split('T')[0];
+  // Get week start (Monday) in UTC
+  const nowUtc = new Date(now.toISOString());
+  const dayOfWeek = nowUtc.getUTCDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const weekStartDate = new Date(nowUtc);
+  weekStartDate.setUTCDate(nowUtc.getUTCDate() - daysToMonday);
+  const weekStartUtc = weekStartDate.toISOString().split('T')[0];
+  // Get month start in UTC
+  const monthStartUtc = `${nowUtc.getUTCFullYear()}-${String(nowUtc.getUTCMonth() + 1).padStart(2, '0')}-01`;
 
   // Find first entry date to avoid counting days before tracking started
   const firstEntryDate =
@@ -38,41 +45,42 @@ export function Stats() {
           const date = e.logged_at.split('T')[0];
           return date < earliest ? date : earliest;
         }, entries[0].logged_at.split('T')[0])
-      : today;
+      : todayUtc;
 
-  const entriesInRange = (start: Date, end: Date) =>
+  // Use UTC dates to match server-side calculations
+  const entriesInRange = (startDateStr: string, endDateStr: string) =>
     entries.filter((e) => {
-      const date = parseISO(e.logged_at);
-      return date >= start && date <= end;
+      const dateUtc = e.logged_at.split('T')[0]; // Extract UTC date
+      return dateUtc >= startDateStr && dateUtc <= endDateStr;
     });
 
   const getDailyTotalsInRange = (rangeEntries: Entry[]) => {
     const dailyMap = new Map<string, number>();
     rangeEntries.forEach((e) => {
-      const day = format(parseISO(e.logged_at), 'yyyy-MM-dd');
+      const day = e.logged_at.split('T')[0]; // UTC date from ISO string
       dailyMap.set(day, (dailyMap.get(day) || 0) + e.units);
     });
     return dailyMap;
   };
 
-  // Generate array of days from start to today (inclusive), respecting first entry date
-  const getDaysInRange = (periodStart: Date) => {
-    const effectiveStart = format(periodStart, 'yyyy-MM-dd');
-    const rangeStart = effectiveStart > firstEntryDate ? effectiveStart : firstEntryDate;
+  // Generate array of UTC days from start to today (inclusive), respecting first entry date
+  const getDaysInRange = (periodStartUtc: string) => {
+    const rangeStart = periodStartUtc > firstEntryDate ? periodStartUtc : firstEntryDate;
     const days: string[] = [];
     let current = rangeStart;
-    while (current <= today) {
+    while (current <= todayUtc) {
       days.push(current);
-      const nextDate = new Date(current + 'T12:00:00');
-      nextDate.setDate(nextDate.getDate() + 1);
-      current = format(nextDate, 'yyyy-MM-dd');
+      // Add one day using UTC
+      const nextDate = new Date(current + 'T12:00:00Z');
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      current = nextDate.toISOString().split('T')[0];
     }
     return days;
   };
 
-  // This week
-  const weekDays = getDaysInRange(weekStart);
-  const weekEntries = entriesInRange(weekStart, now);
+  // This week (UTC)
+  const weekDays = getDaysInRange(weekStartUtc);
+  const weekEntries = entriesInRange(weekStartUtc, todayUtc);
   const weekDailyTotals = getDailyTotalsInRange(weekEntries);
   const weekTotalUnits = weekEntries.reduce((sum, e) => sum + e.units, 0);
   const weekZeroDays = weekDays.filter((day) => (weekDailyTotals.get(day) || 0) === 0).length;
@@ -80,9 +88,9 @@ export function Stats() {
     (day) => (weekDailyTotals.get(day) || 0) <= dailyLimit,
   ).length;
 
-  // This month
-  const monthDays = getDaysInRange(monthStart);
-  const monthEntries = entriesInRange(monthStart, now);
+  // This month (UTC)
+  const monthDays = getDaysInRange(monthStartUtc);
+  const monthEntries = entriesInRange(monthStartUtc, todayUtc);
   const monthDailyTotals = getDailyTotalsInRange(monthEntries);
   const monthTotalUnits = monthEntries.reduce((sum, e) => sum + e.units, 0);
   const monthZeroDays = monthDays.filter((day) => (monthDailyTotals.get(day) || 0) === 0).length;
