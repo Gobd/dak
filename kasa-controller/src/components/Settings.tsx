@@ -3,7 +3,7 @@ import { Save, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '../stores/settings-store';
 import { Input, Button } from '@dak/ui';
 
-const DEFAULT_RELAY_URL = 'http://localhost:5111';
+const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 export default function Settings() {
   const { relayUrl, setRelayUrl } = useSettingsStore();
@@ -35,7 +35,7 @@ export default function Settings() {
           type="url"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="http://localhost:5111"
+          placeholder="https://kiosk-relay.bkemper.me"
         />
         <p className="mt-2 text-sm text-text-muted">
           The URL of the home relay server that controls your Kasa devices.

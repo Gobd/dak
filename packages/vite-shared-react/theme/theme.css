@@ -62,16 +62,16 @@
   /* Surfaces */
   --color-surface: oklch(12% 0.005 240);
   --color-surface-raised: oklch(18% 0.01 240);
-  --color-surface-sunken: oklch(8% 0.005 240);
+  --color-surface-sunken: oklch(15% 0.005 240);
 
   /* Borders */
-  --color-border: oklch(28% 0.01 240);
-  --color-border-strong: oklch(40% 0.01 240);
+  --color-border: oklch(32% 0.01 240);
+  --color-border-strong: oklch(45% 0.01 240);
 
   /* Text */
   --color-text: oklch(98% 0.005 240);
-  --color-text-secondary: oklch(70% 0.01 240);
-  --color-text-muted: oklch(55% 0.01 240);
+  --color-text-secondary: oklch(75% 0.01 240);
+  --color-text-muted: oklch(65% 0.01 240);
 
   /* Accent (blue) - brighter in dark mode */
   --color-accent: oklch(65% 0.2 255);

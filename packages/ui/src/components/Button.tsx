@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         disabled={isDisabled}
-        className={`${roundedClass} font-medium transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+        className={`${roundedClass} font-medium transition-colors flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
         {...props}
       >
         {loading ? <Spinner size="sm" /> : children}
