@@ -39,12 +39,14 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
   loading: false,
 
   fetchTodayEntries: async () => {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    // Use local day boundaries converted to ISO (includes timezone offset)
+    const todayStart = startOfDay(new Date()).toISOString();
+    const tomorrowStart = startOfDay(subDays(new Date(), -1)).toISOString();
     const { data, error } = await supabase
       .from('tracker_entries')
       .select('*')
-      .gte('logged_at', `${today}T00:00:00`)
-      .lt('logged_at', `${today}T23:59:59.999`)
+      .gte('logged_at', todayStart)
+      .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false });
 
     if (!error && data) {
@@ -101,7 +103,10 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
 
   addEntry: async (volumeMl: number, percentage: number, dailyLimit: number, notes?: string) => {
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+    if (!userData.user) {
+      console.error('addEntry: no authenticated user');
+      return;
+    }
 
     const units = calculateUnits(volumeMl, percentage);
 
@@ -115,11 +120,13 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
       logged_at: new Date().toISOString(),
     });
 
-    if (!error) {
-      get().fetchTodayEntries();
-      get().fetchEntries();
-      broadcastSync({ type: 'entries' });
+    if (error) {
+      console.error('addEntry error:', error);
+      return;
     }
+    get().fetchTodayEntries();
+    get().fetchEntries();
+    broadcastSync({ type: 'entries' });
   },
 
   updateEntry: async (id: string, volumeMl: number, percentage: number, notes?: string) => {
