@@ -14,6 +14,10 @@ echo "==> Formatting (oxfmt --write)..."
 pnpm format
 
 echo ""
+echo "==> Linting shell scripts (shellcheck)..."
+pnpm lint:sh
+
+echo ""
 echo "==> Running knip (unused code detection)..."
 pnpm knip
 

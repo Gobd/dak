@@ -23,7 +23,6 @@ export function LeaderboardView({ onOpenFamily }: LeaderboardViewProps) {
 
   useEffect(() => {
     setPeriod(currentPeriod);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculate date range for current period

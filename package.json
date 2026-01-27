@@ -4,13 +4,14 @@
   "scripts": {
     "dev": "(sleep 2 && open http://localhost:8080/?local) & pnpm -r --parallel dev",
     "lint": "oxlint --fix",
+    "lint:sh": "shellcheck scripts/*.sh dashboard/scripts/**/*.sh",
     "format:check": "oxfmt --check",
     "format": "oxfmt --write",
     "knip": "knip",
     "typecheck": "pnpm -r typecheck",
     "build:react-vendor": "pnpm --filter @dak/vite-shared-react build:vendor",
     "build": "pnpm build:react-vendor && pnpm -r build",
-    "check": "pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck && pnpm build",
+    "check": "pnpm lint && pnpm lint:sh && pnpm format:check && pnpm knip && pnpm typecheck && pnpm build",
     "gen:api": "pnpm --filter @dak/api-client gen:api",
     "gen:api:check": "pnpm gen:api && git diff --exit-code packages/api-client/src/generated || (echo 'Error: Generated API client is out of sync. Run pnpm gen:api and commit.' && exit 1)",
     "build:pages": "./scripts/build-pages.sh"
@@ -18,7 +19,8 @@
   "devDependencies": {
     "knip": "^5.82.1",
     "oxfmt": "^0.27.0",
-    "oxlint": "^1.42.0"
+    "oxlint": "^1.42.0",
+    "shellcheck": "^4.1.0"
   },
   "volta": {
     "node": "24.12.0"
