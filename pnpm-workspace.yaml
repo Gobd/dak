@@ -21,7 +21,7 @@ catalog:
   date-fns: ^4.1.0
   lucide-react: ^0.563.0
   react: ^19.2.3
-  react-dom: ^19.2.3
+  react-dom: ^19.2.4
   react-router-dom: ^7.13.0
   rollup-plugin-visualizer: ^6.0.5
   tailwindcss: ^4.1.18
