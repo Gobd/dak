@@ -53,12 +53,14 @@ CREATE TABLE public.notes (
 
 -- NOTE_ACCESS (unified access control - owners + shared users)
 -- Managed by triggers and RPC functions, not directly by users
+-- updated_at is used to propagate note changes to shared users via postgres_changes
 CREATE TABLE public.note_access (
   note_id UUID NOT NULL REFERENCES public.notes(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   is_owner BOOLEAN DEFAULT FALSE,
   granted_by UUID REFERENCES public.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
   PRIMARY KEY (note_id, user_id)
 );
 
@@ -103,6 +105,7 @@ CREATE INDEX idx_tags_user_id ON public.tags(user_id);
 CREATE INDEX idx_note_access_note_id ON public.note_access(note_id);
 CREATE INDEX idx_note_access_user_id ON public.note_access(user_id);
 CREATE INDEX idx_note_access_owner ON public.note_access(note_id) WHERE is_owner = true;
+CREATE INDEX idx_note_access_updated_at ON public.note_access(updated_at DESC);
 CREATE INDEX idx_default_shares_user_id ON public.default_shares(user_id);
 
 
@@ -450,6 +453,30 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 CREATE TRIGGER cleanup_shares_on_default_remove
   AFTER DELETE ON public.default_shares
   FOR EACH ROW EXECUTE FUNCTION public.cleanup_shares_on_default_remove();
+
+
+-- Propagate note updates to note_access for bulletproof postgres_changes
+-- When a note is updated, update all note_access rows so shared users get notified
+CREATE FUNCTION public.propagate_note_update_to_access()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.note_access
+  SET updated_at = NOW()
+  WHERE note_id = NEW.id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+CREATE TRIGGER propagate_note_update
+  AFTER UPDATE ON public.notes
+  FOR EACH ROW
+  WHEN (
+    OLD.content IS DISTINCT FROM NEW.content OR
+    OLD.is_private IS DISTINCT FROM NEW.is_private OR
+    OLD.pinned IS DISTINCT FROM NEW.pinned OR
+    OLD.trashed_at IS DISTINCT FROM NEW.trashed_at
+  )
+  EXECUTE FUNCTION public.propagate_note_update_to_access();
 
 
 -- Handle privacy toggle: remove shares when private, auto-share when public

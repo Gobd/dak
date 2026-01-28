@@ -342,9 +342,6 @@ importers:
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui
-      '@supabase/supabase-js':
-        specifier: 'catalog:'
-        version: 2.93.1
       '@tiptap/core':
         specifier: ^3.17.1
         version: 3.17.1(@tiptap/pm@3.17.1)

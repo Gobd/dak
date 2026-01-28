@@ -37,3 +37,4 @@ export { createThemeStore } from './stores/theme-store';
 
 // Realtime
 export { RealtimeSync } from './realtime/realtime-sync';
+export type { PostgresChangeEvent } from './realtime/realtime-sync';
