@@ -1,4 +1,5 @@
 import { RealtimeSync } from '@dak/ui';
+import type { PostgresChangeEvent } from '@dak/ui';
 import { supabase } from './supabase';
 
 export type SyncEvent =
@@ -7,7 +8,7 @@ export type SyncEvent =
   | { type: 'presets' }
   | { type: 'preferences' };
 
-type SyncHandler = (event: SyncEvent) => void;
+type SyncHandler = (event: SyncEvent | PostgresChangeEvent) => void;
 
 const handlers = new Set<SyncHandler>();
 

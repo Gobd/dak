@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { subscribeToSync } from '../lib/realtime';
 import { useShotsStore } from '../stores/shots-store';
 import { useMedicineStore } from '../stores/medicine-store';
@@ -6,10 +6,10 @@ import { usePrnStore } from '../stores/prn-store';
 import { usePeopleStore } from '../stores/people-store';
 
 /**
- * Hook to sync data across devices using Supabase Realtime broadcast
+ * Hook to sync data across devices using Supabase Realtime
  *
- * When another device makes changes, this hook receives a sync event
- * and refetches the relevant data from the database.
+ * Uses postgres_changes on root tables (bulletproof) + broadcast for
+ * granular events. Includes automatic reconnection and 5-min polling fallback.
  */
 export function useRealtimeSync(userId: string | undefined) {
   const fetchSchedules = useShotsStore((s) => s.fetchSchedules);
@@ -17,45 +17,67 @@ export function useRealtimeSync(userId: string | undefined) {
   const fetchMeds = usePrnStore((s) => s.fetchMeds);
   const fetchPeople = usePeopleStore((s) => s.fetchPeople);
 
+  // Refresh all data - used on reconnect and as polling fallback
+  const refreshAll = useCallback(() => {
+    fetchSchedules();
+    fetchCourses();
+    fetchMeds();
+    fetchPeople();
+  }, [fetchSchedules, fetchCourses, fetchMeds, fetchPeople]);
+
   useEffect(() => {
     if (!userId) return;
 
-    const unsubscribe = subscribeToSync(userId, (event) => {
-      switch (event.type) {
-        case 'shots':
-          fetchSchedules();
-          break;
-        case 'medicine':
-          fetchCourses();
-          break;
-        case 'prn':
-          fetchMeds();
-          break;
-        case 'people':
-          fetchPeople();
-          // People changes may affect other views
-          fetchSchedules();
-          fetchCourses();
-          fetchMeds();
-          break;
-      }
-    });
+    const unsubscribe = subscribeToSync(
+      userId,
+      (event) => {
+        // Handle postgres_changes events (bulletproof, from all tables)
+        if (event.type === 'postgres_change') {
+          // Map table names to specific refresh actions
+          switch (event.table) {
+            case 'people':
+              refreshAll(); // People changes affect everything
+              break;
+            case 'shot_schedules':
+            case 'shot_logs':
+              fetchSchedules();
+              break;
+            case 'medicine_courses':
+            case 'medicine_doses':
+              fetchCourses();
+              break;
+            case 'prn_meds':
+            case 'prn_logs':
+              fetchMeds();
+              break;
+            default:
+              refreshAll();
+          }
+          return;
+        }
 
-    // Also refetch when tab becomes visible again
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchSchedules();
-        fetchCourses();
-        fetchMeds();
-        fetchPeople();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+        // Handle broadcast events (granular)
+        switch (event.type) {
+          case 'shots':
+            fetchSchedules();
+            break;
+          case 'medicine':
+            fetchCourses();
+            break;
+          case 'prn':
+            fetchMeds();
+            break;
+          case 'people':
+            // People changes may affect other views
+            refreshAll();
+            break;
+        }
+      },
+      refreshAll, // onReconnect callback
+    );
 
     return () => {
       unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userId, fetchSchedules, fetchCourses, fetchMeds, fetchPeople]);
+  }, [userId, fetchSchedules, fetchCourses, fetchMeds, fetchPeople, refreshAll]);
 }

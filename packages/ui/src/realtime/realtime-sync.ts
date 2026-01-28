@@ -1,23 +1,50 @@
 import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 
+export interface TableConfig {
+  /** Table name to watch */
+  table: string;
+  /** Optional filter (e.g., `user_id=eq.${userId}`) - userId placeholder will be replaced */
+  filter?: string;
+}
+
 export interface RealtimeSyncOptions<TEvent> {
   /** Supabase client instance */
   supabase: SupabaseClient;
   /** Channel prefix (e.g., 'sync:chores', 'sync:health') - userId will be appended */
   channelPrefix: string;
-  /** Handler called when sync events are received */
-  onEvent: (event: TEvent) => void;
+  /** Handler called when sync events are received (broadcast or postgres_changes) */
+  onEvent: (event: TEvent | PostgresChangeEvent) => void;
+  /** Handler called after reconnection - use to refresh data */
+  onReconnect?: () => void;
+  /**
+   * Tables to watch via postgres_changes (bulletproof, DB-triggered).
+   * Only tables with user_id column can be filtered effectively.
+   * When a watched table changes, onEvent receives { type: 'postgres_change', table: string }
+   */
+  tables?: TableConfig[];
 }
+
+/** Event emitted when postgres_changes detects a change */
+export interface PostgresChangeEvent {
+  type: 'postgres_change';
+  table: string;
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+}
+
+// Polling interval as fallback (5 minutes)
+const POLLING_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
  * Robust realtime sync manager with automatic reconnection.
  *
  * Features:
+ * - postgres_changes for bulletproof DB-triggered notifications
+ * - Broadcast for fast cross-device sync
  * - Exponential backoff reconnection (1s → 5 min max, retries indefinitely)
- * - Heartbeat detection for silent disconnects (every 30s)
- * - Visibility change handling (reconnects when app returns to foreground)
+ * - Visibility change handling (reconnects + refreshes when app returns to foreground)
  * - Online event handling (reconnects when browser regains network)
- * - Presence tracking to skip broadcasts when no other devices are online
+ * - Polling fallback every 5 minutes as insurance
+ * - Data refresh on reconnect (catches any missed events)
  *
  * @example
  * ```ts
@@ -29,12 +56,20 @@ export interface RealtimeSyncOptions<TEvent> {
  *   onEvent: (event) => {
  *     if (event.type === 'items') refreshItems();
  *   },
+ *   onReconnect: () => {
+ *     // Refresh all data after reconnection
+ *     refreshItems();
+ *     refreshSettings();
+ *   },
+ *   tables: [
+ *     { table: 'items', filter: 'user_id=eq.${userId}' },
+ *   ],
  * });
  *
  * // On login
  * sync.subscribe(userId);
  *
- * // On data change
+ * // On data change (for cross-device notification)
  * await sync.broadcast({ type: 'items' });
  *
  * // On logout
@@ -44,29 +79,28 @@ export interface RealtimeSyncOptions<TEvent> {
 export class RealtimeSync<TEvent> {
   private supabase: SupabaseClient;
   private channelPrefix: string;
-  private onEvent: (event: TEvent) => void;
+  private onEvent: RealtimeSyncOptions<TEvent>['onEvent'];
+  private onReconnect?: () => void;
+  private tables: TableConfig[];
 
   private channel: RealtimeChannel | null = null;
   private currentUserId: string | null = null;
-  private deviceId: string | null = null;
-  private otherDevicesOnline = 0;
 
   // Reconnection state
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
   private readonly RECONNECT_BASE_DELAY_MS = 1000;
-  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 min - keeps trying forever at this interval
-
-  // Heartbeat to detect silent disconnects
-  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-  private readonly HEARTBEAT_INTERVAL_MS = 30000;
+  private readonly RECONNECT_MAX_DELAY_MS = 300000; // 5 min max
 
   // Track when app was last visible (for staleness detection)
   private lastVisibleAt: number = Date.now();
-  private readonly STALE_THRESHOLD_MS = 60000; // 1 minute - force reconnect after this long in background
+  private readonly STALE_THRESHOLD_MS = 60000; // 1 minute
 
   // Track if browser event listeners are registered
   private listenersRegistered = false;
+
+  // Polling fallback
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
 
   // Bound handlers for event listeners (so we can remove them)
   private boundHandleVisibilityChange: () => void;
@@ -76,6 +110,8 @@ export class RealtimeSync<TEvent> {
     this.supabase = options.supabase;
     this.channelPrefix = options.channelPrefix;
     this.onEvent = options.onEvent;
+    this.onReconnect = options.onReconnect;
+    this.tables = options.tables ?? [];
 
     // Bind handlers so they can be removed later
     this.boundHandleVisibilityChange = this.handleVisibilityChange.bind(this);
@@ -106,6 +142,7 @@ export class RealtimeSync<TEvent> {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
+    this.stopPolling();
 
     this.currentUserId = userId;
     this.reconnectAttempts = 0;
@@ -115,14 +152,16 @@ export class RealtimeSync<TEvent> {
 
     // Set up the channel
     this.setupChannel(userId);
+
+    // Start polling fallback
+    this.startPolling();
   }
 
   /**
    * Broadcast a sync event to other devices.
-   * Only sends if other devices are online (via presence).
    */
   async broadcast(event: TEvent): Promise<void> {
-    if (!this.channel || this.otherDevicesOnline === 0) return;
+    if (!this.channel) return;
 
     await this.channel.send({
       type: 'broadcast',
@@ -136,8 +175,8 @@ export class RealtimeSync<TEvent> {
    * Call this on logout.
    */
   unsubscribe(): void {
-    this.stopHeartbeat();
     this.unregisterBrowserListeners();
+    this.stopPolling();
 
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -150,8 +189,6 @@ export class RealtimeSync<TEvent> {
     }
 
     this.currentUserId = null;
-    this.deviceId = null;
-    this.otherDevicesOnline = 0;
     this.reconnectAttempts = 0;
   }
 
@@ -161,7 +198,6 @@ export class RealtimeSync<TEvent> {
    */
   private handleVisibilityChange(): void {
     if (document.visibilityState === 'hidden') {
-      // Track when we went to background
       this.lastVisibleAt = Date.now();
       return;
     }
@@ -172,14 +208,17 @@ export class RealtimeSync<TEvent> {
       const channelState = this.channel?.state;
       const isUnhealthy = channelState !== 'joined' && channelState !== 'joining';
 
-      // Force reconnect if stale (long background) OR channel is unhealthy
       if (isStale || isUnhealthy) {
         console.log(
-          `[realtime] App became visible after ${Math.round(timeInBackground / 1000)}s, ` +
-            `channel=${channelState}, forcing reconnect...`,
+          `[realtime] Visible after ${Math.round(timeInBackground / 1000)}s, ` +
+            `channel=${channelState}, reconnecting...`,
         );
         this.reconnectAttempts = 0;
         this.reconnectChannel(this.currentUserId);
+      } else {
+        // Even if channel looks healthy, refresh data after being hidden
+        // (browser may have throttled the tab and missed events)
+        this.onReconnect?.();
       }
     }
   }
@@ -218,30 +257,23 @@ export class RealtimeSync<TEvent> {
   }
 
   /**
-   * Start heartbeat to detect silent disconnects.
+   * Start polling fallback - refreshes data every 5 minutes as insurance.
    */
-  private startHeartbeat(userId: string): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-    }
+  private startPolling(): void {
+    if (this.pollingInterval) return;
 
-    this.heartbeatInterval = setInterval(() => {
-      const channelState = this.channel?.state;
-
-      if (channelState !== 'joined' && channelState !== 'joining') {
-        console.warn(`[realtime] Heartbeat detected unhealthy channel: ${channelState}`);
-        this.scheduleReconnect(userId);
-      }
-    }, this.HEARTBEAT_INTERVAL_MS);
+    this.pollingInterval = setInterval(() => {
+      this.onReconnect?.();
+    }, POLLING_INTERVAL_MS);
   }
 
   /**
-   * Stop the heartbeat interval.
+   * Stop polling fallback.
    */
-  private stopHeartbeat(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
+  private stopPolling(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
     }
   }
 
@@ -254,7 +286,6 @@ export class RealtimeSync<TEvent> {
       clearTimeout(this.reconnectTimeout);
     }
 
-    // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 5 min, then stays at 5 min forever
     const delay = Math.min(
       this.RECONNECT_BASE_DELAY_MS * Math.pow(2, this.reconnectAttempts),
       this.RECONNECT_MAX_DELAY_MS,
@@ -273,57 +304,69 @@ export class RealtimeSync<TEvent> {
    * Reconnect channel after a disconnect.
    */
   private reconnectChannel(userId: string): void {
-    console.log('[realtime] Attempting to reconnect...');
+    console.log('[realtime] Reconnecting...');
 
-    // Clean up old channel
     if (this.channel) {
       this.supabase.removeChannel(this.channel);
       this.channel = null;
     }
-    this.otherDevicesOnline = 0;
 
-    // Re-establish channel
     this.setupChannel(userId);
   }
 
   /**
-   * Set up the broadcast/presence channel.
+   * Set up the realtime channel with postgres_changes + broadcast.
    */
   private setupChannel(userId: string): void {
-    // Unique ID for this browser tab/device
-    this.deviceId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
     this.channel = this.supabase.channel(`${this.channelPrefix}:${userId}`, {
       config: {
         broadcast: { self: false },
-        presence: { key: this.deviceId },
       },
     });
 
-    this.channel
-      .on('broadcast', { event: 'sync' }, ({ payload }) => {
-        const event = payload as TEvent;
-        this.onEvent(event);
-      })
-      .on('presence', { event: 'sync' }, () => {
-        const state = this.channel?.presenceState() ?? {};
-        this.otherDevicesOnline = Object.keys(state).filter((key) => key !== this.deviceId).length;
-      })
-      .subscribe(async (status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('[realtime] Channel connected');
-          this.reconnectAttempts = 0; // Reset on successful connection
-          this.startHeartbeat(userId);
-          await this.channel?.track({ device_id: this.deviceId });
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('[realtime] Channel failed:', status, err);
-          this.stopHeartbeat();
-          this.scheduleReconnect(userId);
-        } else if (status === 'CLOSED') {
-          console.warn('[realtime] Channel closed, reconnecting...');
-          this.stopHeartbeat();
-          this.scheduleReconnect(userId);
-        }
-      });
+    // Set up postgres_changes listeners for configured tables
+    for (const tableConfig of this.tables) {
+      const filter = tableConfig.filter?.replace('${userId}', userId);
+
+      this.channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: tableConfig.table,
+          ...(filter && { filter }),
+        },
+        (payload) => {
+          console.log(`[realtime] postgres_changes on ${tableConfig.table}:`, payload.eventType);
+          this.onEvent({
+            type: 'postgres_change',
+            table: tableConfig.table,
+            eventType: payload.eventType,
+          } as PostgresChangeEvent);
+        },
+      );
+    }
+
+    // Listen to broadcast for cross-device sync
+    this.channel.on('broadcast', { event: 'sync' }, ({ payload }) => {
+      const event = payload as TEvent;
+      console.log('[realtime] broadcast received');
+      this.onEvent(event);
+    });
+
+    this.channel.subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('[realtime] Channel connected');
+        this.reconnectAttempts = 0;
+        // Refresh data on successful reconnect (may have missed events)
+        this.onReconnect?.();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error('[realtime] Channel error:', status, err);
+        this.scheduleReconnect(this.currentUserId!);
+      } else if (status === 'CLOSED') {
+        console.warn('[realtime] Channel closed');
+        this.scheduleReconnect(this.currentUserId!);
+      }
+    });
   }
 }

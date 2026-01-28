@@ -1,7 +1,8 @@
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeSync } from '@dak/ui';
+import type { PostgresChangeEvent } from '@dak/ui';
 import { supabase } from './supabase';
 
-type SyncEvent =
+export type SyncEvent =
   | { type: 'note_changed'; noteId: string }
   | { type: 'note_created'; noteId: string }
   | { type: 'note_trashed'; noteId: string }
@@ -10,302 +11,62 @@ type SyncEvent =
   | { type: 'notes_refresh' }
   | { type: 'tags_refresh' };
 
-type SyncHandler = (event: SyncEvent) => void;
+type SyncHandler = (event: SyncEvent | PostgresChangeEvent) => void;
 
-// User's personal channel (for syncing across their devices)
-let userChannel: RealtimeChannel | null = null;
-let currentUserId: string | null = null;
 const handlers = new Set<SyncHandler>();
+let onReconnectCallback: (() => void) | null = null;
+let currentUserId: string | null = null;
 
-// Presence channel to track who's online
-let presenceChannel: RealtimeChannel | null = null;
-// Cache of online user IDs (updated via presence sync)
-const onlineUsers = new Set<string>();
-
-// Reconnection state
-let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-let reconnectAttempts = 0;
-const RECONNECT_BASE_DELAY_MS = 1000;
-const RECONNECT_MAX_DELAY_MS = 300000; // 5 min - keeps trying forever at this interval
-
-// Heartbeat to detect silent disconnects (important for kiosk/long-running apps)
-let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-const HEARTBEAT_INTERVAL_MS = 30000; // Check every 30 seconds
-
-// Track when app was last visible (for staleness detection)
-let lastVisibleAt = Date.now();
-const STALE_THRESHOLD_MS = 60000; // 1 minute - force reconnect after this long in background
-
-// Track if browser event listeners are registered
-let listenersRegistered = false;
-
-/**
- * Handle visibility change - reconnect when app comes back to foreground
- * This is critical for mobile browsers that suspend JS when backgrounded
- */
-function handleVisibilityChange() {
-  if (document.visibilityState === 'hidden') {
-    // Track when we went to background
-    lastVisibleAt = Date.now();
-    return;
-  }
-
-  if (document.visibilityState === 'visible' && currentUserId) {
-    const timeInBackground = Date.now() - lastVisibleAt;
-    const isStale = timeInBackground > STALE_THRESHOLD_MS;
-    const userChannelState = userChannel?.state;
-    const presenceChannelState = presenceChannel?.state;
-    const isUnhealthy =
-      (userChannelState !== 'joined' && userChannelState !== 'joining') ||
-      (presenceChannelState !== 'joined' && presenceChannelState !== 'joining');
-
-    // Force reconnect if stale (long background) OR channels are unhealthy
-    if (isStale || isUnhealthy) {
-      console.log(
-        `[realtime] App became visible after ${Math.round(timeInBackground / 1000)}s, ` +
-          `user=${userChannelState}, presence=${presenceChannelState}, forcing reconnect...`,
-      );
-      reconnectAttempts = 0;
-      reconnectChannels(currentUserId);
-    }
-  }
-}
-
-/**
- * Handle online event - reconnect when browser regains network
- */
-function handleOnline() {
-  if (currentUserId) {
-    console.log('[realtime] Browser came online, reconnecting...');
-    reconnectAttempts = 0;
-    reconnectChannels(currentUserId);
-  }
-}
-
-/**
- * Register browser event listeners for reconnection
- */
-function registerBrowserListeners() {
-  if (listenersRegistered) return;
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  window.addEventListener('online', handleOnline);
-  listenersRegistered = true;
-}
-
-/**
- * Unregister browser event listeners
- */
-function unregisterBrowserListeners() {
-  if (!listenersRegistered) return;
-
-  document.removeEventListener('visibilitychange', handleVisibilityChange);
-  window.removeEventListener('online', handleOnline);
-  listenersRegistered = false;
-}
-
-/**
- * Start heartbeat to detect silent disconnects
- */
-function startHeartbeat(userId: string) {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-  }
-
-  heartbeatInterval = setInterval(() => {
-    // Check if channels are in a healthy state
-    const userChannelState = userChannel?.state;
-    const presenceChannelState = presenceChannel?.state;
-
-    if (userChannelState !== 'joined' && userChannelState !== 'joining') {
-      console.warn(`[realtime] Heartbeat detected unhealthy user channel: ${userChannelState}`);
-      scheduleReconnect(userId);
-    } else if (presenceChannelState !== 'joined' && presenceChannelState !== 'joining') {
-      console.warn(
-        `[realtime] Heartbeat detected unhealthy presence channel: ${presenceChannelState}`,
-      );
-      scheduleReconnect(userId);
-    }
-  }, HEARTBEAT_INTERVAL_MS);
-}
-
-/**
- * Stop the heartbeat interval
- */
-function stopHeartbeat() {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = null;
-  }
-}
-
-/**
- * Schedule a reconnection attempt with exponential backoff.
- * Never gives up - keeps trying at max interval (5 min) indefinitely.
- */
-function scheduleReconnect(userId: string) {
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-  }
-
-  // Exponential backoff: 1s, 2s, 4s, 8s, ... up to 5 min, then stays at 5 min forever
-  const delay = Math.min(
-    RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempts),
-    RECONNECT_MAX_DELAY_MS,
-  );
-  reconnectAttempts++;
-
-  console.log(`[realtime] Scheduling reconnect attempt ${reconnectAttempts} in ${delay}ms`);
-
-  reconnectTimeout = setTimeout(() => {
-    reconnectTimeout = null;
-    reconnectChannels(userId);
-  }, delay);
-}
-
-/**
- * Reconnect all channels after a disconnect
- */
-function reconnectChannels(userId: string) {
-  console.log('[realtime] Attempting to reconnect...');
-
-  // Clean up old channels
-  if (userChannel) {
-    supabase.removeChannel(userChannel);
-    userChannel = null;
-  }
-  if (presenceChannel) {
-    supabase.removeChannel(presenceChannel);
-    presenceChannel = null;
-    onlineUsers.clear();
-  }
-
-  // Re-establish channels
-  setupChannels(userId);
-}
-
-/**
- * Set up the broadcast and presence channels
- */
-function setupChannels(userId: string) {
-  // Create broadcast channel for this user's devices
-  // self: false means we don't receive our own broadcasts
-  userChannel = supabase.channel(`sync:user:${userId}`, {
-    config: {
-      broadcast: { self: false },
-    },
-  });
-
-  userChannel
-    .on('broadcast', { event: 'sync' }, ({ payload }) => {
-      const event = payload as SyncEvent;
-      handlers.forEach((handler) => handler(event));
-    })
-    .subscribe((status, err) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('[realtime] User channel connected');
-        reconnectAttempts = 0; // Reset on successful connection
-        startHeartbeat(userId); // Start monitoring for silent disconnects
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('[realtime] User channel failed:', status, err);
-        stopHeartbeat();
-        scheduleReconnect(userId);
-      } else if (status === 'CLOSED') {
-        console.warn('[realtime] User channel closed, reconnecting...');
-        stopHeartbeat();
-        scheduleReconnect(userId);
-      }
-    });
-
-  // Subscribe to presence channel to track who's online
-  // This lets us skip broadcasting to users who aren't listening
-  presenceChannel = supabase.channel('presence:online');
-
-  presenceChannel
-    .on('presence', { event: 'sync' }, () => {
-      // Rebuild online users set from presence state
-      onlineUsers.clear();
-      const state = presenceChannel?.presenceState() ?? {};
-      for (const presences of Object.values(state)) {
-        for (const presence of presences as Array<{ user_id?: string }>) {
-          if (presence.user_id) {
-            onlineUsers.add(presence.user_id);
-          }
-        }
-      }
-    })
-    .subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log('[realtime] Presence channel connected');
-        // Track this user as online
-        await presenceChannel?.track({ user_id: userId });
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.warn('[realtime] Presence channel disconnected:', status);
-        scheduleReconnect(userId);
-      }
-    });
-}
+const sync = new RealtimeSync<SyncEvent>({
+  supabase,
+  channelPrefix: 'realtime:notes',
+  onEvent: (event) => {
+    handlers.forEach((handler) => handler(event));
+  },
+  onReconnect: () => {
+    onReconnectCallback?.();
+  },
+  // Watch tables with user_id for bulletproof postgres_changes:
+  // - notes: owned notes (any change to my notes)
+  // - note_access: notes shared with me (when someone shares/unshares)
+  // - tags: my tags
+  tables: [
+    { table: 'notes', filter: 'user_id=eq.${userId}' },
+    { table: 'note_access', filter: 'user_id=eq.${userId}' },
+    { table: 'tags', filter: 'user_id=eq.${userId}' },
+  ],
+});
 
 /**
  * Subscribe to sync events for a user
  *
- * Syncs across a user's own devices. When another device (or a user
- * who shared a note with them) makes changes, they receive events here.
+ * Uses postgres_changes for owned notes (bulletproof) and
+ * broadcast for shared notes (fast notification from other users)
  */
-export function subscribeToSync(userId: string, onEvent: SyncHandler) {
+export function subscribeToSync(
+  userId: string,
+  onEvent: SyncHandler,
+  onReconnect?: () => void,
+): () => void {
   handlers.add(onEvent);
 
-  // Only create channel once per user
-  if (userChannel && currentUserId === userId) {
-    return () => {
-      handlers.delete(onEvent);
-    };
-  }
-
-  // Clean up old channels if user changed
-  if (userChannel) {
-    supabase.removeChannel(userChannel);
-    userChannel = null;
-  }
-  if (presenceChannel) {
-    supabase.removeChannel(presenceChannel);
-    presenceChannel = null;
-    onlineUsers.clear();
-  }
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-    reconnectTimeout = null;
+  if (onReconnect) {
+    onReconnectCallback = onReconnect;
   }
 
   currentUserId = userId;
-  reconnectAttempts = 0;
 
-  // Register browser event listeners for reconnection on visibility/online changes
-  registerBrowserListeners();
-
-  // Set up the channels
-  setupChannels(userId);
+  // Subscribe if this is the first handler
+  if (handlers.size === 1) {
+    sync.subscribe(userId);
+  }
 
   return () => {
     handlers.delete(onEvent);
     if (handlers.size === 0) {
-      stopHeartbeat();
-      unregisterBrowserListeners();
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-        reconnectTimeout = null;
-      }
-      if (userChannel) {
-        supabase.removeChannel(userChannel);
-        userChannel = null;
-      }
-      if (presenceChannel) {
-        supabase.removeChannel(presenceChannel);
-        presenceChannel = null;
-        onlineUsers.clear();
-      }
+      sync.unsubscribe();
+      onReconnectCallback = null;
       currentUserId = null;
-      reconnectAttempts = 0;
     }
   };
 }
@@ -313,106 +74,74 @@ export function subscribeToSync(userId: string, onEvent: SyncHandler) {
 /**
  * Broadcast a sync event to other devices/users
  *
- * For private notes (isPrivate=true): broadcasts only to user's own devices
- * For shared notes (isPrivate=false): broadcasts to user's devices AND
- *   all users who have access via note_shares table
- *
- * @param event - The sync event to broadcast
- * @param isPrivate - If true, only sync to own devices. If false, also notify shared users.
+ * For private notes: broadcasts only to user's own channel (other devices)
+ * For shared notes: broadcasts to own channel AND all users with access
  */
 export async function broadcastSync(event: SyncEvent, isPrivate: boolean = true) {
-  if (!userChannel || !currentUserId) {
-    // No channel yet - this can happen on first save before sync is set up
-    // It's fine, the other devices will fetch on load anyway
-    return;
-  }
+  // Broadcast to own channel (for own other devices)
+  await sync.broadcast(event);
 
-  // Always broadcast to own devices
-  const result = await userChannel.send({
-    type: 'broadcast',
-    event: 'sync',
-    payload: event,
-  });
-
-  if (result !== 'ok') {
-    console.warn('[realtime] Broadcast to own devices failed:', result);
-  }
-
-  // For shared notes, also notify users who have access
+  // For shared notes, also notify all users who have access (owner + other shared users)
   if (!isPrivate && 'noteId' in event) {
-    await notifySharedUsers(event.noteId, event);
+    await notifyUsersWithAccess(event.noteId, event);
   }
 }
 
 /**
- * Notify all users who have access to a shared note
- *
- * Only notifies users who are currently online (via presence).
- * Offline users will fetch updates when they next open the app.
+ * Notify all users who have access to a note (excluding current user)
+ * This includes the owner (if current user is a shared user) and other shared users
  */
-async function notifySharedUsers(noteId: string, event: SyncEvent) {
+async function notifyUsersWithAccess(noteId: string, event: SyncEvent) {
+  if (!currentUserId) return;
+
   try {
-    // Get all users who have access to this note (excluding owner)
-    const { data: shares, error } = await supabase
+    // Get all users with access to this note (owner + shared users)
+    const { data: accessList, error } = await supabase
       .from('note_access')
       .select('user_id')
-      .eq('note_id', noteId)
-      .eq('is_owner', false);
+      .eq('note_id', noteId);
 
-    if (error || !shares) {
-      console.error('Failed to get note shares:', error);
+    if (error || !accessList) {
+      console.error('[realtime] Failed to get note access:', error);
       return;
     }
 
-    // Filter to only users who are currently online
-    const userIds = shares
-      .map((s) => s.user_id)
-      .filter((id): id is string => id !== null && id !== currentUserId && onlineUsers.has(id));
+    // Filter out current user
+    const userIds = accessList
+      .map((a) => a.user_id)
+      .filter((id): id is string => id !== null && id !== currentUserId);
 
-    if (userIds.length === 0) {
-      // No shared users are online - skip broadcasting entirely
-      return;
-    }
+    if (userIds.length === 0) return;
 
-    const SUBSCRIPTION_TIMEOUT_MS = 5000;
-
+    // Send to each user's channel
     await Promise.all(
       userIds.map(async (userId) => {
-        const channel = supabase.channel(`sync:user:${userId}`);
-
+        const channel = supabase.channel(`realtime:notes:${userId}`);
         try {
-          // Wait for channel to be ready with timeout to prevent hanging
-          await Promise.race([
-            new Promise<void>((resolve) => {
-              channel.subscribe((status) => {
-                if (status === 'SUBSCRIBED') resolve();
-              });
-            }),
-            new Promise<void>((_, reject) =>
-              setTimeout(() => reject(new Error('Subscription timeout')), SUBSCRIPTION_TIMEOUT_MS),
-            ),
-          ]);
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('timeout')), 5000);
+            channel.subscribe((status) => {
+              if (status === 'SUBSCRIBED') {
+                clearTimeout(timeout);
+                resolve();
+              }
+            });
+          });
 
-          // Send the broadcast and wait for confirmation
-          const result = await channel.send({
+          await channel.send({
             type: 'broadcast',
             event: 'sync',
             payload: event,
           });
-
-          if (result !== 'ok') {
-            console.warn(`Failed to notify user ${userId} - send returned: ${result}`);
-          }
         } catch {
-          // Timeout or subscription error - continue with cleanup
-          console.warn(`Failed to notify user ${userId} - subscription timeout`);
+          // Timeout or error - user may be offline, that's fine
         } finally {
           supabase.removeChannel(channel);
         }
       }),
     );
   } catch (err) {
-    console.error('Failed to notify shared users:', err);
+    console.error('[realtime] Failed to notify users:', err);
   }
 }
 
@@ -420,22 +149,8 @@ async function notifySharedUsers(noteId: string, event: SyncEvent) {
  * Unsubscribe from all sync events (call on signout)
  */
 export function unsubscribeFromSync() {
-  stopHeartbeat();
-  unregisterBrowserListeners();
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-    reconnectTimeout = null;
-  }
-  if (userChannel) {
-    supabase.removeChannel(userChannel);
-    userChannel = null;
-  }
-  if (presenceChannel) {
-    supabase.removeChannel(presenceChannel);
-    presenceChannel = null;
-    onlineUsers.clear();
-  }
-  currentUserId = null;
-  reconnectAttempts = 0;
   handlers.clear();
+  sync.unsubscribe();
+  onReconnectCallback = null;
+  currentUserId = null;
 }
