@@ -153,7 +153,8 @@ export function useNoteEditor({
   // Helper functions that were previously on the ref
   const toggleTaskList = () => editor?.chain().focus().toggleTaskList().run();
   const toggleBulletList = () => editor?.chain().focus().toggleBulletList().run();
-  const toggleHeading = (level: 1 | 2 | 3) => editor?.chain().focus().toggleHeading({ level }).run();
+  const toggleHeading = (level: 1 | 2 | 3) =>
+    editor?.chain().focus().toggleHeading({ level }).run();
   const setEditable = (editable: boolean) => {
     editor?.setEditable(editable);
     if (!editable) {

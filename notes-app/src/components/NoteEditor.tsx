@@ -411,7 +411,8 @@ export function NoteEditor({
                 {availableTags
                   .filter(
                     (tag) =>
-                      !newTagName.trim() || tag.name.toLowerCase().includes(newTagName.toLowerCase()),
+                      !newTagName.trim() ||
+                      tag.name.toLowerCase().includes(newTagName.toLowerCase()),
                   )
                   .slice(0, 8)
                   .map((tag) => (
