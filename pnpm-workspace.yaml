@@ -10,18 +10,18 @@ packages:
   - packages/*
 
 catalog:
-  '@supabase/supabase-js': ^2.93.1
+  '@supabase/supabase-js': ^2.93.2
   '@tailwindcss/vite': ^4.1.18
   '@tanstack/react-query': ^5.90.20
   '@types/node': ^24.0.0
-  '@types/react': ^19.2.9
+  '@types/react': ^19.2.10
   '@types/react-dom': ^19.2.3
   '@vitejs/plugin-react': ^5.1.2
   concurrently: ^9.2.1
   date-fns: ^4.1.0
   lucide-react: ^0.563.0
-  react: ^19.2.3
-  react-dom: ^19.2.3
+  react: ^19.2.4
+  react-dom: ^19.2.4
   react-router-dom: ^7.13.0
   rollup-plugin-visualizer: ^6.0.5
   tailwindcss: ^4.1.18
