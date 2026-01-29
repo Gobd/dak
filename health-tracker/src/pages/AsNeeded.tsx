@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useInterval } from '@dak/hooks';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
 import { useToastStore } from '@dak/ui';
@@ -62,13 +63,21 @@ export function AsNeeded() {
     fetchMeds();
   }, [fetchPeople, fetchMeds]);
 
+  // Force re-render for relative timestamps
+  const [, setTick] = useState(0);
+
   // Auto-refresh every minute to update countdowns
+  useInterval(() => setTick((t) => t + 1), 60000);
+
+  // Refresh immediately when returning from background
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Force re-render to update time displays
-      setShowAddForm((prev) => prev);
-    }, 60000);
-    return () => clearInterval(interval);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setTick((t) => t + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const handleAddMed = async (e: React.FormEvent) => {

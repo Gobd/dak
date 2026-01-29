@@ -258,6 +258,10 @@ The standalone apps share the same backend (home-relay) but have their own UI op
 
 ## Patterns
 
+- **Relative timestamps** - Components displaying `formatDistanceToNow` or similar must refresh periodically for 24/7 kiosk displays. Use both:
+  - `useInterval` from `@dak/hooks` for 1-minute updates
+  - `visibilitychange` listener for instant refresh on tab/app return
+- **Prefer shared hooks** - Use `@dak/hooks` (`useInterval`, `useToggle`, etc.) over raw implementations
 - **No underscore prefix** for unused params - remove them or fix the code
 - **Optional props** in interfaces for props that aren't always needed
 - **Semantic tokens only** - no hardcoded colors
