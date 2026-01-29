@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { FileText, Search, Hash } from 'lucide-react';
+import { useInterval } from '@dak/hooks';
 import { NoteListItem } from './NoteListItem';
 import type { Note } from '../types/note';
 
@@ -25,6 +27,21 @@ export function NotesList({
   onToggleSelect,
   currentUserId,
 }: NotesListProps) {
+  // Force re-render to update relative timestamps
+  const [, setTick] = useState(0);
+  useInterval(() => setTick((t) => t + 1), 60000); // Every minute
+
+  // Also refresh when page becomes visible (e.g., returning from background on phone)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setTick((t) => t + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   if (notes.length === 0) {
     if (emptyStateType === 'search') {
       return (
