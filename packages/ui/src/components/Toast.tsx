@@ -21,6 +21,12 @@ const borderColors: Record<ToastType, string> = {
   info: 'border-l-accent',
 };
 
+const bgColors: Record<ToastType, string> = {
+  success: 'bg-success-light',
+  error: 'bg-danger-light',
+  info: 'bg-accent-light',
+};
+
 export function ToastContainer() {
   const { toasts, hideToast } = useToastStore();
 
@@ -34,7 +40,7 @@ export function ToastContainer() {
         return (
           <div
             key={toast.id}
-            className={`flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto bg-surface-sunken border-l-[3px] ${borderColors[toast.type]}`}
+            className={`flex items-center rounded-lg py-3 px-4 mb-2 max-w-[360px] min-w-[200px] shadow-lg pointer-events-auto border border-border border-l-[3px] ${bgColors[toast.type]} ${borderColors[toast.type]}`}
           >
             <Icon size={18} className={`mr-2.5 flex-shrink-0 ${iconColors[toast.type]}`} />
             <span className="flex-1 text-sm text-text">{toast.message}</span>
