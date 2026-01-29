@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
+import { useToastStore } from '@dak/ui';
 import {
   ConfirmModal,
   Modal,
@@ -31,6 +32,7 @@ import {
 export function AsNeeded() {
   const { people, fetchPeople } = usePeopleStore();
   const { meds, logs, fetchMeds, addMed, deleteMed, giveMed, undoLastDose } = usePrnStore();
+  const { showToast } = useToastStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedPersons, setExpandedPersons] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -293,7 +295,14 @@ export function AsNeeded() {
                                 <Button
                                   variant="secondary"
                                   size="sm"
-                                  onClick={() => undoLastDose(med.id)}
+                                  onClick={async () => {
+                                    const success = await undoLastDose(med.id);
+                                    if (success) {
+                                      showToast('Dose undone', 'success');
+                                    } else {
+                                      showToast('Failed to undo', 'error');
+                                    }
+                                  }}
                                   title="Undo last dose"
                                 >
                                   <Undo2 size={16} />
@@ -318,11 +327,15 @@ export function AsNeeded() {
                               </Button>
                               <Button
                                 variant={okToGive ? 'primary' : 'danger'}
-                                onClick={() => {
-                                  if (showTimeInput === med.id && customTime) {
-                                    giveMed(med.id, customTime);
+                                onClick={async () => {
+                                  const success =
+                                    showTimeInput === med.id && customTime
+                                      ? await giveMed(med.id, customTime)
+                                      : await giveMed(med.id);
+                                  if (success) {
+                                    showToast(`${med.name} given`, 'success');
                                   } else {
-                                    giveMed(med.id);
+                                    showToast('Failed to log dose', 'error');
                                   }
                                   setShowTimeInput(null);
                                   setCustomTime(null);

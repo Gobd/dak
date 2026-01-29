@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './stores/auth-store';
-import { ProtectedRoute } from '@dak/ui';
+import { ProtectedRoute, ToastContainer } from '@dak/ui';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { SignUp } from './pages/SignUp';
@@ -31,29 +31,32 @@ export default function App() {
   }, [initialize]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute session={session} loading={loading}>
-            <AuthenticatedApp>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shots" element={<Shots />} />
-                  <Route path="/medicine" element={<Courses />} />
-                  <Route path="/prn" element={<AsNeeded />} />
-                  <Route path="/people" element={<People />} />
-                </Routes>
-              </Layout>
-            </AuthenticatedApp>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <>
+      <ToastContainer />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute session={session} loading={loading}>
+              <AuthenticatedApp>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/shots" element={<Shots />} />
+                    <Route path="/medicine" element={<Courses />} />
+                    <Route path="/prn" element={<AsNeeded />} />
+                    <Route path="/people" element={<People />} />
+                  </Routes>
+                </Layout>
+              </AuthenticatedApp>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </>
   );
 }

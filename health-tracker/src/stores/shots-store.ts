@@ -19,7 +19,7 @@ interface ShotsState {
   }) => Promise<void>;
   updateSchedule: (id: string, data: Partial<ShotSchedule>) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
-  logShot: (scheduleId: string, dose: string, notes?: string, takenAt?: Date) => Promise<void>;
+  logShot: (scheduleId: string, dose: string, notes?: string, takenAt?: Date) => Promise<boolean>;
   pushNextDue: (scheduleId: string, days: number) => Promise<void>;
   deleteLog: (scheduleId: string, logId: string) => Promise<void>;
 }
@@ -86,7 +86,7 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
 
   logShot: async (scheduleId: string, dose: string, notes?: string, takenAt?: Date) => {
     const schedule = get().schedules.find((s) => s.id === scheduleId);
-    if (!schedule) return;
+    if (!schedule) return false;
 
     const shotTime = takenAt || new Date();
 
@@ -98,7 +98,7 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
       notes: notes || null,
     });
 
-    if (error) return;
+    if (error) return false;
 
     // Update next due date
     const nextDue = addDays(shotTime, schedule.interval_days);
@@ -113,6 +113,7 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
     get().fetchSchedules();
     get().fetchLogs(scheduleId);
     broadcastSync({ type: 'shots' });
+    return true;
   },
 
   pushNextDue: async (scheduleId: string, days: number) => {

@@ -14,8 +14,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { Trash } from './pages/Trash';
 import { About } from './pages/About';
-import { ToastContainer } from './components/ui/toast';
-import { Spinner } from '@dak/ui';
+import { Spinner, ToastContainer } from '@dak/ui';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, isInitialized } = useAuthStore();

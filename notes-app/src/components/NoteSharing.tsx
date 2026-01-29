@@ -4,8 +4,7 @@ import { Users, Plus, X, Lock, Globe } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useUserStore } from '../stores/user-store';
 import { useSharesStore } from '../stores/shares-store';
-import { ConfirmModal, Input, Button } from '@dak/ui';
-import { useToastStore } from '../stores/toast-store';
+import { ConfirmModal, Input, Button, useToastStore } from '@dak/ui';
 import type { Note } from '../types/note';
 
 interface NoteSharingProps {

@@ -16,7 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ConfirmModal, Spinner, Input, Button } from '@dak/ui';
+import { ConfirmModal, Spinner, Input, Button, useToastStore } from '@dak/ui';
 import type { Plan } from '../constants/plan-limits';
 import { PLAN_LIMITS } from '../constants/plan-limits';
 import { notesApi } from '../lib/api/notes';
@@ -28,7 +28,6 @@ import { useNotesStore } from '../stores/notes-store';
 import { useSharesStore } from '../stores/shares-store';
 import { useTagsStore } from '../stores/tags-store';
 import { useThemeStore } from '../stores/theme-store';
-import { useToastStore } from '../stores/toast-store';
 import { useUserStore } from '../stores/user-store';
 
 export function Settings() {

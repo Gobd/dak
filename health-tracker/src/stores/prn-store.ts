@@ -12,8 +12,8 @@ interface PrnState {
   addMed: (data: { person_id: string; name: string; min_hours: number }) => Promise<void>;
   updateMed: (id: string, data: { name?: string; min_hours?: number }) => Promise<void>;
   deleteMed: (id: string) => Promise<void>;
-  giveMed: (medId: string, givenAt?: Date) => Promise<void>;
-  undoLastDose: (medId: string) => Promise<void>;
+  giveMed: (medId: string, givenAt?: Date) => Promise<boolean>;
+  undoLastDose: (medId: string) => Promise<boolean>;
 }
 
 export const usePrnStore = create<PrnState>((set, get) => ({
@@ -89,12 +89,14 @@ export const usePrnStore = create<PrnState>((set, get) => ({
     if (!error) {
       get().fetchLogs(medId);
       broadcastSync({ type: 'prn' });
+      return true;
     }
+    return false;
   },
 
   undoLastDose: async (medId: string) => {
     const medLogs = get().logs[medId] || [];
-    if (medLogs.length === 0) return;
+    if (medLogs.length === 0) return false;
 
     const lastLog = medLogs[0];
     const { error } = await supabase.from('prn_logs').delete().eq('id', lastLog.id);
@@ -102,6 +104,8 @@ export const usePrnStore = create<PrnState>((set, get) => ({
     if (!error) {
       get().fetchLogs(medId);
       broadcastSync({ type: 'prn' });
+      return true;
     }
+    return false;
   },
 }));
