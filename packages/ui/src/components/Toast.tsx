@@ -1,6 +1,6 @@
 import { X, Check, TriangleAlert } from 'lucide-react';
-import { Button } from '@dak/ui';
-import { useToastStore, type ToastType } from '../../stores/toast-store';
+import { Button } from './Button';
+import { useToastStore, type ToastType } from '../stores/toast-store';
 import type { LucideIcon } from 'lucide-react';
 
 const icons: Record<ToastType, LucideIcon> = {

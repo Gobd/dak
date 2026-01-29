@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useToggle } from '@dak/hooks';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
+import { useToastStore } from '@dak/ui';
 import {
   ConfirmModal,
   Modal,
@@ -71,10 +72,18 @@ export function Shots() {
     setNextDue(new Date());
   };
 
+  const { showToast } = useToastStore();
+
   const handleLogShot = async (scheduleId: string) => {
     if (!logDose) return;
     const takenAt = useCustomTime.value && logTime ? logTime : undefined;
-    await logShot(scheduleId, logDose, logNotes || undefined, takenAt);
+    const schedule = schedules.find((s) => s.id === scheduleId);
+    const success = await logShot(scheduleId, logDose, logNotes || undefined, takenAt);
+    if (success) {
+      showToast(`${schedule?.name || 'Shot'} logged`, 'success');
+    } else {
+      showToast('Failed to log shot', 'error');
+    }
     setShowLogForm(null);
     setLogDose('');
     setLogNotes('');

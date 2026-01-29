@@ -19,7 +19,7 @@ interface MedicineState {
     notes?: string;
   }) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
-  toggleDose: (doseId: string, taken: boolean) => Promise<void>;
+  toggleDose: (doseId: string, taken: boolean) => Promise<boolean>;
 }
 
 export const useMedicineStore = create<MedicineState>((set, get) => ({
@@ -114,6 +114,8 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
     if (!error && data) {
       get().fetchDoses(data.course_id);
       broadcastSync({ type: 'medicine' });
+      return true;
     }
+    return false;
   },
 }));

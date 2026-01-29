@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePeopleStore } from '../stores/people-store';
 import { useMedicineStore } from '../stores/medicine-store';
+import { useToastStore } from '@dak/ui';
 import {
   ConfirmModal,
   Modal,
@@ -17,6 +18,7 @@ export function Courses() {
   const { people, fetchPeople } = usePeopleStore();
   const { courses, doses, fetchCourses, fetchDoses, addCourse, deleteCourse, toggleDose } =
     useMedicineStore();
+  const { showToast } = useToastStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedCompleted, setExpandedCompleted] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -284,7 +286,15 @@ export function Courses() {
                               <input
                                 type="checkbox"
                                 checked={dose.taken}
-                                onChange={() => toggleDose(dose.id, !dose.taken)}
+                                onChange={async () => {
+                                  const newState = !dose.taken;
+                                  const success = await toggleDose(dose.id, newState);
+                                  if (success) {
+                                    showToast(newState ? 'Dose taken' : 'Dose unmarked', 'success');
+                                  } else {
+                                    showToast('Failed to update dose', 'error');
+                                  }
+                                }}
                                 className="w-5 h-5 rounded border-border text-success focus:ring-success bg-surface-sunken"
                               />
                               <span
@@ -378,7 +388,18 @@ export function Courses() {
                                       <input
                                         type="checkbox"
                                         checked={dose.taken}
-                                        onChange={() => toggleDose(dose.id, !dose.taken)}
+                                        onChange={async () => {
+                                          const newState = !dose.taken;
+                                          const success = await toggleDose(dose.id, newState);
+                                          if (success) {
+                                            showToast(
+                                              newState ? 'Dose taken' : 'Dose unmarked',
+                                              'success',
+                                            );
+                                          } else {
+                                            showToast('Failed to update dose', 'error');
+                                          }
+                                        }}
                                         className="w-5 h-5 rounded border-border text-success focus:ring-success bg-surface-sunken"
                                       />
                                       <span
