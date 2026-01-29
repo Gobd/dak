@@ -6,11 +6,6 @@ import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 
-// Strip trailing whitespace, newlines, and &nbsp; entities that create empty paragraphs
-function trimTrailingEmpty(str: string): string {
-  return str.replace(/(\s|&nbsp;|\u00A0)+$/g, '');
-}
-
 // Focus at end of actual content, skipping empty trailing paragraphs that TipTap creates
 function focusAtContentEnd(editor: ReturnType<typeof useEditor>): void {
   if (!editor) return;
@@ -41,7 +36,7 @@ export function useNoteEditor({
   maxLength = 50000,
   placeholder = 'Start writing...',
 }: UseNoteEditorOptions) {
-  const lastContentRef = useRef(trimTrailingEmpty(content));
+  const lastContentRef = useRef(content);
   const isInitPhaseRef = useRef(true);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onUpdateRef = useRef(onUpdate);
@@ -51,7 +46,7 @@ export function useNoteEditor({
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
 
-  const initialContent = trimTrailingEmpty(content);
+  const initialContent = content;
 
   const editor = useEditor({
     extensions: [
@@ -92,7 +87,7 @@ export function useNoteEditor({
       }
 
       debounceTimerRef.current = setTimeout(() => {
-        const markdown = trimTrailingEmpty(editor.getMarkdown());
+        const markdown = editor.getMarkdown();
         if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
           lastContentRef.current = markdown;
           onUpdate(markdown);
@@ -112,14 +107,12 @@ export function useNoteEditor({
 
   // Update content when it changes externally
   useEffect(() => {
-    // Trim trailing whitespace so focus('end') lands on actual text, not an empty line
-    const trimmedContent = trimTrailingEmpty(content);
-    if (editor && trimmedContent !== lastContentRef.current) {
-      lastContentRef.current = trimmedContent;
+    if (editor && content !== lastContentRef.current) {
+      lastContentRef.current = content;
       isInitPhaseRef.current = true;
 
-      if (trimmedContent) {
-        (editor as any).commands.setContent(trimmedContent, { contentType: 'markdown' });
+      if (content) {
+        (editor as any).commands.setContent(content, { contentType: 'markdown' });
         focusAtContentEnd(editor);
       } else {
         (editor as any).commands.setContent('# ', { contentType: 'markdown' });
@@ -142,7 +135,7 @@ export function useNoteEditor({
       }
       // Flush any pending changes before unmount
       if (editorInstance && !isInitPhaseRef.current) {
-        const markdown = trimTrailingEmpty(editorInstance.getMarkdown?.() ?? '');
+        const markdown = editorInstance.getMarkdown?.() ?? '';
         if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
           onUpdateRef.current(markdown);
         }
@@ -164,14 +157,13 @@ export function useNoteEditor({
   const blur = () => editor?.commands.blur();
   const getMarkdown = () => {
     if (!editor) return '';
-    return trimTrailingEmpty(editor.getMarkdown() ?? '');
+    return editor.getMarkdown() ?? '';
   };
   const setMarkdown = (markdown: string) => {
     if (!editor) return;
-    const trimmed = trimTrailingEmpty(markdown);
-    lastContentRef.current = trimmed;
-    (editor as any).commands.setContent(trimmed, { contentType: 'markdown' });
-    onUpdateRef.current(trimmed);
+    lastContentRef.current = markdown;
+    (editor as any).commands.setContent(markdown, { contentType: 'markdown' });
+    onUpdateRef.current(markdown);
   };
 
   return {
