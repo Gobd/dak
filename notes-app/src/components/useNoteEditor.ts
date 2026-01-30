@@ -25,7 +25,6 @@ interface UseNoteEditorOptions {
   onUpdate: (content: string) => void; // returns markdown
   maxLength?: number;
   placeholder?: string;
-  autofocus?: boolean; // disable on mobile to let user tap for keyboard
 }
 
 // Debounce delay for content changes
@@ -36,7 +35,6 @@ export function useNoteEditor({
   onUpdate,
   maxLength = 50000,
   placeholder = 'Start writing...',
-  autofocus = true,
 }: UseNoteEditorOptions) {
   const lastContentRef = useRef(content);
   const isInitPhaseRef = useRef(true);
@@ -71,11 +69,9 @@ export function useNoteEditor({
     contentType: 'markdown',
     autofocus: false, // Handle focus manually after DOM is ready
     onCreate: ({ editor }) => {
-      if (autofocus) {
-        // Delay focus until after browser has finished rendering
-        // If requestAnimationFrame isn't enough, try setTimeout(() => ..., 50)
-        requestAnimationFrame(() => focusAtContentEnd(editor));
-      }
+      // Delay focus until after browser has finished rendering
+      // If requestAnimationFrame isn't enough, try setTimeout(() => ..., 50)
+      requestAnimationFrame(() => focusAtContentEnd(editor));
     },
     editorProps: {
       attributes: {
