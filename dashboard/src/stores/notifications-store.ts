@@ -7,6 +7,7 @@ import {
   addEventNotificationsPost,
   type DueNotification,
 } from '@dak/api-client';
+import { getRelayUrl } from './config-store';
 
 export type { DueNotification };
 
@@ -76,8 +77,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   fetchDue: async () => {
     try {
-      const { data } = await getDueNotificationsDueGet();
-      if (data) {
+      const { data } = await getDueNotificationsDueGet({ baseUrl: getRelayUrl() });
+      if (Array.isArray(data)) {
         get().setNotifications(data);
       }
     } catch {
@@ -87,7 +88,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   fetchPreferences: async () => {
     try {
-      const { data } = await getPreferencesNotificationsPreferencesGet();
+      const { data } = await getPreferencesNotificationsPreferencesGet({ baseUrl: getRelayUrl() });
       if (data) {
         const prefs = data as { types: TypePreference[]; unconfigured_count: number };
         set({
@@ -103,6 +104,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   setTypeEnabled: async (type, enabled) => {
     try {
       const { response } = await setPreferenceNotificationsPreferencesEventTypePost({
+        baseUrl: getRelayUrl(),
         path: { event_type: type },
         query: { enabled },
       });
@@ -125,6 +127,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
           : { hours };
 
       const { response } = await dismissEventNotificationsEventIdDismissPost({
+        baseUrl: getRelayUrl(),
         path: { event_id: id },
         body,
       });
@@ -148,6 +151,7 @@ if (typeof window !== 'undefined') {
     }
     try {
       await addEventNotificationsPost({
+        baseUrl: getRelayUrl(),
         body: {
           type: payload.type,
           name: payload.name,
