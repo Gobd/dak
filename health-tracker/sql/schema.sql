@@ -149,3 +149,15 @@ CREATE POLICY "Users can manage own prn_logs"
   ON prn_logs FOR ALL TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
+
+-- ============================================
+-- REALTIME (for cross-device sync)
+-- ============================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE people;
+ALTER PUBLICATION supabase_realtime ADD TABLE shot_schedules;
+ALTER PUBLICATION supabase_realtime ADD TABLE shot_logs;
+ALTER PUBLICATION supabase_realtime ADD TABLE medicine_courses;
+ALTER PUBLICATION supabase_realtime ADD TABLE medicine_doses;
+ALTER PUBLICATION supabase_realtime ADD TABLE prn_meds;
+ALTER PUBLICATION supabase_realtime ADD TABLE prn_logs;

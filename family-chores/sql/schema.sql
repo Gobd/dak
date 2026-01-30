@@ -188,3 +188,11 @@ CREATE POLICY "Users can manage own app_settings"
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
+
+-- ============================================
+-- REALTIME (for cross-device sync)
+-- ============================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE family_members;
+ALTER PUBLICATION supabase_realtime ADD TABLE chores;
+ALTER PUBLICATION supabase_realtime ADD TABLE app_settings;

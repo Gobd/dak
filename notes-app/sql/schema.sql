@@ -755,7 +755,16 @@ ON CONFLICT (id) DO NOTHING;
 
 
 -- =============================================
--- SECTION 10: RELOAD POSTGREST SCHEMA CACHE
+-- SECTION 10: REALTIME (for cross-device sync)
+-- =============================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE notes;
+ALTER PUBLICATION supabase_realtime ADD TABLE note_access;
+ALTER PUBLICATION supabase_realtime ADD TABLE tags;
+
+
+-- =============================================
+-- SECTION 11: RELOAD POSTGREST SCHEMA CACHE
 -- =============================================
 
 NOTIFY pgrst, 'reload schema';

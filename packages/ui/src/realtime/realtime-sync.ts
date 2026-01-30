@@ -34,6 +34,9 @@ export interface PostgresChangeEvent {
 // Polling interval as fallback (5 minutes)
 const POLLING_INTERVAL_MS = 5 * 60 * 1000;
 
+// Debounce delay for event handling (prevents rapid-fire fetches)
+const DEBOUNCE_MS = 1000;
+
 /**
  * Robust realtime sync manager with automatic reconnection.
  *
@@ -101,6 +104,11 @@ export class RealtimeSync<TEvent> {
 
   // Polling fallback
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Debounce timers
+  private eventDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingEvents: Set<string> = new Set();
 
   // Bound handlers for event listeners (so we can remove them)
   private boundHandleVisibilityChange: () => void;
@@ -183,6 +191,17 @@ export class RealtimeSync<TEvent> {
       this.reconnectTimeout = null;
     }
 
+    // Clear debounce timers
+    if (this.eventDebounceTimer) {
+      clearTimeout(this.eventDebounceTimer);
+      this.eventDebounceTimer = null;
+    }
+    if (this.reconnectDebounceTimer) {
+      clearTimeout(this.reconnectDebounceTimer);
+      this.reconnectDebounceTimer = null;
+    }
+    this.pendingEvents.clear();
+
     if (this.channel) {
       this.supabase.removeChannel(this.channel);
       this.channel = null;
@@ -215,10 +234,10 @@ export class RealtimeSync<TEvent> {
         );
         this.reconnectAttempts = 0;
         this.reconnectChannel(this.currentUserId);
-      } else {
-        // Even if channel looks healthy, refresh data after being hidden
-        // (browser may have throttled the tab and missed events)
-        this.onReconnect?.();
+      } else if (timeInBackground > 5000) {
+        // Only refresh if hidden for more than 5 seconds (prevents rapid tab switching spam)
+        // Use debounced handler to batch multiple visibility events
+        this.debouncedOnReconnect();
       }
     }
   }
@@ -263,7 +282,8 @@ export class RealtimeSync<TEvent> {
     if (this.pollingInterval) return;
 
     this.pollingInterval = setInterval(() => {
-      this.onReconnect?.();
+      // Use debounced to prevent overlap with other refresh triggers
+      this.debouncedOnReconnect();
     }, POLLING_INTERVAL_MS);
   }
 
@@ -275,6 +295,59 @@ export class RealtimeSync<TEvent> {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
     }
+  }
+
+  /**
+   * Debounced event handler - batches rapid events into a single callback.
+   * Stores the last event of each type and fires them after debounce period.
+   */
+  private debouncedOnEvent(event: TEvent | PostgresChangeEvent): void {
+    // Track event by type/table for deduplication
+    const e = event as Record<string, unknown>;
+    const eventKey =
+      e.type === 'postgres_change' && typeof e.table === 'string'
+        ? `pg:${e.table}`
+        : `bc:${e.type || 'unknown'}`;
+    this.pendingEvents.add(eventKey);
+
+    if (this.eventDebounceTimer) {
+      clearTimeout(this.eventDebounceTimer);
+    }
+
+    this.eventDebounceTimer = setTimeout(() => {
+      this.eventDebounceTimer = null;
+      // Fire event for each unique pending event type
+      for (const key of this.pendingEvents) {
+        if (key.startsWith('pg:')) {
+          this.onEvent({
+            type: 'postgres_change',
+            table: key.slice(3),
+            eventType: 'UPDATE',
+          } as PostgresChangeEvent);
+        } else if (key.startsWith('bc:')) {
+          // For broadcast, fire a generic event with the type
+          const type = key.slice(3);
+          if (type !== 'unknown') {
+            this.onEvent({ type } as TEvent);
+          }
+        }
+      }
+      this.pendingEvents.clear();
+    }, DEBOUNCE_MS);
+  }
+
+  /**
+   * Debounced reconnect handler - prevents rapid refresh calls.
+   */
+  private debouncedOnReconnect(): void {
+    if (this.reconnectDebounceTimer) {
+      clearTimeout(this.reconnectDebounceTimer);
+    }
+
+    this.reconnectDebounceTimer = setTimeout(() => {
+      this.reconnectDebounceTimer = null;
+      this.onReconnect?.();
+    }, DEBOUNCE_MS);
   }
 
   /**
@@ -338,7 +411,8 @@ export class RealtimeSync<TEvent> {
         },
         (payload) => {
           console.log(`[realtime] postgres_changes on ${tableConfig.table}:`, payload.eventType);
-          this.onEvent({
+          // Use debounced handler to batch rapid changes
+          this.debouncedOnEvent({
             type: 'postgres_change',
             table: tableConfig.table,
             eventType: payload.eventType,
@@ -351,7 +425,8 @@ export class RealtimeSync<TEvent> {
     this.channel.on('broadcast', { event: 'sync' }, ({ payload }) => {
       const event = payload as TEvent;
       console.log('[realtime] broadcast received');
-      this.onEvent(event);
+      // Use debounced handler - broadcast from same device shouldn't cause refetch
+      this.debouncedOnEvent(event);
     });
 
     this.channel.subscribe((status, err) => {
@@ -359,7 +434,8 @@ export class RealtimeSync<TEvent> {
         console.log('[realtime] Channel connected');
         this.reconnectAttempts = 0;
         // Refresh data on successful reconnect (may have missed events)
-        this.onReconnect?.();
+        // Use debounced to prevent rapid reconnect spam
+        this.debouncedOnReconnect();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         console.error('[realtime] Channel error:', status, err);
         this.scheduleReconnect(this.currentUserId!);

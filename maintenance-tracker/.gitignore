@@ -1,0 +1,6 @@
+node_modules
+dist
+*.local
+# Compiled output (should not be committed)
+src/**/*.js
+*.tsbuildinfo

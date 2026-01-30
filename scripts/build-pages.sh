@@ -22,6 +22,7 @@ apps=(
   family-chores
   health-tracker
   kasa-controller
+  maintenance-tracker
   notes-app
   tracker
 )

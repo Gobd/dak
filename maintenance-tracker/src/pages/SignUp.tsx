@@ -1,0 +1,13 @@
+import { SignUp as SharedSignUp } from '@dak/ui';
+import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
+
+export function SignUp() {
+  return (
+    <SharedSignUp
+      appName="Maintenance Tracker"
+      useAuthStore={useAuthStore}
+      useThemeStore={useThemeStore}
+    />
+  );
+}
