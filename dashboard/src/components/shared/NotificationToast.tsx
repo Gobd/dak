@@ -6,7 +6,7 @@ import {
   type NotificationEvent,
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
-import { X, Clock, AlertTriangle, Calendar, Settings, Trash2 } from 'lucide-react';
+import { X, Clock, AlertTriangle, Calendar, Settings, Trash2, Undo2 } from 'lucide-react';
 import { Toggle, ConfirmModal } from '@dak/ui';
 
 // Check if notifications widget is configured on any screen
@@ -190,7 +190,6 @@ function TypePreferenceItem({ pref }: { pref: TypePreference }) {
 }
 
 function ScheduleItem({ event }: { event: NotificationEvent }) {
-  // Append T00:00:00 to parse as local time, not UTC
   const dueDate = new Date(event.due_date + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -211,6 +210,44 @@ function ScheduleItem({ event }: { event: NotificationEvent }) {
   );
 }
 
+function SnoozedItem({ event }: { event: NotificationEvent }) {
+  const undismiss = useNotificationsStore((s) => s.undismiss);
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
+
+  const dueDate = new Date(event.due_date + 'T00:00:00');
+
+  return (
+    <>
+      <div className="flex items-center justify-between py-2 opacity-60">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-xs text-text-muted uppercase">{event.type}</span>
+          <span className="text-text-muted line-through truncate">{event.name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-sm text-text-muted">
+            {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+          </span>
+          <button
+            onClick={() => setShowUndoConfirm(true)}
+            className="p-1 text-text-muted hover:text-accent transition-colors"
+            title="Undo dismiss"
+          >
+            <Undo2 size={14} />
+          </button>
+        </div>
+      </div>
+      <ConfirmModal
+        open={showUndoConfirm}
+        onClose={() => setShowUndoConfirm(false)}
+        onConfirm={() => undismiss(event.id)}
+        title="Undo Dismiss"
+        message={`Restore "${event.name}" so it shows as due again?`}
+        confirmText="Restore"
+      />
+    </>
+  );
+}
+
 export function NotificationToast() {
   const hasWidget = useHasNotificationsWidget();
   const {
@@ -225,7 +262,9 @@ export function NotificationToast() {
     unconfiguredCount,
   } = useNotificationsStore();
 
-  const [activeTab, setActiveTab] = useState<'due' | 'schedule' | 'settings'>('settings');
+  const [activeTab, setActiveTab] = useState<'due' | 'schedule' | 'snoozed' | 'settings'>(
+    'settings',
+  );
 
   // Drag state
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -243,12 +282,28 @@ export function NotificationToast() {
 
   // Fetch data when switching tabs
   useEffect(() => {
-    if (activeTab === 'schedule') {
+    if (activeTab === 'schedule' || activeTab === 'snoozed') {
       fetchAllEvents();
     } else if (activeTab === 'settings') {
       fetchPreferences();
     }
   }, [activeTab, fetchAllEvents, fetchPreferences]);
+
+  // Split events into upcoming and snoozed
+  const upcomingEvents = allEvents
+    .filter((e) => !e.dismissed_until || new Date(e.dismissed_until) <= new Date())
+    .sort(
+      (a, b) =>
+        new Date(a.due_date + 'T00:00:00').getTime() - new Date(b.due_date + 'T00:00:00').getTime(),
+    );
+
+  const snoozedEvents = allEvents
+    .filter((e) => e.dismissed_until && new Date(e.dismissed_until) > new Date())
+    .sort(
+      (a, b) =>
+        new Date(a.due_date + 'T00:00:00').getTime() - new Date(b.due_date + 'T00:00:00').getTime(),
+    )
+    .slice(0, 10); // Limit to 10
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -316,7 +371,6 @@ export function NotificationToast() {
     return null;
   }
 
-
   // Modal is closed - widget handles the bell icon
   if (!isOpen) {
     return null;
@@ -356,7 +410,7 @@ export function NotificationToast() {
                 Due ({notifications.length})
               </button>
             )}
-            {allEvents.length > 0 && (
+            {upcomingEvents.length > 0 && (
               <button
                 onClick={() => setActiveTab('schedule')}
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
@@ -366,6 +420,18 @@ export function NotificationToast() {
                 }`}
               >
                 Schedule
+              </button>
+            )}
+            {snoozedEvents.length > 0 && (
+              <button
+                onClick={() => setActiveTab('snoozed')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  activeTab === 'snoozed'
+                    ? 'bg-surface-raised text-text'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                Snoozed
               </button>
             )}
             <button
@@ -409,18 +475,19 @@ export function NotificationToast() {
           )}
           {activeTab === 'schedule' && (
             <div className="divide-y divide-border">
-              {allEvents
-                .sort(
-                  (a, b) =>
-                    new Date(a.due_date + 'T00:00:00').getTime() -
-                    new Date(b.due_date + 'T00:00:00').getTime(),
-                )
-                .map((event) => (
-                  <ScheduleItem key={event.id} event={event} />
-                ))}
-              {allEvents.length === 0 && (
+              {upcomingEvents.map((event) => (
+                <ScheduleItem key={event.id} event={event} />
+              ))}
+              {upcomingEvents.length === 0 && (
                 <p className="text-text-muted text-center py-4">No scheduled notifications</p>
               )}
+            </div>
+          )}
+          {activeTab === 'snoozed' && (
+            <div className="divide-y divide-border">
+              {snoozedEvents.map((event) => (
+                <SnoozedItem key={event.id} event={event} />
+              ))}
             </div>
           )}
           {activeTab === 'settings' && (

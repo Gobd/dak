@@ -2806,6 +2806,34 @@ export type DismissEventNotificationsEventIdDismissPostResponses = {
 
 export type DismissEventNotificationsEventIdDismissPostResponse = DismissEventNotificationsEventIdDismissPostResponses[keyof DismissEventNotificationsEventIdDismissPostResponses];
 
+export type UndismissEventNotificationsEventIdUndismissPostData = {
+    body?: never;
+    path: {
+        /**
+         * Event Id
+         */
+        event_id: number;
+    };
+    query?: never;
+    url: '/notifications/{event_id}/undismiss';
+};
+
+export type UndismissEventNotificationsEventIdUndismissPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UndismissEventNotificationsEventIdUndismissPostError = UndismissEventNotificationsEventIdUndismissPostErrors[keyof UndismissEventNotificationsEventIdUndismissPostErrors];
+
+export type UndismissEventNotificationsEventIdUndismissPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type TriggerCheckNotificationsCheckPostData = {
     body?: never;
     path?: never;

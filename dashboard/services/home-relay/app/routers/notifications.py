@@ -60,6 +60,12 @@ async def dismiss_event(event_id: int, request: DismissRequest | None = None):
     return notification_service.dismiss_event(event_id, hours)
 
 
+@router.post("/{event_id}/undismiss")
+async def undismiss_event(event_id: int):
+    """Clear dismissal for an event, making it due again."""
+    return notification_service.undismiss_event(event_id)
+
+
 @router.post("/check")
 async def trigger_check():
     """Manually trigger notification check (for testing)."""
