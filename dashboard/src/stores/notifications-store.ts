@@ -16,9 +16,9 @@ export type { DueNotification, NotificationEvent };
 
 export interface TypePreference {
   type: string;
-  enabled: boolean;
+  enabled: boolean | null; // null = unconfigured, must pick
   first_seen: string;
-  is_known: boolean;
+  is_known: boolean; // true if enabled is not null (user has configured)
 }
 
 interface NotificationsState {
@@ -194,6 +194,9 @@ if (typeof window !== 'undefined') {
         },
       });
       console.log('Notification registered:', payload);
+      // Refresh UI after registering
+      useNotificationsStore.getState().fetchDue();
+      useNotificationsStore.getState().fetchPreferences();
     } catch (err) {
       console.warn('Failed to register notification:', err);
     }

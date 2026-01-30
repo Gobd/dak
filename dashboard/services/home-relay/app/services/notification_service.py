@@ -63,16 +63,28 @@ def _init_db():
 
             CREATE TABLE IF NOT EXISTS type_preferences (
                 type TEXT PRIMARY KEY,
-                enabled INTEGER NOT NULL DEFAULT 0,
-                first_seen TEXT DEFAULT CURRENT_TIMESTAMP,
-                seen INTEGER NOT NULL DEFAULT 0
+                enabled INTEGER DEFAULT NULL,
+                first_seen TEXT DEFAULT CURRENT_TIMESTAMP
             );
         """)
-        # Migration: add seen column if it doesn't exist
-        try:
-            conn.execute("ALTER TABLE type_preferences ADD COLUMN seen INTEGER NOT NULL DEFAULT 0")
-        except sqlite3.OperationalError:
-            pass  # Column already exists
+        # Migration: convert old schema (NOT NULL enabled, seen column) to new (nullable enabled)
+        # Check if we have the old schema by looking for the seen column
+        cursor = conn.execute("PRAGMA table_info(type_preferences)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "seen" in columns:
+            # Old schema - migrate to new
+            conn.executescript("""
+                CREATE TABLE type_preferences_new (
+                    type TEXT PRIMARY KEY,
+                    enabled INTEGER DEFAULT NULL,
+                    first_seen TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                INSERT INTO type_preferences_new (type, enabled, first_seen)
+                SELECT type, CASE WHEN seen = 1 THEN enabled ELSE NULL END, first_seen
+                FROM type_preferences;
+                DROP TABLE type_preferences;
+                ALTER TABLE type_preferences_new RENAME TO type_preferences;
+            """)
         conn.commit()
 
 
@@ -174,9 +186,9 @@ def add_event(event_type: str, name: str, due_date: str, data: dict | None = Non
         due_date = due_date.split("T")[0]
 
     with closing(_get_db()) as conn:
-        # Ensure type exists in preferences (default disabled for new types)
+        # Ensure type exists in preferences (NULL = unconfigured, requires user to pick)
         conn.execute(
-            "INSERT OR IGNORE INTO type_preferences (type, enabled) VALUES (?, 0)",
+            "INSERT OR IGNORE INTO type_preferences (type, enabled) VALUES (?, NULL)",
             (event_type,),
         )
 
@@ -342,11 +354,11 @@ KNOWN_TYPES = ["shot", "maintenance", "weather"]
 
 
 def _ensure_known_types():
-    """Ensure known types exist in preferences table (pre-marked as seen)."""
+    """Ensure known types exist in preferences table (unconfigured by default)."""
     with closing(_get_db()) as conn:
         for t in KNOWN_TYPES:
             conn.execute(
-                "INSERT OR IGNORE INTO type_preferences (type, enabled, seen) VALUES (?, 0, 1)",
+                "INSERT OR IGNORE INTO type_preferences (type, enabled) VALUES (?, NULL)",
                 (t,),
             )
         conn.commit()
@@ -358,7 +370,7 @@ def get_type_preferences() -> list[dict]:
 
     with closing(_get_db()) as conn:
         rows = conn.execute("""
-            SELECT type, enabled, first_seen, seen
+            SELECT type, enabled, first_seen
             FROM type_preferences
             ORDER BY type ASC
         """).fetchall()
@@ -366,25 +378,22 @@ def get_type_preferences() -> list[dict]:
     return [
         {
             "type": row["type"],
-            "enabled": bool(row["enabled"]),
+            "enabled": None if row["enabled"] is None else bool(row["enabled"]),
             "first_seen": row["first_seen"],
-            "is_known": bool(row["seen"]),
+            "is_known": row["enabled"] is not None,  # Known if explicitly configured (not NULL)
         }
         for row in rows
     ]
 
 
 def set_type_enabled(event_type: str, enabled: bool) -> dict:
-    """Enable or disable notifications for a type.
-
-    Also marks the type as 'seen' since the user has now configured it.
-    """
+    """Enable or disable notifications for a type."""
     with closing(_get_db()) as conn:
         conn.execute(
             """
-            INSERT INTO type_preferences (type, enabled, seen)
-            VALUES (?, ?, 1)
-            ON CONFLICT(type) DO UPDATE SET enabled = excluded.enabled, seen = 1
+            INSERT INTO type_preferences (type, enabled)
+            VALUES (?, ?)
+            ON CONFLICT(type) DO UPDATE SET enabled = excluded.enabled
             """,
             (event_type, 1 if enabled else 0),
         )
@@ -394,13 +403,12 @@ def set_type_enabled(event_type: str, enabled: bool) -> dict:
 
 
 def get_unconfigured_count() -> int:
-    """Get count of notification types that have events but are disabled (new/unconfigured)."""
+    """Get count of notification types that are unconfigured (enabled = NULL)."""
     with closing(_get_db()) as conn:
         row = conn.execute("""
-            SELECT COUNT(DISTINCT e.type) as count
-            FROM events e
-            INNER JOIN type_preferences tp ON e.type = tp.type
-            WHERE tp.enabled = 0
+            SELECT COUNT(*) as count
+            FROM type_preferences
+            WHERE enabled IS NULL
         """).fetchone()
 
     return row["count"] if row else 0

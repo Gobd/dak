@@ -9,12 +9,15 @@ function notifyDashboard(schedule: ShotSchedule) {
   try {
     const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
     if (notify && schedule.next_due) {
+      // Include person in name to make it unique per person
+      const displayName = schedule.person?.name
+        ? `${schedule.person.name} - ${schedule.name}`
+        : schedule.name;
       notify({
         type: 'shot',
-        name: schedule.name,
+        name: displayName,
         due: schedule.next_due,
         data: {
-          person: schedule.person?.name,
           dose: schedule.current_dose,
         },
       });
