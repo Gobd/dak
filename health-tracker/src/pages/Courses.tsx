@@ -16,8 +16,7 @@ import { format, addDays } from 'date-fns';
 
 export function Courses() {
   const { people, fetchPeople } = usePeopleStore();
-  const { courses, doses, fetchCourses, fetchDoses, addCourse, deleteCourse, toggleDose } =
-    useMedicineStore();
+  const { courses, doses, fetchCourses, addCourse, deleteCourse, toggleDose } = useMedicineStore();
   const { showToast } = useToastStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedCompleted, setExpandedCompleted] = useState<Set<string>>(new Set());
@@ -43,9 +42,6 @@ export function Courses() {
     fetchPeople();
     fetchCourses();
   }, [fetchPeople, fetchCourses]);
-  useEffect(() => {
-    courses.forEach((course) => fetchDoses(course.id));
-  }, [courses, fetchDoses]);
 
   // Track previous completion state to detect transitions
   const prevCompletionState = useRef<Record<string, boolean>>({});

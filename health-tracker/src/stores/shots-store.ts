@@ -79,7 +79,7 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
       .select('*')
       .eq('schedule_id', scheduleId)
       .order('taken_at', { ascending: false })
-      .limit(20);
+      .limit(5);
 
     if (!error && data) {
       set((state) => ({

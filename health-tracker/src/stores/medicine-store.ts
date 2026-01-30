@@ -40,6 +40,25 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
 
     if (!error && data) {
       set({ courses: data, loading: false, initialized: true });
+
+      // Batch fetch all doses in a single query instead of N+1
+      if (data.length > 0) {
+        const courseIds = data.map((c) => c.id);
+        const { data: allDoses } = await supabase
+          .from('medicine_doses')
+          .select('*')
+          .in('course_id', courseIds)
+          .order('scheduled_date')
+          .order('dose_number');
+
+        // Group by course_id
+        const dosesByCourse: Record<string, MedicineDose[]> = {};
+        for (const dose of allDoses || []) {
+          if (!dosesByCourse[dose.course_id]) dosesByCourse[dose.course_id] = [];
+          dosesByCourse[dose.course_id].push(dose);
+        }
+        set({ doses: dosesByCourse });
+      }
     } else if (isInitialLoad) {
       set({ loading: false, initialized: true });
     }
