@@ -328,6 +328,33 @@ export function NotificationToast() {
     setIsDragging(false);
   }, []);
 
+  // Touch handlers for kiosk/tablet
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      const touch = e.touches[0];
+      setIsDragging(true);
+      dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
+    },
+    [position],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.current.x,
+        y: touch.clientY - dragStart.current.y,
+      });
+    },
+    [isDragging],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   // Fetch due notifications and preferences on mount (only if widget configured)
   useEffect(() => {
     if (hasWidget) {
@@ -357,6 +384,8 @@ export function NotificationToast() {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div
         ref={modalRef}
@@ -367,6 +396,7 @@ export function NotificationToast() {
         <div
           className={`flex items-center justify-between px-3 py-2 border-b border-border ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
         >
           {/* Tab toggle */}
           <div className="flex gap-1 bg-surface-sunken rounded-lg p-0.5">

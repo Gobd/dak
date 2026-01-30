@@ -25,20 +25,22 @@ function calculateNextDue(
 
 // Notify parent dashboard of task changes (for notifications)
 function notifyDashboard(task: MaintenanceTask) {
+  if (!task.next_due) return;
+
+  const payload = {
+    type: 'maintenance',
+    name: task.name,
+    due: task.next_due,
+    data: { interval: `${task.interval_value} ${task.interval_unit}` },
+  };
+
   try {
-    const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
-    if (notify && task.next_due) {
-      notify({
-        type: 'maintenance',
-        name: task.name,
-        due: task.next_due,
-        data: {
-          interval: `${task.interval_value} ${task.interval_unit}`,
-        },
-      });
+    // Use postMessage for reliable cross-frame communication
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ action: 'notify', payload }, '*');
     }
   } catch {
-    // Ignore errors when not in iframe
+    // Not in iframe - ignore
   }
 }
 

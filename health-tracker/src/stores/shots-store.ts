@@ -6,24 +6,26 @@ import { addDays, format } from 'date-fns';
 
 // Notify parent dashboard of schedule changes (for reminders)
 function notifyDashboard(schedule: ShotSchedule) {
+  if (!schedule.next_due) return;
+
+  const displayName = schedule.person?.name
+    ? `${schedule.person.name} - ${schedule.name}`
+    : schedule.name;
+
+  const payload = {
+    type: 'shot',
+    name: displayName,
+    due: schedule.next_due,
+    data: { dose: schedule.current_dose },
+  };
+
   try {
-    const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
-    if (notify && schedule.next_due) {
-      // Include person in name to make it unique per person
-      const displayName = schedule.person?.name
-        ? `${schedule.person.name} - ${schedule.name}`
-        : schedule.name;
-      notify({
-        type: 'shot',
-        name: displayName,
-        due: schedule.next_due,
-        data: {
-          dose: schedule.current_dose,
-        },
-      });
+    // Use postMessage for reliable cross-frame communication
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ action: 'notify', payload }, '*');
     }
   } catch {
-    // Ignore errors when not in iframe
+    // Not in iframe - ignore
   }
 }
 

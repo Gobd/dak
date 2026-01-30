@@ -8,7 +8,7 @@ import { VoiceResponseToast } from './components/shared/VoiceResponseToast';
 import { MqttModal } from './components/shared/MqttModal';
 import { NotificationToast } from './components/shared/NotificationToast';
 
-// Initialize notifications store (exposes window.notify for iframed apps)
+// Initialize notifications store (listens for postMessage from iframed apps)
 import './stores/notifications-store';
 
 const queryClient = new QueryClient({

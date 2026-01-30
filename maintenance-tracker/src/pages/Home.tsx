@@ -81,14 +81,14 @@ export function Home() {
     if (daysUntil <= 7) {
       return {
         status: 'soon',
-        label: `Due in ${daysUntil} days`,
+        label: `Due ${format(dueDate, 'EEE, MMM d')}`,
         color: 'text-text-secondary',
       };
     }
 
     return {
       status: 'ok',
-      label: `Due ${format(dueDate, 'MMM d')}`,
+      label: `Due ${format(dueDate, 'EEE, MMM d')}`,
       color: 'text-text-muted',
     };
   };

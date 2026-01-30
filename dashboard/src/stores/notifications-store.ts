@@ -175,30 +175,37 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   },
 }));
 
-// Expose notify function for iframed apps
+// Handle notification registration from iframes
+async function handleNotify(data: unknown) {
+  const payload = data as { type?: string; name?: string; due?: string; data?: unknown };
+  if (!payload.type || !payload.name || !payload.due) {
+    console.warn('notify: type, name, and due are required');
+    return;
+  }
+  try {
+    await addEventNotificationsPost({
+      baseUrl: getRelayUrl(),
+      body: {
+        type: payload.type,
+        name: payload.name,
+        due: payload.due,
+        data: payload.data as Record<string, unknown> | null,
+      },
+    });
+    console.log('Notification registered:', payload);
+    // Refresh UI after registering
+    useNotificationsStore.getState().fetchDue();
+    useNotificationsStore.getState().fetchPreferences();
+  } catch (err) {
+    console.warn('Failed to register notification:', err);
+  }
+}
+
+// Listen for postMessage from iframed apps
 if (typeof window !== 'undefined') {
-  (window as Window & { notify?: (data: unknown) => void }).notify = async (data: unknown) => {
-    const payload = data as { type?: string; name?: string; due?: string; data?: unknown };
-    if (!payload.type || !payload.name || !payload.due) {
-      console.warn('notify: type, name, and due are required');
-      return;
+  window.addEventListener('message', (event) => {
+    if (event.data?.action === 'notify' && event.data?.payload) {
+      handleNotify(event.data.payload);
     }
-    try {
-      await addEventNotificationsPost({
-        baseUrl: getRelayUrl(),
-        body: {
-          type: payload.type,
-          name: payload.name,
-          due: payload.due,
-          data: payload.data as Record<string, unknown> | null,
-        },
-      });
-      console.log('Notification registered:', payload);
-      // Refresh UI after registering
-      useNotificationsStore.getState().fetchDue();
-      useNotificationsStore.getState().fetchPreferences();
-    } catch (err) {
-      console.warn('Failed to register notification:', err);
-    }
-  };
+  });
 }

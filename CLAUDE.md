@@ -258,42 +258,53 @@ The standalone apps share the same backend (home-relay) but have their own UI op
 
 ### Notification System
 
-Dashboard includes a notification system for reminders from iframed apps (health-tracker shots, maintenance-tracker tasks, etc.). Notifications persist in SQLite and display as a toast modal on the dashboard.
+Dashboard includes a notification system for reminders from iframed apps (health-tracker shots, maintenance-tracker tasks, etc.) and 3rd party widgets. Notifications persist in SQLite and display as a toast modal on the dashboard.
 
 #### How It Works
 
-1. **Iframed apps register notifications** via `window.parent.notify()` when schedules change
+1. **Iframed apps register notifications** via `postMessage` when schedules change
 2. **home-relay stores notifications** in SQLite with due dates and dismissal tracking
 3. **Background scheduler** checks every minute for due notifications
 4. **SSE broadcasts** push due notifications to the dashboard
 5. **Toast modal** displays with snooze options (1h, 4h, 1d, 3d)
 
-#### Adding Notifications from an App
+#### Adding Notifications from an Iframe (Any App or 3rd Party Widget)
 
-Apps iframed in dashboard can register notifications by calling `window.parent.notify()`:
+Any iframe can register notifications using `postMessage`. This works for internal apps and 3rd party widgets.
 
 ```typescript
-// In your store or component
-function notifyDashboard(item: { name: string; next_due: string | null }) {
+// Send notification to dashboard
+function notifyDashboard(item: { type: string; name: string; due: string; data?: object }) {
   try {
-    const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
-    if (notify && item.next_due) {
-      notify({
-        type: 'shot', // Category shown in toast (shot, maintenance, etc.)
-        name: item.name, // Display name
-        due: item.next_due, // ISO date string (YYYY-MM-DD)
-        data: {
-          // Optional extra info shown in toast
-          person: 'John',
-          dose: '0.5ml',
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          action: 'notify',
+          payload: {
+            type: item.type, // Category: 'shot', 'maintenance', 'reminder', etc.
+            name: item.name, // Display name shown in toast
+            due: item.due, // ISO date string (YYYY-MM-DD)
+            data: item.data, // Optional metadata shown in toast
+          },
         },
-      });
+        '*',
+      );
     }
   } catch {
-    // Ignore errors when not in iframe
+    // Not in iframe - ignore
   }
 }
+
+// Example usage
+notifyDashboard({
+  type: 'shot',
+  name: 'John - Weekly Shot',
+  due: '2026-01-30',
+  data: { dose: '0.5ml' },
+});
 ```
+
+**Protocol:** Dashboard listens for `postMessage` with `{ action: 'notify', payload: {...} }`.
 
 Call this function:
 
