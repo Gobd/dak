@@ -495,7 +495,7 @@ function connectToConfigUpdates() {
           }
           console.log('Config changed externally, reloading...');
           useConfigStore.getState()._loadFromRelay();
-        } else if (data.type === 'notifications' && data.notifications) {
+        } else if (data.type === 'notifications' && Array.isArray(data.notifications)) {
           // Forward to notifications store
           import('./notifications-store').then(({ useNotificationsStore }) => {
             useNotificationsStore.getState().addNotifications(data.notifications);
