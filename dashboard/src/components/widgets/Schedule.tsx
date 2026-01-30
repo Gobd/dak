@@ -12,9 +12,10 @@ export default function Schedule() {
     return () => clearInterval(interval);
   }, [fetchAllEvents]);
 
-  // Sort by due date
+  // Sort by due date (append T00:00:00 to parse as local time, not UTC)
   const sortedEvents = [...allEvents].sort(
-    (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
+    (a, b) =>
+      new Date(a.due_date + 'T00:00:00').getTime() - new Date(b.due_date + 'T00:00:00').getTime(),
   );
 
   const today = new Date();
@@ -34,7 +35,7 @@ export default function Schedule() {
         {sortedEvents.length > 0 ? (
           <div className="divide-y divide-border">
             {sortedEvents.map((event) => {
-              const dueDate = new Date(event.due_date);
+              const dueDate = new Date(event.due_date + 'T00:00:00');
               const isPast = dueDate < today;
               const isToday = dueDate.toDateString() === today.toDateString();
               const tomorrow = new Date(today);

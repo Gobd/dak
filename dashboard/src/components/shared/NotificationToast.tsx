@@ -7,7 +7,7 @@ import {
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
 import { X, Clock, AlertTriangle, Calendar, Settings, Trash2 } from 'lucide-react';
-import { Toggle } from '@dak/ui';
+import { Toggle, ConfirmModal } from '@dak/ui';
 
 // Check if notifications widget is configured on any screen
 function useHasNotificationsWidget() {
@@ -131,33 +131,67 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
 function TypePreferenceItem({ pref }: { pref: TypePreference }) {
   const setTypeEnabled = useNotificationsStore((s) => s.setTypeEnabled);
   const deleteType = useNotificationsStore((s) => s.deleteType);
+  const isUnconfigured = pref.enabled === null;
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
-    <div className="flex items-center justify-between py-2 gap-3">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="font-medium capitalize text-text truncate">{pref.type}</span>
-        {!pref.is_known && (
-          <span className="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded flex-shrink-0">
-            new
-          </span>
-        )}
+    <>
+      <div className="flex items-center justify-between py-2 gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="font-medium capitalize text-text truncate">{pref.type}</span>
+          {isUnconfigured && (
+            <span className="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded flex-shrink-0">
+              new
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isUnconfigured ? (
+            <>
+              <button
+                onClick={() => setTypeEnabled(pref.type, true)}
+                className="px-2 py-1 text-xs bg-success/20 text-success hover:bg-success/30 rounded transition-colors"
+              >
+                Enable
+              </button>
+              <button
+                onClick={() => setTypeEnabled(pref.type, false)}
+                className="px-2 py-1 text-xs bg-border text-text-muted hover:bg-border-strong rounded transition-colors"
+              >
+                Disable
+              </button>
+            </>
+          ) : (
+            <Toggle
+              checked={pref.enabled ?? false}
+              onChange={(checked) => setTypeEnabled(pref.type, checked)}
+            />
+          )}
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-1 text-text-muted hover:text-danger transition-colors"
+            title="Delete notification type"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Toggle checked={pref.enabled} onChange={(checked) => setTypeEnabled(pref.type, checked)} />
-        <button
-          onClick={() => deleteType(pref.type)}
-          className="p-1 text-text-muted hover:text-danger transition-colors"
-          title="Delete notification type"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-    </div>
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => deleteType(pref.type)}
+        title="Delete Notification Type"
+        message={`Delete "${pref.type}" and all its scheduled notifications? This cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+      />
+    </>
   );
 }
 
 function ScheduleItem({ event }: { event: NotificationEvent }) {
-  const dueDate = new Date(event.due_date);
+  // Append T00:00:00 to parse as local time, not UTC
+  const dueDate = new Date(event.due_date + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isPast = dueDate < today;
@@ -204,7 +238,8 @@ function PreferencesModal({ onClose }: { onClose: () => void }) {
         {/* Type list */}
         <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
           <p className="text-sm text-text-muted mb-4">
-            Enable notification types to receive reminders. New types are disabled by default.
+            Configure notification types. New types must be enabled or disabled before the badge
+            clears.
           </p>
           <div className="divide-y divide-border">
             {typePreferences.map((pref) => (
@@ -395,7 +430,11 @@ export function NotificationToast() {
           ) : (
             <div className="divide-y divide-border">
               {allEvents
-                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(a.due_date + 'T00:00:00').getTime() -
+                    new Date(b.due_date + 'T00:00:00').getTime(),
+                )
                 .map((event) => (
                   <ScheduleItem key={event.id} event={event} />
                 ))}
