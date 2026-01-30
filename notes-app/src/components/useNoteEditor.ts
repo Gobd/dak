@@ -67,8 +67,12 @@ export function useNoteEditor({
     ],
     content: initialContent,
     contentType: 'markdown',
-    autofocus: 'end',
-    onCreate: ({ editor }) => focusAtContentEnd(editor),
+    autofocus: false, // Handle focus manually after DOM is ready
+    onCreate: ({ editor }) => {
+      // Delay focus until after browser has finished rendering
+      // If requestAnimationFrame isn't enough, try setTimeout(() => ..., 50)
+      requestAnimationFrame(() => focusAtContentEnd(editor));
+    },
     editorProps: {
       attributes: {
         id: 'note-editor',
