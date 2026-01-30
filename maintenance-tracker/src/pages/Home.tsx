@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTasksStore } from '../stores/tasks-store';
 import { TaskModal } from '../components/TaskModal';
-import { Card, Button, ConfirmModal, useToastStore } from '@dak/ui';
+import { Card, Button, ConfirmModal, useToastStore, SearchInput } from '@dak/ui';
 import {
   Plus,
   Check,
@@ -12,6 +12,7 @@ import {
   Trash2,
   History,
   Undo2,
+  ArrowUpDown,
 } from 'lucide-react';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import type { MaintenanceTask, MaintenanceLog } from '../types';
@@ -40,6 +41,8 @@ export function Home() {
   );
   const [showHistoryFor, setShowHistoryFor] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'due' | 'alpha'>('due');
 
   useEffect(() => {
     fetchTasks();
@@ -150,12 +153,18 @@ export function Home() {
     return `Every ${value} ${unit}`;
   };
 
-  // Sort tasks: overdue first, then by next_due
-  const sortedTasks = [...tasks].sort((a, b) => {
-    if (!a.next_due) return 1;
-    if (!b.next_due) return -1;
-    return new Date(a.next_due).getTime() - new Date(b.next_due).getTime();
-  });
+  // Filter and sort tasks
+  const filteredTasks = tasks
+    .filter((task) => task.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === 'alpha') {
+        return a.name.localeCompare(b.name);
+      }
+      // Sort by due date (soonest first)
+      if (!a.next_due) return 1;
+      if (!b.next_due) return -1;
+      return new Date(a.next_due).getTime() - new Date(b.next_due).getTime();
+    });
 
   return (
     <div className="space-y-4">
@@ -166,6 +175,23 @@ export function Home() {
           Add Task
         </Button>
       </div>
+
+      {tasks.length > 0 && (
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <SearchInput value={search} onChange={setSearch} placeholder="Search tasks..." />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setSortBy(sortBy === 'due' ? 'alpha' : 'due')}
+            title={sortBy === 'due' ? 'Sorted by due date' : 'Sorted alphabetically'}
+          >
+            <ArrowUpDown size={16} />
+            {sortBy === 'due' ? 'Due' : 'A-Z'}
+          </Button>
+        </div>
+      )}
 
       {loading && tasks.length === 0 ? (
         <Card padding="lg" className="text-center">
@@ -180,12 +206,12 @@ export function Home() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {sortedTasks.map((task) => {
+          {filteredTasks.map((task) => {
             const { status, label, color } = getStatus(task);
             const taskLogs = logs[task.id] || [];
 
             return (
-              <Card key={task.id} padding="none" className="overflow-hidden">
+              <Card key={task.id} padding="none">
                 <div className="p-4 flex items-center gap-3">
                   {/* Status icon */}
                   <div className="flex-shrink-0">{getStatusIcon(status)}</div>
