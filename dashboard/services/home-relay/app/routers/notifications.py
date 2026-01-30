@@ -79,3 +79,13 @@ async def get_preferences():
 async def set_preference(event_type: str, enabled: bool = True):
     """Enable or disable notifications for a type."""
     return notification_service.set_type_enabled(event_type, enabled)
+
+
+@router.delete("/preferences/{event_type}")
+async def delete_preference(event_type: str):
+    """Delete a notification type and all its events.
+
+    When deleted, if a new notification of this type comes in later,
+    it will be re-added as a new unconfigured type.
+    """
+    return notification_service.delete_type_preference(event_type)

@@ -48,14 +48,14 @@ export default function Notifications() {
       title={title}
     >
       <div className="relative">
-        <Bell className={hasNotifications ? 'text-black' : 'text-text'} size={24} />
+        <Bell className={hasNotifications ? 'text-warning-dark' : 'text-text'} size={24} />
         {hasNotifications && (
-          <span className="absolute -top-2 -right-2 w-5 h-5 bg-danger text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 w-5 h-5 bg-danger text-text text-xs font-bold rounded-full flex items-center justify-center">
             {notifications.length}
           </span>
         )}
         {hasUnconfigured && (
-          <span className="absolute -top-2 -left-2 w-5 h-5 bg-accent text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-2 -left-2 w-5 h-5 bg-accent text-text text-xs font-bold rounded-full flex items-center justify-center">
             !
           </span>
         )}

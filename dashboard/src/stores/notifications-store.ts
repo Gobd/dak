@@ -3,6 +3,7 @@ import {
   getDueNotificationsDueGet,
   getPreferencesNotificationsPreferencesGet,
   setPreferenceNotificationsPreferencesEventTypePost,
+  deletePreferenceNotificationsPreferencesEventTypeDelete,
   dismissEventNotificationsEventIdDismissPost,
   addEventNotificationsPost,
   type DueNotification,
@@ -36,6 +37,7 @@ interface NotificationsState {
   fetchDue: () => Promise<void>;
   fetchPreferences: () => Promise<void>;
   setTypeEnabled: (type: string, enabled: boolean) => Promise<void>;
+  deleteType: (type: string) => Promise<void>;
   dismiss: (id: number, hours: number, permanent?: boolean) => Promise<void>;
 }
 
@@ -107,6 +109,22 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         baseUrl: getRelayUrl(),
         path: { event_type: type },
         query: { enabled },
+      });
+      if (response.ok) {
+        // Refresh preferences and due notifications
+        get().fetchPreferences();
+        get().fetchDue();
+      }
+    } catch {
+      // Ignore errors
+    }
+  },
+
+  deleteType: async (type) => {
+    try {
+      const { response } = await deletePreferenceNotificationsPreferencesEventTypeDelete({
+        baseUrl: getRelayUrl(),
+        path: { event_type: type },
       });
       if (response.ok) {
         // Refresh preferences and due notifications

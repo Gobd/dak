@@ -64,9 +64,15 @@ def _init_db():
             CREATE TABLE IF NOT EXISTS type_preferences (
                 type TEXT PRIMARY KEY,
                 enabled INTEGER NOT NULL DEFAULT 0,
-                first_seen TEXT DEFAULT CURRENT_TIMESTAMP
+                first_seen TEXT DEFAULT CURRENT_TIMESTAMP,
+                seen INTEGER NOT NULL DEFAULT 0
             );
         """)
+        # Migration: add seen column if it doesn't exist
+        try:
+            conn.execute("ALTER TABLE type_preferences ADD COLUMN seen INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         conn.commit()
 
 
@@ -336,11 +342,11 @@ KNOWN_TYPES = ["shot", "maintenance", "weather"]
 
 
 def _ensure_known_types():
-    """Ensure known types exist in preferences table."""
+    """Ensure known types exist in preferences table (pre-marked as seen)."""
     with closing(_get_db()) as conn:
         for t in KNOWN_TYPES:
             conn.execute(
-                "INSERT OR IGNORE INTO type_preferences (type, enabled) VALUES (?, 0)",
+                "INSERT OR IGNORE INTO type_preferences (type, enabled, seen) VALUES (?, 0, 1)",
                 (t,),
             )
         conn.commit()
@@ -352,7 +358,7 @@ def get_type_preferences() -> list[dict]:
 
     with closing(_get_db()) as conn:
         rows = conn.execute("""
-            SELECT type, enabled, first_seen
+            SELECT type, enabled, first_seen, seen
             FROM type_preferences
             ORDER BY type ASC
         """).fetchall()
@@ -362,20 +368,23 @@ def get_type_preferences() -> list[dict]:
             "type": row["type"],
             "enabled": bool(row["enabled"]),
             "first_seen": row["first_seen"],
-            "is_known": row["type"] in KNOWN_TYPES,
+            "is_known": bool(row["seen"]),
         }
         for row in rows
     ]
 
 
 def set_type_enabled(event_type: str, enabled: bool) -> dict:
-    """Enable or disable notifications for a type."""
+    """Enable or disable notifications for a type.
+
+    Also marks the type as 'seen' since the user has now configured it.
+    """
     with closing(_get_db()) as conn:
         conn.execute(
             """
-            INSERT INTO type_preferences (type, enabled)
-            VALUES (?, ?)
-            ON CONFLICT(type) DO UPDATE SET enabled = excluded.enabled
+            INSERT INTO type_preferences (type, enabled, seen)
+            VALUES (?, ?, 1)
+            ON CONFLICT(type) DO UPDATE SET enabled = excluded.enabled, seen = 1
             """,
             (event_type, 1 if enabled else 0),
         )
@@ -395,3 +404,28 @@ def get_unconfigured_count() -> int:
         """).fetchone()
 
     return row["count"] if row else 0
+
+
+def delete_type_preference(event_type: str) -> dict:
+    """Delete a notification type preference and all its events.
+
+    When deleted, if a new notification of this type comes in later,
+    it will be re-added as a new unconfigured type.
+    """
+    with closing(_get_db()) as conn:
+        # Get all event IDs for this type to clean up dismissed table
+        event_ids = conn.execute("SELECT id FROM events WHERE type = ?", (event_type,)).fetchall()
+
+        # Delete dismissed entries for these events
+        for row in event_ids:
+            conn.execute("DELETE FROM dismissed WHERE event_id = ?", (row["id"],))
+
+        # Delete all events of this type
+        conn.execute("DELETE FROM events WHERE type = ?", (event_type,))
+
+        # Delete the type preference
+        conn.execute("DELETE FROM type_preferences WHERE type = ?", (event_type,))
+
+        conn.commit()
+
+    return {"success": True, "type": event_type}
