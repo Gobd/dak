@@ -5,6 +5,7 @@ import {
   setPreferenceNotificationsPreferencesEventTypePost,
   deletePreferenceNotificationsPreferencesEventTypeDelete,
   dismissEventNotificationsEventIdDismissPost,
+  undismissEventNotificationsEventIdUndismissPost,
   addEventNotificationsPost,
   listEventsNotificationsGet,
   type DueNotification,
@@ -43,6 +44,7 @@ interface NotificationsState {
   setTypeEnabled: (type: string, enabled: boolean) => Promise<void>;
   deleteType: (type: string) => Promise<void>;
   dismiss: (id: number, hours: number, permanent?: boolean) => Promise<void>;
+  undismiss: (id: number) => Promise<void>;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
@@ -171,6 +173,22 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     } catch {
       // Still remove from local state
       get().removeNotification(id);
+    }
+  },
+
+  undismiss: async (id) => {
+    try {
+      const { response } = await undismissEventNotificationsEventIdUndismissPost({
+        baseUrl: getRelayUrl(),
+        path: { event_id: id },
+      });
+      if (response.ok) {
+        // Refresh to pick up the now-due notification
+        get().fetchDue();
+        get().fetchAllEvents();
+      }
+    } catch {
+      // Ignore errors
     }
   },
 }));

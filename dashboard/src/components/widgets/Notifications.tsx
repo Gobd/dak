@@ -3,14 +3,8 @@ import { Bell } from 'lucide-react';
 import { useNotificationsStore } from '../../stores/notifications-store';
 
 export default function Notifications() {
-  const {
-    notifications,
-    unconfiguredCount,
-    setOpen,
-    setShowPreferences,
-    fetchDue,
-    fetchPreferences,
-  } = useNotificationsStore();
+  const { notifications, unconfiguredCount, setOpen, fetchDue, fetchPreferences } =
+    useNotificationsStore();
 
   // Fetch on mount
   useEffect(() => {
@@ -22,11 +16,7 @@ export default function Notifications() {
   const hasUnconfigured = unconfiguredCount > 0;
 
   const handleClick = () => {
-    if (hasNotifications) {
-      setOpen(true);
-    } else {
-      setShowPreferences(true);
-    }
+    setOpen(true);
   };
 
   const title = hasNotifications

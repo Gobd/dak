@@ -290,6 +290,14 @@ def dismiss_event(
     return {"success": True, "dismissed_until": dismissed_until}
 
 
+def undismiss_event(event_id: int) -> dict:
+    """Clear dismissal for an event, making it due again."""
+    with closing(_get_db()) as conn:
+        conn.execute("DELETE FROM dismissed WHERE event_id = ?", (event_id,))
+        conn.commit()
+    return {"success": True}
+
+
 def get_due_notifications() -> list[dict]:
     """Get currently due notifications (for initial load).
 
