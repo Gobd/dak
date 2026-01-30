@@ -79,9 +79,27 @@ Tap the gear icon to enter edit mode. Add widgets, drag to reposition, resize wi
 | --------------------------------------------------------- | ------------------------------------------------------------- |
 | ![Settings](screenshots/dashboard/edit-mode-settings.png) | ![Add Widget](screenshots/dashboard/edit-mode-add-widget.png) |
 
+## Notifications
+
+Dashboard displays reminder notifications from iframed apps (health-tracker, maintenance-tracker, etc.). When something is due or overdue, a toast modal appears with snooze options.
+
+| Notification Toast                                     | Minimized Bell                                       |
+| ------------------------------------------------------ | ---------------------------------------------------- |
+| ![Toast](screenshots/dashboard/notification-toast.png) | ![Bell](screenshots/dashboard/notification-bell.png) |
+
+**Features:**
+
+- Notifications persist across page refreshes (stored in SQLite)
+- Background scheduler checks every minute for due items
+- Snooze for 1 hour, 4 hours, 1 day, or 3 days
+- Status indicators: Overdue (red), Due Today (yellow), Due Tomorrow (blue)
+- Minimizes to pulsing bell icon - tap to reopen
+
+**For app developers:** See CLAUDE.md "Notification System" section for how to register notifications from your iframed app using `window.parent.notify()`.
+
 ## Backend
 
-Connects to `home-relay` (Python/FastAPI) which handles Kasa device control, Zigbee2MQTT sensors, voice processing, config sync, Wake-on-LAN, display brightness, and MQTT publishing. All processing stays local on your network.
+Connects to `home-relay` (Python/FastAPI) which handles Kasa device control, Zigbee2MQTT sensors, voice processing, config sync, Wake-on-LAN, display brightness, MQTT publishing, and notification management. All processing stays local on your network.
 
 ## Development
 

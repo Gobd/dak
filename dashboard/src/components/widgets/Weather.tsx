@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Settings, RefreshCw, AlertTriangle, Wind } from 'lucide-react';
 import { useLocation, formatLocation } from '../../hooks/useLocation';
@@ -7,6 +7,43 @@ import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { Modal, Button, Spinner } from '@dak/ui';
 import type { WidgetComponentProps } from './index';
 import type { LocationConfig } from '../../types';
+
+// Simple hash for alert content change detection
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(16).slice(0, 6);
+}
+
+// Register weather alerts as notifications
+function registerWeatherAlerts(alerts: NwsAlert[]) {
+  const notify = (window as Window & { notify?: (data: unknown) => void }).notify;
+  if (!notify) return;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  for (const alert of alerts) {
+    // Hash content so updates (12in→2ft, timing changes) trigger new notification
+    const contentHash = simpleHash(
+      (alert.properties.headline || '') + (alert.properties.description || ''),
+    );
+
+    notify({
+      type: 'weather',
+      name: `${alert.properties.event} #${contentHash}`,
+      due: today, // Show immediately
+      data: {
+        severity: alert.properties.severity,
+        headline: alert.properties.headline,
+        expires: new Date(alert.properties.expires).toLocaleString(),
+      },
+    });
+  }
+}
 
 // NWS API - free, no auth, CORS-enabled
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://example.com';
@@ -251,6 +288,19 @@ export default function Weather({ panel }: WidgetComponentProps) {
       enabled: !!location,
     },
   );
+
+  // Register severe weather alerts as notifications
+  useEffect(() => {
+    if (weather?.alerts && weather.alerts.length > 0) {
+      // Only register severe/extreme alerts by default
+      const severeAlerts = weather.alerts.filter((a) =>
+        ['severe', 'extreme'].includes(a.properties.severity?.toLowerCase()),
+      );
+      if (severeAlerts.length > 0) {
+        registerWeatherAlerts(severeAlerts);
+      }
+    }
+  }, [weather?.alerts]);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['weather', location?.lat, location?.lon] });

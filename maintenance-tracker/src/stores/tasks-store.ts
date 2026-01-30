@@ -50,6 +50,7 @@ interface TasksState {
   tasks: MaintenanceTask[];
   logs: Record<string, MaintenanceLog[]>;
   loading: boolean;
+  initialized: boolean;
   fetchTasks: () => Promise<void>;
   fetchLogs: (taskId: string) => Promise<void>;
   addTask: (data: {
@@ -70,19 +71,26 @@ export const useTasksStore = create<TasksState>((set, get) => ({
   tasks: [],
   logs: {},
   loading: false,
+  initialized: false,
 
   fetchTasks: async () => {
-    set({ loading: true });
+    // Only show loading on initial fetch, not background refreshes
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) {
+      set({ loading: true });
+    }
+
     const { data, error } = await supabase
       .from('maint_tasks')
       .select('*')
       .order('next_due', { ascending: true, nullsFirst: false });
 
     if (!error && data) {
-      set({ tasks: data });
+      set({ tasks: data, loading: false, initialized: true });
       syncAllTasksToDashboard(data);
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchLogs: async (taskId: string) => {

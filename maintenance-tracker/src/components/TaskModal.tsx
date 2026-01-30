@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Input, Button, DatePickerCompact, Toggle } from '@dak/ui';
+import { Modal, Input, Button, DatePicker, Toggle, NumberPickerCompact } from '@dak/ui';
 import type { MaintenanceTask, ScheduleType } from '../types';
 
 interface TaskModalProps {
@@ -18,7 +18,7 @@ interface TaskModalProps {
 
 export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
   const [name, setName] = useState('');
-  const [intervalValue, setIntervalValue] = useState(30);
+  const [intervalValue, setIntervalValue] = useState(1);
   const [intervalUnit, setIntervalUnit] = useState<'days' | 'weeks' | 'months'>('days');
   const [scheduleType, setScheduleType] = useState<ScheduleType>('rolling');
   const [notes, setNotes] = useState('');
@@ -36,7 +36,7 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
         setLastDone(task.last_done ? new Date(task.last_done + 'T00:00:00') : null);
       } else {
         setName('');
-        setIntervalValue(30);
+        setIntervalValue(1);
         setIntervalUnit('days');
         setScheduleType('rolling');
         setNotes('');
@@ -84,27 +84,30 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
           />
         </div>
 
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-text-secondary mb-1">Every</label>
-            <Input
-              type="number"
-              min={1}
-              value={intervalValue}
-              onChange={(e) => setIntervalValue(parseInt(e.target.value) || 1)}
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
-            <select
-              value={intervalUnit}
-              onChange={(e) => setIntervalUnit(e.target.value as 'days' | 'weeks' | 'months')}
-              className="w-full px-3 py-2 bg-surface-raised border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent"
-            >
-              <option value="days">Days</option>
-              <option value="weeks">Weeks</option>
-              <option value="months">Months</option>
-            </select>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">Every</label>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <NumberPickerCompact
+                value={intervalValue}
+                onChange={setIntervalValue}
+                min={1}
+                max={12}
+                suffix={intervalUnit}
+                zeroLabel=""
+              />
+            </div>
+            <div className="flex-1">
+              <select
+                value={intervalUnit}
+                onChange={(e) => setIntervalUnit(e.target.value as 'days' | 'weeks' | 'months')}
+                className="w-full px-3 py-2 bg-surface-raised border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="days">Days</option>
+                <option value="weeks">Weeks</option>
+                <option value="months">Months</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -140,28 +143,30 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
               {lastDone ? formatDate(lastDone) : 'Not set (starts from today)'}
             </button>
             {showDatePicker && (
-              <div className="absolute z-10 mt-1 bg-surface-raised border border-border rounded-lg shadow-lg p-2">
-                <DatePickerCompact
-                  value={lastDone || new Date()}
-                  onChange={(date) => {
-                    setLastDone(date);
-                    setShowDatePicker(false);
-                  }}
-                  allowFuture={false}
-                />
-                {lastDone && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLastDone(null);
+              <>
+                <div className="fixed inset-0" onClick={() => setShowDatePicker(false)} />
+                <div className="absolute z-10 mt-1">
+                  <DatePicker
+                    value={lastDone || new Date()}
+                    onChange={(date) => {
+                      setLastDone(date);
                       setShowDatePicker(false);
                     }}
-                    className="w-full mt-2 px-3 py-1 text-sm text-text-muted hover:text-text transition-colors"
-                  >
-                    Clear date
-                  </button>
-                )}
-              </div>
+                  />
+                  {lastDone && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLastDone(null);
+                        setShowDatePicker(false);
+                      }}
+                      className="w-full mt-2 px-3 py-1 text-sm bg-surface-raised border border-border rounded-lg text-text-muted hover:text-text transition-colors"
+                    >
+                      Clear date
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

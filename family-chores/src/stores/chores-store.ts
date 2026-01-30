@@ -20,6 +20,7 @@ interface ChoreInput {
 interface ChoresState {
   chores: ChoreWithAssignments[];
   loading: boolean;
+  initialized: boolean;
   fetchChores: () => Promise<void>;
   addChore: (data: ChoreInput, assigneeIds: string[]) => Promise<void>;
   updateChore: (id: string, data: Partial<ChoreInput>, assigneeIds?: string[]) => Promise<void>;
@@ -30,9 +31,11 @@ interface ChoresState {
 export const useChoresStore = create<ChoresState>((set, get) => ({
   chores: [],
   loading: true,
+  initialized: false,
 
   fetchChores: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
 
     const { data: chores } = await supabase
       .from('chores')
@@ -40,7 +43,7 @@ export const useChoresStore = create<ChoresState>((set, get) => ({
       .order('created_at', { ascending: true });
 
     if (!chores) {
-      set({ chores: [], loading: false });
+      set({ chores: [], loading: false, initialized: true });
       return;
     }
 
@@ -59,7 +62,7 @@ export const useChoresStore = create<ChoresState>((set, get) => ({
         })),
     }));
 
-    set({ chores: choresWithAssignments, loading: false });
+    set({ chores: choresWithAssignments, loading: false, initialized: true });
   },
 
   addChore: async (data, assigneeIds) => {

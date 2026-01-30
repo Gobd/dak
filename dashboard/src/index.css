@@ -168,9 +168,6 @@ body {
   background: var(--color-text-muted);
 }
 
-/* Roller styles from shared UI package */
-@import '../../packages/ui/src/roller.css';
-
 /* Cursor hiding for kiosk mode */
 .hide-cursor {
   cursor: none !important;

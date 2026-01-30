@@ -9,6 +9,7 @@ interface GoalsState {
   progress: GoalProgress[];
   completions: GoalCompletion[];
   loading: boolean;
+  initialized: boolean;
   fetchGoalProgress: () => Promise<void>;
   recordCompletion: (choreId: string, memberId: string) => Promise<void>;
   removeLastCompletion: (choreId: string, memberId: string) => Promise<void>;
@@ -28,15 +29,17 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
   progress: [],
   completions: [],
   loading: true,
+  initialized: false,
 
   fetchGoalProgress: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
 
     const chores = useChoresStore.getState().chores;
     const goals = chores.filter((c) => c.schedule_type === 'goal' && c.is_active);
 
     if (goals.length === 0) {
-      set({ progress: [], completions: [], loading: false });
+      set({ progress: [], completions: [], loading: false, initialized: true });
       return;
     }
 
@@ -78,7 +81,7 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
       }
     }
 
-    set({ progress: progressList, completions, loading: false });
+    set({ progress: progressList, completions, loading: false, initialized: true });
   },
 
   recordCompletion: async (choreId: string, memberId: string) => {

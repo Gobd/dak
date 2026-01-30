@@ -5,6 +5,7 @@ import type { AppSettings } from '../types';
 interface SettingsState {
   settings: AppSettings | null;
   loading: boolean;
+  initialized: boolean;
   pinVerified: boolean;
   fetchSettings: () => Promise<void>;
   setPin: (pin: string) => Promise<void>;
@@ -16,14 +17,17 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   settings: null,
   loading: true,
+  initialized: false,
   pinVerified: false,
 
   fetchSettings: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data } = await supabase.from('app_settings').select('*').single();
 
     if (data) {
-      set({ settings: data, loading: false });
+      set({ settings: data, loading: false, initialized: true });
     } else {
       // Create default settings if none exist
       const { data: newSettings } = await supabase
@@ -31,7 +35,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         .insert({})
         .select()
         .single();
-      set({ settings: newSettings, loading: false });
+      set({ settings: newSettings, loading: false, initialized: true });
     }
   },
 

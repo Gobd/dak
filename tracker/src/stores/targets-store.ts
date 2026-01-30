@@ -12,6 +12,7 @@ interface CalcParams {
 interface TargetsState {
   target: Target | null;
   loading: boolean;
+  initialized: boolean;
   fetchTarget: () => Promise<void>;
   setTarget: (dailyLimit: number, calcParams?: CalcParams) => Promise<void>;
 }
@@ -19,15 +20,19 @@ interface TargetsState {
 export const useTargetsStore = create<TargetsState>((set, get) => ({
   target: null,
   loading: false,
+  initialized: false,
 
   fetchTarget: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase.from('tracker_targets').select('*').maybeSingle();
 
     if (!error && data) {
-      set({ target: data });
+      set({ target: data, loading: false, initialized: true });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   setTarget: async (dailyLimit: number, calcParams?: CalcParams) => {

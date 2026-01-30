@@ -7,6 +7,7 @@ interface PrnState {
   meds: PrnMed[];
   logs: Record<string, PrnLog[]>;
   loading: boolean;
+  initialized: boolean;
   fetchMeds: () => Promise<void>;
   fetchLogs: (medId: string) => Promise<void>;
   addMed: (data: { person_id: string; name: string; min_hours: number }) => Promise<void>;
@@ -20,22 +21,25 @@ export const usePrnStore = create<PrnState>((set, get) => ({
   meds: [],
   logs: {},
   loading: false,
+  initialized: false,
 
   fetchMeds: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('prn_meds')
       .select('*, person:people(*)')
       .order('name');
 
     if (!error && data) {
-      set({ meds: data });
-      // Fetch logs for each med
+      set({ meds: data, loading: false, initialized: true });
       data.forEach((med) => {
         get().fetchLogs(med.id);
       });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchLogs: async (medId: string) => {

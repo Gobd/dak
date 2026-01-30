@@ -6,6 +6,7 @@ import type { FamilyMember } from '../types';
 interface MembersState {
   members: FamilyMember[];
   loading: boolean;
+  initialized: boolean;
   fetchMembers: () => Promise<void>;
   addMember: (data: { name: string; avatar_emoji: string; color: string }) => Promise<void>;
   updateMember: (
@@ -18,15 +19,18 @@ interface MembersState {
 export const useMembersStore = create<MembersState>((set, get) => ({
   members: [],
   loading: true,
+  initialized: false,
 
   fetchMembers: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data } = await supabase
       .from('family_members')
       .select('*')
       .order('created_at', { ascending: true });
 
-    set({ members: data ?? [], loading: false });
+    set({ members: data ?? [], loading: false, initialized: true });
   },
 
   addMember: async (data) => {

@@ -256,6 +256,67 @@ Some widgets have matching standalone apps for dedicated displays:
 
 The standalone apps share the same backend (home-relay) but have their own UI optimized for dedicated tablets/displays.
 
+### Notification System
+
+Dashboard includes a notification system for reminders from iframed apps (health-tracker shots, maintenance-tracker tasks, etc.). Notifications persist in SQLite and display as a toast modal on the dashboard.
+
+#### How It Works
+
+1. **Iframed apps register notifications** via `window.parent.notify()` when schedules change
+2. **home-relay stores notifications** in SQLite with due dates and dismissal tracking
+3. **Background scheduler** checks every minute for due notifications
+4. **SSE broadcasts** push due notifications to the dashboard
+5. **Toast modal** displays with snooze options (1h, 4h, 1d, 3d)
+
+#### Adding Notifications from an App
+
+Apps iframed in dashboard can register notifications by calling `window.parent.notify()`:
+
+```typescript
+// In your store or component
+function notifyDashboard(item: { name: string; next_due: string | null }) {
+  try {
+    const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
+    if (notify && item.next_due) {
+      notify({
+        type: 'shot', // Category shown in toast (shot, maintenance, etc.)
+        name: item.name, // Display name
+        due: item.next_due, // ISO date string (YYYY-MM-DD)
+        data: {
+          // Optional extra info shown in toast
+          person: 'John',
+          dose: '0.5ml',
+        },
+      });
+    }
+  } catch {
+    // Ignore errors when not in iframe
+  }
+}
+```
+
+Call this function:
+
+- After fetching schedules (on initial load)
+- After creating/updating items with due dates
+- After logging completion (updates next due date)
+
+#### Notification API Endpoints
+
+| Endpoint                      | Method | Description                      |
+| ----------------------------- | ------ | -------------------------------- |
+| `/notifications`              | POST   | Register a notification          |
+| `/notifications/due`          | GET    | Get all due notifications        |
+| `/notifications/{id}/dismiss` | POST   | Dismiss with `{ hours: number }` |
+
+#### Notification Toast Behavior
+
+- **Auto-opens** when due notifications exist
+- **Persists** across screen changes until dismissed
+- **Minimizes** to a pulsing bell icon when closed (reappears on interaction)
+- **Snooze options:** 1 hour, 4 hours, 1 day, 3 days
+- **Status indicators:** Overdue (red), Due Today (yellow), Due Tomorrow (blue)
+
 ## Patterns
 
 - **Relative timestamps** - Components displaying `formatDistanceToNow` or similar must refresh periodically for 24/7 kiosk displays. Use both:

@@ -6,6 +6,10 @@ import { useVoiceCommandRelay } from './hooks/useVoiceCommandRelay';
 import { Screen } from './components/layout/Screen';
 import { VoiceResponseToast } from './components/shared/VoiceResponseToast';
 import { MqttModal } from './components/shared/MqttModal';
+import { NotificationToast } from './components/shared/NotificationToast';
+
+// Initialize notifications store (exposes window.notify for iframed apps)
+import './stores/notifications-store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +58,7 @@ function App() {
       <Screen />
       <VoiceResponseToast />
       <MqttModal />
+      <NotificationToast />
     </QueryClientProvider>
   );
 }

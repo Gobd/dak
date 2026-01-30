@@ -6,25 +6,30 @@ import type { VolumeUnit } from '../types';
 interface PreferencesState {
   volumeUnit: VolumeUnit;
   loading: boolean;
+  initialized: boolean;
   fetchPreferences: () => Promise<void>;
   setVolumeUnit: (unit: VolumeUnit) => Promise<void>;
 }
 
-export const usePreferencesStore = create<PreferencesState>((set) => ({
+export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   volumeUnit: 'ml',
   loading: false,
+  initialized: false,
 
   fetchPreferences: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('tracker_targets')
       .select('volume_unit')
       .maybeSingle();
 
     if (!error && data?.volume_unit) {
-      set({ volumeUnit: data.volume_unit as VolumeUnit });
+      set({ volumeUnit: data.volume_unit as VolumeUnit, loading: false, initialized: true });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   setVolumeUnit: async (volumeUnit: VolumeUnit) => {

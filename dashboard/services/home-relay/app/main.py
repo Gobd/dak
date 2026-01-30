@@ -22,6 +22,7 @@ from app.routers import (
     kasa,
     models,
     mqtt,
+    notifications,
     sensors,
     transcribe,
     voice,
@@ -43,6 +44,12 @@ async def lifespan(_app: FastAPI):
     from app.services.kasa_service import get_event_loop
 
     get_event_loop()
+
+    # Initialize notification service with SSE broadcaster
+    from app.services import notification_service
+    from app.services.sse_manager import config_sse
+
+    notification_service.init(config_sse.broadcast)
 
     yield
 
@@ -97,3 +104,4 @@ app.include_router(transcribe.router)
 app.include_router(models.router)
 app.include_router(voices.router)
 app.include_router(adguard.router)
+app.include_router(notifications.router)

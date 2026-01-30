@@ -26,6 +26,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   ptt: lazy(() => import('./Ptt')),
   mqtt: lazy(() => import('./Mqtt')),
   adguard: lazy(() => import('./Adguard')),
+  notifications: lazy(() => import('./Notifications')),
 };
 
 // Loading placeholder

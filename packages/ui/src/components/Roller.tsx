@@ -1,5 +1,6 @@
 import { WheelPicker } from '@ncdai/react-wheel-picker';
 import { useMemo } from 'react';
+import '../roller.css';
 
 interface RollerProps {
   items: number[];

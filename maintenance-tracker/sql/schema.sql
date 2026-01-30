@@ -6,10 +6,6 @@
 -- DROP EXISTING (for easy re-run)
 -- ============================================
 
--- Remove from realtime first
-ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS maint_logs;
-ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS maint_tasks;
-
 -- Drop tables (cascade drops policies, indexes, etc.)
 DROP TABLE IF EXISTS maint_logs CASCADE;
 DROP TABLE IF EXISTS maint_tasks CASCADE;

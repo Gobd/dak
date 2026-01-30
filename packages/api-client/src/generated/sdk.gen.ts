@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddScheduleKasaSchedulePostData, AddScheduleKasaSchedulePostErrors, AddScheduleKasaSchedulePostResponses, AllSensorsSensorsAllGetData, AllSensorsSensorsAllGetResponses, AutoBrightnessAutoGetData, AutoBrightnessAutoGetResponses, AutoBrightnessAutoPostData, AutoBrightnessAutoPostResponses, BrightnessKasaBrightnessPostData, BrightnessKasaBrightnessPostErrors, BrightnessKasaBrightnessPostResponses, ConfigSubscribeConfigSubscribeGetData, ConfigSubscribeConfigSubscribeGetResponses, CountdownKasaCountdownPostData, CountdownKasaCountdownPostErrors, CountdownKasaCountdownPostResponses, DeleteModelVoiceModelsModelIdDeleteData, DeleteModelVoiceModelsModelIdDeleteErrors, DeleteModelVoiceModelsModelIdDeleteResponses, DeleteScheduleKasaScheduleDeleteData, DeleteScheduleKasaScheduleDeleteErrors, DeleteScheduleKasaScheduleDeleteResponses, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteData, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteErrors, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteResponses, DevicesSensorsDevicesGetData, DevicesSensorsDevicesGetResponses, DiscoverKasaDiscoverGetData, DiscoverKasaDiscoverGetResponses, DiscoverKasaDiscoverPostData, DiscoverKasaDiscoverPostResponses, DownloadModelVoiceModelsModelIdDownloadPostData, DownloadModelVoiceModelsModelIdDownloadPostErrors, DownloadModelVoiceModelsModelIdDownloadPostResponses, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostData, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostErrors, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostResponses, GetBridgeInfoMqttBridgeGetData, GetBridgeInfoMqttBridgeGetResponses, GetBrightnessConfigConfigBrightnessGetData, GetBrightnessConfigConfigBrightnessGetResponses, GetConfigConfigGetData, GetConfigConfigGetResponses, GetModelVoiceModelsModelIdGetData, GetModelVoiceModelsModelIdGetErrors, GetModelVoiceModelsModelIdGetResponses, GetStatusAdguardStatusPostData, GetStatusAdguardStatusPostErrors, GetStatusAdguardStatusPostResponses, GetVoiceVoiceTtsVoicesVoiceIdGetData, GetVoiceVoiceTtsVoicesVoiceIdGetErrors, GetVoiceVoiceTtsVoicesVoiceIdGetResponses, HealthHealthGetData, HealthHealthGetResponses, IndoorSensorsIndoorGetData, IndoorSensorsIndoorGetResponses, ListDevicesMqttDevicesGetData, ListDevicesMqttDevicesGetResponses, ListModelsVoiceModelsGetData, ListModelsVoiceModelsGetResponses, ListVoicesVoiceTtsVoicesGetData, ListVoicesVoiceTtsVoicesGetResponses, LookupMacWolMacGetData, LookupMacWolMacGetErrors, LookupMacWolMacGetResponses, OutdoorSensorsOutdoorGetData, OutdoorSensorsOutdoorGetResponses, PingWolPingGetData, PingWolPingGetErrors, PingWolPingGetResponses, RemoveDeviceMqttDevicesRemovePostData, RemoveDeviceMqttDevicesRemovePostErrors, RemoveDeviceMqttDevicesRemovePostResponses, RenameDeviceMqttDevicesRenamePostData, RenameDeviceMqttDevicesRenamePostErrors, RenameDeviceMqttDevicesRenamePostResponses, ScheduleKasaScheduleGetData, ScheduleKasaScheduleGetErrors, ScheduleKasaScheduleGetResponses, SendCommandVoiceCommandPostData, SendCommandVoiceCommandPostErrors, SendCommandVoiceCommandPostResponses, SetBrightnessBrightnessSetPostData, SetBrightnessBrightnessSetPostErrors, SetBrightnessBrightnessSetPostResponses, SetConfigConfigPostData, SetConfigConfigPostErrors, SetConfigConfigPostResponses, SetPermitJoinMqttPermitJoinPostData, SetPermitJoinMqttPermitJoinPostErrors, SetPermitJoinMqttPermitJoinPostResponses, SetProtectionAdguardProtectionPostData, SetProtectionAdguardProtectionPostErrors, SetProtectionAdguardProtectionPostResponses, SpeakEndpointVoiceTtsSpeakPostData, SpeakEndpointVoiceTtsSpeakPostErrors, SpeakEndpointVoiceTtsSpeakPostResponses, StatusBrightnessStatusGetData, StatusBrightnessStatusGetResponses, StatusKasaStatusGetData, StatusKasaStatusGetErrors, StatusKasaStatusGetResponses, StatusSensorsStatusGetData, StatusSensorsStatusGetResponses, SubscribeVoiceSubscribeGetData, SubscribeVoiceSubscribeGetResponses, SunBrightnessSunGetData, SunBrightnessSunGetResponses, ToggleByNameKasaToggleByNamePostData, ToggleByNameKasaToggleByNamePostErrors, ToggleByNameKasaToggleByNamePostResponses, ToggleKasaTogglePostData, ToggleKasaTogglePostErrors, ToggleKasaTogglePostResponses, TranscribeAndExecuteVoiceTranscribeAndExecutePostData, TranscribeAndExecuteVoiceTranscribeAndExecutePostResponses, TranscribeVoiceTranscribePostData, TranscribeVoiceTranscribePostResponses, TtsStatusVoiceTtsStatusGetData, TtsStatusVoiceTtsStatusGetResponses, UpdateScheduleKasaSchedulePutData, UpdateScheduleKasaSchedulePutErrors, UpdateScheduleKasaSchedulePutResponses, VolumeGetVolumeGetData, VolumeGetVolumeGetResponses, VolumeSetVolumePostData, VolumeSetVolumePostErrors, VolumeSetVolumePostResponses, WakeWolWakePostData, WakeWolWakePostErrors, WakeWolWakePostResponses } from './types.gen';
+import type { AddEventNotificationsPostData, AddEventNotificationsPostErrors, AddEventNotificationsPostResponses, AddScheduleKasaSchedulePostData, AddScheduleKasaSchedulePostErrors, AddScheduleKasaSchedulePostResponses, AllSensorsSensorsAllGetData, AllSensorsSensorsAllGetResponses, AutoBrightnessAutoGetData, AutoBrightnessAutoGetResponses, AutoBrightnessAutoPostData, AutoBrightnessAutoPostResponses, BrightnessKasaBrightnessPostData, BrightnessKasaBrightnessPostErrors, BrightnessKasaBrightnessPostResponses, ConfigSubscribeConfigSubscribeGetData, ConfigSubscribeConfigSubscribeGetResponses, CountdownKasaCountdownPostData, CountdownKasaCountdownPostErrors, CountdownKasaCountdownPostResponses, DeleteEventNotificationsEventIdDeleteData, DeleteEventNotificationsEventIdDeleteErrors, DeleteEventNotificationsEventIdDeleteResponses, DeleteModelVoiceModelsModelIdDeleteData, DeleteModelVoiceModelsModelIdDeleteErrors, DeleteModelVoiceModelsModelIdDeleteResponses, DeleteScheduleKasaScheduleDeleteData, DeleteScheduleKasaScheduleDeleteErrors, DeleteScheduleKasaScheduleDeleteResponses, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteData, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteErrors, DeleteVoiceVoiceTtsVoicesVoiceIdDeleteResponses, DevicesSensorsDevicesGetData, DevicesSensorsDevicesGetResponses, DiscoverKasaDiscoverGetData, DiscoverKasaDiscoverGetResponses, DiscoverKasaDiscoverPostData, DiscoverKasaDiscoverPostResponses, DismissEventNotificationsEventIdDismissPostData, DismissEventNotificationsEventIdDismissPostErrors, DismissEventNotificationsEventIdDismissPostResponses, DownloadModelVoiceModelsModelIdDownloadPostData, DownloadModelVoiceModelsModelIdDownloadPostErrors, DownloadModelVoiceModelsModelIdDownloadPostResponses, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostData, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostErrors, DownloadVoiceVoiceTtsVoicesVoiceIdDownloadPostResponses, GetBridgeInfoMqttBridgeGetData, GetBridgeInfoMqttBridgeGetResponses, GetBrightnessConfigConfigBrightnessGetData, GetBrightnessConfigConfigBrightnessGetResponses, GetConfigConfigGetData, GetConfigConfigGetResponses, GetDueNotificationsDueGetData, GetDueNotificationsDueGetResponses, GetModelVoiceModelsModelIdGetData, GetModelVoiceModelsModelIdGetErrors, GetModelVoiceModelsModelIdGetResponses, GetPreferencesNotificationsPreferencesGetData, GetPreferencesNotificationsPreferencesGetResponses, GetStatusAdguardStatusPostData, GetStatusAdguardStatusPostErrors, GetStatusAdguardStatusPostResponses, GetVoiceVoiceTtsVoicesVoiceIdGetData, GetVoiceVoiceTtsVoicesVoiceIdGetErrors, GetVoiceVoiceTtsVoicesVoiceIdGetResponses, HealthHealthGetData, HealthHealthGetResponses, IndoorSensorsIndoorGetData, IndoorSensorsIndoorGetResponses, ListDevicesMqttDevicesGetData, ListDevicesMqttDevicesGetResponses, ListEventsNotificationsGetData, ListEventsNotificationsGetResponses, ListModelsVoiceModelsGetData, ListModelsVoiceModelsGetResponses, ListVoicesVoiceTtsVoicesGetData, ListVoicesVoiceTtsVoicesGetResponses, LookupMacWolMacGetData, LookupMacWolMacGetErrors, LookupMacWolMacGetResponses, OutdoorSensorsOutdoorGetData, OutdoorSensorsOutdoorGetResponses, PingWolPingGetData, PingWolPingGetErrors, PingWolPingGetResponses, RemoveDeviceMqttDevicesRemovePostData, RemoveDeviceMqttDevicesRemovePostErrors, RemoveDeviceMqttDevicesRemovePostResponses, RenameDeviceMqttDevicesRenamePostData, RenameDeviceMqttDevicesRenamePostErrors, RenameDeviceMqttDevicesRenamePostResponses, ScheduleKasaScheduleGetData, ScheduleKasaScheduleGetErrors, ScheduleKasaScheduleGetResponses, SendCommandVoiceCommandPostData, SendCommandVoiceCommandPostErrors, SendCommandVoiceCommandPostResponses, SetBrightnessBrightnessSetPostData, SetBrightnessBrightnessSetPostErrors, SetBrightnessBrightnessSetPostResponses, SetConfigConfigPostData, SetConfigConfigPostErrors, SetConfigConfigPostResponses, SetPermitJoinMqttPermitJoinPostData, SetPermitJoinMqttPermitJoinPostErrors, SetPermitJoinMqttPermitJoinPostResponses, SetPreferenceNotificationsPreferencesEventTypePostData, SetPreferenceNotificationsPreferencesEventTypePostErrors, SetPreferenceNotificationsPreferencesEventTypePostResponses, SetProtectionAdguardProtectionPostData, SetProtectionAdguardProtectionPostErrors, SetProtectionAdguardProtectionPostResponses, SpeakEndpointVoiceTtsSpeakPostData, SpeakEndpointVoiceTtsSpeakPostErrors, SpeakEndpointVoiceTtsSpeakPostResponses, StatusBrightnessStatusGetData, StatusBrightnessStatusGetResponses, StatusKasaStatusGetData, StatusKasaStatusGetErrors, StatusKasaStatusGetResponses, StatusSensorsStatusGetData, StatusSensorsStatusGetResponses, SubscribeVoiceSubscribeGetData, SubscribeVoiceSubscribeGetResponses, SunBrightnessSunGetData, SunBrightnessSunGetResponses, ToggleByNameKasaToggleByNamePostData, ToggleByNameKasaToggleByNamePostErrors, ToggleByNameKasaToggleByNamePostResponses, ToggleKasaTogglePostData, ToggleKasaTogglePostErrors, ToggleKasaTogglePostResponses, TranscribeAndExecuteVoiceTranscribeAndExecutePostData, TranscribeAndExecuteVoiceTranscribeAndExecutePostResponses, TranscribeVoiceTranscribePostData, TranscribeVoiceTranscribePostResponses, TriggerCheckNotificationsCheckPostData, TriggerCheckNotificationsCheckPostResponses, TtsStatusVoiceTtsStatusGetData, TtsStatusVoiceTtsStatusGetResponses, UpdateScheduleKasaSchedulePutData, UpdateScheduleKasaSchedulePutErrors, UpdateScheduleKasaSchedulePutResponses, VolumeGetVolumeGetData, VolumeGetVolumeGetResponses, VolumeSetVolumePostData, VolumeSetVolumePostErrors, VolumeSetVolumePostResponses, WakeWolWakePostData, WakeWolWakePostErrors, WakeWolWakePostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -520,3 +520,76 @@ export const setProtectionAdguardProtectionPost = <ThrowOnError extends boolean 
         ...options.headers
     }
 });
+
+/**
+ * List Events
+ *
+ * List all notification events.
+ */
+export const listEventsNotificationsGet = <ThrowOnError extends boolean = false>(options?: Options<ListEventsNotificationsGetData, ThrowOnError>) => (options?.client ?? client).get<ListEventsNotificationsGetResponses, unknown, ThrowOnError>({ url: '/notifications', ...options });
+
+/**
+ * Add Event
+ *
+ * Add or update a notification event.
+ *
+ * Called by iframed apps (health-tracker, maintenance-tracker, etc.)
+ * to register upcoming due dates for the dashboard to track.
+ */
+export const addEventNotificationsPost = <ThrowOnError extends boolean = false>(options: Options<AddEventNotificationsPostData, ThrowOnError>) => (options.client ?? client).post<AddEventNotificationsPostResponses, AddEventNotificationsPostErrors, ThrowOnError>({
+    url: '/notifications',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get Due
+ *
+ * Get currently due notifications (for initial load).
+ */
+export const getDueNotificationsDueGet = <ThrowOnError extends boolean = false>(options?: Options<GetDueNotificationsDueGetData, ThrowOnError>) => (options?.client ?? client).get<GetDueNotificationsDueGetResponses, unknown, ThrowOnError>({ url: '/notifications/due', ...options });
+
+/**
+ * Delete Event
+ *
+ * Delete a notification event.
+ */
+export const deleteEventNotificationsEventIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteEventNotificationsEventIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteEventNotificationsEventIdDeleteResponses, DeleteEventNotificationsEventIdDeleteErrors, ThrowOnError>({ url: '/notifications/{event_id}', ...options });
+
+/**
+ * Dismiss Event
+ *
+ * Dismiss a notification for a specified number of hours, until midnight, or permanently.
+ */
+export const dismissEventNotificationsEventIdDismissPost = <ThrowOnError extends boolean = false>(options: Options<DismissEventNotificationsEventIdDismissPostData, ThrowOnError>) => (options.client ?? client).post<DismissEventNotificationsEventIdDismissPostResponses, DismissEventNotificationsEventIdDismissPostErrors, ThrowOnError>({
+    url: '/notifications/{event_id}/dismiss',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Trigger Check
+ *
+ * Manually trigger notification check (for testing).
+ */
+export const triggerCheckNotificationsCheckPost = <ThrowOnError extends boolean = false>(options?: Options<TriggerCheckNotificationsCheckPostData, ThrowOnError>) => (options?.client ?? client).post<TriggerCheckNotificationsCheckPostResponses, unknown, ThrowOnError>({ url: '/notifications/check', ...options });
+
+/**
+ * Get Preferences
+ *
+ * Get notification type preferences (which types are enabled/disabled).
+ */
+export const getPreferencesNotificationsPreferencesGet = <ThrowOnError extends boolean = false>(options?: Options<GetPreferencesNotificationsPreferencesGetData, ThrowOnError>) => (options?.client ?? client).get<GetPreferencesNotificationsPreferencesGetResponses, unknown, ThrowOnError>({ url: '/notifications/preferences', ...options });
+
+/**
+ * Set Preference
+ *
+ * Enable or disable notifications for a type.
+ */
+export const setPreferenceNotificationsPreferencesEventTypePost = <ThrowOnError extends boolean = false>(options: Options<SetPreferenceNotificationsPreferencesEventTypePostData, ThrowOnError>) => (options.client ?? client).post<SetPreferenceNotificationsPreferencesEventTypePostResponses, SetPreferenceNotificationsPreferencesEventTypePostErrors, ThrowOnError>({ url: '/notifications/preferences/{event_type}', ...options });

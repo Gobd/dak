@@ -19,6 +19,7 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'clock', label: 'Clock', description: 'Time and date display' },
   { type: 'weather', label: 'Weather', description: 'Current weather and forecast' },
   { type: 'climate', label: 'Climate', description: 'Indoor/outdoor temp & humidity' },
+  { type: 'notifications', label: 'Notifications', description: 'Reminders from apps & alerts' },
   { type: 'timer', label: 'Timer', description: 'Countdown timers & stopwatches' },
   { type: 'ptt', label: 'Push to Talk', description: 'Voice command button' },
   { type: 'drive-time', label: 'Drive Time', description: 'Commute traffic overlay' },

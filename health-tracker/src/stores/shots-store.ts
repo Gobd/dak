@@ -4,10 +4,36 @@ import { broadcastSync } from '../lib/realtime';
 import type { ShotSchedule, ShotLog } from '../types';
 import { addDays, format } from 'date-fns';
 
+// Notify parent dashboard of schedule changes (for reminders)
+function notifyDashboard(schedule: ShotSchedule) {
+  try {
+    const notify = (window.parent as Window & { notify?: (data: unknown) => void })?.notify;
+    if (notify && schedule.next_due) {
+      notify({
+        type: 'shot',
+        name: schedule.name,
+        due: schedule.next_due,
+        data: {
+          person: schedule.person?.name,
+          dose: schedule.current_dose,
+        },
+      });
+    }
+  } catch {
+    // Ignore errors when not in iframe
+  }
+}
+
+// Sync all schedules to dashboard on initial load
+function syncAllSchedulesToDashboard(schedules: ShotSchedule[]) {
+  schedules.filter((s) => s.next_due).forEach(notifyDashboard);
+}
+
 interface ShotsState {
   schedules: ShotSchedule[];
   logs: Record<string, ShotLog[]>;
   loading: boolean;
+  initialized: boolean;
   fetchSchedules: () => Promise<void>;
   fetchLogs: (scheduleId: string) => Promise<void>;
   addSchedule: (data: {
@@ -28,18 +54,23 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
   schedules: [],
   logs: {},
   loading: false,
+  initialized: false,
 
   fetchSchedules: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('shot_schedules')
       .select('*, person:people(*)')
       .order('name');
 
     if (!error && data) {
-      set({ schedules: data });
+      set({ schedules: data, loading: false, initialized: true });
+      syncAllSchedulesToDashboard(data);
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchLogs: async (scheduleId: string) => {
