@@ -34,9 +34,31 @@ export const usePrnStore = create<PrnState>((set, get) => ({
 
     if (!error && data) {
       set({ meds: data, loading: false, initialized: true });
-      data.forEach((med) => {
-        get().fetchLogs(med.id);
-      });
+
+      // Batch fetch recent logs (last 48h) to get most recent per med
+      // This is enough for Home page "OK to give" display without fetching full history
+      if (data.length > 0) {
+        const medIds = data.map((m) => m.id);
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+        const { data: allLogs } = await supabase
+          .from('prn_logs')
+          .select('*')
+          .in('med_id', medIds)
+          .gte('given_at', twoDaysAgo.toISOString())
+          .order('given_at', { ascending: false });
+
+        // Group by med_id and keep only most recent (for "OK to give" calc)
+        const logsByMed: Record<string, PrnLog[]> = {};
+        for (const log of allLogs || []) {
+          if (!logsByMed[log.med_id]) logsByMed[log.med_id] = [];
+          if (logsByMed[log.med_id].length < 1) {
+            logsByMed[log.med_id].push(log);
+          }
+        }
+        set({ logs: logsByMed });
+      }
     } else if (isInitialLoad) {
       set({ loading: false, initialized: true });
     }
@@ -48,7 +70,7 @@ export const usePrnStore = create<PrnState>((set, get) => ({
       .select('*')
       .eq('med_id', medId)
       .order('given_at', { ascending: false })
-      .limit(10);
+      .limit(5);
 
     if (!error && data) {
       set((state) => ({

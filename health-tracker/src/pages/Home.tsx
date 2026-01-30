@@ -19,7 +19,7 @@ import { Card } from '@dak/ui';
 export function Home() {
   const { people, fetchPeople } = usePeopleStore();
   const { schedules, fetchSchedules } = useShotsStore();
-  const { courses, doses, fetchCourses, fetchDoses } = useMedicineStore();
+  const { courses, doses, fetchCourses } = useMedicineStore();
   const { meds: prnMeds, logs: prnLogs, fetchMeds: fetchPrnMeds } = usePrnStore();
 
   useEffect(() => {
@@ -28,16 +28,6 @@ export function Home() {
     fetchCourses();
     fetchPrnMeds();
   }, [fetchPeople, fetchSchedules, fetchCourses, fetchPrnMeds]);
-
-  // Fetch doses for active courses
-  useEffect(() => {
-    courses.forEach((course) => {
-      const endDate = addDays(new Date(course.start_date + 'T00:00:00'), course.duration_days);
-      if (endDate >= new Date()) {
-        fetchDoses(course.id);
-      }
-    });
-  }, [courses, fetchDoses]);
 
   // Get upcoming shots (hide if 3x overdue - likely discontinued)
   const upcomingShots = schedules

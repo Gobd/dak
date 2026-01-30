@@ -283,7 +283,7 @@ export function AsNeeded() {
                                   </span>
                                 </div>
                               ) : (
-                                <div className="text-sm text-text-muted">Never given</div>
+                                <div className="text-sm text-text-muted">Not given in last 48h</div>
                               )}
                               {timeUntil && (
                                 <div className="flex items-center gap-1 text-sm text-warning mt-1">
