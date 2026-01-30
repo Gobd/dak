@@ -6,11 +6,13 @@ import {
   deletePreferenceNotificationsPreferencesEventTypeDelete,
   dismissEventNotificationsEventIdDismissPost,
   addEventNotificationsPost,
+  listEventsNotificationsGet,
   type DueNotification,
+  type NotificationEvent,
 } from '@dak/api-client';
 import { getRelayUrl } from './config-store';
 
-export type { DueNotification };
+export type { DueNotification, NotificationEvent };
 
 export interface TypePreference {
   type: string;
@@ -21,6 +23,7 @@ export interface TypePreference {
 
 interface NotificationsState {
   notifications: DueNotification[];
+  allEvents: NotificationEvent[];
   isOpen: boolean;
   typePreferences: TypePreference[];
   unconfiguredCount: number;
@@ -35,6 +38,7 @@ interface NotificationsState {
 
   // API calls
   fetchDue: () => Promise<void>;
+  fetchAllEvents: () => Promise<void>;
   fetchPreferences: () => Promise<void>;
   setTypeEnabled: (type: string, enabled: boolean) => Promise<void>;
   deleteType: (type: string) => Promise<void>;
@@ -43,6 +47,7 @@ interface NotificationsState {
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   notifications: [],
+  allEvents: [],
   isOpen: false,
   typePreferences: [],
   unconfiguredCount: 0,
@@ -82,6 +87,17 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       const { data } = await getDueNotificationsDueGet({ baseUrl: getRelayUrl() });
       if (Array.isArray(data)) {
         get().setNotifications(data);
+      }
+    } catch {
+      // Relay not available
+    }
+  },
+
+  fetchAllEvents: async () => {
+    try {
+      const { data } = await listEventsNotificationsGet({ baseUrl: getRelayUrl() });
+      if (Array.isArray(data)) {
+        set({ allEvents: data });
       }
     } catch {
       // Relay not available

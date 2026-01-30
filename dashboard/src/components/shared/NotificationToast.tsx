@@ -3,6 +3,7 @@ import {
   useNotificationsStore,
   type DueNotification,
   type TypePreference,
+  type NotificationEvent,
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
 import { X, Clock, AlertTriangle, Calendar, Settings, Trash2 } from 'lucide-react';
@@ -155,6 +156,27 @@ function TypePreferenceItem({ pref }: { pref: TypePreference }) {
   );
 }
 
+function ScheduleItem({ event }: { event: NotificationEvent }) {
+  const dueDate = new Date(event.due_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = dueDate < today;
+
+  return (
+    <div className={`flex items-center justify-between py-2 ${isPast ? 'opacity-50' : ''}`}>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="text-xs text-text-muted uppercase">{event.type}</span>
+        <span className="text-text truncate">{event.name}</span>
+      </div>
+      <span
+        className={`text-sm flex-shrink-0 ${isPast ? 'text-text-muted' : 'text-text-secondary'}`}
+      >
+        {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+      </span>
+    </div>
+  );
+}
+
 function PreferencesModal({ onClose }: { onClose: () => void }) {
   const { typePreferences, fetchPreferences } = useNotificationsStore();
 
@@ -212,14 +234,18 @@ export function NotificationToast() {
   const hasWidget = useHasNotificationsWidget();
   const {
     notifications,
+    allEvents,
     isOpen,
     setOpen,
     fetchDue,
+    fetchAllEvents,
     fetchPreferences,
     unconfiguredCount,
     showPreferences,
     setShowPreferences,
   } = useNotificationsStore();
+
+  const [activeTab, setActiveTab] = useState<'due' | 'schedule'>('due');
 
   // Drag state
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -227,12 +253,20 @@ export function NotificationToast() {
   const dragStart = useRef({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Reset position when modal opens
+  // Reset position and tab when modal opens
   useEffect(() => {
     if (isOpen) {
       setPosition({ x: 0, y: 0 });
+      setActiveTab('due');
     }
   }, [isOpen]);
+
+  // Fetch all events when switching to schedule tab
+  useEffect(() => {
+    if (activeTab === 'schedule') {
+      fetchAllEvents();
+    }
+  }, [activeTab, fetchAllEvents]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -296,35 +330,80 @@ export function NotificationToast() {
       >
         {/* Header - drag handle */}
         <div
-          className={`flex items-center justify-end gap-1 px-3 py-2 border-b border-border ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`flex items-center justify-between px-3 py-2 border-b border-border ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
         >
-          <button
-            onClick={() => setShowPreferences(true)}
-            className="p-1 text-text-muted hover:text-text transition-colors relative"
-            title="Notification settings"
-          >
-            <Settings size={18} />
-            {unconfiguredCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-text text-[10px] font-bold rounded-full flex items-center justify-center">
-                !
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setOpen(false)}
-            className="p-1 text-text-muted hover:text-text transition-colors"
-            title="Close"
-          >
-            <X size={18} />
-          </button>
+          {/* Tab toggle */}
+          <div className="flex gap-1 bg-surface-sunken rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveTab('due')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeTab === 'due'
+                  ? 'bg-surface-raised text-text'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              Due{notifications.length > 0 && ` (${notifications.length})`}
+            </button>
+            <button
+              onClick={() => setActiveTab('schedule')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeTab === 'schedule'
+                  ? 'bg-surface-raised text-text'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              Schedule
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowPreferences(true)}
+              className="p-1 text-text-muted hover:text-text transition-colors relative"
+              title="Notification settings"
+            >
+              <Settings size={18} />
+              {unconfiguredCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-text text-[10px] font-bold rounded-full flex items-center justify-center">
+                  !
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setOpen(false)}
+              className="p-1 text-text-muted hover:text-text transition-colors"
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Notification list */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {notifications.map((notification) => (
-            <NotificationItem key={notification.id} notification={notification} />
-          ))}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {activeTab === 'due' ? (
+            <div className="space-y-3">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))
+              ) : (
+                <p className="text-text-muted text-center py-4">No due reminders</p>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {allEvents
+                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                .map((event) => (
+                  <ScheduleItem key={event.id} event={event} />
+                ))}
+              {allEvents.length === 0 && (
+                <p className="text-text-muted text-center py-4">No scheduled notifications</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
