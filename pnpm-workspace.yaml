@@ -5,6 +5,7 @@ packages:
   - functions
   - health-tracker
   - kasa-controller
+  - maintenance-tracker
   - notes-app
   - tracker
   - packages/*
