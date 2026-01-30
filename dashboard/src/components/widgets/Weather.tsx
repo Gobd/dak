@@ -292,9 +292,9 @@ export default function Weather({ panel }: WidgetComponentProps) {
   // Register severe weather alerts as notifications
   useEffect(() => {
     if (weather?.alerts && weather.alerts.length > 0) {
-      // Only register severe/extreme alerts by default
+      // Only register moderate/severe/extreme alerts
       const severeAlerts = weather.alerts.filter((a) =>
-        ['severe', 'extreme'].includes(a.properties.severity?.toLowerCase()),
+        ['moderate', 'severe', 'extreme'].includes(a.properties.severity?.toLowerCase()),
       );
       if (severeAlerts.length > 0) {
         registerWeatherAlerts(severeAlerts);

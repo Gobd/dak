@@ -211,76 +211,21 @@ function ScheduleItem({ event }: { event: NotificationEvent }) {
   );
 }
 
-function PreferencesModal({ onClose }: { onClose: () => void }) {
-  const { typePreferences, fetchPreferences } = useNotificationsStore();
-
-  useEffect(() => {
-    fetchPreferences();
-  }, [fetchPreferences]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
-      <div className="bg-surface-raised rounded-xl shadow-2xl max-w-sm w-full max-h-[80vh] flex flex-col animate-slide-up">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Settings className="text-text-muted" size={20} />
-            <h2 className="text-lg font-semibold text-text">Notification Types</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-text-muted hover:text-text transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Type list */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
-          <p className="text-sm text-text-muted mb-4">
-            Configure notification types. New types must be enabled or disabled before the badge
-            clears.
-          </p>
-          <div className="divide-y divide-border">
-            {typePreferences.map((pref) => (
-              <TypePreferenceItem key={pref.type} pref={pref} />
-            ))}
-            {typePreferences.length === 0 && (
-              <p className="text-text-muted py-4 text-center">No notification types yet</p>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-border">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 bg-border hover:bg-border-strong rounded-lg transition-colors text-text"
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function NotificationToast() {
   const hasWidget = useHasNotificationsWidget();
   const {
     notifications,
     allEvents,
+    typePreferences,
     isOpen,
     setOpen,
     fetchDue,
     fetchAllEvents,
     fetchPreferences,
     unconfiguredCount,
-    showPreferences,
-    setShowPreferences,
   } = useNotificationsStore();
 
-  const [activeTab, setActiveTab] = useState<'due' | 'schedule'>('due');
+  const [activeTab, setActiveTab] = useState<'due' | 'schedule' | 'settings'>('settings');
 
   // Drag state
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -292,16 +237,18 @@ export function NotificationToast() {
   useEffect(() => {
     if (isOpen) {
       setPosition({ x: 0, y: 0 });
-      setActiveTab('due');
+      setActiveTab('settings');
     }
   }, [isOpen]);
 
-  // Fetch all events when switching to schedule tab
+  // Fetch data when switching tabs
   useEffect(() => {
     if (activeTab === 'schedule') {
       fetchAllEvents();
+    } else if (activeTab === 'settings') {
+      fetchPreferences();
     }
-  }, [activeTab, fetchAllEvents]);
+  }, [activeTab, fetchAllEvents, fetchPreferences]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -355,23 +302,20 @@ export function NotificationToast() {
     setIsDragging(false);
   }, []);
 
-  // Fetch due notifications and preferences on mount (only if widget configured)
+  // Fetch all data on mount (only if widget configured)
   useEffect(() => {
     if (hasWidget) {
       fetchDue();
       fetchPreferences();
+      fetchAllEvents();
     }
-  }, [hasWidget, fetchDue, fetchPreferences]);
+  }, [hasWidget, fetchDue, fetchPreferences, fetchAllEvents]);
 
   // Don't render anything if notifications widget is not configured
   if (!hasWidget) {
     return null;
   }
 
-  // Show preferences modal
-  if (showPreferences) {
-    return <PreferencesModal onClose={() => setShowPreferences(false)} />;
-  }
 
   // Modal is closed - widget handles the bell icon
   if (!isOpen) {
@@ -400,54 +344,59 @@ export function NotificationToast() {
         >
           {/* Tab toggle */}
           <div className="flex gap-1 bg-surface-sunken rounded-lg p-0.5">
+            {notifications.length > 0 && (
+              <button
+                onClick={() => setActiveTab('due')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  activeTab === 'due'
+                    ? 'bg-surface-raised text-text'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                Due ({notifications.length})
+              </button>
+            )}
+            {allEvents.length > 0 && (
+              <button
+                onClick={() => setActiveTab('schedule')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  activeTab === 'schedule'
+                    ? 'bg-surface-raised text-text'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                Schedule
+              </button>
+            )}
             <button
-              onClick={() => setActiveTab('due')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                activeTab === 'due'
+              onClick={() => setActiveTab('settings')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors relative ${
+                activeTab === 'settings'
                   ? 'bg-surface-raised text-text'
                   : 'text-text-muted hover:text-text'
               }`}
             >
-              Due{notifications.length > 0 && ` (${notifications.length})`}
-            </button>
-            <button
-              onClick={() => setActiveTab('schedule')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                activeTab === 'schedule'
-                  ? 'bg-surface-raised text-text'
-                  : 'text-text-muted hover:text-text'
-              }`}
-            >
-              Schedule
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowPreferences(true)}
-              className="p-1 text-text-muted hover:text-text transition-colors relative"
-              title="Notification settings"
-            >
-              <Settings size={18} />
+              <Settings size={14} className="inline" />
               {unconfiguredCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-text text-[10px] font-bold rounded-full flex items-center justify-center">
                   !
                 </span>
               )}
             </button>
-            <button
-              onClick={() => setOpen(false)}
-              className="p-1 text-text-muted hover:text-text transition-colors"
-              title="Close"
-            >
-              <X size={18} />
-            </button>
           </div>
+
+          <button
+            onClick={() => setOpen(false)}
+            className="p-1 text-text-muted hover:text-text transition-colors"
+            title="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          {activeTab === 'due' ? (
+          {activeTab === 'due' && (
             <div className="space-y-3">
               {notifications.length > 0 ? (
                 notifications.map((notification) => (
@@ -457,7 +406,8 @@ export function NotificationToast() {
                 <p className="text-text-muted text-center py-4">No due reminders</p>
               )}
             </div>
-          ) : (
+          )}
+          {activeTab === 'schedule' && (
             <div className="divide-y divide-border">
               {allEvents
                 .sort(
@@ -471,6 +421,22 @@ export function NotificationToast() {
               {allEvents.length === 0 && (
                 <p className="text-text-muted text-center py-4">No scheduled notifications</p>
               )}
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div>
+              <p className="text-sm text-text-muted mb-4">
+                Configure notification types. New types must be enabled or disabled before the badge
+                clears.
+              </p>
+              <div className="divide-y divide-border">
+                {typePreferences.map((pref) => (
+                  <TypePreferenceItem key={pref.type} pref={pref} />
+                ))}
+                {typePreferences.length === 0 && (
+                  <p className="text-text-muted py-4 text-center">No notification types yet</p>
+                )}
+              </div>
             </div>
           )}
         </div>
