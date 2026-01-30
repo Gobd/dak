@@ -42,109 +42,157 @@
           "height": 6,
           "anchor": "top-right",
           "offsetX": 16,
-          "offsetY": 46,
+          "offsetY": 76,
           "widthPx": 120,
           "heightPx": 51
         },
         {
           "id": "panel-climate",
           "widget": "climate",
-          "x": 62,
+          "x": 55,
           "y": 2,
           "width": 12,
           "height": 12,
           "anchor": "top-right",
-          "offsetX": 321,
+          "offsetX": 377,
           "offsetY": 11,
           "widthPx": 185,
           "heightPx": 84,
           "refresh": "1m"
         },
         {
+          "id": "panel-notifications",
+          "widget": "notifications",
+          "args": { "label": "Alerts" },
+          "x": 68,
+          "y": 2,
+          "width": 5,
+          "height": 8,
+          "anchor": "top-right",
+          "offsetX": 321,
+          "offsetY": 2,
+          "widthPx": 48,
+          "heightPx": 64
+        },
+        {
+          "id": "panel-health-popup",
+          "widget": "iframe-popup",
+          "args": { "src": "/health-tracker/", "icon": "heart-pulse", "title": "Health" },
+          "x": 68,
+          "y": 10,
+          "width": 5,
+          "height": 8,
+          "anchor": "top-right",
+          "offsetX": 321,
+          "offsetY": 70,
+          "widthPx": 48,
+          "heightPx": 64
+        },
+        {
           "id": "panel-drive-time",
           "widget": "drive-time",
+          "args": { "label": "ETA" },
           "x": 74,
           "y": 2,
           "width": 5,
-          "height": 6,
+          "height": 8,
           "anchor": "top-right",
           "offsetX": 265,
           "offsetY": 2,
           "widthPx": 48,
-          "heightPx": 48,
+          "heightPx": 64,
           "refresh": "5m"
+        },
+        {
+          "id": "panel-maint-popup",
+          "widget": "iframe-popup",
+          "args": { "src": "/maintenance-tracker/", "icon": "wrench", "title": "Maint" },
+          "x": 74,
+          "y": 10,
+          "width": 5,
+          "height": 8,
+          "anchor": "top-right",
+          "offsetX": 265,
+          "offsetY": 70,
+          "widthPx": 48,
+          "heightPx": 64
         },
         {
           "id": "panel-kasa",
           "widget": "kasa",
+          "args": { "label": "Kasa" },
           "x": 79,
           "y": 2,
           "width": 5,
-          "height": 6,
+          "height": 8,
           "anchor": "top-right",
           "offsetX": 209,
           "offsetY": 2,
           "widthPx": 48,
-          "heightPx": 48
-        },
-        {
-          "id": "panel-wol",
-          "widget": "wol",
-          "x": 84,
-          "y": 2,
-          "width": 5,
-          "height": 6,
-          "anchor": "top-right",
-          "offsetX": 153,
-          "offsetY": 2,
-          "widthPx": 48,
-          "heightPx": 48
+          "heightPx": 64
         },
         {
           "id": "panel-adguard",
           "widget": "adguard",
-          "x": 74,
-          "y": 8,
+          "args": { "label": "Ads" },
+          "x": 79,
+          "y": 10,
           "width": 5,
-          "height": 6,
+          "height": 8,
           "anchor": "top-right",
-          "offsetX": 265,
-          "offsetY": 54,
+          "offsetX": 209,
+          "offsetY": 70,
           "widthPx": 48,
-          "heightPx": 48,
+          "heightPx": 64,
           "refresh": "10s"
+        },
+        {
+          "id": "panel-wol",
+          "widget": "wol",
+          "args": { "label": "WOL" },
+          "x": 84,
+          "y": 2,
+          "width": 5,
+          "height": 8,
+          "anchor": "top-right",
+          "offsetX": 153,
+          "offsetY": 2,
+          "widthPx": 48,
+          "heightPx": 64
         },
         {
           "id": "panel-brightness",
           "widget": "brightness",
-          "x": 79,
-          "y": 8,
+          "args": { "label": "Dim" },
+          "x": 84,
+          "y": 10,
           "width": 5,
-          "height": 6,
+          "height": 8,
           "anchor": "top-right",
-          "offsetX": 209,
-          "offsetY": 54,
+          "offsetX": 153,
+          "offsetY": 70,
           "widthPx": 48,
-          "heightPx": 48
+          "heightPx": 64
         },
         {
           "id": "panel-timer",
           "widget": "timer",
-          "x": 84,
-          "y": 8,
+          "args": { "label": "Timer" },
+          "x": 89,
+          "y": 2,
           "width": 5,
-          "height": 6,
+          "height": 8,
           "anchor": "top-right",
-          "offsetX": 153,
-          "offsetY": 54,
+          "offsetX": 97,
+          "offsetY": 2,
           "widthPx": 48,
-          "heightPx": 48
+          "heightPx": 64
         }
       ]
     },
     {
-      "id": "weather-health",
-      "name": "Weather & Health",
+      "id": "weather-schedule",
+      "name": "Weather & Schedule",
       "panels": [
         {
           "id": "panel-weather",
@@ -185,13 +233,13 @@
           "refresh": "1h"
         },
         {
-          "id": "panel-health",
-          "widget": "iframe",
-          "args": { "src": "/health-tracker/" },
+          "id": "panel-schedule",
+          "widget": "schedule",
           "x": 30,
           "y": 0,
           "width": 70,
-          "height": 100
+          "height": 100,
+          "refresh": "5m"
         }
       ]
     }
@@ -203,6 +251,6 @@
     "routes": []
   },
   "calendar": {
-    "headerHeight": 110
+    "headerHeight": 140
   }
 }

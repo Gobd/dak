@@ -187,6 +187,13 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
   const [tempHeightPx, setTempHeightPx] = useState(panel.heightPx ?? 56);
   const [tempOffsetX, setTempOffsetX] = useState(panel.offsetX ?? 16);
   const [tempOffsetY, setTempOffsetY] = useState(panel.offsetY ?? 16);
+  // Iframe-popup specific settings
+  const [tempPopupWidth, setTempPopupWidth] = useState((panel.args?.popupWidth as number) ?? 70);
+  const [tempPopupHeight, setTempPopupHeight] = useState((panel.args?.popupHeight as number) ?? 80);
+  const [tempSrc, setTempSrc] = useState((panel.args?.src as string) ?? '');
+  const [tempIcon, setTempIcon] = useState((panel.args?.icon as string) ?? 'external-link');
+  const [tempTitle, setTempTitle] = useState((panel.args?.title as string) ?? '');
+  const [tempLabel, setTempLabel] = useState((panel.args?.label as string) ?? '');
   const dragStart = useRef({ x: 0, y: 0, panelX: 0, panelY: 0, offsetX: 0, offsetY: 0 });
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0, widthPx: 0, heightPx: 0 });
 
@@ -397,7 +404,16 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
       onContextMenu={handleContextMenu}
     >
       {/* Widget content */}
-      <div className="w-full h-full overflow-hidden">{children}</div>
+      {frameless && (panel.args?.label || panel.args?.title) ? (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 overflow-hidden">
+          <div className="flex-1 flex items-center justify-center w-full">{children}</div>
+          <span className="text-[10px] text-text-secondary truncate max-w-full px-1 pb-1">
+            {(panel.args?.label as string) || (panel.args?.title as string)}
+          </span>
+        </div>
+      ) : (
+        <div className="w-full h-full overflow-hidden">{children}</div>
+      )}
 
       {/* Edit mode overlay for widgets that capture events (iframes) */}
       {isEditMode && panel.widget === 'iframe' && (
@@ -521,6 +537,13 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
           setTempHeightPx(panel.heightPx ?? 56);
           setTempOffsetX(panel.offsetX ?? 16);
           setTempOffsetY(panel.offsetY ?? 16);
+          // Reset iframe-popup state
+          setTempPopupWidth((panel.args?.popupWidth as number) ?? 70);
+          setTempPopupHeight((panel.args?.popupHeight as number) ?? 80);
+          setTempSrc((panel.args?.src as string) ?? '');
+          setTempIcon((panel.args?.icon as string) ?? 'external-link');
+          setTempTitle((panel.args?.title as string) ?? '');
+          setTempLabel((panel.args?.label as string) ?? '');
         }}
         title="Panel Settings"
       >
@@ -636,6 +659,79 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
               </div>
             </div>
           )}
+
+          {/* Iframe-popup specific settings */}
+          {panel.widget === 'iframe-popup' && (
+            <div className="border-t border-border pt-4 space-y-3">
+              <h3 className="text-sm font-medium">Popup Settings</h3>
+              <Input
+                label="URL"
+                value={tempSrc}
+                onChange={(e) => setTempSrc(e.target.value)}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder="/health-tracker/"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  label="Icon"
+                  value={tempIcon}
+                  onChange={(e) => setTempIcon(e.target.value)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  placeholder="heart-pulse"
+                />
+                <Input
+                  label="Title"
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  placeholder="Health"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  label="Popup Width (%)"
+                  type="number"
+                  value={tempPopupWidth}
+                  onChange={(e) => setTempPopupWidth(parseInt(e.target.value) || 70)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                  max={100}
+                />
+                <Input
+                  label="Popup Height (%)"
+                  type="number"
+                  value={tempPopupHeight}
+                  onChange={(e) => setTempPopupHeight(parseInt(e.target.value) || 80)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  min={20}
+                  max={100}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Label for frameless widgets */}
+          {[
+            'iframe-popup',
+            'kasa',
+            'wol',
+            'brightness',
+            'timer',
+            'adguard',
+            'notifications',
+            'drive-time',
+            'ptt',
+          ].includes(panel.widget) && (
+            <div className="border-t border-border pt-4">
+              <Input
+                label="Label (shown below icon)"
+                value={tempLabel}
+                onChange={(e) => setTempLabel(e.target.value)}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder="Optional label"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 mt-4">
@@ -649,6 +745,13 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
               setTempHeightPx(panel.heightPx ?? 56);
               setTempOffsetX(panel.offsetX ?? 16);
               setTempOffsetY(panel.offsetY ?? 16);
+              // Reset iframe-popup state
+              setTempPopupWidth((panel.args?.popupWidth as number) ?? 70);
+              setTempPopupHeight((panel.args?.popupHeight as number) ?? 80);
+              setTempSrc((panel.args?.src as string) ?? '');
+              setTempIcon((panel.args?.icon as string) ?? 'external-link');
+              setTempTitle((panel.args?.title as string) ?? '');
+              setTempLabel((panel.args?.label as string) ?? '');
             }}
           >
             Cancel
@@ -678,6 +781,23 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
                 updates.widthPx = undefined;
                 updates.heightPx = undefined;
               }
+
+              // Update args for iframe-popup and labels
+              const newArgs = { ...panel.args };
+              if (panel.widget === 'iframe-popup') {
+                newArgs.src = tempSrc;
+                newArgs.icon = tempIcon;
+                newArgs.title = tempTitle;
+                newArgs.popupWidth = tempPopupWidth;
+                newArgs.popupHeight = tempPopupHeight;
+              }
+              // Label for frameless widgets
+              if (tempLabel) {
+                newArgs.label = tempLabel;
+              } else {
+                delete newArgs.label;
+              }
+              updates.args = newArgs;
 
               updatePanel(panel.id, updates);
               setShowSettings(false);

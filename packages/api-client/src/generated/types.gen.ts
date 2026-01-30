@@ -2834,6 +2834,34 @@ export type GetPreferencesNotificationsPreferencesGetResponses = {
     200: unknown;
 };
 
+export type DeletePreferenceNotificationsPreferencesEventTypeDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Event Type
+         */
+        event_type: string;
+    };
+    query?: never;
+    url: '/notifications/preferences/{event_type}';
+};
+
+export type DeletePreferenceNotificationsPreferencesEventTypeDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeletePreferenceNotificationsPreferencesEventTypeDeleteError = DeletePreferenceNotificationsPreferencesEventTypeDeleteErrors[keyof DeletePreferenceNotificationsPreferencesEventTypeDeleteErrors];
+
+export type DeletePreferenceNotificationsPreferencesEventTypeDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type SetPreferenceNotificationsPreferencesEventTypePostData = {
     body?: never;
     path: {

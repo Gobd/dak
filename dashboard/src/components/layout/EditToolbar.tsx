@@ -20,6 +20,7 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'weather', label: 'Weather', description: 'Current weather and forecast' },
   { type: 'climate', label: 'Climate', description: 'Indoor/outdoor temp & humidity' },
   { type: 'notifications', label: 'Notifications', description: 'Reminders from apps & alerts' },
+  { type: 'schedule', label: 'Schedule', description: 'Upcoming notifications list' },
   { type: 'timer', label: 'Timer', description: 'Countdown timers & stopwatches' },
   { type: 'ptt', label: 'Push to Talk', description: 'Voice command button' },
   { type: 'drive-time', label: 'Drive Time', description: 'Commute traffic overlay' },
@@ -30,6 +31,11 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'wol', label: 'Wake on LAN', description: 'Wake network devices' },
   { type: 'brightness', label: 'Brightness', description: 'Display brightness control' },
   { type: 'iframe', label: 'Iframe', description: 'Embed external content' },
+  {
+    type: 'iframe-popup',
+    label: 'Iframe Popup',
+    description: 'Icon button that opens app in popup',
+  },
   { type: 'mqtt', label: 'MQTT', description: 'MQTT sensor data display' },
   { type: 'adguard', label: 'AdGuard Home', description: 'DNS ad-blocking control' },
 ];

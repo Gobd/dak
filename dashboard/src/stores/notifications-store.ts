@@ -3,13 +3,16 @@ import {
   getDueNotificationsDueGet,
   getPreferencesNotificationsPreferencesGet,
   setPreferenceNotificationsPreferencesEventTypePost,
+  deletePreferenceNotificationsPreferencesEventTypeDelete,
   dismissEventNotificationsEventIdDismissPost,
   addEventNotificationsPost,
+  listEventsNotificationsGet,
   type DueNotification,
+  type NotificationEvent,
 } from '@dak/api-client';
 import { getRelayUrl } from './config-store';
 
-export type { DueNotification };
+export type { DueNotification, NotificationEvent };
 
 export interface TypePreference {
   type: string;
@@ -20,6 +23,7 @@ export interface TypePreference {
 
 interface NotificationsState {
   notifications: DueNotification[];
+  allEvents: NotificationEvent[];
   isOpen: boolean;
   typePreferences: TypePreference[];
   unconfiguredCount: number;
@@ -34,13 +38,16 @@ interface NotificationsState {
 
   // API calls
   fetchDue: () => Promise<void>;
+  fetchAllEvents: () => Promise<void>;
   fetchPreferences: () => Promise<void>;
   setTypeEnabled: (type: string, enabled: boolean) => Promise<void>;
+  deleteType: (type: string) => Promise<void>;
   dismiss: (id: number, hours: number, permanent?: boolean) => Promise<void>;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   notifications: [],
+  allEvents: [],
   isOpen: false,
   typePreferences: [],
   unconfiguredCount: 0,
@@ -86,6 +93,17 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     }
   },
 
+  fetchAllEvents: async () => {
+    try {
+      const { data } = await listEventsNotificationsGet({ baseUrl: getRelayUrl() });
+      if (Array.isArray(data)) {
+        set({ allEvents: data });
+      }
+    } catch {
+      // Relay not available
+    }
+  },
+
   fetchPreferences: async () => {
     try {
       const { data } = await getPreferencesNotificationsPreferencesGet({ baseUrl: getRelayUrl() });
@@ -107,6 +125,22 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         baseUrl: getRelayUrl(),
         path: { event_type: type },
         query: { enabled },
+      });
+      if (response.ok) {
+        // Refresh preferences and due notifications
+        get().fetchPreferences();
+        get().fetchDue();
+      }
+    } catch {
+      // Ignore errors
+    }
+  },
+
+  deleteType: async (type) => {
+    try {
+      const { response } = await deletePreferenceNotificationsPreferencesEventTypeDelete({
+        baseUrl: getRelayUrl(),
+        path: { event_type: type },
       });
       if (response.ok) {
         // Refresh preferences and due notifications

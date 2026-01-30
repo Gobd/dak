@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   useNotificationsStore,
   type DueNotification,
   type TypePreference,
+  type NotificationEvent,
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
-import { Bell, X, Clock, AlertTriangle, Calendar, Settings } from 'lucide-react';
+import { X, Clock, AlertTriangle, Calendar, Settings, Trash2 } from 'lucide-react';
 import { Toggle } from '@dak/ui';
 
 // Check if notifications widget is configured on any screen
@@ -52,7 +53,7 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
   };
 
   return (
-    <div className="bg-surface rounded-lg p-4 border border-border">
+    <div className="bg-surface-sunken rounded-lg p-4 border border-border">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{getStatusIcon()}</div>
         <div className="flex-1 min-w-0">
@@ -92,7 +93,7 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
               <button
                 key={opt.hours}
                 onClick={() => handleSnooze(opt.hours)}
-                className="px-3 py-1.5 text-sm bg-surface-raised hover:bg-surface-sunken rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text"
               >
                 {opt.label}
               </button>
@@ -108,14 +109,14 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
           <>
             <button
               onClick={() => setShowOptions(true)}
-              className="px-3 py-1.5 text-sm bg-surface-raised hover:bg-surface-sunken rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
             >
               <Clock size={14} />
               Snooze
             </button>
             <button
               onClick={handleDismiss}
-              className="px-3 py-1.5 text-sm bg-surface-raised hover:bg-surface-sunken rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
             >
               <X size={14} />
               Dismiss
@@ -129,16 +130,49 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
 
 function TypePreferenceItem({ pref }: { pref: TypePreference }) {
   const setTypeEnabled = useNotificationsStore((s) => s.setTypeEnabled);
+  const deleteType = useNotificationsStore((s) => s.deleteType);
 
   return (
-    <div className="flex items-center justify-between py-2">
-      <div className="flex items-center gap-2">
-        <span className="font-medium capitalize">{pref.type}</span>
+    <div className="flex items-center justify-between py-2 gap-3">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="font-medium capitalize text-text truncate">{pref.type}</span>
         {!pref.is_known && (
-          <span className="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded">new</span>
+          <span className="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded flex-shrink-0">
+            new
+          </span>
         )}
       </div>
-      <Toggle checked={pref.enabled} onChange={(checked) => setTypeEnabled(pref.type, checked)} />
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Toggle checked={pref.enabled} onChange={(checked) => setTypeEnabled(pref.type, checked)} />
+        <button
+          onClick={() => deleteType(pref.type)}
+          className="p-1 text-text-muted hover:text-danger transition-colors"
+          title="Delete notification type"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleItem({ event }: { event: NotificationEvent }) {
+  const dueDate = new Date(event.due_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPast = dueDate < today;
+
+  return (
+    <div className={`flex items-center justify-between py-2 ${isPast ? 'opacity-50' : ''}`}>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="text-xs text-text-muted uppercase">{event.type}</span>
+        <span className="text-text truncate">{event.name}</span>
+      </div>
+      <span
+        className={`text-sm flex-shrink-0 ${isPast ? 'text-text-muted' : 'text-text-secondary'}`}
+      >
+        {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+      </span>
     </div>
   );
 }
@@ -157,7 +191,7 @@ function PreferencesModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Settings className="text-text-muted" size={20} />
-            <h2 className="text-lg font-semibold">Notification Types</h2>
+            <h2 className="text-lg font-semibold text-text">Notification Types</h2>
           </div>
           <button
             onClick={onClose}
@@ -186,7 +220,7 @@ function PreferencesModal({ onClose }: { onClose: () => void }) {
         <div className="px-6 py-3 border-t border-border">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 bg-surface hover:bg-surface-sunken rounded-lg transition-colors"
+            className="w-full px-4 py-2 bg-border hover:bg-border-strong rounded-lg transition-colors text-text"
           >
             Done
           </button>
@@ -200,14 +234,64 @@ export function NotificationToast() {
   const hasWidget = useHasNotificationsWidget();
   const {
     notifications,
+    allEvents,
     isOpen,
     setOpen,
     fetchDue,
+    fetchAllEvents,
     fetchPreferences,
     unconfiguredCount,
     showPreferences,
     setShowPreferences,
   } = useNotificationsStore();
+
+  const [activeTab, setActiveTab] = useState<'due' | 'schedule'>('due');
+
+  // Drag state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Reset position and tab when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setPosition({ x: 0, y: 0 });
+      setActiveTab('due');
+    }
+  }, [isOpen]);
+
+  // Fetch all events when switching to schedule tab
+  useEffect(() => {
+    if (activeTab === 'schedule') {
+      fetchAllEvents();
+    }
+  }, [activeTab, fetchAllEvents]);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Only drag from header area, not buttons
+      if ((e.target as HTMLElement).closest('button')) return;
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    },
+    [position],
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y,
+      });
+    },
+    [isDragging],
+  );
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
   // Fetch due notifications and preferences on mount (only if widget configured)
   useEffect(() => {
@@ -233,26 +317,55 @@ export function NotificationToast() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
-      <div className="bg-surface-raised rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-slide-up">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Bell className="text-warning" size={20} />
-            <h2 className="text-lg font-semibold">Reminders</h2>
-            <span className="px-2 py-0.5 text-xs font-medium bg-warning/20 text-warning rounded-full">
-              {notifications.length}
-            </span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <div
+        ref={modalRef}
+        className="pointer-events-auto bg-surface-raised rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-slide-up border border-border"
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+      >
+        {/* Header - drag handle */}
+        <div
+          className={`flex items-center justify-between px-3 py-2 border-b border-border ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onMouseDown={handleMouseDown}
+        >
+          {/* Tab toggle */}
+          <div className="flex gap-1 bg-surface-sunken rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveTab('due')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeTab === 'due'
+                  ? 'bg-surface-raised text-text'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              Due{notifications.length > 0 && ` (${notifications.length})`}
+            </button>
+            <button
+              onClick={() => setActiveTab('schedule')}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                activeTab === 'schedule'
+                  ? 'bg-surface-raised text-text'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              Schedule
+            </button>
           </div>
+
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowPreferences(true)}
               className="p-1 text-text-muted hover:text-text transition-colors relative"
               title="Notification settings"
             >
-              <Settings size={20} />
+              <Settings size={18} />
               {unconfiguredCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-text text-[10px] font-bold rounded-full flex items-center justify-center">
                   !
                 </span>
               )}
@@ -260,28 +373,37 @@ export function NotificationToast() {
             <button
               onClick={() => setOpen(false)}
               className="p-1 text-text-muted hover:text-text transition-colors"
-              title="Minimize"
+              title="Close"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* Notification list */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {notifications.map((notification) => (
-            <NotificationItem key={notification.id} notification={notification} />
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-border text-center">
-          <button
-            onClick={() => setOpen(false)}
-            className="text-sm text-text-muted hover:text-text transition-colors"
-          >
-            Minimize (reminders will reappear)
-          </button>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {activeTab === 'due' ? (
+            <div className="space-y-3">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem key={notification.id} notification={notification} />
+                ))
+              ) : (
+                <p className="text-text-muted text-center py-4">No due reminders</p>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {allEvents
+                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                .map((event) => (
+                  <ScheduleItem key={event.id} event={event} />
+                ))}
+              {allEvents.length === 0 && (
+                <p className="text-text-muted text-center py-4">No scheduled notifications</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -16,7 +16,9 @@ export type WidgetType =
   | 'ptt'
   | 'mqtt'
   | 'adguard'
-  | 'notifications';
+  | 'notifications'
+  | 'schedule'
+  | 'iframe-popup';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -145,6 +147,16 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
     widthPx: 56,
     heightPx: 56,
     offsetX: 16,
+    offsetY: 16,
+  },
+  schedule: { width: 25, height: 50, refresh: '5m' },
+  'iframe-popup': {
+    width: 8,
+    height: 10,
+    anchor: 'bottom-left',
+    widthPx: 72,
+    heightPx: 80,
+    offsetX: 80,
     offsetY: 16,
   },
 };
