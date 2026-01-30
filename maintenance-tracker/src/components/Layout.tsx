@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Wrench, LogOut } from 'lucide-react';
+import { Wrench, LogOut, Moon, Sun } from 'lucide-react';
+import { Button } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +10,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { signOut } = useAuthStore();
+  const { dark, toggle } = useThemeStore();
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -17,13 +20,19 @@ export function Layout({ children }: LayoutProps) {
           <Wrench className="text-accent" size={24} />
           <span className="font-semibold text-lg">Maintenance</span>
         </Link>
-        <button
-          onClick={() => signOut()}
-          className="p-2 text-text-muted hover:text-text transition-colors"
-          title="Sign out"
-        >
-          <LogOut size={20} />
-        </button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggle}
+            title={dark ? 'Light mode' : 'Dark mode'}
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sign out">
+            <LogOut size={18} />
+          </Button>
+        </div>
       </header>
 
       {/* Main content */}

@@ -370,6 +370,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.10)
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.1.18
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

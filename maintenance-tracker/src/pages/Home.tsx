@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTasksStore } from '../stores/tasks-store';
 import { TaskModal } from '../components/TaskModal';
-import { Card, Button, ConfirmModal } from '@dak/ui';
+import { Card, Button, ConfirmModal, useToastStore } from '@dak/ui';
 import {
   Plus,
   Check,
@@ -11,17 +11,33 @@ import {
   Pencil,
   Trash2,
   History,
+  Undo2,
 } from 'lucide-react';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
-import type { MaintenanceTask } from '../types';
+import type { MaintenanceTask, MaintenanceLog } from '../types';
 
 export function Home() {
-  const { tasks, logs, loading, fetchTasks, fetchLogs, addTask, updateTask, deleteTask, markDone } =
-    useTasksStore();
+  const {
+    tasks,
+    logs,
+    loading,
+    fetchTasks,
+    fetchLogs,
+    addTask,
+    updateTask,
+    deleteTask,
+    markDone,
+    deleteLog,
+  } = useTasksStore();
+  const { showToast } = useToastStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [deletingTask, setDeletingTask] = useState<MaintenanceTask | null>(null);
+  const [markingDoneTask, setMarkingDoneTask] = useState<MaintenanceTask | null>(null);
+  const [undoingLog, setUndoingLog] = useState<{ taskId: string; log: MaintenanceLog } | null>(
+    null,
+  );
   const [showHistoryFor, setShowHistoryFor] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
@@ -86,14 +102,29 @@ export function Home() {
     }
   };
 
-  const handleMarkDone = async (task: MaintenanceTask) => {
-    await markDone(task.id);
+  const handleConfirmMarkDone = async () => {
+    if (markingDoneTask) {
+      const success = await markDone(markingDoneTask.id);
+      if (success) {
+        showToast(`"${markingDoneTask.name}" marked as done`, 'success');
+      }
+      setMarkingDoneTask(null);
+    }
+  };
+
+  const handleConfirmUndo = async () => {
+    if (undoingLog) {
+      await deleteLog(undoingLog.taskId, undoingLog.log.id);
+      showToast('Entry removed', 'success');
+      setUndoingLog(null);
+    }
   };
 
   const handleSaveTask = async (data: {
     name: string;
     interval_value: number;
     interval_unit: 'days' | 'weeks' | 'months';
+    schedule_type?: 'rolling' | 'fixed';
     notes?: string;
     last_done?: string;
   }) => {
@@ -180,7 +211,7 @@ export function Home() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => handleMarkDone(task)}
+                    onClick={() => setMarkingDoneTask(task)}
                     title="Mark as done"
                   >
                     <Check size={16} />
@@ -251,11 +282,22 @@ export function Home() {
                       <p className="text-sm text-text-muted">No history yet</p>
                     ) : (
                       <div className="space-y-1">
-                        {taskLogs.map((log) => (
-                          <div key={log.id} className="text-sm flex justify-between">
-                            <span>{format(new Date(log.completed_at), 'MMM d, yyyy h:mm a')}</span>
-                            {log.notes && (
-                              <span className="text-text-muted truncate ml-2">{log.notes}</span>
+                        {taskLogs.map((log, index) => (
+                          <div key={log.id} className="text-sm flex items-center gap-2">
+                            <span className="flex-1">
+                              {format(new Date(log.completed_at), 'MMM d, yyyy h:mm a')}
+                              {log.notes && (
+                                <span className="text-text-muted ml-2">- {log.notes}</span>
+                              )}
+                            </span>
+                            {index === 0 && (
+                              <button
+                                onClick={() => setUndoingLog({ taskId: task.id, log })}
+                                className="p-1 text-text-muted hover:text-warning transition-colors"
+                                title="Undo this entry"
+                              >
+                                <Undo2 size={14} />
+                              </button>
                             )}
                           </div>
                         ))}
@@ -288,6 +330,28 @@ export function Home() {
         title="Delete Task"
         message={`Are you sure you want to delete "${deletingTask?.name}"? This will also delete all history.`}
         confirmText="Delete"
+        variant="danger"
+      />
+
+      {/* Mark Done Confirmation */}
+      <ConfirmModal
+        open={markingDoneTask !== null}
+        onClose={() => setMarkingDoneTask(null)}
+        onConfirm={handleConfirmMarkDone}
+        title="Mark as Done"
+        message={`Mark "${markingDoneTask?.name}" as completed today?`}
+        confirmText="Done"
+        variant="primary"
+      />
+
+      {/* Undo Confirmation */}
+      <ConfirmModal
+        open={undoingLog !== null}
+        onClose={() => setUndoingLog(null)}
+        onConfirm={handleConfirmUndo}
+        title="Undo Entry"
+        message={`Remove this completion entry from ${undoingLog ? format(new Date(undoingLog.log.completed_at), 'MMM d, yyyy') : ''}? This will recalculate the next due date.`}
+        confirmText="Undo"
         variant="danger"
       />
     </div>

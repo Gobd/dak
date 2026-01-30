@@ -2,6 +2,22 @@
 -- Run this in Supabase SQL Editor (same project as health-tracker)
 -- All tables prefixed with maint_ to avoid conflicts
 
+-- ============================================
+-- DROP EXISTING (for easy re-run)
+-- ============================================
+
+-- Remove from realtime first
+ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS maint_logs;
+ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS maint_tasks;
+
+-- Drop tables (cascade drops policies, indexes, etc.)
+DROP TABLE IF EXISTS maint_logs CASCADE;
+DROP TABLE IF EXISTS maint_tasks CASCADE;
+
+-- ============================================
+-- TABLES
+-- ============================================
+
 -- Maintenance tasks (recurring home/car maintenance items)
 CREATE TABLE maint_tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -9,6 +25,7 @@ CREATE TABLE maint_tasks (
   name TEXT NOT NULL,
   interval_value INT NOT NULL DEFAULT 30,
   interval_unit TEXT NOT NULL DEFAULT 'days', -- days, weeks, months
+  schedule_type TEXT NOT NULL DEFAULT 'rolling', -- rolling (from completion) or fixed (from scheduled)
   last_done DATE,
   next_due DATE,
   notes TEXT,
@@ -50,3 +67,10 @@ CREATE POLICY "Users can manage own maint_logs"
   ON maint_logs FOR ALL TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
+
+-- ============================================
+-- REALTIME (for cross-device sync)
+-- ============================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE maint_tasks;
+ALTER PUBLICATION supabase_realtime ADD TABLE maint_logs;

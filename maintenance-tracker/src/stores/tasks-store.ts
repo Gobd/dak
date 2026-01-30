@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { broadcastSync } from '../lib/realtime';
-import type { MaintenanceTask, MaintenanceLog } from '../types';
+import type { MaintenanceTask, MaintenanceLog, ScheduleType } from '../types';
 import { addDays, addWeeks, addMonths, format } from 'date-fns';
 
 function calculateNextDue(
@@ -56,6 +56,7 @@ interface TasksState {
     name: string;
     interval_value: number;
     interval_unit: 'days' | 'weeks' | 'months';
+    schedule_type?: ScheduleType;
     notes?: string;
     last_done?: string; // yyyy-MM-dd format, for setting initial "last done" date
   }) => Promise<void>;
@@ -108,6 +109,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
       name: data.name,
       interval_value: data.interval_value,
       interval_unit: data.interval_unit,
+      schedule_type: data.schedule_type || 'rolling',
       notes: data.notes || null,
       last_done: data.last_done || null,
       next_due: nextDue,
@@ -164,8 +166,15 @@ export const useTasksStore = create<TasksState>((set, get) => ({
 
     if (error) return false;
 
-    // Update task with new last_done and next_due
-    const nextDue = calculateNextDue(doneTime, task.interval_value, task.interval_unit);
+    // Calculate next_due based on schedule type
+    // Rolling: next due from when it was actually done
+    // Fixed: next due from when it was scheduled (keeps the same schedule)
+    const fromDate =
+      task.schedule_type === 'fixed' && task.next_due
+        ? new Date(task.next_due + 'T00:00:00')
+        : doneTime;
+    const nextDue = calculateNextDue(fromDate, task.interval_value, task.interval_unit);
+
     await supabase
       .from('maint_tasks')
       .update({
@@ -199,6 +208,8 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     if (remainingLogs && remainingLogs.length > 0) {
       const lastLog = remainingLogs[0];
       const lastDone = format(new Date(lastLog.completed_at), 'yyyy-MM-dd');
+      // For fixed schedule, we'd ideally restore the previous next_due, but we don't track that
+      // So we recalculate from the last completion (same as rolling for undo)
       const nextDue = calculateNextDue(
         new Date(lastLog.completed_at),
         task.interval_value,

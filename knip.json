@@ -34,7 +34,7 @@
       "ignore": ["**/*.stories.tsx"]
     },
     "packages/vite-shared-react": {
-      "ignoreDependencies": ["react", "react-dom", "zustand", "babel-plugin-react-compiler"],
+      "ignoreDependencies": ["react", "react-dom", "zustand"],
       "ignore": ["fonts/**"]
     }
   }

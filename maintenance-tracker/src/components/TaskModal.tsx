@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal, Input, Button, DatePickerCompact } from '@dak/ui';
-import type { MaintenanceTask } from '../types';
+import { Modal, Input, Button, DatePickerCompact, Toggle } from '@dak/ui';
+import type { MaintenanceTask, ScheduleType } from '../types';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface TaskModalProps {
     name: string;
     interval_value: number;
     interval_unit: 'days' | 'weeks' | 'months';
+    schedule_type?: ScheduleType;
     notes?: string;
     last_done?: string;
   }) => void;
@@ -19,6 +20,7 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
   const [name, setName] = useState('');
   const [intervalValue, setIntervalValue] = useState(30);
   const [intervalUnit, setIntervalUnit] = useState<'days' | 'weeks' | 'months'>('days');
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('rolling');
   const [notes, setNotes] = useState('');
   const [lastDone, setLastDone] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -29,12 +31,14 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
         setName(task.name);
         setIntervalValue(task.interval_value);
         setIntervalUnit(task.interval_unit);
+        setScheduleType(task.schedule_type || 'rolling');
         setNotes(task.notes || '');
         setLastDone(task.last_done ? new Date(task.last_done + 'T00:00:00') : null);
       } else {
         setName('');
         setIntervalValue(30);
         setIntervalUnit('days');
+        setScheduleType('rolling');
         setNotes('');
         setLastDone(null);
       }
@@ -50,6 +54,7 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
       name: name.trim(),
       interval_value: intervalValue,
       interval_unit: intervalUnit,
+      schedule_type: scheduleType,
       notes: notes.trim() || undefined,
       last_done: lastDone
         ? `${lastDone.getFullYear()}-${String(lastDone.getMonth() + 1).padStart(2, '0')}-${String(lastDone.getDate()).padStart(2, '0')}`
@@ -100,6 +105,25 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
               <option value="weeks">Weeks</option>
               <option value="months">Months</option>
             </select>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary">
+                Fixed Schedule
+              </label>
+              <p className="text-xs text-text-muted">
+                {scheduleType === 'fixed'
+                  ? 'Next due stays on schedule regardless of when done'
+                  : 'Next due calculated from when actually completed'}
+              </p>
+            </div>
+            <Toggle
+              checked={scheduleType === 'fixed'}
+              onChange={(v) => setScheduleType(v ? 'fixed' : 'rolling')}
+            />
           </div>
         </div>
 
