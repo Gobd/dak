@@ -10,11 +10,22 @@ import { Markdown } from '@tiptap/markdown';
 function focusAtContentEnd(editor: ReturnType<typeof useEditor>): void {
   if (!editor) return;
   const { doc } = editor.state;
-  const lastChild = doc.lastChild;
-  if (lastChild?.type.name === 'paragraph' && lastChild.textContent === '') {
-    const targetPos = doc.content.size - lastChild.nodeSize - 1;
-    editor.commands.setTextSelection(targetPos);
-    editor.commands.focus();
+
+  // Find the last block with actual content
+  let lastContentPos = doc.content.size;
+  let foundContent = false;
+
+  doc.descendants((node, pos) => {
+    if (node.isTextblock && node.textContent.length > 0) {
+      // Position at end of text content within this block
+      lastContentPos = pos + node.content.size + 1;
+      foundContent = true;
+    }
+    return true; // continue traversing
+  });
+
+  if (foundContent) {
+    editor.chain().focus().setTextSelection(lastContentPos).run();
   } else {
     editor.commands.focus('end');
   }
@@ -117,7 +128,8 @@ export function useNoteEditor({
 
       if (content) {
         (editor as any).commands.setContent(content, { contentType: 'markdown' });
-        focusAtContentEnd(editor);
+        // Delay focus until after browser has finished rendering the new content
+        requestAnimationFrame(() => focusAtContentEnd(editor));
       } else {
         (editor as any).commands.setContent('# ', { contentType: 'markdown' });
         editor.commands.setTextSelection(1);
