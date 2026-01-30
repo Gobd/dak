@@ -15,7 +15,8 @@ export type WidgetType =
   | 'timer'
   | 'ptt'
   | 'mqtt'
-  | 'adguard';
+  | 'adguard'
+  | 'notifications';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -135,6 +136,15 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
     widthPx: 56,
     heightPx: 56,
     offsetX: 272,
+    offsetY: 16,
+  },
+  notifications: {
+    width: 6,
+    height: 6,
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 16,
     offsetY: 16,
   },
 };

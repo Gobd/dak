@@ -51,6 +51,7 @@ export function Screen() {
                   'brightness',
                   'drive-time',
                   'adguard',
+                  'notifications',
                 ];
                 const isFrameless = framelessWidgets.includes(panel.widget);
 

@@ -53,6 +53,48 @@ export type AdGuardRequest = {
 };
 
 /**
+ * AddEventRequest
+ *
+ * Request to add/update a notification event.
+ */
+export type AddEventRequest = {
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Due
+     */
+    due: string;
+    /**
+     * Data
+     */
+    data?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * AddEventResponse
+ *
+ * Response from adding an event.
+ */
+export type AddEventResponse = {
+    /**
+     * Success
+     */
+    success: boolean;
+    /**
+     * Id
+     */
+    id: number;
+};
+
+/**
  * AddScheduleRequest
  *
  * Add schedule rule request.
@@ -420,6 +462,84 @@ export type DevicesResponse = {
 };
 
 /**
+ * DismissRequest
+ *
+ * Request to dismiss a notification.
+ */
+export type DismissRequest = {
+    /**
+     * Hours
+     */
+    hours?: number | null;
+    /**
+     * Permanent
+     */
+    permanent?: boolean;
+    /**
+     * Until Midnight
+     */
+    until_midnight?: boolean;
+};
+
+/**
+ * DismissResponse
+ *
+ * Response from dismissing a notification.
+ */
+export type DismissResponse = {
+    /**
+     * Success
+     */
+    success: boolean;
+    /**
+     * Dismissed Until
+     */
+    dismissed_until?: string | null;
+};
+
+/**
+ * DueNotification
+ *
+ * A notification that's currently due/overdue.
+ */
+export type DueNotification = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Due Date
+     */
+    due_date: string;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Is Overdue
+     */
+    is_overdue: boolean;
+    /**
+     * Is Today
+     */
+    is_today: boolean;
+    /**
+     * Is Tomorrow
+     */
+    is_tomorrow: boolean;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -563,6 +683,44 @@ export type MqttStatusResponse = {
      * Mqtt Connected
      */
     mqtt_connected: boolean;
+};
+
+/**
+ * NotificationEvent
+ *
+ * A notification event in the database.
+ */
+export type NotificationEvent = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Due Date
+     */
+    due_date: string;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Dismissed Until
+     */
+    dismissed_until: string | null;
 };
 
 /**
@@ -2520,6 +2678,189 @@ export type SetProtectionAdguardProtectionPostErrors = {
 export type SetProtectionAdguardProtectionPostError = SetProtectionAdguardProtectionPostErrors[keyof SetProtectionAdguardProtectionPostErrors];
 
 export type SetProtectionAdguardProtectionPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ListEventsNotificationsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications';
+};
+
+export type ListEventsNotificationsGetResponses = {
+    /**
+     * Response List Events Notifications Get
+     *
+     * Successful Response
+     */
+    200: Array<NotificationEvent>;
+};
+
+export type ListEventsNotificationsGetResponse = ListEventsNotificationsGetResponses[keyof ListEventsNotificationsGetResponses];
+
+export type AddEventNotificationsPostData = {
+    body: AddEventRequest;
+    path?: never;
+    query?: never;
+    url: '/notifications';
+};
+
+export type AddEventNotificationsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddEventNotificationsPostError = AddEventNotificationsPostErrors[keyof AddEventNotificationsPostErrors];
+
+export type AddEventNotificationsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: AddEventResponse;
+};
+
+export type AddEventNotificationsPostResponse = AddEventNotificationsPostResponses[keyof AddEventNotificationsPostResponses];
+
+export type GetDueNotificationsDueGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/due';
+};
+
+export type GetDueNotificationsDueGetResponses = {
+    /**
+     * Response Get Due Notifications Due Get
+     *
+     * Successful Response
+     */
+    200: Array<DueNotification>;
+};
+
+export type GetDueNotificationsDueGetResponse = GetDueNotificationsDueGetResponses[keyof GetDueNotificationsDueGetResponses];
+
+export type DeleteEventNotificationsEventIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Event Id
+         */
+        event_id: number;
+    };
+    query?: never;
+    url: '/notifications/{event_id}';
+};
+
+export type DeleteEventNotificationsEventIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteEventNotificationsEventIdDeleteError = DeleteEventNotificationsEventIdDeleteErrors[keyof DeleteEventNotificationsEventIdDeleteErrors];
+
+export type DeleteEventNotificationsEventIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type DismissEventNotificationsEventIdDismissPostData = {
+    /**
+     * Request
+     */
+    body?: DismissRequest | null;
+    path: {
+        /**
+         * Event Id
+         */
+        event_id: number;
+    };
+    query?: never;
+    url: '/notifications/{event_id}/dismiss';
+};
+
+export type DismissEventNotificationsEventIdDismissPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DismissEventNotificationsEventIdDismissPostError = DismissEventNotificationsEventIdDismissPostErrors[keyof DismissEventNotificationsEventIdDismissPostErrors];
+
+export type DismissEventNotificationsEventIdDismissPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: DismissResponse;
+};
+
+export type DismissEventNotificationsEventIdDismissPostResponse = DismissEventNotificationsEventIdDismissPostResponses[keyof DismissEventNotificationsEventIdDismissPostResponses];
+
+export type TriggerCheckNotificationsCheckPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/check';
+};
+
+export type TriggerCheckNotificationsCheckPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetPreferencesNotificationsPreferencesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/notifications/preferences';
+};
+
+export type GetPreferencesNotificationsPreferencesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type SetPreferenceNotificationsPreferencesEventTypePostData = {
+    body?: never;
+    path: {
+        /**
+         * Event Type
+         */
+        event_type: string;
+    };
+    query?: {
+        /**
+         * Enabled
+         */
+        enabled?: boolean;
+    };
+    url: '/notifications/preferences/{event_type}';
+};
+
+export type SetPreferenceNotificationsPreferencesEventTypePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetPreferenceNotificationsPreferencesEventTypePostError = SetPreferenceNotificationsPreferencesEventTypePostErrors[keyof SetPreferenceNotificationsPreferencesEventTypePostErrors];
+
+export type SetPreferenceNotificationsPreferencesEventTypePostResponses = {
     /**
      * Successful Response
      */
