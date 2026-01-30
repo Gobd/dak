@@ -19,11 +19,8 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(16).slice(0, 6);
 }
 
-// Register weather alerts as notifications
+// Register weather alerts as notifications via postMessage
 function registerWeatherAlerts(alerts: NwsAlert[]) {
-  const notify = (window as Window & { notify?: (data: unknown) => void }).notify;
-  if (!notify) return;
-
   const today = new Date().toISOString().split('T')[0];
 
   for (const alert of alerts) {
@@ -32,7 +29,7 @@ function registerWeatherAlerts(alerts: NwsAlert[]) {
       (alert.properties.headline || '') + (alert.properties.description || ''),
     );
 
-    notify({
+    const payload = {
       type: 'weather',
       name: `${alert.properties.event} #${contentHash}`,
       due: today, // Show immediately
@@ -41,7 +38,10 @@ function registerWeatherAlerts(alerts: NwsAlert[]) {
         headline: alert.properties.headline,
         expires: new Date(alert.properties.expires).toLocaleString(),
       },
-    });
+    };
+
+    // Use postMessage - dashboard's notification listener will handle it
+    window.postMessage({ action: 'notify', payload }, '*');
   }
 }
 
