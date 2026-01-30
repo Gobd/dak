@@ -11,6 +11,7 @@ interface EntriesState {
   dailyTotals: DailyTotal[];
   streaks: StreakStats | null;
   loading: boolean;
+  initialized: boolean;
   fetchTodayEntries: () => Promise<void>;
   fetchEntries: (days?: number) => Promise<void>;
   fetchDailyTotals: (days?: number) => Promise<void>;
@@ -37,6 +38,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
   dailyTotals: [],
   streaks: null,
   loading: false,
+  initialized: false,
 
   fetchTodayEntries: async () => {
     // Use local day boundaries converted to ISO (includes timezone offset)
@@ -55,7 +57,9 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
   },
 
   fetchEntries: async (days = 30) => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const startDate = format(subDays(startOfDay(new Date()), days), 'yyyy-MM-dd');
     const { data, error } = await supabase
       .from('tracker_entries')
@@ -64,9 +68,10 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
       .order('logged_at', { ascending: false });
 
     if (!error && data) {
-      set({ entries: data });
+      set({ entries: data, loading: false, initialized: true });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchDailyTotals: async (days = 30) => {

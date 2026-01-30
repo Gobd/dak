@@ -8,6 +8,7 @@ interface MedicineState {
   courses: MedicineCourse[];
   doses: Record<string, MedicineDose[]>;
   loading: boolean;
+  initialized: boolean;
   fetchCourses: () => Promise<void>;
   fetchDoses: (courseId: string) => Promise<void>;
   addCourse: (data: {
@@ -26,18 +27,22 @@ export const useMedicineStore = create<MedicineState>((set, get) => ({
   courses: [],
   doses: {},
   loading: false,
+  initialized: false,
 
   fetchCourses: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('medicine_courses')
       .select('*, person:people(*)')
       .order('start_date', { ascending: false });
 
     if (!error && data) {
-      set({ courses: data });
+      set({ courses: data, loading: false, initialized: true });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchDoses: async (courseId: string) => {

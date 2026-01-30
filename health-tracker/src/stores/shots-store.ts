@@ -33,6 +33,7 @@ interface ShotsState {
   schedules: ShotSchedule[];
   logs: Record<string, ShotLog[]>;
   loading: boolean;
+  initialized: boolean;
   fetchSchedules: () => Promise<void>;
   fetchLogs: (scheduleId: string) => Promise<void>;
   addSchedule: (data: {
@@ -53,20 +54,23 @@ export const useShotsStore = create<ShotsState>((set, get) => ({
   schedules: [],
   logs: {},
   loading: false,
+  initialized: false,
 
   fetchSchedules: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('shot_schedules')
       .select('*, person:people(*)')
       .order('name');
 
     if (!error && data) {
-      set({ schedules: data });
-      // Sync to dashboard for notifications
+      set({ schedules: data, loading: false, initialized: true });
       syncAllSchedulesToDashboard(data);
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   fetchLogs: async (scheduleId: string) => {

@@ -7,6 +7,7 @@ import { DEFAULT_PRESETS } from '../types';
 interface PresetsState {
   presets: Preset[];
   loading: boolean;
+  initialized: boolean;
   fetchPresets: () => Promise<void>;
   addPreset: (name: string, volumeMl: number, percentage: number) => Promise<void>;
   updatePreset: (id: string, name: string, volumeMl: number, percentage: number) => Promise<void>;
@@ -19,16 +20,19 @@ let isSeeding = false; // Guard against concurrent seeding
 export const usePresetsStore = create<PresetsState>((set, get) => ({
   presets: [],
   loading: false,
+  initialized: false,
 
   fetchPresets: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase
       .from('tracker_presets')
       .select('*')
       .order('sort_order', { ascending: true });
 
     if (!error && data) {
-      set({ presets: data });
+      set({ presets: data, initialized: true });
 
       // Seed defaults only once per user (check DB flag + guard)
       if (data.length === 0 && !isSeeding) {
@@ -41,6 +45,8 @@ export const usePresetsStore = create<PresetsState>((set, get) => ({
           await get().seedDefaultPresets();
         }
       }
+    } else if (isInitialLoad) {
+      set({ initialized: true });
     }
     set({ loading: false });
   },

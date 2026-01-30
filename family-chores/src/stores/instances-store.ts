@@ -8,6 +8,7 @@ import { useChoresStore } from './chores-store';
 interface InstancesState {
   instances: ChoreInstanceWithDetails[];
   loading: boolean;
+  initialized: boolean;
   currentDate: string;
   fetchInstancesForDate: (date: string) => Promise<void>;
   ensureTodayInstances: () => Promise<void>;
@@ -71,10 +72,13 @@ function isChoreScheduledForDate(
 export const useInstancesStore = create<InstancesState>((set, get) => ({
   instances: [],
   loading: true,
+  initialized: false,
   currentDate: format(new Date(), 'yyyy-MM-dd'),
 
   fetchInstancesForDate: async (date: string) => {
-    set({ loading: true, currentDate: date });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true, currentDate: date });
+    else set({ currentDate: date });
 
     const { data: instances } = await supabase
       .from('chore_instances')
@@ -89,7 +93,7 @@ export const useInstancesStore = create<InstancesState>((set, get) => ({
       .eq('scheduled_date', date);
 
     if (!instances) {
-      set({ instances: [], loading: false });
+      set({ instances: [], loading: false, initialized: true });
       return;
     }
 
@@ -115,7 +119,7 @@ export const useInstancesStore = create<InstancesState>((set, get) => ({
       };
     });
 
-    set({ instances: enrichedInstances, loading: false });
+    set({ instances: enrichedInstances, loading: false, initialized: true });
   },
 
   ensureTodayInstances: async () => {

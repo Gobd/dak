@@ -6,6 +6,7 @@ import type { Person } from '../types';
 interface PeopleState {
   people: Person[];
   loading: boolean;
+  initialized: boolean;
   fetchPeople: () => Promise<void>;
   addPerson: (name: string) => Promise<void>;
   updatePerson: (id: string, name: string) => Promise<void>;
@@ -15,15 +16,19 @@ interface PeopleState {
 export const usePeopleStore = create<PeopleState>((set, get) => ({
   people: [],
   loading: false,
+  initialized: false,
 
   fetchPeople: async () => {
-    set({ loading: true });
+    const isInitialLoad = !get().initialized;
+    if (isInitialLoad) set({ loading: true });
+
     const { data, error } = await supabase.from('people').select('*').order('name');
 
     if (!error && data) {
-      set({ people: data });
+      set({ people: data, loading: false, initialized: true });
+    } else if (isInitialLoad) {
+      set({ loading: false, initialized: true });
     }
-    set({ loading: false });
   },
 
   addPerson: async (name: string) => {
