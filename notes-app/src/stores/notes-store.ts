@@ -20,7 +20,7 @@ interface NotesStore {
   deleteNotePermanently: (id: string, userId: string) => Promise<void>;
   emptyTrash: (userId: string) => Promise<void>;
   setCurrentNote: (note: Note | null) => void;
-  selectNote: (id: string) => void;
+  selectNote: (id: string) => Promise<void>;
 }
 
 export const useNotesStore = create<NotesStore>((set, get) => ({
@@ -224,8 +224,24 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
     set({ currentNote: note });
   },
 
-  selectNote: (id: string) => {
-    const note = get().notes.find((n) => n.id === id) || null;
-    set({ currentNote: note });
+  selectNote: async (id: string) => {
+    // Fetch fresh content from database to ensure we have latest
+    try {
+      const freshNote = await notesApi.getById(id);
+      if (freshNote) {
+        // Update both currentNote and the note in the list
+        set((state) => ({
+          currentNote: freshNote,
+          notes: state.notes.map((n) => (n.id === id ? { ...n, ...freshNote } : n)),
+        }));
+      } else {
+        // Note was deleted, clear selection
+        set({ currentNote: null });
+      }
+    } catch {
+      // On error, fall back to cached version
+      const note = get().notes.find((n) => n.id === id) || null;
+      set({ currentNote: note });
+    }
   },
 }));
