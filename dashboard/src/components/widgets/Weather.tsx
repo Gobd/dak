@@ -5,7 +5,6 @@ import { useLocation, formatLocation } from '../../hooks/useLocation';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
 import { AddressAutocomplete } from '../shared/AddressAutocomplete';
 import { Modal, Button, Spinner } from '@dak/ui';
-import { getRelayUrl } from '../../stores/config-store';
 import type { WidgetComponentProps } from './index';
 import type { LocationConfig } from '../../types';
 
@@ -21,7 +20,10 @@ function simpleHash(str: string): string {
 }
 
 // Register weather alerts as notifications
-async function registerWeatherAlerts(alerts: NwsAlert[]) {
+function registerWeatherAlerts(alerts: NwsAlert[]) {
+  const notify = (window as Window & { notify?: (data: unknown) => void }).notify;
+  if (!notify) return;
+
   const today = new Date().toISOString().split('T')[0];
 
   for (const alert of alerts) {
@@ -30,24 +32,16 @@ async function registerWeatherAlerts(alerts: NwsAlert[]) {
       (alert.properties.headline || '') + (alert.properties.description || ''),
     );
 
-    try {
-      await fetch(`${getRelayUrl()}/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'weather',
-          name: `${alert.properties.event} #${contentHash}`,
-          due: today, // Show immediately
-          data: {
-            severity: alert.properties.severity,
-            headline: alert.properties.headline,
-            expires: new Date(alert.properties.expires).toLocaleString(),
-          },
-        }),
-      });
-    } catch {
-      // Notification service might not be available
-    }
+    notify({
+      type: 'weather',
+      name: `${alert.properties.event} #${contentHash}`,
+      due: today, // Show immediately
+      data: {
+        severity: alert.properties.severity,
+        headline: alert.properties.headline,
+        expires: new Date(alert.properties.expires).toLocaleString(),
+      },
+    });
   }
 }
 

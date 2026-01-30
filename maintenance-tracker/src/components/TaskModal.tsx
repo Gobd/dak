@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Input, Button, DatePickerCompact, Toggle } from '@dak/ui';
+import { Modal, Input, Button, DatePicker, Toggle } from '@dak/ui';
 import type { MaintenanceTask, ScheduleType } from '../types';
 
 interface TaskModalProps {
@@ -140,8 +140,8 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
               {lastDone ? formatDate(lastDone) : 'Not set (starts from today)'}
             </button>
             {showDatePicker && (
-              <div className="absolute z-10 mt-1 bg-surface-raised border border-border rounded-lg shadow-lg p-2">
-                <DatePickerCompact
+              <div className="absolute z-10 mt-1">
+                <DatePicker
                   value={lastDone || new Date()}
                   onChange={(date) => {
                     setLastDone(date);
@@ -156,7 +156,7 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
                       setLastDone(null);
                       setShowDatePicker(false);
                     }}
-                    className="w-full mt-2 px-3 py-1 text-sm text-text-muted hover:text-text transition-colors"
+                    className="w-full mt-2 px-3 py-1 text-sm bg-surface-raised border border-border rounded-lg text-text-muted hover:text-text transition-colors"
                   >
                     Clear date
                   </button>

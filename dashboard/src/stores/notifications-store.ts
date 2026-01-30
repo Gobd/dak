@@ -1,16 +1,14 @@
 import { create } from 'zustand';
-import { getRelayUrl } from './config-store';
+import {
+  getDueNotificationsDueGet,
+  getPreferencesNotificationsPreferencesGet,
+  setPreferenceNotificationsPreferencesEventTypePost,
+  dismissEventNotificationsEventIdDismissPost,
+  addEventNotificationsPost,
+  type DueNotification,
+} from '@dak/api-client';
 
-export interface DueNotification {
-  id: number;
-  type: string;
-  name: string;
-  due_date: string;
-  data: Record<string, unknown> | null;
-  is_overdue: boolean;
-  is_today: boolean;
-  is_tomorrow: boolean;
-}
+export type { DueNotification };
 
 export interface TypePreference {
   type: string;
@@ -78,9 +76,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   fetchDue: async () => {
     try {
-      const res = await fetch(`${getRelayUrl()}/notifications/due`);
-      if (res.ok) {
-        const data = (await res.json()) as DueNotification[];
+      const { data } = await getDueNotificationsDueGet();
+      if (data) {
         get().setNotifications(data);
       }
     } catch {
@@ -90,15 +87,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   fetchPreferences: async () => {
     try {
-      const res = await fetch(`${getRelayUrl()}/notifications/preferences`);
-      if (res.ok) {
-        const data = (await res.json()) as {
-          types: TypePreference[];
-          unconfigured_count: number;
-        };
+      const { data } = await getPreferencesNotificationsPreferencesGet();
+      if (data) {
+        const prefs = data as { types: TypePreference[]; unconfigured_count: number };
         set({
-          typePreferences: data.types,
-          unconfiguredCount: data.unconfigured_count,
+          typePreferences: prefs.types,
+          unconfiguredCount: prefs.unconfigured_count,
         });
       }
     } catch {
@@ -108,11 +102,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   setTypeEnabled: async (type, enabled) => {
     try {
-      const res = await fetch(
-        `${getRelayUrl()}/notifications/preferences/${encodeURIComponent(type)}?enabled=${enabled}`,
-        { method: 'POST' },
-      );
-      if (res.ok) {
+      const { response } = await setPreferenceNotificationsPreferencesEventTypePost({
+        path: { event_type: type },
+        query: { enabled },
+      });
+      if (response.ok) {
         // Refresh preferences and due notifications
         get().fetchPreferences();
         get().fetchDue();
@@ -124,21 +118,17 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   dismiss: async (id, hours, permanent = false) => {
     try {
-      let body: Record<string, unknown>;
-      if (permanent) {
-        body = { permanent: true };
-      } else if (hours === -1) {
-        body = { until_midnight: true };
-      } else {
-        body = { hours };
-      }
+      const body = permanent
+        ? { permanent: true }
+        : hours === -1
+          ? { until_midnight: true }
+          : { hours };
 
-      const res = await fetch(`${getRelayUrl()}/notifications/${id}/dismiss`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+      const { response } = await dismissEventNotificationsEventIdDismissPost({
+        path: { event_id: id },
+        body,
       });
-      if (res.ok) {
+      if (response.ok) {
         get().removeNotification(id);
       }
     } catch {
@@ -157,10 +147,13 @@ if (typeof window !== 'undefined') {
       return;
     }
     try {
-      await fetch(`${getRelayUrl()}/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      await addEventNotificationsPost({
+        body: {
+          type: payload.type,
+          name: payload.name,
+          due: payload.due,
+          data: payload.data as Record<string, unknown> | null,
+        },
       });
       console.log('Notification registered:', payload);
     } catch (err) {
