@@ -26,6 +26,7 @@ const SNOOZE_OPTIONS = [
 function NotificationItem({ notification }: { notification: DueNotification }) {
   const dismiss = useNotificationsStore((s) => s.dismiss);
   const [showOptions, setShowOptions] = useState(false);
+  const [showDismissConfirm, setShowDismissConfirm] = useState(false);
 
   const getStatusIcon = () => {
     if (notification.is_overdue) {
@@ -50,81 +51,93 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
 
   const handleDismiss = async () => {
     await dismiss(notification.id, 0, true);
+    setShowDismissConfirm(false);
   };
 
   return (
-    <div className="bg-surface-sunken rounded-lg p-4 border border-border">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">{getStatusIcon()}</div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wide">
-              {notification.type}
-            </span>
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                notification.is_overdue
-                  ? 'bg-danger/20 text-danger'
-                  : notification.is_today
-                    ? 'bg-warning/20 text-warning'
-                    : 'bg-accent/20 text-accent'
-              }`}
-            >
-              {getStatusText()}
-            </span>
-          </div>
-          <div className="font-medium text-text truncate">{notification.name}</div>
-          {notification.data && (
-            <div className="text-sm text-text-muted mt-1">
-              {Object.entries(notification.data)
-                .filter(([, v]) => v)
-                .map(([k, v]) => `${k}: ${v}`)
-                .join(' · ')}
+    <>
+      <div className="bg-surface-sunken rounded-lg p-4 border border-border">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">{getStatusIcon()}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-medium text-text-muted uppercase tracking-wide">
+                {notification.type}
+              </span>
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  notification.is_overdue
+                    ? 'bg-danger/20 text-danger'
+                    : notification.is_today
+                      ? 'bg-warning/20 text-warning'
+                      : 'bg-accent/20 text-accent'
+                }`}
+              >
+                {getStatusText()}
+              </span>
             </div>
+            <div className="font-medium text-text truncate">{notification.name}</div>
+            {notification.data && (
+              <div className="text-sm text-text-muted mt-1">
+                {Object.entries(notification.data)
+                  .filter(([, v]) => v)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join(' · ')}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Snooze/Dismiss options */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {showOptions ? (
+            <>
+              {SNOOZE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.hours}
+                  onClick={() => handleSnooze(opt.hours)}
+                  className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text"
+                >
+                  {opt.label}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowOptions(false)}
+                className="px-3 py-1.5 text-sm text-text-muted hover:text-text transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setShowOptions(true)}
+                className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
+              >
+                <Clock size={14} />
+                Snooze
+              </button>
+              <button
+                onClick={() => setShowDismissConfirm(true)}
+                className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
+              >
+                <X size={14} />
+                Dismiss
+              </button>
+            </>
           )}
         </div>
       </div>
-
-      {/* Snooze/Dismiss options */}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {showOptions ? (
-          <>
-            {SNOOZE_OPTIONS.map((opt) => (
-              <button
-                key={opt.hours}
-                onClick={() => handleSnooze(opt.hours)}
-                className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text"
-              >
-                {opt.label}
-              </button>
-            ))}
-            <button
-              onClick={() => setShowOptions(false)}
-              className="px-3 py-1.5 text-sm text-text-muted hover:text-text transition-colors"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => setShowOptions(true)}
-              className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
-            >
-              <Clock size={14} />
-              Snooze
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="px-3 py-1.5 text-sm bg-border hover:bg-border-strong rounded-lg transition-colors text-text flex items-center gap-1.5"
-            >
-              <X size={14} />
-              Dismiss
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+      <ConfirmModal
+        open={showDismissConfirm}
+        onClose={() => setShowDismissConfirm(false)}
+        onConfirm={handleDismiss}
+        title="Dismiss Notification"
+        message={`Permanently dismiss "${notification.name}"? It won't appear again unless rescheduled.`}
+        confirmText="Dismiss"
+        variant="danger"
+      />
+    </>
   );
 }
 
@@ -276,8 +289,10 @@ export function NotificationToast() {
   useEffect(() => {
     if (isOpen) {
       setPosition({ x: 0, y: 0 });
-      setActiveTab('settings');
+      // Go to 'due' tab if there are notifications, otherwise settings
+      setActiveTab(notifications.length > 0 ? 'due' : 'settings');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on isOpen change
   }, [isOpen]);
 
   // Fetch data when switching tabs

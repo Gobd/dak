@@ -56,11 +56,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   showPreferences: false,
 
   setNotifications: (notifications) => {
+    // Just update state, don't auto-open (that's handled by addNotifications for new SSE notifications)
     set({ notifications });
-    // Auto-open if there are notifications
-    if (notifications.length > 0) {
-      set({ isOpen: true });
-    }
   },
 
   addNotifications: (newNotifications) => {

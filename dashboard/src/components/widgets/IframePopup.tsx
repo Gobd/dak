@@ -143,6 +143,33 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
     setIsDragging(false);
   }, []);
 
+  // Touch handlers for tablet/kiosk
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      const touch = e.touches[0];
+      setIsDragging(true);
+      dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
+    },
+    [position],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragStart.current.x,
+        y: touch.clientY - dragStart.current.y,
+      });
+    },
+    [isDragging],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   if (!src) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-surface-raised text-text-muted rounded-full">
@@ -166,6 +193,8 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {/* Backdrop - clickable to close */}
             <div
@@ -187,6 +216,7 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
               <div
                 className={`flex items-center justify-between px-4 py-2 border-b border-border bg-surface-sunken ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                 onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
               >
                 <div className="flex items-center gap-2">
                   <DynamicIcon name={icon} size={16} />
