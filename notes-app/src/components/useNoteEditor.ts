@@ -41,13 +41,19 @@ interface UseNoteEditorOptions {
 // Debounce delay for content changes
 const DEBOUNCE_MS = 300;
 
+// TipTap can insert non-breaking spaces (char 160) or &nbsp; entities
+// Normalize to regular spaces to avoid weird characters in saved content
+function normalizeMarkdown(raw: string): string {
+  return raw.replace(/\u00A0/g, ' ').replace(/&nbsp;/g, ' ');
+}
+
 export function useNoteEditor({
   content,
   onUpdate,
   maxLength = 50000,
   placeholder = 'Start writing...',
 }: UseNoteEditorOptions) {
-  const lastContentRef = useRef(content);
+  const lastContentRef = useRef(normalizeMarkdown(content));
   const isInitPhaseRef = useRef(true);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onUpdateRef = useRef(onUpdate);
@@ -57,7 +63,7 @@ export function useNoteEditor({
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
 
-  const initialContent = content;
+  const initialContent = normalizeMarkdown(content);
 
   const editor = useEditor({
     extensions: [
@@ -108,7 +114,7 @@ export function useNoteEditor({
       }
 
       debounceTimerRef.current = setTimeout(() => {
-        const markdown = editor.getMarkdown();
+        const markdown = normalizeMarkdown(editor.getMarkdown());
         if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
           lastContentRef.current = markdown;
           onUpdate(markdown);
@@ -128,12 +134,14 @@ export function useNoteEditor({
 
   // Update content when it changes externally
   useEffect(() => {
-    if (editor && content !== lastContentRef.current) {
-      lastContentRef.current = content;
+    const normalized = normalizeMarkdown(content);
+    if (editor && normalized !== lastContentRef.current) {
+      lastContentRef.current = normalized;
       isInitPhaseRef.current = true;
 
-      if (content) {
-        (editor as any).commands.setContent(content, { contentType: 'markdown' });
+      if (normalized) {
+        // Normalize before setting to prevent &nbsp; from rendering as literal text
+        (editor as any).commands.setContent(normalized, { contentType: 'markdown' });
         // Delay focus until after browser has finished rendering the new content
         requestAnimationFrame(() => focusAtContentEnd(editor));
       } else {
@@ -159,7 +167,7 @@ export function useNoteEditor({
       }
       // Flush any pending changes before unmount
       if (editorInstance && !isInitPhaseRef.current) {
-        const markdown = editorInstance.getMarkdown?.() ?? '';
+        const markdown = normalizeMarkdown(editorInstance.getMarkdown?.() ?? '');
         if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
           onUpdateRef.current(markdown);
         }
@@ -181,13 +189,14 @@ export function useNoteEditor({
   const blur = () => editor?.commands.blur();
   const getMarkdown = () => {
     if (!editor) return '';
-    return editor.getMarkdown() ?? '';
+    return normalizeMarkdown(editor.getMarkdown() ?? '');
   };
   const setMarkdown = (markdown: string) => {
     if (!editor) return;
-    lastContentRef.current = markdown;
-    (editor as any).commands.setContent(markdown, { contentType: 'markdown' });
-    onUpdateRef.current(markdown);
+    const normalized = normalizeMarkdown(markdown);
+    lastContentRef.current = normalized;
+    (editor as any).commands.setContent(normalized, { contentType: 'markdown' });
+    onUpdateRef.current(normalized);
   };
 
   return {
