@@ -6,7 +6,7 @@ import { Input, Button } from '@dak/ui';
 const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
 
 export default function Settings() {
-  const { relayUrl, setRelayUrl, unit, setUnit } = useSettingsStore();
+  const { relayUrl, setRelayUrl } = useSettingsStore();
   const [inputValue, setInputValue] = useState(relayUrl);
   const [saved, setSaved] = useState(false);
 
@@ -40,24 +40,6 @@ export default function Settings() {
         <p className="mt-2 text-sm text-text-muted">
           The URL of the home relay server with climate sensors.
         </p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">
-          Temperature Unit
-        </label>
-        <div className="flex gap-2">
-          {(['C', 'F'] as const).map((u) => (
-            <Button
-              key={u}
-              variant={unit === u ? 'primary' : 'secondary'}
-              onClick={() => setUnit(u)}
-              className="flex-1"
-            >
-              °{u}
-            </Button>
-          ))}
-        </div>
       </div>
 
       <div className="flex gap-3">

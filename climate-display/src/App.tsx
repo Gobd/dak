@@ -40,10 +40,6 @@ interface ClimateData {
 
 type View = 'climate' | 'settings';
 
-function celsiusToFahrenheit(c: number): number {
-  return (c * 9) / 5 + 32;
-}
-
 function TrendIcon({ trend }: { trend: 'rising' | 'falling' | 'steady' }) {
   if (trend === 'rising') return <TrendingUp className="w-5 h-5 text-danger" />;
   if (trend === 'falling') return <TrendingDown className="w-5 h-5 text-accent" />;
@@ -54,17 +50,11 @@ function SensorCard({
   label,
   icon,
   sensor,
-  unit,
 }: {
   label: string;
   icon: string;
   sensor: SensorData | undefined;
-  unit: 'C' | 'F';
 }) {
-  const formatTemp = (temp: number) => {
-    const converted = unit === 'F' ? celsiusToFahrenheit(temp) : temp;
-    return converted.toFixed(1);
-  };
   if (!sensor?.available) {
     return (
       <div className="bg-surface-raised rounded-2xl p-6 flex flex-col items-center justify-center min-h-[200px] border border-border">
@@ -87,7 +77,7 @@ function SensorCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Thermometer className="w-6 h-6 text-warning" />
-            <span className="text-4xl font-light text-text">{formatTemp(sensor.temperature)}°</span>
+            <span className="text-4xl font-light text-text">{sensor.temperature.toFixed(1)}°</span>
           </div>
           <TrendIcon trend={sensor.temperature_trend} />
         </div>
@@ -104,7 +94,7 @@ function SensorCard({
         {/* Feels like */}
         <div className="pt-3 border-t border-border">
           <span className="text-text-muted text-sm">
-            Feels like {formatTemp(sensor.feels_like)}°
+            Feels like {sensor.feels_like.toFixed(1)}°
           </span>
         </div>
 
@@ -119,18 +109,11 @@ function SensorCard({
   );
 }
 
-function ComparisonBanner({
-  comparison,
-  unit,
-}: {
-  comparison: ClimateData['comparison'];
-  unit: 'C' | 'F';
-}) {
+function ComparisonBanner({ comparison }: { comparison: ClimateData['comparison'] }) {
   if (!comparison) return null;
 
   const { outside_feels_cooler, outside_feels_warmer, difference } = comparison;
-  // Convert the difference if using Fahrenheit (difference is in Celsius)
-  const absDiff = Math.abs(unit === 'F' ? (difference * 9) / 5 : difference).toFixed(1);
+  const absDiff = Math.abs(difference).toFixed(1);
 
   if (!outside_feels_cooler && !outside_feels_warmer) {
     return (
@@ -161,7 +144,6 @@ function ComparisonBanner({
 
 function ClimateView() {
   const relayUrl = useSettingsStore((s) => s.relayUrl);
-  const unit = useSettingsStore((s) => s.unit);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<ClimateData>({
     queryKey: ['climate', relayUrl],
@@ -213,13 +195,13 @@ function ClimateView() {
 
       {/* Sensor cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <SensorCard label="Indoor" icon="🏠" sensor={data?.indoor} unit={unit} />
-        <SensorCard label="Outdoor" icon="🌳" sensor={data?.outdoor} unit={unit} />
+        <SensorCard label="Indoor" icon="🏠" sensor={data?.indoor} />
+        <SensorCard label="Outdoor" icon="🌳" sensor={data?.outdoor} />
       </div>
 
       {/* Comparison */}
       {data?.indoor?.available && data?.outdoor?.available && (
-        <ComparisonBanner comparison={data.comparison} unit={unit} />
+        <ComparisonBanner comparison={data.comparison} />
       )}
     </div>
   );
