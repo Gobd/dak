@@ -168,10 +168,16 @@ export default function Climate({ dark }: WidgetComponentProps) {
           <span className="text-text-muted">Loading...</span>
         ) : error ? (
           <span className="text-danger">Error</span>
-        ) : sensorsConnected === 0 && !(climateConfig?.indoor || climateConfig?.outdoor) ? (
+        ) : sensorsConnected === 0 &&
+          !(data?.indoor && 'error' in data.indoor) &&
+          !(data?.outdoor && 'error' in data.outdoor) ? (
           <span className="text-text-muted">No sensors</span>
         ) : sensorsConnected === 0 ? (
-          <span className="text-text-muted">Waiting for data...</span>
+          <span className="text-text-muted">
+            {(data?.indoor && 'error' in data.indoor && data.indoor.error) ||
+              (data?.outdoor && 'error' in data.outdoor && data.outdoor.error) ||
+              'Waiting for data...'}
+          </span>
         ) : (
           <div className="grid grid-cols-[auto_auto_auto] gap-x-2 gap-y-0.5 items-center">
             {renderSensorRow('🏠', data?.indoor)}
@@ -242,18 +248,29 @@ export default function Climate({ dark }: WidgetComponentProps) {
           {/* Connection Status */}
           <div>
             <label className={`block text-sm font-medium mb-2 text-text-secondary`}>Status</label>
-            <div className={`text-sm text-text-muted`}>
-              {sensorsConnected === 2 ? (
-                <span className="text-success">✓ Both sensors receiving data</span>
-              ) : sensorsConnected === 1 ? (
-                <span className="text-warning">
-                  ⚠ Only {data?.indoor?.available ? 'indoor' : 'outdoor'} receiving data
-                </span>
-              ) : climateConfig?.indoor || climateConfig?.outdoor ? (
-                <span className="text-warning">⚠ Waiting for sensor data...</span>
-              ) : (
-                <span className="text-text-muted">Select sensors above</span>
-              )}
+            <div className={`text-sm space-y-1`}>
+              {/* Indoor status */}
+              <div>
+                🏠{' '}
+                {data?.indoor?.available ? (
+                  <span className="text-success">Receiving data</span>
+                ) : data?.indoor && 'error' in data.indoor ? (
+                  <span className="text-warning">{data.indoor.error}</span>
+                ) : (
+                  <span className="text-text-muted">Not configured</span>
+                )}
+              </div>
+              {/* Outdoor status */}
+              <div>
+                🌳{' '}
+                {data?.outdoor?.available ? (
+                  <span className="text-success">Receiving data</span>
+                ) : data?.outdoor && 'error' in data.outdoor ? (
+                  <span className="text-warning">{data.outdoor.error}</span>
+                ) : (
+                  <span className="text-text-muted">Not configured</span>
+                )}
+              </div>
             </div>
           </div>
 
