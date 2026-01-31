@@ -66,6 +66,10 @@ def _init_db():
                 enabled INTEGER DEFAULT NULL,
                 first_seen TEXT DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Index for cleanup query (due_date)
+            CREATE INDEX IF NOT EXISTS idx_events_due_date
+            ON events(due_date);
         """)
         # Migration: convert old schema (NOT NULL enabled, seen column) to new (nullable enabled)
         # Check if we have the old schema by looking for the seen column
@@ -86,6 +90,23 @@ def _init_db():
                 ALTER TABLE type_preferences_new RENAME TO type_preferences;
             """)
         conn.commit()
+
+
+def _cleanup_old_events():
+    """Remove notifications that are more than 10 days past due."""
+    cutoff = (date.today() - timedelta(days=10)).isoformat()
+
+    with closing(_get_db()) as conn:
+        # Get IDs of events with due_date more than 10 days ago
+        rows = conn.execute("SELECT id FROM events WHERE due_date < ?", (cutoff,)).fetchall()
+
+        if rows:
+            ids = [r["id"] for r in rows]
+            placeholders = ",".join("?" * len(ids))
+            conn.execute(f"DELETE FROM dismissed WHERE event_id IN ({placeholders})", ids)
+            conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
+            conn.commit()
+            logger.info("Cleaned up %d old notifications", len(ids))
 
 
 def _check_notifications():
@@ -151,9 +172,15 @@ def _check_notifications():
 
 def _scheduler_loop():
     """Background scheduler that checks notifications every minute."""
+    cleanup_counter = 0
     while not _scheduler_stop.is_set():
         try:
             _check_notifications()
+            # Run cleanup once per hour (every 60 iterations)
+            cleanup_counter += 1
+            if cleanup_counter >= 60:
+                cleanup_counter = 0
+                _cleanup_old_events()
         except Exception:
             logger.exception("Notification check error")
         _scheduler_stop.wait(60)  # Check every minute
