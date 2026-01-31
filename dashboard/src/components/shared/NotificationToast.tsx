@@ -217,7 +217,11 @@ function ScheduleItem({ event }: { event: NotificationEvent }) {
       <span
         className={`text-sm flex-shrink-0 ${isPast ? 'text-text-muted' : 'text-text-secondary'}`}
       >
-        {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        {dueDate.toLocaleDateString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })}
       </span>
     </div>
   );
@@ -238,7 +242,11 @@ function SnoozedItem({ event }: { event: NotificationEvent }) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-sm text-text-muted">
-            {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            {dueDate.toLocaleDateString(undefined, {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            })}
           </span>
           <button
             onClick={() => setShowUndoConfirm(true)}
