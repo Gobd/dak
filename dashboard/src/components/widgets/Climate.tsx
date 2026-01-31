@@ -89,9 +89,9 @@ export default function Climate({ dark }: WidgetComponentProps) {
     }
 
     if (outside_feels_cooler) {
-      return { icon: '❄️', text: `Outside ${absDiff}° cooler` };
+      return { icon: '❄️', text: `Outside ${absDiff.toFixed(1)}° cooler` };
     } else {
-      return { icon: '🔥', text: `Outside ${absDiff}° warmer` };
+      return { icon: '🔥', text: `Outside ${absDiff.toFixed(1)}° warmer` };
     }
   };
 
@@ -115,7 +115,7 @@ export default function Climate({ dark }: WidgetComponentProps) {
       <div className="contents">
         <span>{icon}</span>
         <span>
-          {Math.round(s.temperature)}°{tTemp}
+          {s.temperature.toFixed(1)}°{tTemp}
         </span>
         <span className="text-text-muted">
           {Math.round(s.humidity)}%{tHum}
