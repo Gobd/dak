@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -107,17 +107,22 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
   const popupHeight = (args.popupHeight as number) || 80; // % of viewport
 
   const [isOpen, setIsOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false); // Track if ever opened (lazy load)
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Reset position when popup opens
+  // Reset position when popup opens, track first open
   useEffect(() => {
     if (isOpen) {
       setPosition({ x: 0, y: 0 });
+      if (!hasOpened) setHasOpened(true);
     }
-  }, [isOpen]);
+  }, [isOpen, hasOpened]);
+
+  // Memoize src to prevent iframe reloads on re-renders
+  const memoizedSrc = useMemo(() => src, [src]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -185,11 +190,13 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
         <DynamicIcon name={icon} size={24} className="text-text-muted" />
       </Button>
 
-      {/* Popup overlay - portaled to body so z-index works correctly */}
-      {isOpen &&
+      {/* Popup overlay - portaled to body, stays mounted once opened for instant reopen */}
+      {hasOpened &&
         createPortal(
           <div
-            className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
+            className={`fixed inset-0 z-40 flex items-center justify-center pointer-events-none transition-opacity duration-150 ${
+              isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none invisible'
+            }`}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
@@ -198,14 +205,16 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
           >
             {/* Backdrop - clickable to close */}
             <div
-              className="absolute inset-0 bg-black/40 pointer-events-auto"
+              className={`absolute inset-0 bg-black/40 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
               onClick={() => setIsOpen(false)}
             />
 
             {/* Popup window */}
             <div
               ref={popupRef}
-              className="pointer-events-auto bg-surface-raised rounded-xl shadow-2xl flex flex-col overflow-hidden border border-border animate-slide-up"
+              className={`pointer-events-auto bg-surface-raised rounded-xl shadow-2xl flex flex-col overflow-hidden border border-border ${
+                isOpen ? 'animate-slide-up' : ''
+              }`}
               style={{
                 width: `${popupWidth}vw`,
                 height: `${popupHeight}vh`,
@@ -231,10 +240,10 @@ export default function IframePopup({ panel, dark }: WidgetComponentProps) {
                 </button>
               </div>
 
-              {/* Iframe content */}
+              {/* Iframe content - stays mounted for instant reopen */}
               <div className="flex-1 overflow-hidden">
                 <iframe
-                  src={src}
+                  src={memoizedSrc}
                   className="w-full h-full border-0"
                   title={title}
                   allow="fullscreen"
