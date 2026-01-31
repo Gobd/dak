@@ -6,10 +6,13 @@ Subscribes to Zigbee2MQTT topics and tracks sensor readings with history for tre
 import json
 import logging
 import math
+import sqlite3
 import threading
 import time
 from collections import deque
+from contextlib import closing
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import paho.mqtt.client as mqtt
 
@@ -23,6 +26,8 @@ MQTT_HOST = "localhost"
 MQTT_PORT = 1883
 HISTORY_SIZE = 60  # Several hours of history
 TREND_WINDOW = 6  # ~30-60 min of readings for trend
+CACHE_DB = Path.home() / ".config" / "home-relay" / "sensor_cache.db"
+MAX_CACHE_AGE = 90 * 60  # 90 min - older cached data treated as unavailable
 
 
 @dataclass
@@ -63,6 +68,57 @@ def _generate_transaction_id() -> str:
     import uuid
 
     return str(uuid.uuid4())[:8]
+
+
+def _init_cache_db():
+    """Create sensor cache table (2 rows max: indoor, outdoor)."""
+    CACHE_DB.parent.mkdir(parents=True, exist_ok=True)
+    with closing(sqlite3.connect(str(CACHE_DB))) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS sensor_cache (
+                role TEXT PRIMARY KEY,
+                temperature REAL,
+                humidity REAL,
+                battery INTEGER,
+                timestamp REAL
+            )
+        """)
+        conn.commit()
+
+
+def _load_cached_sensors():
+    """Load cached readings on startup."""
+    if not CACHE_DB.exists():
+        return
+    with closing(sqlite3.connect(str(CACHE_DB))) as conn:
+        conn.row_factory = sqlite3.Row
+        for row in conn.execute("SELECT * FROM sensor_cache"):
+            reading = SensorReading(
+                temperature=row["temperature"],
+                humidity=row["humidity"],
+                battery=row["battery"],
+                timestamp=row["timestamp"],
+            )
+            sensors[row["role"]].current = reading
+            logger.info("Loaded cached %s sensor: %.1f°", row["role"], row["temperature"])
+
+
+def _save_sensor_reading(role: str, reading: SensorReading):
+    """Save reading to cache (upsert)."""
+    with closing(sqlite3.connect(str(CACHE_DB))) as conn:
+        conn.execute(
+            """
+            INSERT INTO sensor_cache (role, temperature, humidity, battery, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(role) DO UPDATE SET
+                temperature=excluded.temperature,
+                humidity=excluded.humidity,
+                battery=excluded.battery,
+                timestamp=excluded.timestamp
+            """,
+            (role, reading.temperature, reading.humidity, reading.battery, reading.timestamp),
+        )
+        conn.commit()
 
 
 def load_config():
@@ -196,8 +252,8 @@ def update_subscriptions():
     for topic in needed_topics - subscribed_topics:
         mqtt_client.subscribe(topic)
         logger.info("Subscribed to %s", topic)
-        # Request current state from the device
-        mqtt_client.publish(f"{topic}/get", json.dumps({"temperature": "", "humidity": ""}))
+        # Request current state from the device (empty object = report all attributes)
+        mqtt_client.publish(f"{topic}/get", json.dumps({"state": ""}))
 
     subscribed_topics = needed_topics
 
@@ -214,6 +270,8 @@ def on_connect(client, _userdata, _flags, rc, _properties=None):
         client.subscribe("zigbee2mqtt/bridge/event")
         # Subscribe to configured sensors
         update_subscriptions()
+        # Request current device list (in case we connected after z2m published it)
+        client.publish("zigbee2mqtt/bridge/request/devices", json.dumps({}))
         logger.info("MQTT connected")
 
 
@@ -335,6 +393,7 @@ def on_message(_client, _userdata, msg):
         )
         sensors[key].history.append(reading)
         sensors[key].current = reading
+        _save_sensor_reading(key, reading)
     except Exception:
         logger.exception("Error processing message")
 
@@ -343,6 +402,8 @@ def start_mqtt():
     """Start MQTT client in background thread."""
     global mqtt_client
     load_config()
+    _init_cache_db()
+    _load_cached_sensors()
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)  # type: ignore[attr-defined]
     client.on_connect = on_connect
@@ -372,8 +433,9 @@ def sensor_response(key: str) -> dict:
     s = sensors[key]
     c = s.current
 
-    if c.timestamp == 0:
-        return {"available": False, "error": "No data yet"}
+    # No data or data too old (> 1 hour)
+    if c.timestamp == 0 or (time.time() - c.timestamp) > MAX_CACHE_AGE:
+        return {"available": False, "error": "No data"}
 
     temp = c.temperature
     fl = feels_like(c.temperature, c.humidity)

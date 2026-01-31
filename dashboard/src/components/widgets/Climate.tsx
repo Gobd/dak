@@ -168,8 +168,10 @@ export default function Climate({ dark }: WidgetComponentProps) {
           <span className="text-text-muted">Loading...</span>
         ) : error ? (
           <span className="text-danger">Error</span>
-        ) : sensorsConnected === 0 ? (
+        ) : sensorsConnected === 0 && !(climateConfig?.indoor || climateConfig?.outdoor) ? (
           <span className="text-text-muted">No sensors</span>
+        ) : sensorsConnected === 0 ? (
+          <span className="text-text-muted">Waiting for data...</span>
         ) : (
           <div className="grid grid-cols-[auto_auto_auto] gap-x-2 gap-y-0.5 items-center">
             {renderSensorRow('🏠', data?.indoor)}
