@@ -92,24 +92,23 @@ def _init_db():
         conn.commit()
 
 
-def _cleanup_old_weather():
-    """Remove weather notifications created more than 48 hours ago."""
-    cutoff = (datetime.now() - timedelta(hours=48)).isoformat()
+def _cleanup_old_events():
+    """Remove notifications that are more than 10 days past due."""
+    cutoff = (date.today() - timedelta(days=10)).isoformat()
+
     with closing(_get_db()) as conn:
-        # Get IDs to delete - only weather type, created > 48hr ago
+        # Get IDs of events with due_date more than 10 days ago
         rows = conn.execute(
-            "SELECT id FROM events WHERE type = 'weather' AND created_at < ?", (cutoff,)
+            "SELECT id FROM events WHERE due_date < ?", (cutoff,)
         ).fetchall()
+
         if rows:
             ids = [r["id"] for r in rows]
-            conn.execute(
-                f"DELETE FROM dismissed WHERE event_id IN ({','.join('?' * len(ids))})", ids
-            )
-            conn.execute(
-                f"DELETE FROM events WHERE id IN ({','.join('?' * len(ids))})", ids
-            )
+            placeholders = ",".join("?" * len(ids))
+            conn.execute(f"DELETE FROM dismissed WHERE event_id IN ({placeholders})", ids)
+            conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
             conn.commit()
-            logger.info("Cleaned up %d old weather notifications", len(ids))
+            logger.info("Cleaned up %d old notifications", len(ids))
 
 
 def _check_notifications():
@@ -183,7 +182,7 @@ def _scheduler_loop():
             cleanup_counter += 1
             if cleanup_counter >= 60:
                 cleanup_counter = 0
-                _cleanup_old_weather()
+                _cleanup_old_events()
         except Exception:
             logger.exception("Notification check error")
         _scheduler_stop.wait(60)  # Check every minute
