@@ -29,6 +29,9 @@ class SystemStatsResponse(BaseModel):
     uptime_seconds: int
 
 
+# Mount points to ignore (boot partitions, etc.)
+IGNORED_MOUNTS = frozenset(["/boot", "/boot/firmware", "/boot/efi"])
+
 # Filesystem types to ignore
 IGNORED_FSTYPES = frozenset(
     [
@@ -69,6 +72,9 @@ def _get_stats() -> dict:
     disks = []
     for part in psutil.disk_partitions(all=False):
         if part.fstype in IGNORED_FSTYPES:
+            continue
+        # Skip boot partitions
+        if part.mountpoint in IGNORED_MOUNTS:
             continue
         # Skip pseudo-devices
         if part.device.startswith("/dev/loop"):

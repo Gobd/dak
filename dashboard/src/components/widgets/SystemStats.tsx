@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { Server } from 'lucide-react';
+import { Server, Settings } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
-import { getRelayUrl } from '../../stores/config-store';
-import { Modal, Button, Spinner } from '@dak/ui';
+import { getRelayUrl, useConfigStore } from '../../stores/config-store';
+import { Modal, Button, Spinner, Toggle } from '@dak/ui';
 import { client, getSystemStatsSystemStatsGet } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
@@ -47,11 +47,24 @@ function getBarColor(percent: number): string {
   return 'bg-success';
 }
 
-function StatBar({ label, percent, detail }: { label: string; percent: number; detail?: string }) {
+function StatBar({
+  label,
+  percent,
+  detail,
+  action,
+}: {
+  label: string;
+  percent: number;
+  detail?: string;
+  action?: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="text-text-secondary">{label}</span>
+        <span className="text-text-secondary flex items-center gap-1">
+          {label}
+          {action}
+        </span>
         <span className="text-text">
           {percent.toFixed(0)}%{detail && <span className="text-text-muted ml-1">({detail})</span>}
         </span>
@@ -70,11 +83,16 @@ function IconMode({
   data,
   isLoading,
   showModal,
+  panelId,
+  currentMode,
 }: {
   data?: SystemStats;
   isLoading: boolean;
   showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
+  panelId: string;
+  currentMode: 'icon' | 'inline';
 }) {
+  const updatePanel = useConfigStore((s) => s.updatePanel);
   // Determine health status based on worst metric
   const worstPercent = data
     ? Math.max(data.cpu_percent, data.memory_percent, ...data.disks.map((d) => d.percent))
@@ -121,6 +139,15 @@ function IconMode({
                 <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
               </div>
             </div>
+            <div className="pt-3 border-t border-border">
+              <Toggle
+                label="Show inline on dashboard"
+                checked={currentMode === 'inline'}
+                onChange={(checked) =>
+                  updatePanel(panelId, { args: { mode: checked ? 'inline' : 'icon' } })
+                }
+              />
+            </div>
           </div>
         ) : (
           <div className="text-center py-4 text-text-muted">
@@ -132,7 +159,21 @@ function IconMode({
   );
 }
 
-function InlineMode({ data, isLoading }: { data?: SystemStats; isLoading: boolean }) {
+function InlineMode({
+  data,
+  isLoading,
+  showModal,
+  panelId,
+  currentMode,
+}: {
+  data?: SystemStats;
+  isLoading: boolean;
+  showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
+  panelId: string;
+  currentMode: 'icon' | 'inline';
+}) {
+  const updatePanel = useConfigStore((s) => s.updatePanel);
+
   if (isLoading && !data) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -152,11 +193,60 @@ function InlineMode({ data, isLoading }: { data?: SystemStats; isLoading: boolea
   // Show CPU, RAM, and first disk
   const primaryDisk = data.disks[0];
 
+  const settingsButton = (
+    <button
+      onClick={() => showModal.setTrue()}
+      className="p-0.5 rounded text-text-muted hover:text-text transition-colors"
+      title="Settings"
+    >
+      <Settings size={12} />
+    </button>
+  );
+
   return (
     <div className="w-full h-full p-3 flex flex-col justify-center gap-2">
-      <StatBar label="CPU" percent={data.cpu_percent} />
+      <StatBar label="CPU" percent={data.cpu_percent} action={settingsButton} />
       <StatBar label="RAM" percent={data.memory_percent} />
       {primaryDisk && <StatBar label="Disk" percent={primaryDisk.percent} />}
+
+      <Modal
+        open={showModal.value}
+        onClose={() => showModal.setFalse()}
+        title="System Stats"
+        actions={<Button onClick={() => showModal.setFalse()}>Close</Button>}
+      >
+        <div className="space-y-4">
+          <StatBar label="CPU" percent={data.cpu_percent} />
+          <StatBar
+            label="RAM"
+            percent={data.memory_percent}
+            detail={`${data.memory_used_gb} / ${data.memory_total_gb} GB`}
+          />
+          {data.disks.map((disk) => (
+            <StatBar
+              key={disk.path}
+              label={`Disk ${disk.path}`}
+              percent={disk.percent}
+              detail={`${disk.free_gb.toFixed(0)} GB free`}
+            />
+          ))}
+          <div className="pt-2 border-t border-border">
+            <div className="flex justify-between text-sm">
+              <span className="text-text-secondary">Uptime</span>
+              <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
+            </div>
+          </div>
+          <div className="pt-3 border-t border-border">
+            <Toggle
+              label="Show inline on dashboard"
+              checked={currentMode === 'inline'}
+              onChange={(checked) =>
+                updatePanel(panelId, { args: { mode: checked ? 'inline' : 'icon' } })
+              }
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -173,8 +263,24 @@ export default function SystemStats({ panel }: WidgetComponentProps) {
   });
 
   if (mode === 'inline') {
-    return <InlineMode data={data} isLoading={isLoading} />;
+    return (
+      <InlineMode
+        data={data}
+        isLoading={isLoading}
+        showModal={showModal}
+        panelId={panel.id}
+        currentMode={mode}
+      />
+    );
   }
 
-  return <IconMode data={data} isLoading={isLoading} showModal={showModal} />;
+  return (
+    <IconMode
+      data={data}
+      isLoading={isLoading}
+      showModal={showModal}
+      panelId={panel.id}
+      currentMode={mode}
+    />
+  );
 }

@@ -187,6 +187,20 @@
           "offsetY": 2,
           "widthPx": 48,
           "heightPx": 64
+        },
+        {
+          "id": "panel-system-stats",
+          "widget": "system-stats",
+          "args": { "label": "CPU" },
+          "x": 94,
+          "y": 2,
+          "width": 5,
+          "height": 8,
+          "anchor": "top-right",
+          "offsetX": 41,
+          "offsetY": 2,
+          "widthPx": 48,
+          "heightPx": 64
         }
       ]
     },
