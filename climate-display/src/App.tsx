@@ -63,14 +63,14 @@ function SensorCard({
 }) {
   const formatTemp = (temp: number) => {
     const converted = unit === 'F' ? celsiusToFahrenheit(temp) : temp;
-    return Math.round(converted);
+    return converted.toFixed(1);
   };
   if (!sensor?.available) {
     return (
       <div className="bg-surface-raised rounded-2xl p-6 flex flex-col items-center justify-center min-h-[200px] border border-border">
         <span className="text-5xl mb-3">{icon}</span>
         <span className="text-text-secondary text-lg">{label}</span>
-        <span className="text-text-muted text-sm mt-2">No data</span>
+        <span className="text-warning text-sm mt-2">{sensor?.error || 'No data'}</span>
       </div>
     );
   }
@@ -130,7 +130,7 @@ function ComparisonBanner({
 
   const { outside_feels_cooler, outside_feels_warmer, difference } = comparison;
   // Convert the difference if using Fahrenheit (difference is in Celsius)
-  const absDiff = Math.round(Math.abs(unit === 'F' ? (difference * 9) / 5 : difference));
+  const absDiff = Math.abs(unit === 'F' ? (difference * 9) / 5 : difference).toFixed(1);
 
   if (!outside_feels_cooler && !outside_feels_warmer) {
     return (

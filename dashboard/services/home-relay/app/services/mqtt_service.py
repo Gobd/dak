@@ -430,12 +430,20 @@ def start_mqtt():
 
 def sensor_response(key: str) -> dict:
     """Build sensor response dict."""
+    # Check if sensor is configured
+    if not sensor_config.get(key):
+        return {"available": False}
+
     s = sensors[key]
     c = s.current
 
-    # No data or data too old (> 1 hour)
-    if c.timestamp == 0 or (time.time() - c.timestamp) > MAX_CACHE_AGE:
-        return {"available": False, "error": "No data"}
+    # Sensor configured but no data yet
+    if c.timestamp == 0:
+        return {"available": False, "error": "Waiting for data"}
+
+    # Data too old (> 1 hour)
+    if (time.time() - c.timestamp) > MAX_CACHE_AGE:
+        return {"available": False, "error": "Sensor offline"}
 
     temp = c.temperature
     fl = feels_like(c.temperature, c.humidity)
