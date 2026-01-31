@@ -692,18 +692,6 @@ export type MacLookupResponse = {
 };
 
 /**
- * MqttStatusResponse
- *
- * MQTT connection status.
- */
-export type MqttStatusResponse = {
-    /**
-     * Mqtt Connected
-     */
-    mqtt_connected: boolean;
-};
-
-/**
  * NotificationEvent
  *
  * A notification event in the database.
@@ -1895,10 +1883,8 @@ export type StatusSensorsStatusGetResponses = {
     /**
      * Successful Response
      */
-    200: MqttStatusResponse;
+    200: unknown;
 };
-
-export type StatusSensorsStatusGetResponse = StatusSensorsStatusGetResponses[keyof StatusSensorsStatusGetResponses];
 
 export type DevicesSensorsDevicesGetData = {
     body?: never;

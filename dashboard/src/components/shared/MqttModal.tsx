@@ -60,8 +60,12 @@ export function MqttModal() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['mqtt-devices'],
     queryFn: fetchDevices,
-    refetchInterval: showModal ? 3_000 : 30_000,
-    staleTime: 3000,
+    refetchInterval: (query) => {
+      if (!showModal) return 30_000;
+      // Poll faster when actively pairing
+      return query.state.data?.permit_join ? 1_000 : 3_000;
+    },
+    staleTime: 1000,
     enabled: showModal,
   });
 
