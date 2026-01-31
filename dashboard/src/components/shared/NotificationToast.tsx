@@ -7,7 +7,7 @@ import {
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
 import { X, Clock, AlertTriangle, Calendar, Settings, Trash2, Undo2 } from 'lucide-react';
-import { Toggle, ConfirmModal } from '@dak/ui';
+import { Toggle, ConfirmModal, Modal, Button } from '@dak/ui';
 
 // Check if notifications widget is configured on any screen
 function useHasNotificationsWidget() {
@@ -49,7 +49,12 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
     setShowOptions(false);
   };
 
-  const handleDismiss = async () => {
+  const handleDismissToday = async () => {
+    await dismiss(notification.id, -1); // -1 = until midnight
+    setShowDismissConfirm(false);
+  };
+
+  const handleDismissForever = async () => {
     await dismiss(notification.id, 0, true);
     setShowDismissConfirm(false);
   };
@@ -128,15 +133,23 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
           )}
         </div>
       </div>
-      <ConfirmModal
+      <Modal
         open={showDismissConfirm}
         onClose={() => setShowDismissConfirm(false)}
-        onConfirm={handleDismiss}
         title="Dismiss Notification"
-        message={`Permanently dismiss "${notification.name}"? It won't appear again unless rescheduled.`}
-        confirmText="Dismiss"
-        variant="danger"
-      />
+      >
+        <p className="text-text-secondary mb-6">
+          How long do you want to dismiss "{notification.name}"?
+        </p>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={handleDismissToday} className="flex-1">
+            For Today
+          </Button>
+          <Button variant="danger" onClick={handleDismissForever} className="flex-1">
+            Forever
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
@@ -399,6 +412,9 @@ export function NotificationToast() {
     return null;
   }
 
+  // Show backdrop only on settings/schedule/snoozed tabs (not on due tab)
+  const showBackdrop = activeTab !== 'due';
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
@@ -408,6 +424,13 @@ export function NotificationToast() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Backdrop - only on config/schedule tabs */}
+      {showBackdrop && (
+        <div
+          className="absolute inset-0 bg-black/50 pointer-events-auto"
+          onClick={() => setOpen(false)}
+        />
+      )}
       <div
         ref={modalRef}
         className="pointer-events-auto bg-surface-raised rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-slide-up border border-border"

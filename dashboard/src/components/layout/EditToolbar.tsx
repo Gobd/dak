@@ -38,6 +38,7 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   },
   { type: 'mqtt', label: 'MQTT', description: 'MQTT sensor data display' },
   { type: 'adguard', label: 'AdGuard Home', description: 'DNS ad-blocking control' },
+  { type: 'system-stats', label: 'System Stats', description: 'CPU, RAM, disk & uptime' },
 ];
 
 /**

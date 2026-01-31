@@ -29,6 +29,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   notifications: lazy(() => import('./Notifications')),
   schedule: lazy(() => import('./Schedule')),
   'iframe-popup': lazy(() => import('./IframePopup')),
+  'system-stats': lazy(() => import('./SystemStats')),
 };
 
 // Loading placeholder

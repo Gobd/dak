@@ -54,7 +54,9 @@ export function Screen() {
                   'notifications',
                   'iframe-popup',
                 ];
-                const isFrameless = framelessWidgets.includes(panel.widget);
+                const isFrameless =
+                  framelessWidgets.includes(panel.widget) ||
+                  (panel.widget === 'system-stats' && panel.args?.mode !== 'inline');
 
                 return (
                   <Panel
