@@ -66,6 +66,10 @@ def _init_db():
                 enabled INTEGER DEFAULT NULL,
                 first_seen TEXT DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Index for cleanup query (type + created_at)
+            CREATE INDEX IF NOT EXISTS idx_events_type_created
+            ON events(type, created_at);
         """)
         # Migration: convert old schema (NOT NULL enabled, seen column) to new (nullable enabled)
         # Check if we have the old schema by looking for the seen column
@@ -86,6 +90,26 @@ def _init_db():
                 ALTER TABLE type_preferences_new RENAME TO type_preferences;
             """)
         conn.commit()
+
+
+def _cleanup_old_weather():
+    """Remove weather notifications created more than 48 hours ago."""
+    cutoff = (datetime.now() - timedelta(hours=48)).isoformat()
+    with closing(_get_db()) as conn:
+        # Get IDs to delete - only weather type, created > 48hr ago
+        rows = conn.execute(
+            "SELECT id FROM events WHERE type = 'weather' AND created_at < ?", (cutoff,)
+        ).fetchall()
+        if rows:
+            ids = [r["id"] for r in rows]
+            conn.execute(
+                f"DELETE FROM dismissed WHERE event_id IN ({','.join('?' * len(ids))})", ids
+            )
+            conn.execute(
+                f"DELETE FROM events WHERE id IN ({','.join('?' * len(ids))})", ids
+            )
+            conn.commit()
+            logger.info("Cleaned up %d old weather notifications", len(ids))
 
 
 def _check_notifications():
@@ -151,9 +175,15 @@ def _check_notifications():
 
 def _scheduler_loop():
     """Background scheduler that checks notifications every minute."""
+    cleanup_counter = 0
     while not _scheduler_stop.is_set():
         try:
             _check_notifications()
+            # Run cleanup once per hour (every 60 iterations)
+            cleanup_counter += 1
+            if cleanup_counter >= 60:
+                cleanup_counter = 0
+                _cleanup_old_weather()
         except Exception:
             logger.exception("Notification check error")
         _scheduler_stop.wait(60)  # Check every minute
