@@ -54,7 +54,7 @@
           "width": 12,
           "height": 12,
           "anchor": "top-right",
-          "offsetX": 377,
+          "offsetX": 433,
           "offsetY": 11,
           "widthPx": 185,
           "heightPx": 84,
@@ -69,7 +69,7 @@
           "width": 5,
           "height": 8,
           "anchor": "top-right",
-          "offsetX": 321,
+          "offsetX": 377,
           "offsetY": 2,
           "widthPx": 48,
           "heightPx": 64
@@ -197,7 +197,7 @@
           "width": 5,
           "height": 8,
           "anchor": "top-right",
-          "offsetX": 41,
+          "offsetX": 321,
           "offsetY": 2,
           "widthPx": 48,
           "heightPx": 64
