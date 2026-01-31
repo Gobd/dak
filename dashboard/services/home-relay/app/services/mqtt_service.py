@@ -154,6 +154,21 @@ def get_trend(current: float, history: deque, attr: str) -> str:
     return "steady"
 
 
+def _has_temperature_expose(exposes: list) -> bool:
+    """Check if device exposes include temperature (handles nested features)."""
+    for e in exposes:
+        if not isinstance(e, dict):
+            continue
+        # Check top-level property/name
+        if e.get("property") == "temperature" or e.get("name") == "temperature":
+            return True
+        # Check nested features (some devices nest sensors under a parent type)
+        features = e.get("features", [])
+        if features and _has_temperature_expose(features):
+            return True
+    return False
+
+
 def get_topic_for_device(friendly_name: str) -> str:
     """Get MQTT topic for a device."""
     return f"zigbee2mqtt/{friendly_name}"
@@ -194,6 +209,7 @@ def on_connect(client, _userdata, _flags, rc, _properties=None):
         client.subscribe("zigbee2mqtt/bridge/info")
         client.subscribe("zigbee2mqtt/bridge/state")
         client.subscribe("zigbee2mqtt/bridge/response/#")
+        client.subscribe("zigbee2mqtt/bridge/event")
         # Subscribe to configured sensors
         update_subscriptions()
         logger.info("MQTT connected")
@@ -238,11 +254,7 @@ def on_message(_client, _userdata, msg):
                 }
                 for d in devices
                 if d.get("definition", {}).get("exposes")
-                and any(
-                    e.get("property") == "temperature"
-                    for e in d.get("definition", {}).get("exposes", [])
-                    if isinstance(e, dict)
-                )
+                and _has_temperature_expose(d.get("definition", {}).get("exposes", []))
             ]
             logger.info(
                 "Found %d total devices, %d climate sensors",
@@ -269,6 +281,18 @@ def on_message(_client, _userdata, msg):
             data = json.loads(msg.payload.decode())
             state = data.get("state") if isinstance(data, dict) else data
             logger.info("Bridge state: %s", state)
+            return
+
+        # Handle bridge events (device joining, interview, etc.)
+        if msg.topic == "zigbee2mqtt/bridge/event":
+            data = json.loads(msg.payload.decode())
+            event_type = data.get("type", "")
+            # Request device list refresh on join/interview events for faster UI update
+            if event_type in ("device_joined", "device_interview", "device_announce"):
+                logger.info("Device event: %s - %s", event_type, data.get("data", {}))
+                # Request fresh device list from zigbee2mqtt
+                if mqtt_client:
+                    mqtt_client.publish("zigbee2mqtt/bridge/request/devices", json.dumps({}))
             return
 
         # Handle bridge response (for command results)
