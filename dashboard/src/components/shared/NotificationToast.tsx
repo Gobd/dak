@@ -7,7 +7,7 @@ import {
 } from '../../stores/notifications-store';
 import { useConfigStore } from '../../stores/config-store';
 import { X, Clock, AlertTriangle, Calendar, Settings, Trash2, Undo2 } from 'lucide-react';
-import { Toggle, ConfirmModal } from '@dak/ui';
+import { Toggle, ConfirmModal, Modal, Button } from '@dak/ui';
 
 // Check if notifications widget is configured on any screen
 function useHasNotificationsWidget() {
@@ -49,7 +49,12 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
     setShowOptions(false);
   };
 
-  const handleDismiss = async () => {
+  const handleDismissToday = async () => {
+    await dismiss(notification.id, -1); // -1 = until midnight
+    setShowDismissConfirm(false);
+  };
+
+  const handleDismissForever = async () => {
     await dismiss(notification.id, 0, true);
     setShowDismissConfirm(false);
   };
@@ -128,15 +133,23 @@ function NotificationItem({ notification }: { notification: DueNotification }) {
           )}
         </div>
       </div>
-      <ConfirmModal
+      <Modal
         open={showDismissConfirm}
         onClose={() => setShowDismissConfirm(false)}
-        onConfirm={handleDismiss}
         title="Dismiss Notification"
-        message={`Permanently dismiss "${notification.name}"? It won't appear again unless rescheduled.`}
-        confirmText="Dismiss"
-        variant="danger"
-      />
+      >
+        <p className="text-text-secondary mb-6">
+          How long do you want to dismiss "{notification.name}"?
+        </p>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={handleDismissToday} className="flex-1">
+            For Today
+          </Button>
+          <Button variant="danger" onClick={handleDismissForever} className="flex-1">
+            Forever
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
