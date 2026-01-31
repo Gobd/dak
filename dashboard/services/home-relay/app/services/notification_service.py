@@ -67,9 +67,9 @@ def _init_db():
                 first_seen TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- Index for cleanup query (type + created_at)
-            CREATE INDEX IF NOT EXISTS idx_events_type_created
-            ON events(type, created_at);
+            -- Index for cleanup query (due_date)
+            CREATE INDEX IF NOT EXISTS idx_events_due_date
+            ON events(due_date);
         """)
         # Migration: convert old schema (NOT NULL enabled, seen column) to new (nullable enabled)
         # Check if we have the old schema by looking for the seen column
@@ -98,9 +98,7 @@ def _cleanup_old_events():
 
     with closing(_get_db()) as conn:
         # Get IDs of events with due_date more than 10 days ago
-        rows = conn.execute(
-            "SELECT id FROM events WHERE due_date < ?", (cutoff,)
-        ).fetchall()
+        rows = conn.execute("SELECT id FROM events WHERE due_date < ?", (cutoff,)).fetchall()
 
         if rows:
             ids = [r["id"] for r in rows]
