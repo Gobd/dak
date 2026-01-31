@@ -29,7 +29,11 @@ function UpcomingEventRow({ event, today }: { event: NotificationEvent; today: D
         <div className="text-base text-text truncate">{event.name}</div>
       </div>
       <span className="text-sm text-text-secondary flex-shrink-0 ml-3">
-        {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        {dueDate.toLocaleDateString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })}
       </span>
     </div>
   );
@@ -52,7 +56,11 @@ function DismissedEventRow({ event }: { event: NotificationEvent }) {
         </div>
         <div className="flex items-center gap-3 flex-shrink-0 ml-3">
           <span className="text-sm text-text-muted">
-            {dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            {dueDate.toLocaleDateString(undefined, {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            })}
           </span>
           <button
             onClick={() => setShowUndoConfirm(true)}
