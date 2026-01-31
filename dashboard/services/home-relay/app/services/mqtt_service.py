@@ -192,10 +192,12 @@ def update_subscriptions():
         mqtt_client.unsubscribe(topic)
         logger.info("Unsubscribed from %s", topic)
 
-    # Subscribe to new topics
+    # Subscribe to new topics and request current state
     for topic in needed_topics - subscribed_topics:
         mqtt_client.subscribe(topic)
         logger.info("Subscribed to %s", topic)
+        # Request current state from the device
+        mqtt_client.publish(f"{topic}/get", json.dumps({"temperature": "", "humidity": ""}))
 
     subscribed_topics = needed_topics
 
@@ -246,18 +248,20 @@ def on_message(_client, _userdata, msg):
             ]
 
             # Filter to only devices with temperature/humidity (climate sensors)
+            # Note: use `or {}` since definition can be None (not just missing)
             available_devices = [
                 {
                     "friendly_name": d.get("friendly_name", ""),
-                    "model": d.get("definition", {}).get("model", "Unknown"),
-                    "description": d.get("definition", {}).get("description", ""),
+                    "model": (d.get("definition") or {}).get("model", "Unknown"),
+                    "description": (d.get("definition") or {}).get("description", ""),
                 }
                 for d in devices
-                if d.get("definition", {}).get("exposes")
-                and _has_temperature_expose(d.get("definition", {}).get("exposes", []))
+                if (d.get("definition") or {}).get("exposes")
+                and _has_temperature_expose((d.get("definition") or {}).get("exposes", []))
             ]
+
             logger.info(
-                "Found %d total devices, %d climate sensors",
+                "Found %d devices, %d climate sensors",
                 len(all_devices),
                 len(available_devices),
             )

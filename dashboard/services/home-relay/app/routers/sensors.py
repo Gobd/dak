@@ -11,16 +11,14 @@ from fastapi import APIRouter
 from app.models.sensors import (
     AllSensorsResponse,
     DevicesResponse,
-    MqttStatusResponse,
     SensorComparison,
     SensorDevice,
     SensorReadingResponse,
     SensorUnavailableResponse,
 )
+from app.services import mqtt_service
 from app.services.mqtt_service import (
-    available_devices,
     load_config,
-    mqtt_connected,
     sensor_config,
     sensor_response,
 )
@@ -28,17 +26,22 @@ from app.services.mqtt_service import (
 router = APIRouter(prefix="/sensors", tags=["sensors"])
 
 
-@router.get("/status", response_model=MqttStatusResponse)
+@router.get("/status")
 async def status():
     """Get MQTT connection status."""
-    return MqttStatusResponse(mqtt_connected=mqtt_connected)
+    return {
+        "mqtt_connected": mqtt_service.mqtt_connected,
+        "mqtt_host": mqtt_service.MQTT_HOST,
+        "mqtt_port": mqtt_service.MQTT_PORT,
+        "available_devices_count": len(mqtt_service.available_devices),
+    }
 
 
 @router.get("/devices", response_model=DevicesResponse)
 async def devices():
     """List available climate sensors from Zigbee2MQTT."""
     return DevicesResponse(
-        devices=[SensorDevice(**d) for d in available_devices],
+        devices=[SensorDevice(**d) for d in mqtt_service.available_devices],
     )
 
 

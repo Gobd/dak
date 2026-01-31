@@ -9,6 +9,7 @@ WorkingDirectory=/home/__USER__/dashboard/services/home-relay
 ExecStart=/home/__USER__/dashboard/services/home-relay/.venv/bin/python relay.py
 Restart=always
 RestartSec=5
+TimeoutStopSec=5
 StandardOutput=journal
 StandardError=journal
 

@@ -5,10 +5,18 @@ climate sensors, and voice transcription.
 """
 
 import logging
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+
+# Configure logging for the app (not just uvicorn)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(name)s - %(message)s",
+    stream=sys.stdout,
+)
 
 # Disable uvicorn access logs for cleaner output
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)

@@ -1,13 +1,22 @@
 #!/bin/bash
 # Deploy dashboard to kiosk and run setup
-# Usage: ./scripts/deploy.sh <user@host>
+# Usage: ./scripts/deploy.sh <user@host> [--no-restart]
 
 set -e
 
-REMOTE="$1"
+REMOTE=""
+NO_RESTART=""
+
+for arg in "$@"; do
+  case $arg in
+    --no-restart) NO_RESTART="1" ;;
+    -*) echo "Unknown flag: $arg"; exit 1 ;;
+    *) REMOTE="$arg" ;;
+  esac
+done
 
 if [[ -z "$REMOTE" ]]; then
-  echo "Usage: $0 <user@host>"
+  echo "Usage: $0 <user@host> [--no-restart]"
   exit 1
 fi
 
@@ -25,8 +34,9 @@ rsync -avz --delete \
   "$REPO_DIR/" "$REMOTE:~/dashboard/"
 
 echo "=== Running setup on $REMOTE ==="
-ssh -t "$REMOTE" bash -s << 'SETUP_SCRIPT'
+ssh -t "$REMOTE" bash -s -- "$NO_RESTART" << 'SETUP_SCRIPT'
 set -e
+NO_RESTART="$1"
 
 # Copy config from scripts folder if not already present
 mkdir -p ~/.config/dashboard
@@ -119,8 +129,12 @@ if [ -d ~/dashboard/services/home-relay ]; then
   sed "s|__USER__|$USER|g" home-relay.service | sudo tee /etc/systemd/system/home-relay.service > /dev/null
   sudo systemctl daemon-reload
   sudo systemctl enable home-relay
-  sudo systemctl start home-relay
-  echo "Home relay service installed and started"
+  if [[ -z "$NO_RESTART" ]]; then
+    sudo systemctl restart --no-block home-relay
+    echo "Home relay service installed and restarted"
+  else
+    echo "Home relay service installed (hot reload will pick up changes)"
+  fi
 fi
 
 # =============================================================================
@@ -131,7 +145,9 @@ echo "=== Setting up Zigbee ==="
 echo "Installing Mosquitto..."
 sudo apt-get install -y mosquitto mosquitto-clients
 sudo systemctl enable mosquitto
-sudo systemctl start mosquitto
+if [[ -z "$NO_RESTART" ]]; then
+  sudo systemctl start --no-block mosquitto
+fi
 
 echo "Installing Node.js 24..."
 if ! command -v node &>/dev/null || [[ "$(node -v)" != v24* ]]; then
@@ -166,7 +182,9 @@ sed "s|__USER__|$USER|g" ~/dashboard/services/zigbee2mqtt/zigbee2mqtt.service \
   | sudo tee /etc/systemd/system/zigbee2mqtt.service > /dev/null
 
 sudo systemctl daemon-reload
-sudo systemctl start zigbee2mqtt || true
+if [[ -z "$NO_RESTART" ]]; then
+  sudo systemctl start --no-block zigbee2mqtt || true
+fi
 
 # =============================================================================
 # VOICE CONTROL SETUP
@@ -203,9 +221,13 @@ echo "  - Home relay (Kasa, WoL, brightness)"
 echo "  - Voice control (enable in Settings)"
 echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
 
-echo "Rebooting in 5 seconds..."
-sleep 5
-sudo reboot
+if [[ -z "$NO_RESTART" ]]; then
+  echo "Rebooting in 5 seconds..."
+  sleep 5
+  sudo reboot
+else
+  echo "Skipping reboot (--no-restart)"
+fi
 SETUP_SCRIPT
 
 echo "=== Deploy complete ==="
