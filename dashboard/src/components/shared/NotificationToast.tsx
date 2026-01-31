@@ -399,6 +399,9 @@ export function NotificationToast() {
     return null;
   }
 
+  // Show backdrop only on settings/schedule/snoozed tabs (not on due tab)
+  const showBackdrop = activeTab !== 'due';
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
@@ -408,6 +411,13 @@ export function NotificationToast() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Backdrop - only on config/schedule tabs */}
+      {showBackdrop && (
+        <div
+          className="absolute inset-0 bg-black/50 pointer-events-auto"
+          onClick={() => setOpen(false)}
+        />
+      )}
       <div
         ref={modalRef}
         className="pointer-events-auto bg-surface-raised rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col animate-slide-up border border-border"

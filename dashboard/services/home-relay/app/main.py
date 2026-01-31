@@ -24,6 +24,7 @@ from app.routers import (
     mqtt,
     notifications,
     sensors,
+    system_stats,
     transcribe,
     voice,
     voices,
@@ -105,3 +106,4 @@ app.include_router(models.router)
 app.include_router(voices.router)
 app.include_router(adguard.router)
 app.include_router(notifications.router)
+app.include_router(system_stats.router)

@@ -462,6 +462,24 @@ export type DevicesResponse = {
 };
 
 /**
+ * DiskStats
+ */
+export type DiskStats = {
+    /**
+     * Path
+     */
+    path: string;
+    /**
+     * Percent
+     */
+    percent: number;
+    /**
+     * Free Gb
+     */
+    free_gb: number;
+};
+
+/**
  * DismissRequest
  *
  * Request to dismiss a notification.
@@ -1077,6 +1095,36 @@ export type SunTimes = {
      * Error
      */
     error?: string | null;
+};
+
+/**
+ * SystemStatsResponse
+ */
+export type SystemStatsResponse = {
+    /**
+     * Cpu Percent
+     */
+    cpu_percent: number;
+    /**
+     * Memory Percent
+     */
+    memory_percent: number;
+    /**
+     * Memory Used Gb
+     */
+    memory_used_gb: number;
+    /**
+     * Memory Total Gb
+     */
+    memory_total_gb: number;
+    /**
+     * Disks
+     */
+    disks: Array<DiskStats>;
+    /**
+     * Uptime Seconds
+     */
+    uptime_seconds: number;
 };
 
 /**
@@ -2922,3 +2970,19 @@ export type SetPreferenceNotificationsPreferencesEventTypePostResponses = {
      */
     200: unknown;
 };
+
+export type GetSystemStatsSystemStatsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/system/stats';
+};
+
+export type GetSystemStatsSystemStatsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SystemStatsResponse;
+};
+
+export type GetSystemStatsSystemStatsGetResponse = GetSystemStatsSystemStatsGetResponses[keyof GetSystemStatsSystemStatsGetResponses];

@@ -18,7 +18,8 @@ export type WidgetType =
   | 'adguard'
   | 'notifications'
   | 'schedule'
-  | 'iframe-popup';
+  | 'iframe-popup'
+  | 'system-stats';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -157,6 +158,16 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
     widthPx: 72,
     heightPx: 80,
     offsetX: 80,
+    offsetY: 16,
+  },
+  'system-stats': {
+    width: 6,
+    height: 6,
+    refresh: '10s',
+    anchor: 'top-left',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 16,
     offsetY: 16,
   },
 };
