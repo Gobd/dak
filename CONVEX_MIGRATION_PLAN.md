@@ -1100,7 +1100,26 @@ export const unshareNote = mutation({
 - [ ] Create `apps/people/` standalone app using `@dak/people-ui` + `@dak/sharing-ui`
 - [ ] Add sharing components to each app (quick-add from within apps)
 
-### Phase 7: Unified App
+### Phase 7: Dashboard Config to Convex
+- [ ] Add `dashboardConfigs` table to schema (screens, panels, globalSettings)
+- [ ] Create Convex queries/mutations for config CRUD
+- [ ] Update dashboard to use Convex for logged-in users
+- [ ] Keep local storage fallback for guest/kiosk mode
+- [ ] Dashboard now part of paid product bundle (same auth as other apps)
+- [ ] Real-time config sync + cloud backup = easier sell
+- [ ] Edit config from anywhere (laptop, phone) → kiosk updates instantly via Convex subscriptions
+
+Note: Most widget APIs (weather, calendar, AQI, UV) already call external APIs directly from client JS.
+
+**Home-relay becomes optional** - only needed for local network hardware:
+- Zigbee2MQTT (sensors/devices)
+- Kasa (smart plugs)
+- Wake-on-LAN
+- AdGuard Home
+
+Most users won't need home-relay. Power users self-host it for smart home control.
+
+### Phase 8: Unified App (Optional)
 - [ ] Extract existing app UIs into `packages/*-ui/` packages
 - [ ] Create `apps/dak/` unified app
 - [ ] Implement app switcher, settings, default app preference
@@ -1108,11 +1127,27 @@ export const unshareNote = mutation({
 - [ ] Configure all apps as PWAs (manifest, service worker, icons)
 - [ ] Update standalone apps to import from `*-ui` packages
 
-### Phase 8: Cleanup
+### Phase 9: Cleanup
 - [ ] Remove Supabase dependencies
 - [ ] Delete old Supabase configs/clients
 - [ ] Update CLAUDE.md documentation
-- [ ] Upgrade to Convex paid plan ($25/mo)
+
+### Phase 10: Monetization + Launch
+- [ ] Form LLC
+- [ ] Privacy Policy + Terms of Service pages
+- [ ] Set up Polar.sh (or Lemon Squeezy)
+- [ ] Add subscription webhook handler to Convex
+- [ ] Implement trial/subscription checks in all apps
+- [ ] Google OAuth verification (submit consent screen with legal URLs)
+- [ ] Build landing page (`apps/landing/`)
+  - [ ] Hero section - what DAK is
+  - [ ] Feature breakdown - all apps included
+  - [ ] Pricing - simple single tier
+  - [ ] Screenshots/demo
+  - [ ] Sign up / login links
+- [ ] Custom domain setup (dak.app or similar)
+- [ ] Launch 🚀
+- [ ] Upgrade to Convex paid plan ($25/mo) when needed
 
 ## Admin Functions
 
