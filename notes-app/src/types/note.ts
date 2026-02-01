@@ -31,6 +31,11 @@ export function getNoteTitle(content: string | null, maxLength = 100): string {
   if (!firstLine) return 'Untitled';
   // Strip leading # markers (markdown headings)
   firstLine = firstLine.replace(/^#{1,6}\s*/, '');
+  // Strip &nbsp; and other whitespace-only content
+  firstLine = firstLine
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00A0/g, ' ')
+    .trim();
   if (!firstLine) return 'Untitled';
   if (firstLine.length <= maxLength) return firstLine;
   return firstLine.slice(0, maxLength) + '...';

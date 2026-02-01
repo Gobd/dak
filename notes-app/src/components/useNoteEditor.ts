@@ -80,9 +80,15 @@ export function useNoteEditor({
     contentType: 'markdown',
     autofocus: false, // Handle focus manually after DOM is ready
     onCreate: ({ editor }) => {
-      // Delay focus until after browser has finished rendering
-      // If requestAnimationFrame isn't enough, try setTimeout(() => ..., 50)
-      requestAnimationFrame(() => focusAtContentEnd(editor));
+      // For new/empty notes, start with an h1 heading for the title
+      if (!initialContent) {
+        (editor as any).commands.setContent('# ', { contentType: 'markdown' });
+        editor.commands.setTextSelection(1);
+        editor.commands.focus();
+      } else {
+        // Delay focus until after browser has finished rendering
+        requestAnimationFrame(() => focusAtContentEnd(editor));
+      }
     },
     editorProps: {
       attributes: {
@@ -131,8 +137,10 @@ export function useNoteEditor({
         // Delay focus until after browser has finished rendering the new content
         requestAnimationFrame(() => focusAtContentEnd(editor));
       } else {
+        // New note: set h1 heading, focus at start
         (editor as any).commands.setContent('# ', { contentType: 'markdown' });
         editor.commands.setTextSelection(1);
+        editor.commands.focus();
       }
 
       // Reset init phase after content is set
