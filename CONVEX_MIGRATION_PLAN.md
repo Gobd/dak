@@ -14,10 +14,16 @@ Unified backend for all Supabase apps with shared auth and flexible sharing patt
 
 ```
 apps/
-  people/                    # NEW: "My People" management app
+  notes-app/                  # Standalone notes (PWA)
+  health-tracker/             # Standalone health (PWA)
+  family-chores/              # Standalone chores (PWA)
+  maintenance-tracker/        # Standalone maintenance (PWA)
+  tracker/                    # Standalone alcohol tracker (PWA)
+  people/                     # Standalone "My People" management (PWA)
+  dak/                        # NEW: Unified app - all apps in one (PWA)
 
 packages/
-  convex/                    # Shared Convex backend
+  convex/                     # Shared Convex backend
     convex/
       schema.ts              # All tables
       lib/
@@ -29,9 +35,22 @@ packages/
       health/                # Health tracker functions
       notes/                 # Notes app functions
       people/                # "My People" management functions
+
+  # Shared UI packages (consumed by standalone + unified apps)
+  notes-ui/                   # Notes UI components
+  health-ui/                  # Health UI components
+  chores-ui/                  # Chores UI components
+  maintenance-ui/             # Maintenance UI components
+  tracker-ui/                 # Tracker UI components
+  people-ui/                  # People management UI components
+  sharing-ui/                 # Sharing components (bell, dialogs, quick-add)
 ```
 
 One Convex project, one deployment, all apps connect to same backend.
+
+**Deployment strategy:** Both standalone apps AND unified app are deployed. Users can:
+- Use standalone apps for focused single-purpose access
+- Use unified `dak` app for everything in one place
 
 ## Sharing Model: "My People"
 
@@ -1075,7 +1094,21 @@ export const unshareNote = mutation({
 - [ ] Migrate `notes-app`
 - [ ] Test: auto-share, one-off shares, search
 
-### Phase 6: Cleanup
+### Phase 6: Sharing UI + People App
+- [ ] Create `packages/sharing-ui/` with shared components
+- [ ] Implement `NotificationBell`, `ShareDialog`, `AddPersonDialog`
+- [ ] Create `apps/people/` standalone app using `@dak/people-ui` + `@dak/sharing-ui`
+- [ ] Add sharing components to each app (quick-add from within apps)
+
+### Phase 7: Unified App
+- [ ] Extract existing app UIs into `packages/*-ui/` packages
+- [ ] Create `apps/dak/` unified app
+- [ ] Implement app switcher, settings, default app preference
+- [ ] Add `userPreferences` table to schema
+- [ ] Configure all apps as PWAs (manifest, service worker, icons)
+- [ ] Update standalone apps to import from `*-ui` packages
+
+### Phase 8: Cleanup
 - [ ] Remove Supabase dependencies
 - [ ] Delete old Supabase configs/clients
 - [ ] Update CLAUDE.md documentation
@@ -1197,6 +1230,95 @@ Features:
 - For chores: select parent/kid role
 - Remove person (revokes all access)
 
+## Sharing UI (`@dak/sharing-ui`)
+
+Shared package for all sharing interactions. Any app can import these components.
+
+### Components
+
+```
+packages/sharing-ui/
+  NotificationBell.tsx        # Bell icon + dropdown for pending invites/shares
+  ShareDialog.tsx             # Share with person (one-off or add to My People)
+  AddPersonDialog.tsx         # Quick-add to My People with app-specific permission
+  PendingInvites.tsx          # List pending family/share invites to accept/reject
+  ShareBadge.tsx              # "Shared with X people" indicator
+  PeopleQuickView.tsx         # Mini view of who has access (for app settings)
+```
+
+### Two Ways to Add People
+
+**From any app (quick-add):** Add someone with just that app's permission.
+
+```
+┌─ Health Tracker ─────────────────────────┐
+│ Add Caregiver                            │
+├──────────────────────────────────────────┤
+│ Email: [grandma@email.com           ]    │
+│ Name:  [Grandma                     ]    │
+│                                          │
+│ Can access:                              │
+│ ☑ Emma                                   │
+│ ☐ Jack                                   │
+│                                          │
+│ [Cancel]                    [Add]        │
+└──────────────────────────────────────────┘
+
+→ Grandma added to "My People" with:
+  healthCaregiverFor: ["emma-id"]
+  (all other permissions: false/empty)
+```
+
+**From people app (full control):** Add someone with any combination of permissions.
+
+```
+┌─ People App ─────────────────────────────┐
+│ Add Person                               │
+├──────────────────────────────────────────┤
+│ Email: [grandma@email.com           ]    │
+│ Name:  [Grandma                     ]    │
+│                                          │
+│ Permissions:                             │
+│ ┌────────────────────────────────────┐   │
+│ │ Maintenance    [Off]               │   │
+│ │ Chores         [None ▼]            │   │
+│ │ Health         [Select kids ▼]     │   │
+│ │                ☑ Emma  ☐ Jack      │   │
+│ │ Notes          [Off]               │   │
+│ └────────────────────────────────────┘   │
+│                                          │
+│ [Cancel]                    [Add]        │
+└──────────────────────────────────────────┘
+```
+
+### Updating Permissions
+
+Same pattern - update from the app or from people app:
+
+- **From health-tracker:** "Manage caregivers" → add/remove kids for existing people
+- **From people app:** Full grid view, edit any permission for anyone
+
+### Who Uses What
+
+| App | Sharing Components Used |
+|-----|------------------------|
+| notes-app | `NotificationBell`, `ShareDialog` (one-off + auto-share) |
+| health-tracker | `NotificationBell`, `AddPersonDialog` (caregiver quick-add) |
+| family-chores | `NotificationBell`, `AddPersonDialog` (parent/kid quick-add) |
+| maintenance-tracker | `NotificationBell`, `AddPersonDialog` (access quick-add) |
+| tracker | `NotificationBell` only (no sharing) |
+| people | All components (full management view) |
+
+### People App Purpose
+
+The people app provides the **complete view**:
+- See everyone in one place
+- See all permissions across all apps in a grid
+- Add/edit/remove people with any combination of permissions
+- Manage blocked users
+
+Individual apps let you **quick-add** for their specific needs, but people app is where you go to see the full picture or make cross-app permission changes.
+
 ## Notifications UX
 
 Bell icon in app headers. Shows badge count for pending invites/shares.
@@ -1279,6 +1401,133 @@ function Header() {
 - Note shares: "Accept & View" → accepts + navigates to `/notes/{noteId}`
 
 No unified notification center needed. Just a shared component.
+
+## Unified App (`apps/dak/`)
+
+Single app that bundles all modules with an app switcher. Deploy alongside standalone apps.
+
+### Schema Addition
+
+```typescript
+// Add to convex/schema.ts
+userPreferences: defineTable({
+  userId: v.string(),
+  defaultApp: v.string(),              // "notes" | "health" | "chores" | "maintenance" | "tracker" | "people"
+  enabledApps: v.array(v.string()),    // which apps show in switcher
+  appOrder: v.optional(v.array(v.string())), // custom order in switcher
+})
+  .index("by_user", ["userId"]),
+```
+
+### App Structure
+
+```
+apps/dak/
+  src/
+    App.tsx                   # Router + shell
+    components/
+      AppShell.tsx            # Header, sidebar, notification bell
+      AppSwitcher.tsx         # Dropdown or sidebar nav
+      AppIcon.tsx             # Icon for each app type
+    routes/
+      index.tsx               # Redirects to default app
+      notes.tsx               # <NotesModule />
+      health.tsx              # <HealthModule />
+      chores.tsx              # <ChoresModule />
+      maintenance.tsx         # <MaintenanceModule />
+      tracker.tsx             # <TrackerModule />
+      people.tsx              # <PeopleModule />
+      settings.tsx            # App preferences (default, order, enabled)
+```
+
+### App Switcher UI
+
+```
+┌─────────────────────────────────────────┐
+│ [≡] Notes                      🔔  ⚙️   │
+├─────────────────────────────────────────┤
+│ ┌─────────────────┐                     │
+│ │ 📝 Notes    ✓   │ ← current           │
+│ │ 💊 Health       │                     │
+│ │ ✅ Chores       │                     │
+│ │ 🔧 Maintenance  │                     │
+│ │ 🍺 Tracker      │                     │
+│ │ 👥 People       │                     │
+│ ├─────────────────┤                     │
+│ │ ⚙️ Settings     │                     │
+│ └─────────────────┘                     │
+│                                         │
+│          [Notes content here]           │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Settings Page
+
+- **Default app** - which app opens on launch
+- **Enabled apps** - toggle which apps appear in switcher
+- **App order** - drag to reorder apps in switcher
+
+### Shared UI Package Pattern
+
+Each `*-ui` package exports the main module component:
+
+```typescript
+// packages/notes-ui/index.ts
+export { NotesModule } from './NotesModule';
+export { NotesList } from './components/NotesList';
+export { NoteEditor } from './components/NoteEditor';
+// ... other components for customization
+
+// packages/notes-ui/NotesModule.tsx
+export function NotesModule() {
+  // Full notes UI with routing handled internally
+  return (
+    <NotesProvider>
+      <Routes>
+        <Route index element={<NotesList />} />
+        <Route path=":id" element={<NoteEditor />} />
+      </Routes>
+    </NotesProvider>
+  );
+}
+```
+
+Standalone apps import and wrap:
+
+```typescript
+// apps/notes-app/src/App.tsx
+import { NotesModule } from '@dak/notes-ui';
+
+function App() {
+  return (
+    <ConvexProvider>
+      <AuthProvider>
+        <NotesModule />
+      </AuthProvider>
+    </ConvexProvider>
+  );
+}
+```
+
+Unified app imports all:
+
+```typescript
+// apps/dak/src/routes/notes.tsx
+import { NotesModule } from '@dak/notes-ui';
+
+export default function NotesRoute() {
+  return <NotesModule />;
+}
+```
+
+### Migration Considerations
+
+When migrating existing apps:
+1. Extract UI into `packages/*-ui/`
+2. Update standalone app to import from package
+3. Add route to unified app
+4. Shared auth context from `packages/convex/`
 
 ## Open Questions
 
