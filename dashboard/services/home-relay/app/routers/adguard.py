@@ -62,18 +62,34 @@ async def get_version(request: AdGuardRequest):
     """Check for AdGuard Home updates."""
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{request.url.rstrip('/')}/control/version.json",
+            # Get current version from status endpoint
+            status_resp = await client.get(
+                f"{request.url.rstrip('/')}/control/status",
                 auth=(request.username, request.password),
-                json={"recheck_now": False},
                 timeout=10.0,
             )
-            resp.raise_for_status()
-            data = resp.json()
+            status_resp.raise_for_status()
+            current_version = status_resp.json().get("version")
+
+            # Get latest version info (must be GET, not POST)
+            version_resp = await client.get(
+                f"{request.url.rstrip('/')}/control/version.json",
+                auth=(request.username, request.password),
+                timeout=10.0,
+            )
+            version_resp.raise_for_status()
+            version_data = version_resp.json()
+            new_version = version_data.get("new_version")
+
+            # Only show update available if versions differ
+            update_available = bool(
+                new_version and current_version and new_version != current_version
+            )
+
             return {
-                "current_version": data.get("current_version"),
-                "new_version": data.get("new_version"),
-                "update_available": bool(data.get("new_version")),
+                "current_version": current_version,
+                "new_version": new_version,
+                "update_available": update_available,
             }
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 401:
