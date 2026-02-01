@@ -6,6 +6,8 @@ interface DatePickerProps {
   value: Date;
   onChange: (date: Date) => void;
   allowFuture?: boolean;
+  /** Day the week starts on: 0 = Sunday (default), 1 = Monday */
+  weekStartsOn?: 0 | 1;
 }
 
 function formatLocalDate(date: Date): string {
@@ -15,13 +17,23 @@ function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_NAMES_SUNDAY = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_NAMES_MONDAY = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-export function DatePicker({ value, onChange, allowFuture = true }: DatePickerProps) {
+export function DatePicker({
+  value,
+  onChange,
+  allowFuture = true,
+  weekStartsOn = 0,
+}: DatePickerProps) {
   const [viewMonth, setViewMonth] = useState(new Date(value.getFullYear(), value.getMonth(), 1));
 
+  const dayNames = weekStartsOn === 1 ? DAY_NAMES_MONDAY : DAY_NAMES_SUNDAY;
   const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate();
-  const firstDayOfWeek = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1).getDay();
+  // getDay() returns 0=Sunday, 1=Monday, etc.
+  // Adjust for week start day
+  const rawFirstDay = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1).getDay();
+  const firstDayOfWeek = (rawFirstDay - weekStartsOn + 7) % 7;
 
   // Always render 6 rows (42 cells) to prevent layout jumping
   const days: (number | null)[] = [];
@@ -105,7 +117,7 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
 
       {/* Day names */}
       <div className="grid grid-cols-7 gap-1 mb-1">
-        {DAY_NAMES.map((name) => (
+        {dayNames.map((name) => (
           <div key={name} className="text-center text-xs text-text-muted py-1">
             {name}
           </div>
@@ -146,7 +158,12 @@ export function DatePicker({ value, onChange, allowFuture = true }: DatePickerPr
 }
 
 // Compact version that shows a button and opens a popup
-export function DatePickerCompact({ value, onChange, allowFuture = true }: DatePickerProps) {
+export function DatePickerCompact({
+  value,
+  onChange,
+  allowFuture = true,
+  weekStartsOn = 0,
+}: DatePickerProps) {
   const [showPicker, setShowPicker] = useState(false);
 
   const displayDate = value.toLocaleDateString('en-US', {
@@ -175,6 +192,7 @@ export function DatePickerCompact({ value, onChange, allowFuture = true }: DateP
                 setShowPicker(false);
               }}
               allowFuture={allowFuture}
+              weekStartsOn={weekStartsOn}
             />
             <Button
               variant="secondary"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Trash2, Eye, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
-import { Card, Button, Input, Modal, ConfirmModal } from '@dak/ui';
+import { Card, Button, Input, Modal, ConfirmModal, DatePickerCompact } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
 import { useTargetsStore } from '../stores/targets-store';
 import { usePresetsStore } from '../stores/presets-store';
@@ -18,6 +18,8 @@ interface PreviewState {
   volumeMl: number;
   percentage: number;
   notes?: string;
+  loggedAt?: Date;
+  quantity: number;
 }
 
 export function Home() {
@@ -41,6 +43,8 @@ export function Home() {
   const [inputUnit, setInputUnit] = useState<'ml' | 'oz'>('oz');
   const [percentageInput, setPercentageInput] = useState('');
   const [notesInput, setNotesInput] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [quantityInput, setQuantityInput] = useState('1');
 
   // Preview state - shows what adding a drink would do
   const [preview, setPreview] = useState<PreviewState | null>(null);
@@ -72,6 +76,7 @@ export function Home() {
       name: preset.name,
       volumeMl: preset.volume_ml,
       percentage: preset.percentage,
+      quantity: 1,
     });
   };
 
@@ -81,7 +86,11 @@ export function Home() {
 
     // Use preset name as notes if no custom notes provided
     const notes = preview.notes || (preview.name !== 'Custom' ? preview.name : undefined);
-    await addEntry(preview.volumeMl, preview.percentage, dailyLimit, notes);
+
+    // Add entries for the quantity
+    for (let i = 0; i < preview.quantity; i++) {
+      await addEntry(preview.volumeMl, preview.percentage, dailyLimit, notes, preview.loggedAt);
+    }
     setPreview(null);
 
     if (target) {
@@ -98,6 +107,7 @@ export function Home() {
   const handlePreviewCustom = () => {
     const volume = parseFloat(volumeInput);
     const percentage = parseFloat(percentageInput);
+    const quantity = parseInt(quantityInput) || 1;
 
     if (isNaN(volume) || isNaN(percentage) || volume <= 0 || percentage <= 0) {
       return;
@@ -106,12 +116,21 @@ export function Home() {
     const volumeMl = inputUnit === 'oz' ? ozToMl(volume) : volume;
     const units = calculateUnits(volumeMl, percentage);
 
+    // Check if selected date is not today
+    const today = new Date();
+    const isToday =
+      selectedDate.getFullYear() === today.getFullYear() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getDate() === today.getDate();
+
     setPreview({
       units,
       name: 'Custom',
       volumeMl,
       percentage,
       notes: notesInput || undefined,
+      loggedAt: isToday ? undefined : selectedDate,
+      quantity,
     });
 
     setShowAddModal(false);
@@ -122,6 +141,8 @@ export function Home() {
     setVolumeInput('');
     setPercentageInput('');
     setNotesInput('');
+    setSelectedDate(new Date());
+    setQuantityInput('1');
   };
 
   const handleDelete = async () => {
@@ -180,7 +201,8 @@ export function Home() {
       : null;
 
   // What the total would be after adding preview
-  const projectedTotal = preview ? todayTotal + preview.units : todayTotal;
+  const previewTotalUnits = preview ? preview.units * preview.quantity : 0;
+  const projectedTotal = preview ? todayTotal + previewTotalUnits : todayTotal;
   const projectedPercentage = dailyLimit > 0 ? (projectedTotal / dailyLimit) * 100 : 0;
 
   return (
@@ -198,37 +220,104 @@ export function Home() {
         <Card className="border-2 border-accent">
           <div className="flex items-center gap-2 mb-3">
             <Eye size={18} className="text-accent" />
-            <h2 className="font-semibold">Preview: {preview.name}</h2>
+            <h2 className="font-semibold">
+              Preview: {preview.name}
+              {preview.quantity > 1 && ` × ${preview.quantity}`}
+            </h2>
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-text-muted">This serving:</span>
-              <span className="font-medium">{formatUnits(preview.units)} units</span>
+            {/* Editable date and quantity */}
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <label className="block text-xs text-text-muted mb-1">Date</label>
+                <DatePickerCompact
+                  value={preview.loggedAt ?? new Date()}
+                  onChange={(date) => {
+                    const today = new Date();
+                    const isToday =
+                      date.getFullYear() === today.getFullYear() &&
+                      date.getMonth() === today.getMonth() &&
+                      date.getDate() === today.getDate();
+                    setPreview({ ...preview, loggedAt: isToday ? undefined : date });
+                  }}
+                  allowFuture={false}
+                  weekStartsOn={1}
+                />
+              </div>
+              <div className="w-24">
+                <label className="block text-xs text-text-muted mb-1">Quantity</label>
+                <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    className="px-3 py-2 bg-surface-raised hover:bg-surface-sunken transition-colors disabled:opacity-50"
+                    onClick={() =>
+                      setPreview({ ...preview, quantity: Math.max(1, preview.quantity - 1) })
+                    }
+                    disabled={preview.quantity <= 1}
+                  >
+                    −
+                  </button>
+                  <span className="flex-1 text-center font-medium">{preview.quantity}</span>
+                  <button
+                    type="button"
+                    className="px-3 py-2 bg-surface-raised hover:bg-surface-sunken transition-colors"
+                    onClick={() => setPreview({ ...preview, quantity: preview.quantity + 1 })}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-text-muted">Current total:</span>
-              <span className="font-medium">{formatUnits(todayTotal)} units</span>
-            </div>
-
-            <div className="border-t border-border pt-3">
+            <div className="border-t border-border pt-3 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-medium">After adding:</span>
-                <span
-                  className={`text-lg font-bold ${getRingColor(projectedPercentage).replace('stroke-', 'text-')}`}
-                >
-                  {formatUnits(projectedTotal)} units
+                <span className="text-text-muted">
+                  {preview.quantity > 1 ? 'Per serving:' : 'This serving:'}
                 </span>
+                <span className="font-medium">{formatUnits(preview.units)} units</span>
               </div>
-              <div className="flex justify-between items-center mt-1">
-                <span className="text-text-muted text-sm">Of daily target:</span>
-                <span
-                  className={`text-sm font-medium ${getRingColor(projectedPercentage).replace('stroke-', 'text-')}`}
-                >
-                  {Math.round(projectedPercentage)}%{projectedPercentage > 100 && ' (OVER)'}
-                </span>
-              </div>
+
+              {preview.quantity > 1 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted">Total ({preview.quantity}×):</span>
+                  <span className="font-medium">{formatUnits(previewTotalUnits)} units</span>
+                </div>
+              )}
+
+              {!preview.loggedAt && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-muted">Current total:</span>
+                    <span className="font-medium">{formatUnits(todayTotal)} units</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">After adding:</span>
+                    <span
+                      className={`text-lg font-bold ${getRingColor(projectedPercentage).replace('stroke-', 'text-')}`}
+                    >
+                      {formatUnits(projectedTotal)} units
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-text-muted text-sm">Of daily target:</span>
+                    <span
+                      className={`text-sm font-medium ${getRingColor(projectedPercentage).replace('stroke-', 'text-')}`}
+                    >
+                      {Math.round(projectedPercentage)}%{projectedPercentage > 100 && ' (OVER)'}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {preview.loggedAt && (
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted">Logging to:</span>
+                  <span className="font-medium text-warning">
+                    {format(preview.loggedAt, 'MMM d, yyyy')}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -236,7 +325,7 @@ export function Home() {
                 Cancel
               </Button>
               <Button variant="primary" className="flex-1" onClick={handleConfirmAdd}>
-                Add It
+                Add {preview.quantity > 1 ? `${preview.quantity}` : 'It'}
               </Button>
             </div>
           </div>
@@ -503,24 +592,66 @@ export function Home() {
               />
             </div>
 
-            {/* Live preview of units and impact */}
-            {previewUnits !== null && !isNaN(previewUnits) && (
-              <div className="p-3 bg-surface-raised rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-text-muted">This serving:</span>
-                  <span className="font-bold">{formatUnits(previewUnits)} units</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Would bring you to:</span>
-                  <span
-                    className={`font-bold ${getRingColor(((todayTotal + previewUnits) / dailyLimit) * 100).replace('stroke-', 'text-')}`}
-                  >
-                    {formatUnits(todayTotal + previewUnits)} units (
-                    {Math.round(((todayTotal + previewUnits) / dailyLimit) * 100)}%)
-                  </span>
-                </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-1">Date</label>
+                <DatePickerCompact
+                  value={selectedDate}
+                  onChange={setSelectedDate}
+                  allowFuture={false}
+                  weekStartsOn={1}
+                />
               </div>
-            )}
+              <div className="w-20">
+                <label className="block text-sm font-medium mb-1">Qty</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={quantityInput}
+                  onChange={(e) => setQuantityInput(e.target.value)}
+                  className="text-center"
+                />
+              </div>
+            </div>
+
+            {/* Live preview of units and impact */}
+            {previewUnits !== null &&
+              !isNaN(previewUnits) &&
+              (() => {
+                const qty = parseInt(quantityInput) || 1;
+                const totalUnits = previewUnits * qty;
+                const today = new Date();
+                const isToday =
+                  selectedDate.getFullYear() === today.getFullYear() &&
+                  selectedDate.getMonth() === today.getMonth() &&
+                  selectedDate.getDate() === today.getDate();
+                return (
+                  <div className="p-3 bg-surface-raised rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">
+                        {qty > 1 ? `Per serving (×${qty}):` : 'This serving:'}
+                      </span>
+                      <span className="font-bold">
+                        {qty > 1
+                          ? `${formatUnits(previewUnits)} → ${formatUnits(totalUnits)} units`
+                          : `${formatUnits(previewUnits)} units`}
+                      </span>
+                    </div>
+                    {isToday && (
+                      <div className="flex justify-between">
+                        <span className="text-text-muted">Would bring you to:</span>
+                        <span
+                          className={`font-bold ${getRingColor(((todayTotal + totalUnits) / dailyLimit) * 100).replace('stroke-', 'text-')}`}
+                        >
+                          {formatUnits(todayTotal + totalUnits)} units (
+                          {Math.round(((todayTotal + totalUnits) / dailyLimit) * 100)}%)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
             <div className="flex gap-2">
               <Button

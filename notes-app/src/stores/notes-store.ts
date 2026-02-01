@@ -4,6 +4,29 @@ import { broadcastSync } from '../lib/realtime';
 import { getErrorMessage } from '../lib/error';
 import type { Note, NoteUpdate } from '../types/note';
 
+// Track pending local edits to avoid re-fetching our own changes via postgres_changes
+// Maps noteId → timestamp of last local edit
+const pendingEdits = new Map<string, number>();
+const PENDING_EDIT_TTL_MS = 2000; // 2 seconds
+
+function markPendingEdit(noteId: string): void {
+  const now = Date.now();
+  pendingEdits.set(noteId, now);
+  // Auto-cleanup after TTL
+  setTimeout(() => {
+    if (pendingEdits.get(noteId) === now) {
+      pendingEdits.delete(noteId);
+    }
+  }, PENDING_EDIT_TTL_MS);
+}
+
+/** Check if a note was recently edited locally (skip selectNote to avoid echo) */
+export function hasPendingEdit(noteId: string): boolean {
+  const timestamp = pendingEdits.get(noteId);
+  if (!timestamp) return false;
+  return Date.now() - timestamp < PENDING_EDIT_TTL_MS;
+}
+
 interface NotesStore {
   notes: Note[];
   trashedNotes: Note[];
@@ -91,6 +114,9 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
   updateNote: async (id: string, updates: NoteUpdate) => {
     const note = get().notes.find((n) => n.id === id);
     const isPrivate = updates.is_private ?? note?.is_private ?? true;
+
+    // Mark as pending to skip echo from postgres_changes
+    markPendingEdit(id);
 
     // Optimistic update
     set((state) => ({

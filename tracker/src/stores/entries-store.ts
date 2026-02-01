@@ -21,6 +21,7 @@ interface EntriesState {
     percentage: number,
     dailyLimit: number,
     notes?: string,
+    loggedAt?: Date,
   ) => Promise<void>;
   updateEntry: (
     id: string,
@@ -106,7 +107,13 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
     }
   },
 
-  addEntry: async (volumeMl: number, percentage: number, dailyLimit: number, notes?: string) => {
+  addEntry: async (
+    volumeMl: number,
+    percentage: number,
+    dailyLimit: number,
+    notes?: string,
+    loggedAt?: Date,
+  ) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
       console.error('addEntry: no authenticated user');
@@ -122,7 +129,7 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
       units,
       daily_limit: dailyLimit,
       notes: notes || null,
-      logged_at: new Date().toISOString(),
+      logged_at: (loggedAt ?? new Date()).toISOString(),
     });
 
     if (error) {
