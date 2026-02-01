@@ -2718,6 +2718,29 @@ export type SetProtectionAdguardProtectionPostResponses = {
     200: unknown;
 };
 
+export type GetVersionAdguardVersionPostData = {
+    body: AdGuardRequest;
+    path?: never;
+    query?: never;
+    url: '/adguard/version';
+};
+
+export type GetVersionAdguardVersionPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetVersionAdguardVersionPostError = GetVersionAdguardVersionPostErrors[keyof GetVersionAdguardVersionPostErrors];
+
+export type GetVersionAdguardVersionPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type ListEventsNotificationsGetData = {
     body?: never;
     path?: never;

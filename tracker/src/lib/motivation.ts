@@ -34,6 +34,14 @@ const ZERO_DAY_MESSAGES = [
   'Zero is the goal, zero is the win.',
 ];
 
+// Messages for when the day is still in progress (not yet complete)
+const ZERO_SO_FAR_MESSAGES = [
+  'Nothing logged yet today.',
+  'Starting fresh.',
+  'Clean slate today.',
+  'Zero so far.',
+];
+
 const UNDER_TARGET_MESSAGES = [
   'Under target - well done.',
   "You're in control today.",
@@ -126,6 +134,27 @@ export function getMotivation(
 
   // ===== ZERO DAY MESSAGES =====
   if (todayUnits === 0) {
+    // Don't celebrate a "zero day" until the day is mostly over (after 8pm)
+    const hour = new Date().getHours();
+    const dayIsLateEnough = hour >= 20; // 8pm
+
+    // If it's early in the day, show neutral "so far" message
+    if (!dayIsLateEnough) {
+      // Still mention streak context if we have one going
+      if (streaks && streaks.current_zero_streak > 1) {
+        return {
+          message: pickDaily(ZERO_SO_FAR_MESSAGES),
+          level: 'good',
+          subMessage: `${streaks.current_zero_streak - 1} zero days before today.`,
+        };
+      }
+      return {
+        message: pickDaily(ZERO_SO_FAR_MESSAGES),
+        level: 'good',
+      };
+    }
+
+    // Day is late enough to celebrate zero
     // Check for milestone celebration
     if (streaks && streaks.current_zero_streak > 0) {
       const streak = streaks.current_zero_streak;
@@ -161,7 +190,7 @@ export function getMotivation(
       }
     }
 
-    // Single zero day or first day
+    // Single zero day or first day (and it's late enough)
     return {
       message: pickDaily(ZERO_DAY_MESSAGES),
       level: 'great',

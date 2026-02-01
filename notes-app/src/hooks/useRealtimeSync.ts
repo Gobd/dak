@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { subscribeToSync } from '../lib/realtime';
 import type { SyncEvent } from '../lib/realtime';
-import { useNotesStore } from '../stores/notes-store';
+import { useNotesStore, hasPendingEdit } from '../stores/notes-store';
 import { useTagsStore } from '../stores/tags-store';
 import type { PostgresChangeEvent } from '@dak/ui';
 
@@ -48,10 +48,10 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
           case 'notes':
             // A note I own changed - refresh notes list
             fetchNotes(userId).then(() => {
-              // If we're viewing this note, re-select to refresh editor
-              // (postgres_changes doesn't give us the note ID easily, so just refresh current)
-              if (currentNoteIdRef.current) {
-                selectNote(currentNoteIdRef.current);
+              // If viewing a note and it's not our own pending edit, refresh editor
+              const noteId = currentNoteIdRef.current;
+              if (noteId && !hasPendingEdit(noteId)) {
+                selectNote(noteId);
               }
             });
             if (event.eventType === 'DELETE') {
@@ -59,8 +59,14 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
             }
             break;
           case 'note_access':
-            // Someone shared/unshared a note with me - refresh notes
-            fetchNotes(userId);
+            // A shared note changed (via propagate_note_update_to_access trigger)
+            // or sharing changed - refresh notes and current note if viewing
+            fetchNotes(userId).then(() => {
+              const noteId = currentNoteIdRef.current;
+              if (noteId && !hasPendingEdit(noteId)) {
+                selectNote(noteId);
+              }
+            });
             break;
           case 'tags':
             fetchTags(userId);
@@ -76,7 +82,7 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
         case 'note_changed':
           // Refetch list, and if viewing this note, refresh editor
           fetchNotes(userId).then(() => {
-            if (currentNoteIdRef.current === event.noteId) {
+            if (currentNoteIdRef.current === event.noteId && !hasPendingEdit(event.noteId)) {
               selectNote(event.noteId);
             }
           });

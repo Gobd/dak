@@ -36,7 +36,7 @@ interface DayGroup {
 
 type ViewMode = 'list' | 'calendar';
 
-const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_NAMES = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 export function History() {
   const { entries, fetchEntries } = useEntriesStore();
@@ -68,6 +68,18 @@ export function History() {
 
   // Create a map for quick lookup
   const dayMap = new Map(dayGroups.map((g) => [g.date, g]));
+
+  // Find first entry date - days on/after this are "tracked" (no entries = zero day)
+  const firstEntryDate =
+    entries.length > 0
+      ? entries.reduce(
+          (earliest, e) => {
+            const date = format(parseISO(e.logged_at), 'yyyy-MM-dd');
+            return date < earliest ? date : earliest;
+          },
+          format(parseISO(entries[0].logged_at), 'yyyy-MM-dd'),
+        )
+      : null;
 
   // Sort by date descending for list view
   const sortedDayGroups = [...dayGroups].sort((a, b) => b.date.localeCompare(a.date));
@@ -110,34 +122,80 @@ export function History() {
   };
 
   // Calendar helpers
-  const getDotColor = (totalUnits: number | undefined) => {
-    if (totalUnits === undefined) return 'bg-surface-sunken'; // No data
-    if (totalUnits === 0) return 'bg-success'; // Zero day
-    if (totalUnits <= dailyLimit) return 'bg-accent'; // Under target
-    return 'bg-danger'; // Over target
+  const getDotColor = (totalUnits: number | undefined, dateStr: string, isToday: boolean) => {
+    // Today with zero entries - show neutral (day isn't complete yet)
+    if (isToday && (totalUnits === undefined || totalUnits === 0)) {
+      return 'bg-surface-sunken'; // In progress
+    }
+    // If we have data, use actual units
+    if (totalUnits !== undefined) {
+      if (totalUnits === 0) return 'bg-success'; // Zero day
+      if (totalUnits <= dailyLimit) return 'bg-accent'; // Under target
+      return 'bg-danger'; // Over target
+    }
+    // No entries for this day - check if tracking had started
+    if (firstEntryDate && dateStr >= firstEntryDate) {
+      return 'bg-success'; // Tracked zero day (no entries = zero)
+    }
+    return 'bg-surface-sunken'; // Before tracking started
   };
 
-  const getCalendarDays = () => {
+  interface CalendarDay {
+    day: number;
+    dateStr: string;
+    isCurrentMonth: boolean;
+  }
+
+  const getCalendarDays = (): CalendarDay[] => {
     const monthStart = startOfMonth(viewMonth);
     const monthEnd = endOfMonth(viewMonth);
     const daysInMonth = monthEnd.getDate();
-    const firstDayOfWeek = monthStart.getDay();
+    // Adjust for Monday start: getDay() returns 0=Sunday, we want Monday=0
+    const rawFirstDay = monthStart.getDay();
+    const firstDayOfWeek = (rawFirstDay - 1 + 7) % 7; // Monday = 0, Sunday = 6
 
-    const days: (number | null)[] = [];
+    const days: CalendarDay[] = [];
 
-    // Pad start with nulls
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(null);
+    // Add trailing days from previous month
+    if (firstDayOfWeek > 0) {
+      const prevMonth = subMonths(viewMonth, 1);
+      const prevMonthEnd = endOfMonth(prevMonth);
+      const prevMonthDays = prevMonthEnd.getDate();
+      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+        const day = prevMonthDays - i;
+        days.push({
+          day,
+          dateStr: format(
+            new Date(prevMonth.getFullYear(), prevMonth.getMonth(), day),
+            'yyyy-MM-dd',
+          ),
+          isCurrentMonth: false,
+        });
+      }
     }
 
-    // Add days of month
+    // Add days of current month
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
+      days.push({
+        day: i,
+        dateStr: format(new Date(viewMonth.getFullYear(), viewMonth.getMonth(), i), 'yyyy-MM-dd'),
+        isCurrentMonth: true,
+      });
     }
 
-    // Pad to 42 cells (6 rows)
+    // Pad with next month's days to fill 6 rows (42 cells)
+    let nextMonthDay = 1;
+    const nextMonth = addMonths(viewMonth, 1);
     while (days.length < 42) {
-      days.push(null);
+      days.push({
+        day: nextMonthDay,
+        dateStr: format(
+          new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonthDay),
+          'yyyy-MM-dd',
+        ),
+        isCurrentMonth: false,
+      });
+      nextMonthDay++;
     }
 
     return days;
@@ -177,32 +235,34 @@ export function History() {
 
         {/* Days grid */}
         <div className="grid grid-cols-7 gap-1">
-          {days.map((day, i) => {
-            if (day === null) {
-              return <div key={`empty-${i}`} className="aspect-square" />;
-            }
-
-            const dateStr = format(
-              new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day),
-              'yyyy-MM-dd',
-            );
+          {days.map((calDay, i) => {
+            const { day, dateStr, isCurrentMonth } = calDay;
             const dayData = dayMap.get(dateStr);
             const isToday = dateStr === todayStr;
             const isFuture = new Date(dateStr) > today;
 
             return (
               <div
-                key={day}
+                key={`${dateStr}-${i}`}
                 className={`aspect-square flex flex-col items-center justify-center rounded-lg relative
                   ${isToday ? 'ring-2 ring-accent' : ''}
                   ${isFuture ? 'opacity-30' : ''}
+                  ${!isCurrentMonth ? 'opacity-40' : ''}
                 `}
               >
                 <span className="text-sm text-text-secondary">{day}</span>
                 {!isFuture && (
                   <div
-                    className={`w-3 h-3 rounded-full mt-0.5 ${getDotColor(dayData?.totalUnits)}`}
-                    title={dayData ? `${formatUnits(dayData.totalUnits)} units` : 'No data'}
+                    className={`w-3 h-3 rounded-full mt-0.5 ${getDotColor(dayData?.totalUnits, dateStr, isToday)}`}
+                    title={
+                      isToday && !dayData
+                        ? 'Today (in progress)'
+                        : dayData
+                          ? `${formatUnits(dayData.totalUnits)} units`
+                          : firstEntryDate && dateStr >= firstEntryDate
+                            ? 'Zero day'
+                            : 'No data'
+                    }
                   />
                 )}
               </div>

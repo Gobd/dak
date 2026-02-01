@@ -99,6 +99,10 @@ export class RealtimeSync<TEvent> {
   private lastVisibleAt: number = Date.now();
   private readonly STALE_THRESHOLD_MS = 60000; // 1 minute
 
+  // Track last data refresh to avoid excessive fetches during reconnect churn
+  private lastRefreshAt: number = 0;
+  private readonly MIN_REFRESH_INTERVAL_MS = 60000; // Don't refresh more than once per minute
+
   // Track if browser event listeners are registered
   private listenersRegistered = false;
 
@@ -277,11 +281,16 @@ export class RealtimeSync<TEvent> {
 
   /**
    * Start polling fallback - refreshes data every 5 minutes as insurance.
+   * Only polls when page is visible to avoid wasting API calls on inactive kiosks.
    */
   private startPolling(): void {
     if (this.pollingInterval) return;
 
     this.pollingInterval = setInterval(() => {
+      // Skip polling if page is hidden (kiosk screen off, tab in background, etc.)
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
       // Use debounced to prevent overlap with other refresh triggers
       this.debouncedOnReconnect();
     }, POLLING_INTERVAL_MS);
@@ -337,26 +346,41 @@ export class RealtimeSync<TEvent> {
   }
 
   /**
-   * Debounced reconnect handler - prevents rapid refresh calls.
+   * Debounced reconnect handler - batches rapid refresh calls.
+   * If multiple requests come in within MIN_REFRESH_INTERVAL_MS, does one refresh at the end.
    */
   private debouncedOnReconnect(): void {
+    // Already have a pending refresh scheduled - it will handle this
     if (this.reconnectDebounceTimer) {
-      clearTimeout(this.reconnectDebounceTimer);
+      return;
     }
+
+    const timeSinceLastRefresh = Date.now() - this.lastRefreshAt;
+    const timeUntilAllowed = this.MIN_REFRESH_INTERVAL_MS - timeSinceLastRefresh;
+
+    // If we're within the rate limit window, schedule for when it expires
+    const delay = timeUntilAllowed > 0 ? timeUntilAllowed : DEBOUNCE_MS;
 
     this.reconnectDebounceTimer = setTimeout(() => {
       this.reconnectDebounceTimer = null;
+      this.lastRefreshAt = Date.now();
       this.onReconnect?.();
-    }, DEBOUNCE_MS);
+    }, delay);
   }
 
   /**
    * Schedule a reconnection attempt with exponential backoff.
    * Never gives up - keeps trying at max interval (5 min) indefinitely.
+   * Pauses reconnection attempts when page is hidden to save API calls.
    */
   private scheduleReconnect(userId: string): void {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
+    }
+
+    // Don't schedule reconnect if page is hidden - will reconnect when visible
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      return;
     }
 
     const delay = Math.min(
@@ -364,8 +388,6 @@ export class RealtimeSync<TEvent> {
       this.RECONNECT_MAX_DELAY_MS,
     );
     this.reconnectAttempts++;
-
-    console.log(`[realtime] Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectTimeout = null;
@@ -429,18 +451,15 @@ export class RealtimeSync<TEvent> {
       this.debouncedOnEvent(event);
     });
 
-    this.channel.subscribe((status, err) => {
+    this.channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        console.log('[realtime] Channel connected');
         this.reconnectAttempts = 0;
         // Refresh data on successful reconnect (may have missed events)
         // Use debounced to prevent rapid reconnect spam
         this.debouncedOnReconnect();
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error('[realtime] Channel error:', status, err);
         this.scheduleReconnect(this.currentUserId!);
       } else if (status === 'CLOSED') {
-        console.warn('[realtime] Channel closed');
         this.scheduleReconnect(this.currentUserId!);
       }
     });

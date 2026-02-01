@@ -83,9 +83,12 @@ export function Stats() {
   const weekEntries = entriesInRange(weekStartUtc, todayUtc);
   const weekDailyTotals = getDailyTotalsInRange(weekEntries);
   const weekTotalUnits = weekEntries.reduce((sum, e) => sum + e.units, 0);
-  const weekZeroDays = weekDays.filter((day) => (weekDailyTotals.get(day) || 0) === 0).length;
+  // Don't count today as a zero day - the day isn't complete yet
+  const weekZeroDays = weekDays.filter(
+    (day) => day !== todayUtc && (weekDailyTotals.get(day) || 0) === 0,
+  ).length;
   const weekUnderDays = weekDays.filter(
-    (day) => (weekDailyTotals.get(day) || 0) <= dailyLimit,
+    (day) => day !== todayUtc && (weekDailyTotals.get(day) || 0) <= dailyLimit,
   ).length;
 
   // This month (UTC)
@@ -93,14 +96,36 @@ export function Stats() {
   const monthEntries = entriesInRange(monthStartUtc, todayUtc);
   const monthDailyTotals = getDailyTotalsInRange(monthEntries);
   const monthTotalUnits = monthEntries.reduce((sum, e) => sum + e.units, 0);
-  const monthZeroDays = monthDays.filter((day) => (monthDailyTotals.get(day) || 0) === 0).length;
+  // Don't count today as a zero day - the day isn't complete yet
+  const monthZeroDays = monthDays.filter(
+    (day) => day !== todayUtc && (monthDailyTotals.get(day) || 0) === 0,
+  ).length;
   const monthUnderDays = monthDays.filter(
-    (day) => (monthDailyTotals.get(day) || 0) <= dailyLimit,
+    (day) => day !== todayUtc && (monthDailyTotals.get(day) || 0) <= dailyLimit,
   ).length;
 
   // Averages (use actual tracked days)
   const weekAverage = weekDays.length > 0 ? weekTotalUnits / weekDays.length : 0;
   const monthAverage = monthDays.length > 0 ? monthTotalUnits / monthDays.length : 0;
+
+  // Today's total - used to adjust streak display
+  const todayTotal = entries
+    .filter((e) => e.logged_at.split('T')[0] === todayUtc)
+    .reduce((sum, e) => sum + e.units, 0);
+  const todayHasNoEntries = todayTotal === 0;
+
+  // Adjust streaks to not count today (day isn't complete yet)
+  // If today has no entries and DB is counting it as a zero day, subtract 1
+  const displayZeroStreak = streaks
+    ? todayHasNoEntries && streaks.current_zero_streak > 0
+      ? streaks.current_zero_streak - 1
+      : streaks.current_zero_streak
+    : 0;
+  const displayUnderStreak = streaks
+    ? todayHasNoEntries && streaks.current_under_streak > 0
+      ? streaks.current_under_streak - 1
+      : streaks.current_under_streak
+    : 0;
 
   // Insight based on patterns
   const insight = getInsight(streaks);
@@ -130,7 +155,7 @@ export function Stats() {
               <Flame size={24} className="text-success" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-success">{streaks?.current_zero_streak ?? 0}</div>
+          <div className="text-3xl font-bold text-success">{displayZeroStreak}</div>
           <div className="text-sm text-text-muted">Zero Day Streak</div>
           <div className="text-xs text-text-muted mt-1">
             Best: {streaks?.longest_zero_streak ?? 0}
@@ -144,7 +169,7 @@ export function Stats() {
               <Target size={24} className="text-accent" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-accent">{streaks?.current_under_streak ?? 0}</div>
+          <div className="text-3xl font-bold text-accent">{displayUnderStreak}</div>
           <div className="text-sm text-text-muted">Under Target Streak</div>
           <div className="text-xs text-text-muted mt-1">
             Best: {streaks?.longest_under_streak ?? 0}

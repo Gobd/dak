@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Shield, ShieldOff, Settings } from 'lucide-react';
+import { Shield, ShieldOff, Settings, ChevronUp, ExternalLink } from 'lucide-react';
 import { useToggle } from '@dak/hooks';
 import { useConfigStore, getRelayUrl } from '../../stores/config-store';
 import { Modal, Button, Spinner, Input, Alert } from '@dak/ui';
@@ -8,6 +8,7 @@ import {
   client,
   getStatusAdguardStatusPost,
   setProtectionAdguardProtectionPost,
+  getVersionAdguardVersionPost,
 } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
@@ -21,6 +22,12 @@ interface AdguardStatus {
   protection_enabled: boolean;
   protection_disabled_until: string | null;
   running: boolean;
+}
+
+interface AdguardVersion {
+  current_version: string | null;
+  new_version: string | null;
+  update_available: boolean;
 }
 
 const DURATION_OPTIONS = [
@@ -59,6 +66,33 @@ async function setProtection(
   });
 }
 
+async function fetchVersion(config: AdguardConfig): Promise<AdguardVersion> {
+  const { url, username, password } = config;
+  if (!url || !username || !password) {
+    throw new Error('Not configured');
+  }
+
+  client.setConfig({ baseUrl: getRelayUrl() });
+  const result = await getVersionAdguardVersionPost({
+    body: { url, username, password },
+    throwOnError: true,
+  });
+
+  return result.data as AdguardVersion;
+}
+
+// Build URL with embedded credentials for auto-login
+function buildAuthUrl(config: AdguardConfig): string {
+  try {
+    const url = new URL(config.url);
+    url.username = config.username;
+    url.password = config.password;
+    return url.toString();
+  } catch {
+    return config.url;
+  }
+}
+
 export default function Adguard({ panel }: WidgetComponentProps) {
   const queryClient = useQueryClient();
   const getWidgetData = useConfigStore((s) => s.getWidgetData);
@@ -83,6 +117,17 @@ export default function Adguard({ panel }: WidgetComponentProps) {
     refetchInterval: 10_000,
     retry: false,
   });
+
+  // Check for updates (every 5 minutes - just hits local AdGuard, not external API)
+  const { data: versionData } = useQuery({
+    queryKey: ['adguard-version', panel.id],
+    queryFn: () => fetchVersion(config),
+    enabled: isConfigured,
+    refetchInterval: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const updateAvailable = versionData?.update_available ?? false;
 
   // Calculate countdown when protection is disabled
   const updateCountdown = useCallback(() => {
@@ -247,7 +292,13 @@ export default function Adguard({ panel }: WidgetComponentProps) {
         onClick={() => showMenu.setTrue()}
         disabled={isPending}
         className="relative"
-        title={protectionEnabled ? 'Protection enabled' : 'Protection disabled'}
+        title={
+          updateAvailable
+            ? 'Update available'
+            : protectionEnabled
+              ? 'Protection enabled'
+              : 'Protection disabled'
+        }
       >
         {protectionEnabled ? (
           <Shield size={24} className="text-success" />
@@ -255,6 +306,13 @@ export default function Adguard({ panel }: WidgetComponentProps) {
           <ShieldOff size={24} className="text-danger" />
         )}
         {(isLoading || isPending) && <Spinner size="sm" className="absolute top-0.5 right-0.5" />}
+        {updateAvailable && !isLoading && !isPending && (
+          <ChevronUp
+            size={12}
+            className="absolute -top-0.5 -right-0.5 text-accent"
+            strokeWidth={3}
+          />
+        )}
       </Button>
 
       {/* Countdown text */}
@@ -319,6 +377,15 @@ export default function Adguard({ panel }: WidgetComponentProps) {
               </Button>
             </div>
           )}
+
+          <a
+            href={buildAuthUrl(config)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 text-xs text-text-muted hover:text-accent pt-2"
+          >
+            Open AdGuard Home <ExternalLink size={12} />
+          </a>
         </div>
       </Modal>
 
