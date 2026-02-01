@@ -24,17 +24,30 @@ apps/
 
 packages/
   convex/                     # Shared Convex backend
+    lib/                     # Pure TypeScript (NO Convex imports)
+      sharing.ts             # Permission logic (portable)
+      validation.ts          # Input validation (portable)
+      scheduling.ts          # Due date calculations (portable)
     convex/
       schema.ts              # All tables
-      lib/
-        auth.ts              # Auth helpers
-        sharing.ts           # Sharing helpers
-      tracker/               # Alcohol tracker functions
-      maintenance/           # Maintenance tracker functions
-      chores/                # Family chores functions
-      health/                # Health tracker functions
-      notes/                 # Notes app functions
-      people/                # "My People" management functions
+      _lib/                  # Convex-specific helpers
+        auth.ts              # Auth helpers (uses ctx)
+        db.ts                # DB query helpers (uses ctx)
+      tracker/               # Thin wrappers → call lib/
+      maintenance/           # Thin wrappers → call lib/
+      chores/                # Thin wrappers → call lib/
+      health/                # Thin wrappers → call lib/
+      notes/                 # Thin wrappers → call lib/
+      people/                # Thin wrappers → call lib/
+
+  data/                       # Frontend data hooks (abstracts Convex)
+    src/
+      notes.ts               # useNotes(), useCreateNote(), etc.
+      health.ts              # useMedications(), useLogMedication(), etc.
+      chores.ts              # useChores(), useCompleteChore(), etc.
+      maintenance.ts         # useTasks(), useLogCompletion(), etc.
+      people.ts              # usePeople(), useAddPerson(), etc.
+      index.ts               # Re-exports all
 
   # Shared UI packages (consumed by standalone + unified apps)
   notes-ui/                   # Notes UI components
@@ -51,6 +64,313 @@ One Convex project, one deployment, all apps connect to same backend.
 **Deployment strategy:** Both standalone apps AND unified app are deployed. Users can:
 - Use standalone apps for focused single-purpose access
 - Use unified `dak` app for everything in one place
+
+## Backend Portability
+
+Designed to allow migration from Convex to self-hosted (Soketi + Postgres + FastAPI) if costs become prohibitive at scale.
+
+### Cost Comparison at Scale
+
+| Users | Convex Cloud | Self-hosted Convex | PlanetScale + Soketi |
+|-------|--------------|--------------------|-----------------------|
+| 100   | Free         | Overkill           | Free                  |
+| 1k    | ~$25         | ~$20-40/mo         | ~$10/mo               |
+| 10k   | $300+        | ~$50-100/mo        | ~$40/mo               |
+
+**Recommended path:** Convex Cloud → Self-hosted Convex (no code changes needed)
+
+### Three-Layer Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ FRONTEND                                                     │
+│ components/ → use hooks from packages/data/                  │
+│              (never import Convex directly)                  │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│ DATA HOOKS (packages/data/)                                  │
+│ useNotes(), useMedications(), etc.                          │
+│ Wraps Convex calls - swap implementation here later          │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│ BACKEND (packages/convex/)                                   │
+│                                                              │
+│ convex/          - Thin wrappers (Convex-specific)          │
+│   notes/queries.ts   → calls lib/ functions                 │
+│   notes/mutations.ts → calls lib/ functions                 │
+│                                                              │
+│ lib/             - Pure TypeScript (NO Convex imports)      │
+│   sharing.ts         → permission logic                     │
+│   validation.ts      → input validation                     │
+│   scheduling.ts      → due date calculations                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Pure Business Logic (lib/)
+
+All permission checks, validation, and business rules in pure TypeScript. No Convex imports - receives data as arguments, returns results.
+
+```typescript
+// packages/convex/lib/sharing.ts - PURE TypeScript, portable
+
+// Types (no Convex dependencies)
+interface Note { ownerId: string }
+interface Person { ownerId: string; notesAutoShare: boolean }
+interface NoteShare { sharedWithId: string; status: string }
+
+// Pure function - takes data, returns result
+export function canAccessNote(
+  note: Note,
+  userId: string,
+  autoSharePeople: Person[],
+  noteShares: NoteShare[]
+): { canAccess: boolean; isOwner: boolean } {
+  // Owner
+  if (note.ownerId === userId) {
+    return { canAccess: true, isOwner: true };
+  }
+
+  // Auto-share via "My People"
+  if (autoSharePeople.some(p => p.ownerId === note.ownerId && p.notesAutoShare)) {
+    return { canAccess: true, isOwner: false };
+  }
+
+  // One-off share
+  if (noteShares.some(s => s.sharedWithId === userId && s.status === 'accepted')) {
+    return { canAccess: true, isOwner: false };
+  }
+
+  return { canAccess: false, isOwner: false };
+}
+
+// More pure functions...
+export function canKidCompleteChore(role: string, choreAssigneeId: string, userId: string): boolean {
+  if (role === 'kid' && choreAssigneeId !== userId) return false;
+  return true;
+}
+
+export function isSubscriptionActive(user: {
+  isPermanentlyPaid?: boolean;
+  trialEndsAt: number;
+  subscriptionStatus?: string;
+  subscriptionEndedAt?: number;
+}): boolean {
+  if (user.isPermanentlyPaid) return true;
+
+  const now = Date.now();
+  const GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
+
+  if (now < user.trialEndsAt) return true;
+  if (user.subscriptionStatus === 'active') return true;
+  if (user.subscriptionEndedAt && now < user.subscriptionEndedAt + GRACE_PERIOD_MS) return true;
+
+  return false;
+}
+```
+
+### Thin Convex Wrappers
+
+Convex functions only do: auth, fetch data, call pure functions, persist results.
+
+```typescript
+// packages/convex/convex/notes/queries.ts
+import { canAccessNote } from '../lib/sharing';
+
+export const get = query({
+  args: { noteId: v.id("notes") },
+  handler: async (ctx, { noteId }) => {
+    // 1. Auth
+    const user = await requireUser(ctx);
+
+    // 2. Fetch data
+    const note = await ctx.db.get(noteId);
+    if (!note) throw new Error("Not found");
+
+    const autoSharePeople = await ctx.db
+      .query("people")
+      .withIndex("by_user_status", q => q.eq("userId", user.subject).eq("status", "accepted"))
+      .collect();
+
+    const noteShares = await ctx.db
+      .query("noteShares")
+      .withIndex("by_note", q => q.eq("noteId", noteId))
+      .collect();
+
+    // 3. Call pure function (portable logic)
+    const { canAccess } = canAccessNote(note, user.subject, autoSharePeople, noteShares);
+    if (!canAccess) throw new Error("Forbidden");
+
+    // 4. Return
+    return note;
+  },
+});
+```
+
+### Frontend Data Hooks (packages/data/)
+
+Components never import Convex directly. Use hooks that wrap the implementation.
+
+```typescript
+// packages/data/src/notes.ts
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@dak/convex';
+
+export function useNotes() {
+  return useQuery(api.notes.list);
+}
+
+export function useNote(noteId: string) {
+  return useQuery(api.notes.get, { noteId });
+}
+
+export function useCreateNote() {
+  return useMutation(api.notes.create);
+}
+
+export function useUpdateNote() {
+  return useMutation(api.notes.update);
+}
+
+// packages/data/src/health.ts
+export function useMedicationLogs(childId: string) {
+  return useQuery(api.health.listLogs, { childId });
+}
+
+export function useLogMedication() {
+  return useMutation(api.health.logMedication);
+}
+```
+
+**Components use hooks:**
+
+```tsx
+// Any component
+import { useNotes, useCreateNote } from '@dak/data';
+
+function NotesList() {
+  const notes = useNotes();  // Don't know/care it's Convex
+  const createNote = useCreateNote();
+  // ...
+}
+```
+
+### Migration to Self-Hosted Later
+
+**Option A: Self-hosted Convex (Recommended)**
+
+Convex is open source (FSL Apache 2.0). Self-host when costs get high - no code changes needed.
+
+```bash
+# It's just Docker Compose
+docker compose up
+docker compose exec backend ./generate_admin_key.sh
+```
+
+| Component | Service | Cost at 10k users |
+|-----------|---------|-------------------|
+| Convex backend + dashboard | Fly.io (2 instances) | $15-20/mo |
+| Database | Fly Postgres | $0-7/mo |
+| Static hosting | Cloudflare Pages | Free |
+| **Total** | | **~$20-30/mo** |
+
+**Migration:** Change `CONVEX_URL` from cloud to your server. Done.
+
+**Option B: Full rewrite (PlanetScale + Soketi + FastAPI)**
+
+More work, slightly cheaper, but requires rewriting API layer.
+
+| Component | Service | Cost at 10k users |
+|-----------|---------|-------------------|
+| Database | PlanetScale (managed MySQL) | $29/mo |
+| Realtime | Soketi (self-hosted VPS) | $10/mo |
+| API | FastAPI (same VPS) | $0 |
+| Static hosting | Cloudflare Pages | Free |
+| **Total** | | **~$40/mo** |
+
+**Recommendation:** Start with Convex Cloud, migrate to self-hosted Convex if needed. Only consider Option B if self-hosted Convex doesn't work out for some reason.
+
+1. **lib/** - Copy as-is (or port to Python if using FastAPI)
+2. **convex/** - Rewrite wrappers for FastAPI + SQLAlchemy
+3. **packages/data/** - Swap implementations:
+
+```typescript
+// packages/data/src/notes.ts - AFTER migration
+
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { api } from '../api-client';  // REST client
+import { useChannel } from '../realtime';  // Soketi
+
+export function useNotes() {
+  const query = useQuery(['notes'], () => api.notes.list());
+
+  // Listen for realtime updates
+  useChannel('notes', {
+    'note:created': (data) => query.setData(prev => [...prev, data]),
+    'note:updated': (data) => query.setData(prev =>
+      prev.map(n => n.id === data.id ? data : n)
+    ),
+    'note:deleted': ({ id }) => query.setData(prev =>
+      prev.filter(n => n.id !== id)
+    ),
+  });
+
+  return query.data;
+}
+```
+
+**Components unchanged** - same hook API, different implementation.
+
+### Realtime Pattern: Minimal Data Transfer
+
+Don't send "data changed, refetch all". Send the changed record in the event.
+
+**Event includes payload:**
+```typescript
+// Backend broadcasts after mutation
+broadcast('health:medication_logged', {
+  id: '123',
+  childId: '456',
+  medicationId: '789',
+  administeredBy: 'user-id',
+  administeredAt: 1706123456000,
+  notes: 'Took with food'
+});
+
+// Client updates local state directly - no refetch
+onEvent('health:medication_logged', (log) => {
+  setLogs(prev => [...prev, log]);
+});
+```
+
+**For updates, send the full updated record:**
+```typescript
+broadcast('notes:updated', {
+  id: '123',
+  title: 'New Title',
+  content: '...',
+  updatedAt: 1706123456000
+});
+
+onEvent('notes:updated', (note) => {
+  setNotes(prev => prev.map(n => n.id === note.id ? note : n));
+});
+```
+
+**Convex does this automatically** via reactive queries (sends minimal diffs). When migrating to Soketi, design events to include full changed records.
+
+### Summary
+
+| Layer | Convex Cloud | Self-hosted Convex | PlanetScale + Soketi |
+|-------|--------------|--------------------|-----------------------|
+| **Code changes** | - | None | Rewrite API layer |
+| **lib/** | Pure TypeScript | Same | Same (or Python) |
+| **Database** | Convex DB | Postgres/SQLite | PlanetScale |
+| **Backend** | Convex functions | Same | FastAPI |
+| **Data hooks** | useQuery(api.x) | Same | React Query + Soketi |
+| **Realtime** | Automatic | Same | Soketi channels |
+| **Cost at 10k** | ~$300+/mo | ~$50-80/mo | ~$40/mo |
 
 ## Sharing Model: "My People"
 
