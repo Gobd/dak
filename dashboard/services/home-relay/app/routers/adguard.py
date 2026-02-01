@@ -55,3 +55,29 @@ async def set_protection(request: AdGuardProtectionRequest):
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Connection failed: {e}")
+
+
+@router.post("/version")
+async def get_version(request: AdGuardRequest):
+    """Check for AdGuard Home updates."""
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{request.url.rstrip('/')}/control/version.json",
+                auth=(request.username, request.password),
+                json={"recheck_now": False},
+                timeout=10.0,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "current_version": data.get("current_version"),
+                "new_version": data.get("new_version"),
+                "update_available": bool(data.get("new_version")),
+            }
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Connection failed: {e}")

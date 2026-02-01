@@ -206,7 +206,7 @@ export default function Wol({ panel }: WidgetComponentProps) {
           <span
             className={`absolute -bottom-0.5 -right-0.5 text-[9px] px-1 rounded bg-surface-sunken`}
           >
-            {devices.length}
+            {Object.values(statuses).filter(Boolean).length}/{devices.length}
           </span>
         )}
       </Button>
