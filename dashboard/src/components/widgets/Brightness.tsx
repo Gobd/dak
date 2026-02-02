@@ -159,10 +159,10 @@ export default function Brightness() {
     }
   }
 
-  // Calculate if it's day based on sun times
+  // Calculate if it's day based on sun times (computed fresh each render, not stale useState)
   const sunrise = status?.sun?.sunrise ?? 0;
   const sunset = status?.sun?.sunset ?? 0;
-  const [now] = useState(() => Date.now() / 1000);
+  const now = Date.now() / 1000;
   const isDay = sunrise && sunset ? now >= sunrise && now < sunset : true;
 
   const hasError = !!error;
