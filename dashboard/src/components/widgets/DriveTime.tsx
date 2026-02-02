@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Car, X, Settings, Plus, Trash2 } from 'lucide-react';
+import { useInterval } from '@dak/hooks';
 import { useConfigStore } from '../../stores/config-store';
 import {
   Modal,
@@ -139,10 +140,27 @@ export default function DriveTime() {
   );
   const hasAutoOpenedRef = useRef(false);
 
+  // Force re-evaluation of time windows every minute (for 24/7 kiosk displays)
+  const [timeKey, setTimeKey] = useState(0);
+  useInterval(() => setTimeKey((k) => k + 1), 60_000);
+
+  // Also update on visibility change
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        setTimeKey((k) => k + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
   // Get active routes (in time window) for auto-open
+  // timeKey dependency forces re-evaluation when time changes
   const activeRoutes = useMemo(() => {
     return routes.filter((r) => isInTimeWindow(r));
-  }, [routes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routes, timeKey]);
 
   // Create stable keys for queries
   const allRouteIds = useMemo(() => routes.map((r) => getRouteId(r)).join(','), [routes]);

@@ -9,6 +9,7 @@ import {
   LogOut,
   RefreshCw,
 } from 'lucide-react';
+import { useInterval } from '@dak/hooks';
 import { useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
@@ -219,6 +220,37 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   } = useGoogleAuth();
 
   const [gridStartDate, setGridStartDate] = useState(getMostRecentWeekStart(weekStartsOn));
+
+  // Auto-update week start when crossing into a new week (for 24/7 kiosk displays)
+  const checkWeekChange = useCallback(() => {
+    const currentWeekStart = getMostRecentWeekStart(weekStartsOn);
+    setGridStartDate((prev) => {
+      // Only update if we've crossed into a new week AND the user hasn't navigated away
+      // We detect "user navigated away" by checking if prev is more than 1 week behind current
+      const weekMs = 7 * 24 * 60 * 60 * 1000;
+      const diff = currentWeekStart.getTime() - prev.getTime();
+      if (diff > 0 && diff <= weekMs) {
+        // We're exactly one week behind - auto-advance
+        return currentWeekStart;
+      }
+      return prev;
+    });
+  }, [weekStartsOn]);
+
+  // Check every minute for week rollover
+  useInterval(checkWeekChange, 60_000);
+
+  // Also check on visibility change (tab/app return)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkWeekChange();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [checkWeekChange]);
+
   const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
