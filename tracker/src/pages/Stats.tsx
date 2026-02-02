@@ -119,24 +119,9 @@ export function Stats() {
   const weekAverage = weekDays.length > 0 ? weekTotalUnits / weekDays.length : 0;
   const monthAverage = monthDays.length > 0 ? monthTotalUnits / monthDays.length : 0;
 
-  // Today's total - used to adjust streak display
-  const todayTotal = entries
-    .filter((e) => format(parseISO(e.logged_at), 'yyyy-MM-dd') === todayStr)
-    .reduce((sum, e) => sum + e.units, 0);
-  const todayHasNoEntries = todayTotal === 0;
-
-  // Adjust streaks to not count today (day isn't complete yet)
-  // If today has no entries and DB is counting it as a zero day, subtract 1
-  const displayZeroStreak = streaks
-    ? todayHasNoEntries && streaks.current_zero_streak > 0
-      ? streaks.current_zero_streak - 1
-      : streaks.current_zero_streak
-    : 0;
-  const displayUnderStreak = streaks
-    ? todayHasNoEntries && streaks.current_under_streak > 0
-      ? streaks.current_under_streak - 1
-      : streaks.current_under_streak
-    : 0;
+  // Streaks from DB exclude today (incomplete day), so use directly
+  const displayZeroStreak = streaks?.current_zero_streak ?? 0;
+  const displayUnderStreak = streaks?.current_under_streak ?? 0;
 
   // Insight based on patterns
   const insight = getInsight(streaks);
