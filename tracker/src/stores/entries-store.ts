@@ -61,11 +61,11 @@ export const useEntriesStore = create<EntriesState>((set, get) => ({
     const isInitialLoad = !get().initialized;
     if (isInitialLoad) set({ loading: true });
 
-    const startDate = format(subDays(startOfDay(new Date()), days), 'yyyy-MM-dd');
+    const startOfRange = subDays(startOfDay(new Date()), days);
     const { data, error } = await supabase
       .from('tracker_entries')
       .select('*')
-      .gte('logged_at', `${startDate}T00:00:00`)
+      .gte('logged_at', startOfRange.toISOString())
       .order('logged_at', { ascending: false });
 
     if (!error && data) {

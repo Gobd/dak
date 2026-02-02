@@ -239,7 +239,9 @@ export function History() {
             const { day, dateStr, isCurrentMonth } = calDay;
             const dayData = dayMap.get(dateStr);
             const isToday = dateStr === todayStr;
-            const isFuture = new Date(dateStr) > today;
+            // Compare date strings directly to avoid timezone issues
+            // (new Date("2026-02-02") parses as UTC, causing issues late in the day)
+            const isFuture = dateStr > todayStr;
 
             return (
               <div
