@@ -175,19 +175,22 @@ create trigger update_recipes_updated_at
   execute function update_updated_at_column();
 
 -- Storage bucket for recipe files
--- Run this separately in Supabase Dashboard > Storage
--- Or via SQL:
--- insert into storage.buckets (id, name, public) values ('recipe-files', 'recipe-files', false);
+insert into storage.buckets (id, name, public)
+values ('recipe-files', 'recipe-files', false)
+on conflict (id) do nothing;
 
--- Storage policies (run after creating bucket)
--- create policy "Users can upload recipe files"
---   on storage.objects for insert
---   with check (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
+-- Storage policies
+drop policy if exists "Users can upload recipe files" on storage.objects;
+create policy "Users can upload recipe files"
+  on storage.objects for insert
+  with check (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
 
--- create policy "Users can view own recipe files"
---   on storage.objects for select
---   using (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
+drop policy if exists "Users can view own recipe files" on storage.objects;
+create policy "Users can view own recipe files"
+  on storage.objects for select
+  using (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
 
--- create policy "Users can delete own recipe files"
---   on storage.objects for delete
---   using (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
+drop policy if exists "Users can delete own recipe files" on storage.objects;
+create policy "Users can delete own recipe files"
+  on storage.objects for delete
+  using (bucket_id = 'recipe-files' and auth.uid()::text = (storage.foldername(name))[1]);
