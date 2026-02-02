@@ -948,8 +948,31 @@ export const listMedications = query({
 
 ### Notes App
 
+**Key optimization:** List view only syncs title + updatedAt. Full content only syncs for the one visible note.
+
 ```typescript
 // convex/notes/queries.ts
+
+// Light projection for list view - no content
+type NoteListItem = {
+  _id: Id<"notes">;
+  title: string;
+  updatedAt: number;
+  ownerId: string;
+  sharedBy?: string;
+};
+
+function toListItem(note: Doc<"notes">, sharedBy?: string): NoteListItem {
+  return {
+    _id: note._id,
+    title: note.title,
+    updatedAt: note.updatedAt,
+    ownerId: note.ownerId,
+    ...(sharedBy && { sharedBy }),
+  };
+}
+
+// List - lightweight, always subscribed
 export const list = query({
   handler: async (ctx) => {
     const user = await requireUser(ctx);
@@ -962,7 +985,7 @@ export const list = query({
 
     // Notes auto-shared with me
     const peopleWhoShareWithMe = await getPeopleWhoShareWithMe(ctx, user.subject);
-    const autoShared = [];
+    const autoShared: NoteListItem[] = [];
 
     for (const person of peopleWhoShareWithMe) {
       if (person.notesAutoShare) {
@@ -970,7 +993,7 @@ export const list = query({
           .query("notes")
           .withIndex("by_owner", (q) => q.eq("ownerId", person.ownerId))
           .collect();
-        autoShared.push(...notes.map((n) => ({ ...n, sharedBy: person.ownerId })));
+        autoShared.push(...notes.map((n) => toListItem(n, person.ownerId)));
       }
     }
 
@@ -982,35 +1005,83 @@ export const list = query({
       )
       .collect();
 
-    const oneOffShared = [];
+    const oneOffShared: NoteListItem[] = [];
     for (const share of oneOffShares) {
       const note = await ctx.db.get(share.noteId);
       if (note) {
-        oneOffShared.push({ ...note, sharedBy: share.ownerId });
+        oneOffShared.push(toListItem(note, share.ownerId));
       }
     }
 
-    return { owned, autoShared, oneOffShared };
+    return {
+      owned: owned.map((n) => toListItem(n)),
+      autoShared,
+      oneOffShared,
+    };
   },
 });
 
-// Server-side search (lighter payloads, no content over the wire for list)
+// Single note - full content, only subscribed when viewing
+export const get = query({
+  args: { noteId: v.id("notes") },
+  handler: async (ctx, { noteId }) => {
+    const user = await requireUser(ctx);
+
+    const { canAccess } = await canAccessNote(ctx, noteId, user.subject);
+    if (!canAccess) throw new Error("Forbidden");
+
+    return ctx.db.get(noteId); // Full note with content
+  },
+});
+
+// Server-side search - searches content but returns light results
 export const search = query({
   args: { term: v.string() },
   handler: async (ctx, { term }) => {
     const user = await requireUser(ctx);
     const lowerTerm = term.toLowerCase();
 
-    // Get all accessible notes (owned + shared)
-    const { owned, autoShared, oneOffShared } = await list(ctx, {});
+    // Get all accessible notes (need full docs for content search)
+    const owned = await ctx.db
+      .query("notes")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user.subject))
+      .collect();
+
+    const peopleWhoShareWithMe = await getPeopleWhoShareWithMe(ctx, user.subject);
+    const autoShared: Doc<"notes">[] = [];
+    for (const person of peopleWhoShareWithMe) {
+      if (person.notesAutoShare) {
+        const notes = await ctx.db
+          .query("notes")
+          .withIndex("by_owner", (q) => q.eq("ownerId", person.ownerId))
+          .collect();
+        autoShared.push(...notes);
+      }
+    }
+
+    const oneOffShares = await ctx.db
+      .query("noteShares")
+      .withIndex("by_shared_with_status", (q) =>
+        q.eq("sharedWithId", user.subject).eq("status", "accepted")
+      )
+      .collect();
+
+    const oneOffShared: Doc<"notes">[] = [];
+    for (const share of oneOffShares) {
+      const note = await ctx.db.get(share.noteId);
+      if (note) oneOffShared.push(note);
+    }
+
     const allNotes = [...owned, ...autoShared, ...oneOffShared];
 
-    // Filter by search term
-    return allNotes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(lowerTerm) ||
-        n.content.toLowerCase().includes(lowerTerm)
-    );
+    // Filter by search term, return light results
+    return allNotes
+      .filter(
+        (n) =>
+          n.title.toLowerCase().includes(lowerTerm) ||
+          n.content.toLowerCase().includes(lowerTerm)
+      )
+      .map((n) => toListItem(n));
   },
 });
 ```
@@ -1553,7 +1624,59 @@ import { api } from '../convex/_generated/api';
 const notes = useQuery(api.notes.list);
 ```
 
-Main changes:
+### Notes App - Minimal Sync Pattern
+
+Only sync what's visible. List view gets titles only, selected note gets full content.
+
+```tsx
+// components/NotesList.tsx
+function NotesList({ selectedId, onSelect }) {
+  // Always subscribed - light data (title + updatedAt only)
+  const { owned, autoShared, oneOffShared } = useQuery(api.notes.list) ?? {};
+  const allNotes = [...(owned ?? []), ...(autoShared ?? []), ...(oneOffShared ?? [])];
+
+  return (
+    <ul>
+      {allNotes.map(note => (
+        <li key={note._id} onClick={() => onSelect(note._id)}>
+          {note.title}
+          <span>{formatDate(note.updatedAt)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// components/NoteEditor.tsx
+function NoteEditor({ noteId }) {
+  // Only subscribed when noteId is set - full content
+  const note = useQuery(api.notes.get, noteId ? { noteId } : "skip");
+
+  if (!note) return <EmptyState />;
+
+  return <Editor content={note.content} />;
+}
+
+// App.tsx
+function NotesApp() {
+  const [selectedId, setSelectedId] = useState<Id<"notes"> | null>(null);
+
+  return (
+    <div className="flex">
+      <NotesList selectedId={selectedId} onSelect={setSelectedId} />
+      <NoteEditor noteId={selectedId} />
+    </div>
+  );
+}
+```
+
+**Data synced at any moment:**
+- 500 notes × ~50 bytes (title + updatedAt) = ~25KB
+- 1 full note content = varies (only the visible one)
+
+Switch notes → old content subscription dropped, new one starts. No content accumulation.
+
+### Main changes:
 - Replace Supabase client with Convex hooks
 - Remove RealtimeSync components (not needed - Convex is reactive by default)
 - Remove channel subscriptions (not needed)
