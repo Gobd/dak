@@ -4,17 +4,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  ExternalLink,
   FileText,
+  Globe,
+  Pencil,
   Save,
+  Trash2,
   Upload,
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Card, ConfirmModal, Input, Spinner } from '@dak/ui';
+import { Button, Card, ConfirmModal, Input, Modal, Spinner } from '@dak/ui';
 import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
+import { RecipeEditor } from '../components/RecipeEditor';
 import { TagInput } from '../components/TagInput';
 import { StarRating } from '../components/StarRating';
+import { scrapeRecipe, formatRecipeAsMarkdown } from '../lib/recipe-scraper';
 import { formatDeweyDecimal } from '../lib/utils';
 import { useRecipeStore } from '../stores/recipe-store';
 import type { Recipe } from '../types';
@@ -42,6 +48,7 @@ export function RecipePage() {
   } = useRecipeStore();
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [recipeName, setRecipeName] = useState('');
   const [recipePage, setRecipePage] = useState('');
   const [recipeUrl, setRecipeUrl] = useState('');
@@ -55,6 +62,9 @@ export function RecipePage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [scraping, setScraping] = useState(false);
+  const [scrapePreview, setScrapePreview] = useState<string | null>(null);
+  const [scrapeError, setScrapeError] = useState<string | null>(null);
 
   const loadRecipe = useCallback(async () => {
     if (!id) return;
@@ -71,8 +81,8 @@ export function RecipePage() {
         setTags(recipeData.tags);
         setDeweyDecimal(recipeData.dewey_decimal || '');
       }
-    } catch (error) {
-      console.error('Failed to load recipe:', error);
+    } catch (err) {
+      console.error('Failed to load recipe:', err);
     }
   }, [id, getRecipeById]);
 
@@ -83,13 +93,14 @@ export function RecipePage() {
       const [next, previous] = await Promise.all([getNextRecipe(id), getPreviousRecipe(id)]);
       setNextRecipe(next);
       setPreviousRecipe(previous);
-    } catch (error) {
-      console.error('Failed to load navigation:', error);
+    } catch (err) {
+      console.error('Failed to load navigation:', err);
     }
   }, [id, getNextRecipe, getPreviousRecipe]);
 
   useEffect(() => {
     if (id) {
+      setIsEditing(false);
       loadRecipe();
       loadNavigation();
       loadTags();
@@ -148,7 +159,10 @@ export function RecipePage() {
     const hasUrlChanges = recipeUrl !== (recipe.url || '');
     const hasNotesChanges = recipeNotes !== (recipe.notes || '');
 
-    if (!hasNameChanges && !hasPageChanges && !hasUrlChanges && !hasNotesChanges) return;
+    if (!hasNameChanges && !hasPageChanges && !hasUrlChanges && !hasNotesChanges) {
+      setIsEditing(false);
+      return;
+    }
 
     try {
       setSaving(true);
@@ -161,8 +175,9 @@ export function RecipePage() {
 
       await updateRecipe(id, updates);
       await loadRecipe();
-    } catch (error) {
-      console.error('Failed to save recipe:', error);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save recipe:', err);
     } finally {
       setSaving(false);
     }
@@ -177,8 +192,8 @@ export function RecipePage() {
       await updateRecipe(id, { tags: newTags });
       setRecipe((prev) => (prev ? { ...prev, tags: newTags } : null));
       loadTags();
-    } catch (error) {
-      console.error('Failed to save tags:', error);
+    } catch (err) {
+      console.error('Failed to save tags:', err);
     }
   };
 
@@ -190,8 +205,8 @@ export function RecipePage() {
     try {
       await updateRecipe(id, { rating: newRating });
       setRecipe((prev) => (prev ? { ...prev, rating: newRating } : null));
-    } catch (error) {
-      console.error('Failed to save rating:', error);
+    } catch (err) {
+      console.error('Failed to save rating:', err);
     }
   };
 
@@ -218,8 +233,8 @@ export function RecipePage() {
       setRecipe((prev) =>
         prev ? { ...prev, dewey_decimal: newDeweyDecimal, tags: updatedTags } : null,
       );
-    } catch (error) {
-      console.error('Failed to save Dewey decimal:', error);
+    } catch (err) {
+      console.error('Failed to save Dewey decimal:', err);
     }
   };
 
@@ -233,8 +248,8 @@ export function RecipePage() {
     try {
       await deleteRecipe(id);
       navigate('/');
-    } catch (error) {
-      console.error('Failed to delete recipe:', error);
+    } catch (err) {
+      console.error('Failed to delete recipe:', err);
     }
   };
 
@@ -247,8 +262,8 @@ export function RecipePage() {
         await uploadFile(id, file);
       }
       loadRecipe();
-    } catch (error) {
-      console.error('Failed to upload file:', error);
+    } catch (err) {
+      console.error('Failed to upload file:', err);
     } finally {
       setUploading(false);
     }
@@ -260,8 +275,8 @@ export function RecipePage() {
     try {
       await deleteFile(fileId);
       loadRecipe();
-    } catch (error) {
-      console.error('Failed to delete file:', error);
+    } catch (err) {
+      console.error('Failed to delete file:', err);
     }
   };
 
@@ -274,8 +289,8 @@ export function RecipePage() {
   }) => {
     try {
       await downloadFile(file);
-    } catch (error) {
-      console.error('Failed to download file:', error);
+    } catch (err) {
+      console.error('Failed to download file:', err);
     }
   };
 
@@ -325,6 +340,50 @@ export function RecipePage() {
     document.body.removeChild(cameraInput);
   };
 
+  const handleCancelEdit = () => {
+    if (recipe) {
+      setRecipeName(recipe.name);
+      setRecipePage(recipe.page || '');
+      setRecipeUrl(recipe.url || '');
+      setRecipeNotes(recipe.notes || '');
+    }
+    setIsEditing(false);
+  };
+
+  const handleFetchRecipe = async () => {
+    if (!recipeUrl) return;
+
+    setScraping(true);
+    setScrapeError(null);
+
+    try {
+      const scrapedRecipe = await scrapeRecipe(recipeUrl);
+      const markdown = formatRecipeAsMarkdown(scrapedRecipe);
+      setScrapePreview(markdown);
+
+      // Auto-fill name if empty
+      if (!recipeName && scrapedRecipe.name) {
+        setRecipeName(scrapedRecipe.name);
+      }
+    } catch (err) {
+      setScrapeError(err instanceof Error ? err.message : 'Failed to fetch recipe');
+    } finally {
+      setScraping(false);
+    }
+  };
+
+  const handleImportRecipe = () => {
+    if (scrapePreview) {
+      // Append to existing notes or replace
+      if (recipeNotes.trim()) {
+        setRecipeNotes(recipeNotes + '\n\n---\n\n' + scrapePreview);
+      } else {
+        setRecipeNotes(scrapePreview);
+      }
+      setScrapePreview(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -354,64 +413,154 @@ export function RecipePage() {
     recipeUrl !== (recipe.url || '') ||
     recipeNotes !== (recipe.notes || '');
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <Link to="/" className="inline-flex items-center text-accent hover:text-accent/80 mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to recipes
-        </Link>
-
-        <div className="flex justify-between items-center mb-4">
+  // Reader View (default)
+  if (!isEditing) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/" className="inline-flex items-center text-accent hover:text-accent/80">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Link>
           <div className="flex gap-2">
             {previousRecipe && (
               <Link
                 to={`/recipe/${previousRecipe.id}`}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken"
+                className="p-2 text-text-secondary hover:text-text hover:bg-surface-raised rounded-md"
+                title={previousRecipe.name}
               >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                {previousRecipe.name}
+                <ChevronLeft className="w-5 h-5" />
               </Link>
             )}
-          </div>
-          <div className="flex gap-2">
             {nextRecipe && (
               <Link
                 to={`/recipe/${nextRecipe.id}`}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken"
+                className="p-2 text-text-secondary hover:text-text hover:bg-surface-raised rounded-md"
+                title={nextRecipe.name}
               >
-                {nextRecipe.name}
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-5 h-5" />
               </Link>
             )}
           </div>
         </div>
 
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-text mb-2">Edit Recipe</h1>
-            <p className="text-text-secondary">
-              Created {new Date(recipe.created_at).toLocaleDateString()}
-            </p>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-bold text-text">{recipe.name}</h1>
+            <Button variant="secondary" onClick={() => setIsEditing(true)}>
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+
+          {/* Meta info row */}
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-text-secondary">
             {recipe.dewey_decimal && (
-              <p className="text-sm text-accent font-medium">
-                📚 Dewey: {formatDeweyDecimal(recipe.dewey_decimal)}
-              </p>
+              <span className="text-accent font-medium">
+                {formatDeweyDecimal(recipe.dewey_decimal)}
+              </span>
+            )}
+            {recipe.page && <span>Location: {recipe.page}</span>}
+            {recipe.rating && (
+              <StarRating rating={recipe.rating} size="sm" onRatingChange={handleRatingChange} />
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={!hasChanges || saving}>
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {tags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className="px-2 py-1 text-xs font-medium bg-surface-raised text-text-secondary rounded-md hover:bg-surface-sunken hover:text-text"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
 
-            <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
-              <X className="w-4 h-4 mr-2" />
-              Delete
+          {/* URL */}
+          {recipe.url && (
+            <a
+              href={recipe.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 mt-4 text-sm text-accent hover:underline"
+            >
+              <ExternalLink className="w-4 h-4" />
+              View original recipe
+            </a>
+          )}
+        </div>
+
+        {/* Notes - main content */}
+        {recipe.notes && (
+          <div className="mb-8">
+            <RecipeEditor content={recipe.notes} onChange={() => {}} editable={false} />
+          </div>
+        )}
+
+        {/* Files */}
+        {recipe.files && recipe.files.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-sm font-medium text-text-secondary mb-3">Attachments</h2>
+            <div className="flex flex-wrap gap-2">
+              {recipe.files.map((file) => (
+                <button
+                  key={file.id}
+                  onClick={() => handleFileDownload(file)}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-surface-raised border border-border rounded-md hover:bg-surface-sunken text-sm"
+                >
+                  <FileText className="w-4 h-4 text-text-muted" />
+                  <span className="text-text">{file.filename}</span>
+                  <Download className="w-3 h-3 text-text-muted" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <ConfirmModal
+          open={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteRecipe}
+          title="Delete Recipe"
+          message={`Are you sure you want to delete "${recipe.name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          variant="danger"
+        />
+      </div>
+    );
+  }
+
+  // Edit Mode
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handleCancelEdit}
+            className="inline-flex items-center text-accent hover:text-accent/80"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Cancel
+          </button>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button variant="danger" size="icon" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
+
+        <h1 className="text-2xl font-bold text-text">Edit Recipe</h1>
       </div>
 
       <Card className="mb-6 p-6">
@@ -434,67 +583,63 @@ export function RecipePage() {
               type="text"
               value={recipePage}
               onChange={(e) => setRecipePage(e.target.value)}
-              placeholder="Enter page reference..."
+              placeholder="e.g., Binder 1, Page 24"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">URL</label>
-            <Input
-              type="url"
-              value={recipeUrl}
-              onChange={(e) => setRecipeUrl(e.target.value)}
-              placeholder="Enter recipe URL..."
-            />
-          </div>
-
-          {recipe.url && (
-            <p className="text-sm text-accent font-medium">
-              <a
-                href={recipe.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
+            <div className="flex gap-2">
+              <Input
+                type="url"
+                value={recipeUrl}
+                onChange={(e) => setRecipeUrl(e.target.value)}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleFetchRecipe}
+                disabled={!recipeUrl || scraping}
               >
-                🔗 {recipe.url}
-              </a>
-            </p>
-          )}
+                <Globe className="w-4 h-4 mr-2" />
+                {scraping ? 'Fetching...' : 'Fetch'}
+              </Button>
+            </div>
+            {scrapeError && <p className="text-sm text-danger mt-1">{scrapeError}</p>}
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Notes</label>
-            <textarea
-              value={recipeNotes}
-              onChange={(e) => setRecipeNotes(e.target.value)}
-              placeholder="Add your notes about this recipe..."
-              className="w-full px-3 py-2 bg-surface border border-border rounded-md text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-              rows={4}
-            />
+            <div className="border border-border rounded-md bg-surface overflow-hidden">
+              <RecipeEditor
+                content={recipeNotes}
+                onChange={setRecipeNotes}
+                placeholder="Paste full recipe, ingredients, instructions, or your own notes..."
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              Rating (auto-saved)
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Rating</label>
             <StarRating rating={recipeRating} onRatingChange={handleRatingChange} size="md" />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              Tags (auto-saved)
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">Tags</label>
             <TagInput
               tags={tags}
               availableTags={availableTags}
               onTagsChange={handleTagsChange}
               onTagClick={handleTagClick}
-              placeholder="Add new tags (press Enter to add)..."
+              placeholder="Add tags..."
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Dewey Decimal Classification (auto-saved)
+              Dewey Classification
             </label>
             <DeweyAutoSelector onSelect={handleDeweyDecimalChange} selectedCode={deweyDecimal} />
           </div>
@@ -593,7 +738,7 @@ export function RecipePage() {
 
       {hasChanges && (
         <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
-          <p className="text-warning text-sm">You have unsaved changes. Don't forget to save!</p>
+          <p className="text-warning text-sm">You have unsaved changes.</p>
         </div>
       )}
 
@@ -606,6 +751,28 @@ export function RecipePage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      <Modal
+        open={!!scrapePreview}
+        onClose={() => setScrapePreview(null)}
+        title="Recipe Preview"
+        wide
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            Preview the fetched recipe below. Click Import to add it to your notes.
+          </p>
+          <div className="border border-border rounded-md bg-surface-sunken max-h-96 overflow-y-auto">
+            <RecipeEditor content={scrapePreview || ''} onChange={() => {}} editable={false} />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setScrapePreview(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleImportRecipe}>Import to Notes</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

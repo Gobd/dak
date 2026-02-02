@@ -2,11 +2,9 @@ import { Download, Shuffle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, SearchInput, Spinner } from '@dak/ui';
-import { RecipeForm } from '../components/RecipeForm';
 import { RecipeList } from '../components/RecipeList';
 import { TagInput } from '../components/TagInput';
 import { useRecipeStore } from '../stores/recipe-store';
-import type { Recipe } from '../types';
 
 export function Home() {
   const navigate = useNavigate();
@@ -22,7 +20,6 @@ export function Home() {
     setSearchTerm,
     setSelectedTags,
     loadRecipes,
-    addRecipe,
     deleteRecipe,
     removeTagFromRecipe,
     updateRecipeRating,
@@ -62,20 +59,6 @@ export function Home() {
       loadRecipes('', []);
     }
   }, [loadRecipes, searchParams]);
-
-  const handleAddRecipe = async (
-    recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
-    shouldNavigate?: boolean,
-  ) => {
-    try {
-      const newRecipe = await addRecipe(recipe);
-      if (shouldNavigate) {
-        navigate(`/recipe/${newRecipe.id}`);
-      }
-    } catch (error) {
-      console.error('Failed to add recipe:', error);
-    }
-  };
 
   const handleRandomRecipe = () => {
     if (recipes.length === 0) return;
@@ -130,47 +113,48 @@ export function Home() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <RecipeForm availableTags={availableTags} onAddRecipe={handleAddRecipe} />
-
       {/* Search Section */}
       <Card className="mb-6 p-4">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Search Recipes
-            </label>
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
-              placeholder="Search by recipe name..."
+              placeholder="Search recipes..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Filter by Tags
-            </label>
             <TagInput
               tags={selectedTags}
               availableTags={availableTags}
               onTagsChange={setSelectedTags}
-              placeholder="Select tags to filter..."
+              placeholder="Filter by tags..."
             />
           </div>
         </div>
       </Card>
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-text">
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-text-secondary">
           {searchTerm || selectedTags.length > 0
-            ? `Found ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''}`
+            ? `${recipes.length} result${recipes.length !== 1 ? 's' : ''}`
             : `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''}`}
-        </h2>
+        </p>
 
-        <Button onClick={handleRandomRecipe} disabled={recipes.length === 0} variant="secondary">
-          <Shuffle className="w-4 h-4 mr-2" />
-          Random Recipe
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleRandomRecipe}
+            disabled={recipes.length === 0}
+            variant="ghost"
+            size="sm"
+          >
+            <Shuffle className="w-4 h-4" />
+          </Button>
+          <Button onClick={handleDownloadCSV} variant="ghost" size="sm">
+            <Download className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <RecipeList
@@ -179,13 +163,6 @@ export function Home() {
         onRemoveTag={removeTagFromRecipe}
         onRatingChange={updateRecipeRating}
       />
-
-      <div className="mt-8 text-center">
-        <Button onClick={handleDownloadCSV} variant="secondary">
-          <Download className="w-4 h-4 mr-2" />
-          Download Recipe Info (CSV)
-        </Button>
-      </div>
     </div>
   );
 }

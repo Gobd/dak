@@ -13,6 +13,13 @@
   },
   "dependencies": {
     "@dak/ui": "workspace:*",
+    "@tiptap/core": "catalog:",
+    "@tiptap/extension-placeholder": "catalog:",
+    "@tiptap/extension-task-item": "catalog:",
+    "@tiptap/extension-task-list": "catalog:",
+    "@tiptap/markdown": "catalog:",
+    "@tiptap/react": "catalog:",
+    "@tiptap/starter-kit": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

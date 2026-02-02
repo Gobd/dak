@@ -7,6 +7,7 @@ import { SignUp } from './pages/SignUp';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { Home } from './pages/Home';
+import { AddRecipePage } from './pages/AddRecipePage';
 import { RecipePage } from './pages/RecipePage';
 import { TagsPage } from './pages/TagsPage';
 import { DeweyAdminPage } from './pages/DeweyAdminPage';
@@ -39,6 +40,7 @@ export default function App() {
                 <Layout>
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/add" element={<AddRecipePage />} />
                     <Route path="/recipe/:id" element={<RecipePage />} />
                     <Route path="/tags" element={<TagsPage />} />
                     <Route path="/dewey-admin" element={<DeweyAdminPage />} />

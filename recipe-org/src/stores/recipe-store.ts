@@ -113,7 +113,9 @@ async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
 
   return {
     ...recipe,
-    tags: recipe.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
+    tags:
+      recipe.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) ||
+      [],
     files: recipe.recipe_files || [],
   };
 }
@@ -171,7 +173,9 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
       let processedRecipes = (recipes || []).map((r) => ({
         ...r,
-        tags: r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
+        tags:
+          r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) ||
+          [],
         files: r.recipe_files || [],
       }));
 
@@ -215,7 +219,8 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
     return (data || []).map((r) => ({
       ...r,
-      tags: r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
+      tags:
+        r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
     }));
   },
 

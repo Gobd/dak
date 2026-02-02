@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Tags, FolderTree, LogOut, Sun, Moon } from 'lucide-react';
+import { Search, Plus, Tags, FolderTree, LogOut, Sun, Moon } from 'lucide-react';
 import { Button } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
@@ -14,7 +14,8 @@ export function Layout({ children }: LayoutProps) {
   const { dark, toggle } = useThemeStore();
 
   const navItems = [
-    { path: '/', label: 'Recipes', icon: Home },
+    { path: '/', label: 'Search', icon: Search },
+    { path: '/add', label: 'Add', icon: Plus },
     { path: '/tags', label: 'Tags', icon: Tags },
     { path: '/dewey-admin', label: 'Dewey', icon: FolderTree },
   ];
