@@ -192,7 +192,7 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Iterate through days from first entry to today
+  -- Iterate through days from first entry to yesterday (exclude incomplete today)
   FOR r IN
     SELECT
       d.day::date,
@@ -200,7 +200,7 @@ BEGIN
       MAX(e.daily_limit) AS day_limit
     FROM generate_series(
       v_first_entry_date,
-      CURRENT_DATE,
+      CURRENT_DATE - 1,
       '1 day'::interval
     ) AS d(day)
     LEFT JOIN tracker_entries e ON tracker_logged_at_to_date(e.logged_at) = d.day::date

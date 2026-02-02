@@ -1,18 +1,22 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { broadcastSync } from '../lib/realtime';
-import type { VolumeUnit } from '../types';
+import type { VolumeUnit, StatsPeriodType } from '../types';
 
 interface PreferencesState {
   volumeUnit: VolumeUnit;
+  statsPeriodType: StatsPeriodType;
   loading: boolean;
   initialized: boolean;
   fetchPreferences: () => Promise<void>;
   setVolumeUnit: (unit: VolumeUnit) => Promise<void>;
+  setStatsPeriodType: (type: StatsPeriodType) => void;
 }
 
 export const usePreferencesStore = create<PreferencesState>((set, get) => ({
   volumeUnit: 'ml',
+  statsPeriodType:
+    (localStorage.getItem('tracker_stats_period_type') as StatsPeriodType) || 'calendar',
   loading: false,
   initialized: false,
 
@@ -57,5 +61,10 @@ export const usePreferencesStore = create<PreferencesState>((set, get) => ({
     }
 
     broadcastSync({ type: 'preferences' });
+  },
+
+  setStatsPeriodType: (statsPeriodType: StatsPeriodType) => {
+    localStorage.setItem('tracker_stats_period_type', statsPeriodType);
+    set({ statsPeriodType });
   },
 }));

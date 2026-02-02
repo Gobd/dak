@@ -1,4 +1,5 @@
 export type VolumeUnit = 'ml' | 'oz';
+export type StatsPeriodType = 'calendar' | 'rolling';
 
 export interface Target {
   id: string;

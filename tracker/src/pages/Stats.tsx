@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-// date-fns no longer needed - using UTC date strings directly
+import { format, parseISO, startOfWeek, startOfMonth, addDays, subDays } from 'date-fns';
 import { Flame, Target, TrendingDown, Calendar, Award, Lightbulb } from 'lucide-react';
 import { Card } from '@dak/ui';
 import { useEntriesStore } from '../stores/entries-store';
 import { useTargetsStore } from '../stores/targets-store';
+import { usePreferencesStore } from '../stores/preferences-store';
 import { formatUnits } from '../lib/units';
 import { getInsight } from '../lib/motivation';
 import type { Entry } from '../types';
@@ -11,6 +12,7 @@ import type { Entry } from '../types';
 export function Stats() {
   const { entries, streaks, fetchEntries, fetchStreaks } = useEntriesStore();
   const { target, fetchTarget } = useTargetsStore();
+  const { statsPeriodType, setStatsPeriodType } = usePreferencesStore();
 
   useEffect(() => {
     fetchTarget();
@@ -25,114 +27,134 @@ export function Stats() {
 
   const dailyLimit = target?.daily_limit ?? 14;
 
-  // Calculate weekly stats using UTC dates to match server
+  // Use local dates for user-facing stats (matches History.tsx)
   const now = new Date();
-  const todayUtc = now.toISOString().split('T')[0];
-  // Get week start (Monday) in UTC
-  const nowUtc = new Date(now.toISOString());
-  const dayOfWeek = nowUtc.getUTCDay();
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const weekStartDate = new Date(nowUtc);
-  weekStartDate.setUTCDate(nowUtc.getUTCDate() - daysToMonday);
-  const weekStartUtc = weekStartDate.toISOString().split('T')[0];
-  // Get month start in UTC
-  const monthStartUtc = `${nowUtc.getUTCFullYear()}-${String(nowUtc.getUTCMonth() + 1).padStart(2, '0')}-01`;
+  const todayStr = format(now, 'yyyy-MM-dd');
+  // Calendar periods
+  const calWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const calWeekStartStr = format(calWeekStart, 'yyyy-MM-dd');
+  const calMonthStart = startOfMonth(now);
+  const calMonthStartStr = format(calMonthStart, 'yyyy-MM-dd');
+
+  // Rolling periods (last 7 and 30 days)
+  const rolling7Start = subDays(now, 6); // 6 days ago + today = 7 days
+  const rolling7StartStr = format(rolling7Start, 'yyyy-MM-dd');
+  const rolling30Start = subDays(now, 29); // 29 days ago + today = 30 days
+  const rolling30StartStr = format(rolling30Start, 'yyyy-MM-dd');
+
+  // Use selected period type
+  const isRolling = statsPeriodType === 'rolling';
+  const weekStartStr = isRolling ? rolling7StartStr : calWeekStartStr;
+  const monthStartStr = isRolling ? rolling30StartStr : calMonthStartStr;
 
   // Find first entry date to avoid counting days before tracking started
+  // Convert entry timestamps to local date for consistency
   const firstEntryDate =
     entries.length > 0
-      ? entries.reduce((earliest, e) => {
-          const date = e.logged_at.split('T')[0];
-          return date < earliest ? date : earliest;
-        }, entries[0].logged_at.split('T')[0])
-      : todayUtc;
+      ? entries.reduce(
+          (earliest, e) => {
+            const date = format(parseISO(e.logged_at), 'yyyy-MM-dd');
+            return date < earliest ? date : earliest;
+          },
+          format(parseISO(entries[0].logged_at), 'yyyy-MM-dd'),
+        )
+      : todayStr;
 
-  // Use UTC dates to match server-side calculations
+  // Filter entries by local date range
   const entriesInRange = (startDateStr: string, endDateStr: string) =>
     entries.filter((e) => {
-      const dateUtc = e.logged_at.split('T')[0]; // Extract UTC date
-      return dateUtc >= startDateStr && dateUtc <= endDateStr;
+      const dateLocal = format(parseISO(e.logged_at), 'yyyy-MM-dd');
+      return dateLocal >= startDateStr && dateLocal <= endDateStr;
     });
 
   const getDailyTotalsInRange = (rangeEntries: Entry[]) => {
     const dailyMap = new Map<string, number>();
     rangeEntries.forEach((e) => {
-      const day = e.logged_at.split('T')[0]; // UTC date from ISO string
+      const day = format(parseISO(e.logged_at), 'yyyy-MM-dd');
       dailyMap.set(day, (dailyMap.get(day) || 0) + e.units);
     });
     return dailyMap;
   };
 
-  // Generate array of UTC days from start to today (inclusive), respecting first entry date
-  const getDaysInRange = (periodStartUtc: string) => {
-    const rangeStart = periodStartUtc > firstEntryDate ? periodStartUtc : firstEntryDate;
+  // Generate array of local days from start to today (inclusive), respecting first entry date
+  const getDaysInRange = (periodStartStr: string) => {
+    const rangeStart = periodStartStr > firstEntryDate ? periodStartStr : firstEntryDate;
     const days: string[] = [];
-    let current = rangeStart;
-    while (current <= todayUtc) {
-      days.push(current);
-      // Add one day using UTC
-      const nextDate = new Date(current + 'T12:00:00Z');
-      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
-      current = nextDate.toISOString().split('T')[0];
+    let currentDate = new Date(rangeStart + 'T12:00:00'); // noon to avoid DST issues
+    const endDate = new Date(todayStr + 'T12:00:00');
+    while (currentDate <= endDate) {
+      days.push(format(currentDate, 'yyyy-MM-dd'));
+      currentDate = addDays(currentDate, 1);
     }
     return days;
   };
 
   // This week (UTC)
-  const weekDays = getDaysInRange(weekStartUtc);
-  const weekEntries = entriesInRange(weekStartUtc, todayUtc);
+  const weekDays = getDaysInRange(weekStartStr);
+  const weekEntries = entriesInRange(weekStartStr, todayStr);
   const weekDailyTotals = getDailyTotalsInRange(weekEntries);
   const weekTotalUnits = weekEntries.reduce((sum, e) => sum + e.units, 0);
   // Don't count today as a zero day - the day isn't complete yet
   const weekZeroDays = weekDays.filter(
-    (day) => day !== todayUtc && (weekDailyTotals.get(day) || 0) === 0,
+    (day) => day !== todayStr && (weekDailyTotals.get(day) || 0) === 0,
   ).length;
   const weekUnderDays = weekDays.filter(
-    (day) => day !== todayUtc && (weekDailyTotals.get(day) || 0) <= dailyLimit,
+    (day) => day !== todayStr && (weekDailyTotals.get(day) || 0) <= dailyLimit,
   ).length;
 
   // This month (UTC)
-  const monthDays = getDaysInRange(monthStartUtc);
-  const monthEntries = entriesInRange(monthStartUtc, todayUtc);
+  const monthDays = getDaysInRange(monthStartStr);
+  const monthEntries = entriesInRange(monthStartStr, todayStr);
   const monthDailyTotals = getDailyTotalsInRange(monthEntries);
   const monthTotalUnits = monthEntries.reduce((sum, e) => sum + e.units, 0);
   // Don't count today as a zero day - the day isn't complete yet
   const monthZeroDays = monthDays.filter(
-    (day) => day !== todayUtc && (monthDailyTotals.get(day) || 0) === 0,
+    (day) => day !== todayStr && (monthDailyTotals.get(day) || 0) === 0,
   ).length;
   const monthUnderDays = monthDays.filter(
-    (day) => day !== todayUtc && (monthDailyTotals.get(day) || 0) <= dailyLimit,
+    (day) => day !== todayStr && (monthDailyTotals.get(day) || 0) <= dailyLimit,
   ).length;
 
   // Averages (use actual tracked days)
   const weekAverage = weekDays.length > 0 ? weekTotalUnits / weekDays.length : 0;
   const monthAverage = monthDays.length > 0 ? monthTotalUnits / monthDays.length : 0;
 
-  // Today's total - used to adjust streak display
-  const todayTotal = entries
-    .filter((e) => e.logged_at.split('T')[0] === todayUtc)
-    .reduce((sum, e) => sum + e.units, 0);
-  const todayHasNoEntries = todayTotal === 0;
-
-  // Adjust streaks to not count today (day isn't complete yet)
-  // If today has no entries and DB is counting it as a zero day, subtract 1
-  const displayZeroStreak = streaks
-    ? todayHasNoEntries && streaks.current_zero_streak > 0
-      ? streaks.current_zero_streak - 1
-      : streaks.current_zero_streak
-    : 0;
-  const displayUnderStreak = streaks
-    ? todayHasNoEntries && streaks.current_under_streak > 0
-      ? streaks.current_under_streak - 1
-      : streaks.current_under_streak
-    : 0;
+  // Streaks from DB exclude today (incomplete day), so use directly
+  const displayZeroStreak = streaks?.current_zero_streak ?? 0;
+  const displayUnderStreak = streaks?.current_under_streak ?? 0;
 
   // Insight based on patterns
   const insight = getInsight(streaks);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Stats</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Stats</h1>
+        <div className="flex rounded-lg overflow-hidden border border-border text-sm">
+          <button
+            type="button"
+            className={`px-3 py-1.5 transition-colors ${
+              statsPeriodType === 'calendar'
+                ? 'bg-accent text-white'
+                : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+            }`}
+            onClick={() => setStatsPeriodType('calendar')}
+          >
+            Calendar
+          </button>
+          <button
+            type="button"
+            className={`px-3 py-1.5 transition-colors ${
+              statsPeriodType === 'rolling'
+                ? 'bg-accent text-white'
+                : 'bg-surface-raised text-text-secondary hover:bg-surface-sunken'
+            }`}
+            onClick={() => setStatsPeriodType('rolling')}
+          >
+            Rolling
+          </button>
+        </div>
+      </div>
 
       {/* Insight Banner */}
       {insight && (
@@ -194,11 +216,11 @@ export function Stats() {
         </Card>
       )}
 
-      {/* This Week */}
+      {/* Week / 7 Days */}
       <Card>
         <div className="flex items-center gap-2 mb-4">
           <Calendar size={20} className="text-accent" />
-          <h2 className="font-semibold">This Week</h2>
+          <h2 className="font-semibold">{isRolling ? 'Last 7 Days' : 'This Week'}</h2>
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
@@ -222,11 +244,11 @@ export function Stats() {
         </div>
       </Card>
 
-      {/* This Month */}
+      {/* Month / 30 Days */}
       <Card>
         <div className="flex items-center gap-2 mb-4">
           <Award size={20} className="text-accent" />
-          <h2 className="font-semibold">This Month</h2>
+          <h2 className="font-semibold">{isRolling ? 'Last 30 Days' : 'This Month'}</h2>
         </div>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
