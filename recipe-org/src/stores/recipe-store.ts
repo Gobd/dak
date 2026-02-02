@@ -73,7 +73,7 @@ async function getOrCreateTags(tagNames: string[], userId: string): Promise<stri
   for (const name of tagNames) {
     // Try to find existing tag
     const { data: existing } = await supabase
-      .from('tags')
+      .from('recipe_tags')
       .select('id')
       .eq('user_id', userId)
       .eq('name', name)
@@ -84,7 +84,7 @@ async function getOrCreateTags(tagNames: string[], userId: string): Promise<stri
     } else {
       // Create new tag
       const { data: newTag, error } = await supabase
-        .from('tags')
+        .from('recipe_tags')
         .insert({ user_id: userId, name })
         .select('id')
         .single();
@@ -103,7 +103,7 @@ async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
     .from('recipes')
     .select(`
       *,
-      recipe_tags(tag_id, tags(name)),
+      recipe_tag_map(tag_id, recipe_tags(name)),
       recipe_files(id, filename, file_path, created_at)
     `)
     .eq('id', recipeId)
@@ -113,7 +113,7 @@ async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
 
   return {
     ...recipe,
-    tags: recipe.recipe_tags?.map((rt: { tags: { name: string } }) => rt.tags.name) || [],
+    tags: recipe.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
     files: recipe.recipe_files || [],
   };
 }
@@ -156,7 +156,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
         .from('recipes')
         .select(`
           *,
-          recipe_tags(tag_id, tags(name)),
+          recipe_tag_map(tag_id, recipe_tags(name)),
           recipe_files(id, filename, file_path, created_at)
         `)
         .order('name', { ascending: true });
@@ -171,7 +171,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
       let processedRecipes = (recipes || []).map((r) => ({
         ...r,
-        tags: r.recipe_tags?.map((rt: { tags: { name: string } }) => rt.tags.name) || [],
+        tags: r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
         files: r.recipe_files || [],
       }));
 
@@ -183,7 +183,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       }
 
       // Load tags in parallel
-      const { data: tagsData } = await supabase.from('tags').select('name').order('name');
+      const { data: tagsData } = await supabase.from('recipe_tags').select('name').order('name');
 
       const uniqueTags = tagsData?.map((t) => t.name) || [];
 
@@ -207,7 +207,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       .from('recipes')
       .select(`
         *,
-        recipe_tags(tag_id, tags(name))
+        recipe_tag_map(tag_id, recipe_tags(name))
       `)
       .order('name');
 
@@ -215,7 +215,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
     return (data || []).map((r) => ({
       ...r,
-      tags: r.recipe_tags?.map((rt: { tags: { name: string } }) => rt.tags.name) || [],
+      tags: r.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) || [],
     }));
   },
 
@@ -246,7 +246,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
           recipe_id: newRecipe.id,
           tag_id: tagId,
         }));
-        await supabase.from('recipe_tags').insert(recipeTags);
+        await supabase.from('recipe_tag_map').insert(recipeTags);
       }
 
       const fullRecipe = await fetchRecipeWithTags(newRecipe.id);
@@ -300,7 +300,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       // Update tags if provided
       if (tags !== undefined) {
         // Remove existing tags
-        await supabase.from('recipe_tags').delete().eq('recipe_id', id);
+        await supabase.from('recipe_tag_map').delete().eq('recipe_id', id);
 
         // Add new tags
         if (tags.length > 0) {
@@ -309,7 +309,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
             recipe_id: id,
             tag_id: tagId,
           }));
-          await supabase.from('recipe_tags').insert(recipeTags);
+          await supabase.from('recipe_tag_map').insert(recipeTags);
         }
 
         get().loadTags();
@@ -379,7 +379,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
   loadTags: async () => {
     try {
-      const { data } = await supabase.from('tags').select('name').order('name');
+      const { data } = await supabase.from('recipe_tags').select('name').order('name');
       set({ tags: data?.map((t) => t.name) || [] });
     } catch (error) {
       console.error('Failed to load tags:', error);
@@ -419,7 +419,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     set({ deweyCategoriesLoading: true });
     try {
       const { data, error } = await supabase
-        .from('dewey_categories')
+        .from('recipe_dewey_categories')
         .select('*')
         .order('dewey_code');
 
@@ -475,7 +475,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('dewey_categories')
+        .from('recipe_dewey_categories')
         .insert({ ...category, user_id: user.id })
         .select()
         .single();
@@ -495,7 +495,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   updateDeweyCategory: async (id, updates) => {
     try {
       const { data, error } = await supabase
-        .from('dewey_categories')
+        .from('recipe_dewey_categories')
         .update(updates)
         .eq('id', id)
         .select()
@@ -517,7 +517,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
   deleteDeweyCategory: async (id) => {
     try {
-      const { error } = await supabase.from('dewey_categories').delete().eq('id', id);
+      const { error } = await supabase.from('recipe_dewey_categories').delete().eq('id', id);
 
       if (error) throw error;
 
@@ -532,15 +532,15 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
   getTagsWithCounts: async () => {
     try {
-      const { data } = await supabase.from('tags').select(`
+      const { data } = await supabase.from('recipe_tags').select(`
           name,
-          recipe_tags(count)
+          recipe_tag_map(count)
         `);
 
       return (data || [])
         .map((t) => ({
           name: t.name,
-          count: (t.recipe_tags as { count: number }[])?.[0]?.count || 0,
+          count: (t.recipe_tag_map as { count: number }[])?.[0]?.count || 0,
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     } catch (error) {

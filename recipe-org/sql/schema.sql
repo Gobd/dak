@@ -1,8 +1,8 @@
 -- Recipe Organizer Schema for Supabase
 -- Run this in Supabase SQL Editor
 
--- Tags table
-create table if not exists tags (
+-- Recipe tags table
+create table if not exists recipe_tags (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
@@ -10,8 +10,8 @@ create table if not exists tags (
   unique(user_id, name)
 );
 
--- Dewey categories table
-create table if not exists dewey_categories (
+-- Recipe Dewey categories table
+create table if not exists recipe_dewey_categories (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   dewey_code text not null,
@@ -37,10 +37,10 @@ create table if not exists recipes (
   updated_at timestamptz default now() not null
 );
 
--- Recipe tags junction table
-create table if not exists recipe_tags (
+-- Recipe tag map junction table
+create table if not exists recipe_tag_map (
   recipe_id uuid references recipes(id) on delete cascade not null,
-  tag_id uuid references tags(id) on delete cascade not null,
+  tag_id uuid references recipe_tags(id) on delete cascade not null,
   primary key (recipe_id, tag_id)
 );
 
@@ -56,52 +56,52 @@ create table if not exists recipe_files (
 -- Indexes for performance
 create index if not exists idx_recipes_user_id on recipes(user_id);
 create index if not exists idx_recipes_dewey_decimal on recipes(dewey_decimal);
-create index if not exists idx_tags_user_id on tags(user_id);
-create index if not exists idx_dewey_categories_user_id on dewey_categories(user_id);
-create index if not exists idx_dewey_categories_parent_code on dewey_categories(parent_code);
-create index if not exists idx_recipe_tags_recipe_id on recipe_tags(recipe_id);
-create index if not exists idx_recipe_tags_tag_id on recipe_tags(tag_id);
+create index if not exists idx_recipe_tags_user_id on recipe_tags(user_id);
+create index if not exists idx_recipe_dewey_categories_user_id on recipe_dewey_categories(user_id);
+create index if not exists idx_recipe_dewey_categories_parent_code on recipe_dewey_categories(parent_code);
+create index if not exists idx_recipe_tag_map_recipe_id on recipe_tag_map(recipe_id);
+create index if not exists idx_recipe_tag_map_tag_id on recipe_tag_map(tag_id);
 create index if not exists idx_recipe_files_recipe_id on recipe_files(recipe_id);
 
 -- Row Level Security (RLS)
-alter table tags enable row level security;
-alter table dewey_categories enable row level security;
-alter table recipes enable row level security;
 alter table recipe_tags enable row level security;
+alter table recipe_dewey_categories enable row level security;
+alter table recipes enable row level security;
+alter table recipe_tag_map enable row level security;
 alter table recipe_files enable row level security;
 
--- Tags policies
-create policy "Users can view own tags"
-  on tags for select
+-- Recipe tags policies
+create policy "Users can view own recipe tags"
+  on recipe_tags for select
   using (auth.uid() = user_id);
 
-create policy "Users can insert own tags"
-  on tags for insert
+create policy "Users can insert own recipe tags"
+  on recipe_tags for insert
   with check (auth.uid() = user_id);
 
-create policy "Users can update own tags"
-  on tags for update
+create policy "Users can update own recipe tags"
+  on recipe_tags for update
   using (auth.uid() = user_id);
 
-create policy "Users can delete own tags"
-  on tags for delete
+create policy "Users can delete own recipe tags"
+  on recipe_tags for delete
   using (auth.uid() = user_id);
 
--- Dewey categories policies
-create policy "Users can view own dewey categories"
-  on dewey_categories for select
+-- Recipe Dewey categories policies
+create policy "Users can view own recipe dewey categories"
+  on recipe_dewey_categories for select
   using (auth.uid() = user_id);
 
-create policy "Users can insert own dewey categories"
-  on dewey_categories for insert
+create policy "Users can insert own recipe dewey categories"
+  on recipe_dewey_categories for insert
   with check (auth.uid() = user_id);
 
-create policy "Users can update own dewey categories"
-  on dewey_categories for update
+create policy "Users can update own recipe dewey categories"
+  on recipe_dewey_categories for update
   using (auth.uid() = user_id);
 
-create policy "Users can delete own dewey categories"
-  on dewey_categories for delete
+create policy "Users can delete own recipe dewey categories"
+  on recipe_dewey_categories for delete
   using (auth.uid() = user_id);
 
 -- Recipes policies
@@ -121,23 +121,23 @@ create policy "Users can delete own recipes"
   on recipes for delete
   using (auth.uid() = user_id);
 
--- Recipe tags policies (check via recipe ownership)
-create policy "Users can view own recipe tags"
-  on recipe_tags for select
+-- Recipe tag map policies (check via recipe ownership)
+create policy "Users can view own recipe tag map"
+  on recipe_tag_map for select
   using (exists (
-    select 1 from recipes where recipes.id = recipe_tags.recipe_id and recipes.user_id = auth.uid()
+    select 1 from recipes where recipes.id = recipe_tag_map.recipe_id and recipes.user_id = auth.uid()
   ));
 
-create policy "Users can insert own recipe tags"
-  on recipe_tags for insert
+create policy "Users can insert own recipe tag map"
+  on recipe_tag_map for insert
   with check (exists (
-    select 1 from recipes where recipes.id = recipe_tags.recipe_id and recipes.user_id = auth.uid()
+    select 1 from recipes where recipes.id = recipe_tag_map.recipe_id and recipes.user_id = auth.uid()
   ));
 
-create policy "Users can delete own recipe tags"
-  on recipe_tags for delete
+create policy "Users can delete own recipe tag map"
+  on recipe_tag_map for delete
   using (exists (
-    select 1 from recipes where recipes.id = recipe_tags.recipe_id and recipes.user_id = auth.uid()
+    select 1 from recipes where recipes.id = recipe_tag_map.recipe_id and recipes.user_id = auth.uid()
   ));
 
 -- Recipe files policies
