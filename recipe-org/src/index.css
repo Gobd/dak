@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
+@source "../../packages/ui/src/**/*.tsx";
+
+@layer base {
+  * {
+    font-synthesis: weight;
+  }
+}
+
+button,
+[role='button'],
+a,
+select,
+input[type='checkbox'],
+input[type='radio'],
+input[type='submit'],
+input[type='button'] {
+  cursor: pointer !important;
+}
+
+body {
+  @apply bg-surface text-text min-h-screen;
+}
+
+/* Shared utilities from UI package */
+@import '../../packages/ui/src/utilities.css';
