@@ -612,6 +612,9 @@ importers:
 
   recipe-org:
     dependencies:
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui
