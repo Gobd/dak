@@ -12,6 +12,7 @@
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
+    "@dak/hooks": "workspace:*",
     "@dak/ui": "workspace:*",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-placeholder": "catalog:",
