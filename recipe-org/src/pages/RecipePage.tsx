@@ -8,6 +8,7 @@ import {
   FileText,
   Globe,
   Pencil,
+  Printer,
   Save,
   Trash2,
   Upload,
@@ -20,6 +21,7 @@ import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
 import { RecipeEditor } from '../components/RecipeEditor';
 import { TagInput } from '../components/TagInput';
 import { StarRating } from '../components/StarRating';
+import { markdownToHtml } from '../lib/markdown-to-html';
 import { scrapeRecipe, formatRecipeAsMarkdown } from '../lib/recipe-scraper';
 import { formatDeweyDecimal } from '../lib/utils';
 import { useRecipeStore } from '../stores/recipe-store';
@@ -52,6 +54,7 @@ export function RecipePage() {
   const [recipeName, setRecipeName] = useState('');
   const [recipePage, setRecipePage] = useState('');
   const [recipeUrl, setRecipeUrl] = useState('');
+  const [recipeContent, setRecipeContent] = useState('');
   const [recipeNotes, setRecipeNotes] = useState('');
   const [recipeRating, setRecipeRating] = useState<number | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
@@ -65,6 +68,8 @@ export function RecipePage() {
   const [scraping, setScraping] = useState(false);
   const [scrapePreview, setScrapePreview] = useState<string | null>(null);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printIncludeNotes, setPrintIncludeNotes] = useState(false);
 
   const loadRecipe = useCallback(async () => {
     if (!id) return;
@@ -76,6 +81,7 @@ export function RecipePage() {
         setRecipeName(recipeData.name);
         setRecipePage(recipeData.page || '');
         setRecipeUrl(recipeData.url || '');
+        setRecipeContent(recipeData.recipe || '');
         setRecipeNotes(recipeData.notes || '');
         setRecipeRating(recipeData.rating);
         setTags(recipeData.tags);
@@ -157,9 +163,16 @@ export function RecipePage() {
     const hasNameChanges = recipeName !== recipe.name;
     const hasPageChanges = recipePage !== (recipe.page || '');
     const hasUrlChanges = recipeUrl !== (recipe.url || '');
+    const hasRecipeChanges = recipeContent !== (recipe.recipe || '');
     const hasNotesChanges = recipeNotes !== (recipe.notes || '');
 
-    if (!hasNameChanges && !hasPageChanges && !hasUrlChanges && !hasNotesChanges) {
+    if (
+      !hasNameChanges &&
+      !hasPageChanges &&
+      !hasUrlChanges &&
+      !hasRecipeChanges &&
+      !hasNotesChanges
+    ) {
       setIsEditing(false);
       return;
     }
@@ -171,6 +184,7 @@ export function RecipePage() {
       if (hasNameChanges) updates.name = recipeName;
       if (hasPageChanges) updates.page = recipePage;
       if (hasUrlChanges) updates.url = recipeUrl;
+      if (hasRecipeChanges) updates.recipe = recipeContent;
       if (hasNotesChanges) updates.notes = recipeNotes;
 
       await updateRecipe(id, updates);
@@ -345,6 +359,7 @@ export function RecipePage() {
       setRecipeName(recipe.name);
       setRecipePage(recipe.page || '');
       setRecipeUrl(recipe.url || '');
+      setRecipeContent(recipe.recipe || '');
       setRecipeNotes(recipe.notes || '');
     }
     setIsEditing(false);
@@ -374,14 +389,63 @@ export function RecipePage() {
 
   const handleImportRecipe = () => {
     if (scrapePreview) {
-      // Append to existing notes or replace
-      if (recipeNotes.trim()) {
-        setRecipeNotes(recipeNotes + '\n\n---\n\n' + scrapePreview);
+      // Append to existing recipe or replace
+      if (recipeContent.trim()) {
+        setRecipeContent(recipeContent + '\n\n---\n\n' + scrapePreview);
       } else {
-        setRecipeNotes(scrapePreview);
+        setRecipeContent(scrapePreview);
       }
       setScrapePreview(null);
     }
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const recipeHtml = recipeContent
+      ? `<div class="recipe-content">${markdownToHtml(recipeContent)}</div>`
+      : '';
+    const notesHtml =
+      printIncludeNotes && recipeNotes
+        ? `<hr><h2>Notes</h2><div class="notes-content">${markdownToHtml(recipeNotes)}</div>`
+        : '';
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${recipeName || 'Recipe'}</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              line-height: 1.6;
+            }
+            h1 { margin-bottom: 0.5em; }
+            h2 { margin-top: 1.5em; }
+            ul, ol { padding-left: 1.5em; }
+            li { margin-bottom: 0.25em; }
+            hr { margin: 2em 0; border: none; border-top: 1px solid #ccc; }
+            .meta { color: #666; font-size: 0.9em; margin-bottom: 1em; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${recipeName || 'Recipe'}</h1>
+          ${recipe?.page ? `<p class="meta">Location: ${recipe.page}</p>` : ''}
+          ${recipeHtml}
+          ${notesHtml}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+    setShowPrintModal(false);
   };
 
   if (loading) {
@@ -411,6 +475,7 @@ export function RecipePage() {
     recipeName !== recipe.name ||
     recipePage !== (recipe.page || '') ||
     recipeUrl !== (recipe.url || '') ||
+    recipeContent !== (recipe.recipe || '') ||
     recipeNotes !== (recipe.notes || '');
 
   // Reader View (default)
@@ -449,10 +514,18 @@ export function RecipePage() {
         <div className="mb-8">
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-3xl font-bold text-text">{recipe.name}</h1>
-            <Button variant="secondary" onClick={() => setIsEditing(true)}>
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
+            <div className="flex gap-2">
+              {recipe.recipe && (
+                <Button variant="secondary" onClick={() => setShowPrintModal(true)}>
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
+                </Button>
+              )}
+              <Button variant="secondary" onClick={() => setIsEditing(true)}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            </div>
           </div>
 
           {/* Meta info row */}
@@ -497,10 +570,20 @@ export function RecipePage() {
           )}
         </div>
 
-        {/* Notes - main content */}
+        {/* Recipe content */}
+        {recipe.recipe && (
+          <div className="mb-8">
+            <RecipeEditor content={recipe.recipe} onChange={() => {}} editable={false} />
+          </div>
+        )}
+
+        {/* Notes */}
         {recipe.notes && (
           <div className="mb-8">
-            <RecipeEditor content={recipe.notes} onChange={() => {}} editable={false} />
+            <h2 className="text-sm font-medium text-text-secondary mb-3">Notes</h2>
+            <div className="border-l-2 border-border pl-4">
+              <RecipeEditor content={recipe.notes} onChange={() => {}} editable={false} />
+            </div>
           </div>
         )}
 
@@ -533,6 +616,32 @@ export function RecipePage() {
           confirmText="Delete"
           variant="danger"
         />
+
+        <Modal open={showPrintModal} onClose={() => setShowPrintModal(false)} title="Print Recipe">
+          <div className="space-y-4">
+            <p className="text-sm text-text-secondary">Print the recipe content.</p>
+            {recipe.notes && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={printIncludeNotes}
+                  onChange={(e) => setPrintIncludeNotes(e.target.checked)}
+                  className="w-4 h-4 rounded border-border text-accent focus:ring-accent"
+                />
+                <span className="text-sm text-text">Include notes at the end</span>
+              </label>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowPrintModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handlePrint}>
+                <Printer className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
@@ -611,12 +720,23 @@ export function RecipePage() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Recipe</label>
+            <div className="border border-border rounded-md bg-surface overflow-hidden">
+              <RecipeEditor
+                content={recipeContent}
+                onChange={setRecipeContent}
+                placeholder="Paste or fetch recipe content (ingredients, instructions)..."
+              />
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Notes</label>
             <div className="border border-border rounded-md bg-surface overflow-hidden">
               <RecipeEditor
                 content={recipeNotes}
                 onChange={setRecipeNotes}
-                placeholder="Paste full recipe, ingredients, instructions, or your own notes..."
+                placeholder="Your personal notes, modifications, tips..."
               />
             </div>
           </div>
@@ -760,7 +880,7 @@ export function RecipePage() {
       >
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Preview the fetched recipe below. Click Import to add it to your notes.
+            Preview the fetched recipe below. Click Import to add it to the recipe field.
           </p>
           <div className="border border-border rounded-md bg-surface-sunken max-h-96 overflow-y-auto">
             <RecipeEditor content={scrapePreview || ''} onChange={() => {}} editable={false} />
@@ -769,7 +889,7 @@ export function RecipePage() {
             <Button variant="secondary" onClick={() => setScrapePreview(null)}>
               Cancel
             </Button>
-            <Button onClick={handleImportRecipe}>Import to Notes</Button>
+            <Button onClick={handleImportRecipe}>Import to Recipe</Button>
           </div>
         </div>
       </Modal>

@@ -1,6 +1,48 @@
 // Cloudflare Pages Function for scraping recipe JSON-LD from URLs
 import { getCorsHeaders, handleOptions } from '../_cors.js';
 
+// Extract JSON-LD scripts using HTMLRewriter (proper HTML parsing)
+async function extractJsonLd(response) {
+  const jsonLdContents = [];
+  let currentScript = '';
+
+  const rewriter = new HTMLRewriter().on('script[type="application/ld+json"]', {
+    text(text) {
+      currentScript += text.text;
+      if (text.lastInTextNode) {
+        jsonLdContents.push(currentScript);
+        currentScript = '';
+      }
+    },
+  });
+
+  await rewriter.transform(response).text();
+  return jsonLdContents;
+}
+
+// Find Recipe in JSON-LD data
+function findRecipe(jsonLdContents) {
+  for (const content of jsonLdContents) {
+    try {
+      const data = JSON.parse(content);
+
+      // Check if it's directly a Recipe
+      if (data['@type'] === 'Recipe') {
+        return data;
+      }
+
+      // Check in @graph array
+      if (data['@graph'] && Array.isArray(data['@graph'])) {
+        const found = data['@graph'].find((item) => item['@type'] === 'Recipe');
+        if (found) return found;
+      }
+    } catch {
+      // Invalid JSON, continue to next
+    }
+  }
+  return null;
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   const corsHeaders = getCorsHeaders(request, env);
@@ -31,14 +73,10 @@ export async function onRequestPost(context) {
       });
     }
 
-    const html = await response.text();
+    // Extract JSON-LD using HTMLRewriter
+    const jsonLdContents = await extractJsonLd(response);
 
-    // Extract JSON-LD scripts
-    const jsonLdMatches = html.match(
-      /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
-    );
-
-    if (!jsonLdMatches) {
+    if (jsonLdContents.length === 0) {
       return new Response(JSON.stringify({ error: 'No JSON-LD found on page' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -46,32 +84,7 @@ export async function onRequestPost(context) {
     }
 
     // Find Recipe schema
-    let recipe = null;
-
-    for (const match of jsonLdMatches) {
-      const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '').trim();
-
-      try {
-        const data = JSON.parse(jsonContent);
-
-        // Check if it's directly a Recipe
-        if (data['@type'] === 'Recipe') {
-          recipe = data;
-          break;
-        }
-
-        // Check in @graph array
-        if (data['@graph'] && Array.isArray(data['@graph'])) {
-          const found = data['@graph'].find((item) => item['@type'] === 'Recipe');
-          if (found) {
-            recipe = found;
-            break;
-          }
-        }
-      } catch {
-        // Invalid JSON, continue to next match
-      }
-    }
+    const recipe = findRecipe(jsonLdContents);
 
     if (!recipe) {
       return new Response(JSON.stringify({ error: 'No Recipe schema found' }), {

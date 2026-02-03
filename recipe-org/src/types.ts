@@ -12,6 +12,7 @@ export interface Recipe {
   name: string;
   page?: string;
   url?: string;
+  recipe?: string;
   notes?: string;
   rating?: number;
   dewey_decimal?: string;

@@ -30,6 +30,7 @@ create table if not exists recipes (
   name text not null,
   page text,
   url text,
+  recipe text,
   notes text,
   rating integer check (rating >= 1 and rating <= 5),
   dewey_decimal text,
