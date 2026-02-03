@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "knip": "^5.82.1",
-    "oxfmt": "^0.27.0",
+    "oxfmt": "^0.28.0",
     "oxlint": "^1.42.0",
     "shellcheck": "^4.1.0"
   },
