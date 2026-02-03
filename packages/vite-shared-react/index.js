@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import { defineConfig, esmExternalRequirePlugin } from 'vite';
+import { defineConfig, esmExternalRequirePlugin, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -89,6 +89,38 @@ export function sharedReact() {
 export default sharedReact;
 
 /**
+ * Find monorepo root by looking for pnpm-workspace.yaml
+ */
+function findMonorepoRoot(startDir) {
+  let dir = startDir;
+  while (dir !== '/') {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml'))) {
+      return dir;
+    }
+    dir = dirname(dir);
+  }
+  return null;
+}
+
+/**
+ * Load env vars from monorepo root .env.local if it exists
+ */
+function loadMonorepoEnv(mode) {
+  const root = findMonorepoRoot(process.cwd());
+  if (!root) return {};
+
+  const env = loadEnv(mode, root, '');
+  // Filter to only VITE_ prefixed vars
+  const viteEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (key.startsWith('VITE_')) {
+      viteEnv[`import.meta.env.${key}`] = JSON.stringify(value);
+    }
+  }
+  return viteEnv;
+}
+
+/**
  * Create a Vite config with shared plugins and settings.
  * @param {object} options
  * @param {string} options.base - Base path (e.g., '/notes-app/')
@@ -97,7 +129,9 @@ export default sharedReact;
  * @param {object} [options.rollupInput] - Custom rollup input entries
  */
 export function createViteConfig({ base, port, pwa, rollupInput }) {
-  return defineConfig(({ command }) => {
+  return defineConfig(({ command, mode }) => {
+    // Load env from monorepo root (merged with app-level env, app takes precedence)
+    const monorepoEnv = loadMonorepoEnv(mode);
     const plugins = [
       command === 'build' && esmExternalRequirePlugin({ external: getExternalIds() }),
       react(),
@@ -161,6 +195,8 @@ export function createViteConfig({ base, port, pwa, rollupInput }) {
         sourcemap: true,
         ...(rollupInput && { rollupOptions: { input: rollupInput } }),
       },
+      // Inject monorepo-level env vars (app .env takes precedence)
+      define: monorepoEnv,
       plugins: plugins.filter(Boolean),
     };
   });

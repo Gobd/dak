@@ -376,8 +376,8 @@ export function RecipePage() {
       const markdown = formatRecipeAsMarkdown(scrapedRecipe);
       setScrapePreview(markdown);
 
-      // Auto-fill name if empty
-      if (!recipeName && scrapedRecipe.name) {
+      // Auto-fill name from scraped recipe
+      if (scrapedRecipe.name) {
         setRecipeName(scrapedRecipe.name);
       }
     } catch (err) {
@@ -421,15 +421,18 @@ export function RecipePage() {
               font-family: system-ui, -apple-system, sans-serif;
               max-width: 800px;
               margin: 0 auto;
-              padding: 20px;
-              line-height: 1.6;
+              padding: 10px;
+              font-size: 11pt;
+              line-height: 1.25;
             }
-            h1 { margin-bottom: 0.5em; }
-            h2 { margin-top: 1.5em; }
-            ul, ol { padding-left: 1.5em; }
-            li { margin-bottom: 0.25em; }
-            hr { margin: 2em 0; border: none; border-top: 1px solid #ccc; }
-            .meta { color: #666; font-size: 0.9em; margin-bottom: 1em; }
+            h1 { font-size: 14pt; margin: 0 0 0.2em 0; }
+            h2 { font-size: 12pt; margin: 0.6em 0 0.2em 0; }
+            h3 { font-size: 11pt; margin: 0.4em 0 0.1em 0; }
+            p { margin: 0.2em 0; }
+            ul, ol { padding-left: 1.2em; margin: 0.2em 0; }
+            li { margin-bottom: 0; line-height: 1.2; }
+            hr { margin: 0.5em 0; border: none; border-top: 1px solid #ccc; }
+            .meta { color: #666; font-size: 9pt; margin-bottom: 0.3em; }
             @media print {
               body { padding: 0; }
             }

@@ -39,11 +39,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
 export function formatRecipeAsMarkdown(recipe: ScrapedRecipe): string {
   const lines: string[] = [];
 
-  // Title
-  if (recipe.name) {
-    lines.push(`# ${recipe.name}`);
-    lines.push('');
-  }
+  // Skip title - it goes in the name field separately
 
   // Description
   if (recipe.description) {
