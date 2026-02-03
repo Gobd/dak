@@ -15,6 +15,27 @@ catalogs:
     '@tanstack/react-query':
       specifier: ^5.90.20
       version: 5.90.20
+    '@tiptap/core':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/extension-placeholder':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/extension-task-item':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/extension-task-list':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/markdown':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/react':
+      specifier: ^3.18.0
+      version: 3.18.0
+    '@tiptap/starter-kit':
+      specifier: ^3.18.0
+      version: 3.18.0
     '@types/node':
       specifier: ^24.0.0
       version: 24.10.9
@@ -389,25 +410,25 @@ importers:
         specifier: workspace:*
         version: link:../packages/ui
       '@tiptap/core':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@tiptap/pm@3.18.0)
       '@tiptap/extension-placeholder':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@tiptap/extensions@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
       '@tiptap/extension-task-item':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@tiptap/extension-list@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
       '@tiptap/extension-task-list':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@tiptap/extension-list@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
       '@tiptap/markdown':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0)
       '@tiptap/react':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0(@floating-ui/dom@1.7.5)(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tiptap/starter-kit':
-        specifier: ^3.18.0
+        specifier: 'catalog:'
         version: 3.18.0
       jszip:
         specifier: ^3.10.1
@@ -588,6 +609,70 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.11(@types/node@25.1.0)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
+  recipe-org:
+    dependencies:
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
+      '@tiptap/core':
+        specifier: 'catalog:'
+        version: 3.18.0(@tiptap/pm@3.18.0)
+      '@tiptap/extension-placeholder':
+        specifier: 'catalog:'
+        version: 3.18.0(@tiptap/extensions@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
+      '@tiptap/extension-task-item':
+        specifier: 'catalog:'
+        version: 3.18.0(@tiptap/extension-list@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
+      '@tiptap/extension-task-list':
+        specifier: 'catalog:'
+        version: 3.18.0(@tiptap/extension-list@3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0))
+      '@tiptap/markdown':
+        specifier: 'catalog:'
+        version: 3.18.0(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0)
+      '@tiptap/react':
+        specifier: 'catalog:'
+        version: 3.18.0(@floating-ui/dom@1.7.5)(@tiptap/core@3.18.0(@tiptap/pm@3.18.0))(@tiptap/pm@3.18.0)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@tiptap/starter-kit':
+        specifier: 'catalog:'
+        version: 3.18.0
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.563.0(react@19.2.4)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.4
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.4(react@19.2.4)
+      react-router-dom:
+        specifier: 'catalog:'
+        version: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      zustand:
+        specifier: 'catalog:'
+        version: 5.0.10(@types/react@19.2.10)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
+    devDependencies:
+      '@dak/vite-shared-react':
+        specifier: workspace:*
+        version: link:../packages/vite-shared-react
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.9
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.10
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.10)
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.1.18
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.0-beta.11(@types/node@24.10.9)(esbuild@0.27.2)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   tracker:
     dependencies:

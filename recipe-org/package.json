@@ -1,18 +1,17 @@
 {
-  "name": "notes-app",
-  "version": "1.0.0",
+  "name": "recipe-org",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
     "check": "pnpm typecheck && pnpm build",
     "analyze": "ANALYZE=true pnpm build"
   },
   "dependencies": {
-    "@dak/hooks": "workspace:*",
     "@dak/ui": "workspace:*",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-placeholder": "catalog:",
@@ -21,7 +20,6 @@
     "@tiptap/markdown": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",
-    "jszip": "^3.10.1",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

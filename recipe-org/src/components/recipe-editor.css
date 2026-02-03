@@ -1,0 +1,190 @@
+/* Recipe Editor Styles */
+
+.recipe-editor {
+  min-height: 200px;
+}
+
+.recipe-editor-wrapper {
+  min-height: 100%;
+}
+
+.recipe-editor .tiptap {
+  min-height: 200px;
+  padding: 0.75rem;
+  outline: none;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.recipe-editor .tiptap:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.recipe-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Headings */
+.recipe-editor .tiptap h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.recipe-editor .tiptap h1:first-child {
+  margin-top: 0;
+}
+
+.recipe-editor .tiptap h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.recipe-editor .tiptap h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+/* Paragraphs */
+.recipe-editor .tiptap p {
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+/* Links */
+.recipe-editor .tiptap a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Lists */
+.recipe-editor .tiptap ul {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  list-style-type: disc;
+}
+
+.recipe-editor .tiptap ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  list-style-type: decimal;
+}
+
+.recipe-editor .tiptap li {
+  margin-bottom: 0.25rem;
+  color: var(--color-text);
+}
+
+.recipe-editor .tiptap li p {
+  margin-bottom: 0;
+}
+
+/* Task lists */
+.recipe-editor .tiptap ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.recipe-editor .tiptap ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.recipe-editor .tiptap ul[data-type='taskList'] li > label {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.recipe-editor .tiptap ul[data-type='taskList'] li > div {
+  flex: 1;
+}
+
+.recipe-editor .tiptap ul[data-type='taskList'] input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+/* Completed tasks */
+.recipe-editor .tiptap ul[data-type='taskList'] li[data-checked='true'] > div {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* Code */
+.recipe-editor .tiptap code {
+  background-color: var(--color-surface-sunken);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.recipe-editor .tiptap pre {
+  background-color: var(--color-surface-sunken);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+}
+
+.recipe-editor .tiptap pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Blockquote */
+.recipe-editor .tiptap blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Horizontal rule */
+.recipe-editor .tiptap hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5rem 0;
+}
+
+/* Selection */
+.recipe-editor .tiptap ::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Strong/Bold */
+.recipe-editor .tiptap strong {
+  font-weight: 600;
+}
+
+/* Emphasis/Italic */
+.recipe-editor .tiptap em {
+  font-style: italic;
+}
+
+/* Read-only mode */
+.recipe-editor[data-readonly='true'] .tiptap {
+  cursor: default;
+}
