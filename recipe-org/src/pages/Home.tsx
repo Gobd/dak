@@ -1,14 +1,19 @@
-import { Download, Shuffle } from 'lucide-react';
-import { useEffect } from 'react';
+import { ArrowDownAZ, ArrowUpDown, Calendar, Download, Shuffle, Star } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, SearchInput, Spinner } from '@dak/ui';
+import { useLocalStorage } from '@dak/hooks';
 import { RecipeList } from '../components/RecipeList';
 import { TagInput } from '../components/TagInput';
 import { useRecipeStore } from '../stores/recipe-store';
 
+type SortOption = 'title' | 'rating' | 'date';
+
 export function Home() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [sortBy, setSortBy] = useLocalStorage<SortOption>('recipe-sort', 'title');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const {
     recipes,
@@ -20,13 +25,26 @@ export function Home() {
     setSearchTerm,
     setSelectedTags,
     loadRecipes,
-    deleteRecipe,
-    removeTagFromRecipe,
-    updateRecipeRating,
     getAllRecipesForExport,
   } = useRecipeStore();
 
   const showSkeletons = loading && !initialized;
+
+  const sortedRecipes = useMemo(() => {
+    const sorted = [...recipes];
+    switch (sortBy) {
+      case 'title':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'rating':
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case 'date':
+        sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+    }
+    return sorted;
+  }, [recipes, sortBy]);
 
   // Update URL params when search state changes
   useEffect(() => {
@@ -61,9 +79,9 @@ export function Home() {
   }, [loadRecipes, searchParams]);
 
   const handleRandomRecipe = () => {
-    if (recipes.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * recipes.length);
-    const randomRecipe = recipes[randomIndex];
+    if (sortedRecipes.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * sortedRecipes.length);
+    const randomRecipe = sortedRecipes[randomIndex];
     if (randomRecipe) {
       navigate(`/recipe/${randomRecipe.id}`);
     }
@@ -143,26 +161,69 @@ export function Home() {
         </p>
 
         <div className="flex gap-2">
+          <div className="relative">
+            <Button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              variant="ghost"
+              size="sm"
+              title="Sort recipes"
+            >
+              <ArrowUpDown className="w-4 h-4" />
+            </Button>
+            {showSortMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-20 bg-surface-raised border border-border rounded-md shadow-lg min-w-[140px]">
+                  <button
+                    onClick={() => {
+                      setSortBy('title');
+                      setShowSortMenu(false);
+                    }}
+                    className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-surface-sunken ${sortBy === 'title' ? 'text-accent' : 'text-text'}`}
+                  >
+                    <ArrowDownAZ className="w-4 h-4" />
+                    Title
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortBy('rating');
+                      setShowSortMenu(false);
+                    }}
+                    className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-surface-sunken ${sortBy === 'rating' ? 'text-accent' : 'text-text'}`}
+                  >
+                    <Star className="w-4 h-4" />
+                    Rating
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortBy('date');
+                      setShowSortMenu(false);
+                    }}
+                    className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-surface-sunken ${sortBy === 'date' ? 'text-accent' : 'text-text'}`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Date Added
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Button
             onClick={handleRandomRecipe}
-            disabled={recipes.length === 0}
+            disabled={sortedRecipes.length === 0}
             variant="ghost"
             size="sm"
+            title="Random recipe"
           >
             <Shuffle className="w-4 h-4" />
           </Button>
-          <Button onClick={handleDownloadCSV} variant="ghost" size="sm">
+          <Button onClick={handleDownloadCSV} variant="ghost" size="sm" title="Download CSV">
             <Download className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <RecipeList
-        recipes={recipes}
-        onDeleteRecipe={deleteRecipe}
-        onRemoveTag={removeTagFromRecipe}
-        onRatingChange={updateRecipeRating}
-      />
+      <RecipeList recipes={sortedRecipes} />
     </div>
   );
 }

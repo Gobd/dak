@@ -67,6 +67,7 @@ export function RecipePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [scrapePreview, setScrapePreview] = useState<string | null>(null);
+  const [scrapePreviewTitle, setScrapePreviewTitle] = useState<string | null>(null);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printIncludeNotes, setPrintIncludeNotes] = useState(false);
@@ -375,11 +376,7 @@ export function RecipePage() {
       const scrapedRecipe = await scrapeRecipe(recipeUrl);
       const markdown = formatRecipeAsMarkdown(scrapedRecipe);
       setScrapePreview(markdown);
-
-      // Auto-fill name from scraped recipe
-      if (scrapedRecipe.name) {
-        setRecipeName(scrapedRecipe.name);
-      }
+      setScrapePreviewTitle(scrapedRecipe.name || null);
     } catch (err) {
       setScrapeError(err instanceof Error ? err.message : 'Failed to fetch recipe');
     } finally {
@@ -395,7 +392,14 @@ export function RecipePage() {
       } else {
         setRecipeContent(scrapePreview);
       }
+
+      // Auto-fill name from scraped recipe title
+      if (scrapePreviewTitle) {
+        setRecipeName(scrapePreviewTitle);
+      }
+
       setScrapePreview(null);
+      setScrapePreviewTitle(null);
     }
   };
 
@@ -519,7 +523,10 @@ export function RecipePage() {
             <h1 className="text-3xl font-bold text-text">{recipe.name}</h1>
             <div className="flex gap-2">
               {recipe.recipe && (
-                <Button variant="secondary" onClick={() => setShowPrintModal(true)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => (recipe.notes ? setShowPrintModal(true) : handlePrint())}
+                >
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
@@ -877,11 +884,17 @@ export function RecipePage() {
 
       <Modal
         open={!!scrapePreview}
-        onClose={() => setScrapePreview(null)}
+        onClose={() => {
+          setScrapePreview(null);
+          setScrapePreviewTitle(null);
+        }}
         title="Recipe Preview"
         wide
       >
         <div className="space-y-4">
+          {scrapePreviewTitle && (
+            <h2 className="text-xl font-bold text-text">{scrapePreviewTitle}</h2>
+          )}
           <p className="text-sm text-text-secondary">
             Preview the fetched recipe below. Click Import to add it to the recipe field.
           </p>
@@ -889,7 +902,13 @@ export function RecipePage() {
             <RecipeEditor content={scrapePreview || ''} onChange={() => {}} editable={false} />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setScrapePreview(null)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setScrapePreview(null);
+                setScrapePreviewTitle(null);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleImportRecipe}>Import to Recipe</Button>
