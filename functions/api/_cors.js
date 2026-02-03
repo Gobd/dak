@@ -1,19 +1,24 @@
 // Shared CORS utilities for Cloudflare Pages Functions
 // Set ALLOWED_ORIGIN env var in Cloudflare (e.g., https://yourdomain.com)
 
-const LOCALHOST_ORIGINS = ['http://localhost:8080', 'http://127.0.0.1:8080'];
+// Check if origin is localhost (any port)
+function isLocalhost(origin) {
+  if (!origin) return false;
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
 
 export function getCorsHeaders(request, env, options = {}) {
   const origin = request.headers.get('Origin') || '';
 
-  // Build allowed origins list from env var + localhost for dev
-  const allowedOrigins = env?.ALLOWED_ORIGIN
-    ? [env.ALLOWED_ORIGIN, ...LOCALHOST_ORIGINS]
-    : LOCALHOST_ORIGINS;
+  // Allow any localhost port for dev, plus configured production origin
+  const isAllowed = isLocalhost(origin) || (env?.ALLOWED_ORIGIN && origin === env.ALLOWED_ORIGIN);
 
-  const allowedOrigin = allowedOrigins.find((o) => origin.startsWith(o))
-    ? origin
-    : allowedOrigins[0];
+  const allowedOrigin = isAllowed ? origin : env?.ALLOWED_ORIGIN || 'http://localhost:8080';
 
   const headers = {
     'Access-Control-Allow-Origin': allowedOrigin,
