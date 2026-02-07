@@ -23,16 +23,16 @@
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@storybook/addon-a11y": "^10.2.1",
-    "@storybook/react": "^10.2.1",
-    "@storybook/react-vite": "^10.2.1",
+    "@storybook/addon-a11y": "^10.2.7",
+    "@storybook/react": "^10.2.7",
+    "@storybook/react-vite": "^10.2.7",
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "storybook": "^10.2.1",
+    "storybook": "^10.2.7",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "8.0.0-beta.13"
   }
 }
