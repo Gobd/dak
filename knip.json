@@ -2,9 +2,10 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignoreBinaries": ["sleep", "open", "uv"],
   "rules": {
-    "duplicates": "off"
+    "duplicates": "off",
+    "types": "off"
   },
-  "ignore": ["**/*.css"],
+  "ignore": ["**/*.css", "elixir/**"],
   "ignoreUnresolved": ["vite/client"],
   "workspaces": {
     ".": {

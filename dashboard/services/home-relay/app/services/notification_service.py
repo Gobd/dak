@@ -210,7 +210,7 @@ def add_event(event_type: str, name: str, due_date: str, data: dict | None = Non
     """
     # Normalize due_date to just the date part
     if "T" in due_date:
-        due_date = due_date.split("T")[0]
+        due_date = due_date.split("T", maxsplit=1)[0]
 
     with closing(_get_db()) as conn:
         # Ensure type exists in preferences (NULL = unconfigured, requires user to pick)

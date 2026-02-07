@@ -112,7 +112,7 @@ async def _install_piper() -> bool:
                     if member.name:  # Skip empty name (the directory itself)
                         tar.extract(member, PIPER_DIR)
 
-        Path(tmp_path).unlink()
+        Path(tmp_path).unlink()  # noqa: ASYNC240
         logger.info("Piper TTS installed successfully")
         return True
     except Exception:
