@@ -12,18 +12,14 @@ packages:
   - packages/*
 
 catalog:
-<<<<<<< Updated upstream
-  '@supabase/supabase-js': ^2.93.3
-  '@tiptap/core': ^3.18.0
-  '@tiptap/extension-placeholder': ^3.18.0
-  '@tiptap/extension-task-item': ^3.18.0
-  '@tiptap/extension-task-list': ^3.18.0
-  '@tiptap/markdown': ^3.18.0
-  '@tiptap/react': ^3.18.0
-  '@tiptap/starter-kit': ^3.18.0
-=======
   '@supabase/supabase-js': ^2.95.3
->>>>>>> Stashed changes
+  '@tiptap/core': ^3.19.0
+  '@tiptap/extension-placeholder': ^3.19.0
+  '@tiptap/extension-task-item': ^3.19.0
+  '@tiptap/extension-task-list': ^3.19.0
+  '@tiptap/markdown': ^3.19.0
+  '@tiptap/react': ^3.19.0
+  '@tiptap/starter-kit': ^3.19.0
   '@tailwindcss/vite': ^4.1.18
   '@tanstack/react-query': ^5.90.20
   '@types/node': ^24.10.11
@@ -39,6 +35,6 @@ catalog:
   rollup-plugin-visualizer: ^6.0.5
   tailwindcss: ^4.1.18
   typescript: ~5.9.3
-  vite: 8.0.0-beta.11
+  vite: 8.0.0-beta.13
   vite-plugin-pwa: ^1.2.0
   zustand: ^5.0.11

@@ -33,6 +33,6 @@
     "storybook": "^10.2.7",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "8.0.0-beta.13"
+    "vite": "catalog:"
   }
 }
