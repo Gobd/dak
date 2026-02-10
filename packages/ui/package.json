@@ -25,7 +25,7 @@
     "@dak/vite-shared-react": "workspace:*",
     "@storybook/addon-a11y": "^10.2.7",
     "@storybook/react": "^10.2.7",
-    "@storybook/react-vite": "^10.2.7",
+    "@storybook/react-vite": "^10.2.8",
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
