@@ -13,7 +13,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@ncdai/react-wheel-picker": "^1.1.0",
+    "@ncdai/react-wheel-picker": "^1.2.0",
     "@supabase/supabase-js": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

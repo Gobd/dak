@@ -515,8 +515,8 @@ importers:
   packages/ui:
     dependencies:
       '@ncdai/react-wheel-picker':
-        specifier: ^1.1.0
-        version: 1.1.0(react@19.2.4)
+        specifier: ^1.2.0
+        version: 1.2.0(react@19.2.4)
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.95.3
@@ -1496,8 +1496,8 @@ packages:
   '@napi-rs/wasm-runtime@1.1.1':
     resolution: {integrity: sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A==}
 
-  '@ncdai/react-wheel-picker@1.1.0':
-    resolution: {integrity: sha512-c6zFfO0lVlJCnmBufBbmpq7GFYFrLi1wpt11wZDP5EukWMLKd3lrBNQ1Mofv8fsxEsM0PqksMCvxwJg3NrOBgQ==}
+  '@ncdai/react-wheel-picker@1.2.0':
+    resolution: {integrity: sha512-Qe+5fuZD6G2rx1FGPvvxtY/8gee0VJgycvbdvTkgwEl9LnGU4Xyo7h3b5elC5oNDQjjniXVlr2Bi0joqTKLxyA==}
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
 
@@ -5517,7 +5517,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@ncdai/react-wheel-picker@1.1.0(react@19.2.4)':
+  '@ncdai/react-wheel-picker@1.2.0(react@19.2.4)':
     dependencies:
       react: 19.2.4
 
