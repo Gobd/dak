@@ -192,6 +192,8 @@ export function Dashboard() {
     // On mobile, navigate to the new note by hiding sidebar
     if (!isDesktop) {
       setShowSidebar(false);
+      // Push history state so back gesture returns to list instead of exiting PWA/iframe
+      window.history.pushState({ view: 'note' }, '');
     }
   };
 
