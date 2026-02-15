@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 MQTT_HOST = "localhost"
 MQTT_PORT = 1883
 HISTORY_SIZE = 60  # Several hours of history
-TREND_WINDOW = 6  # ~30-60 min of readings for trend
+TREND_THRESHOLD_TEMP = 0.3  # °C change to trigger trend
+TREND_THRESHOLD_HUMIDITY = 1.5  # % change to trigger trend
 CACHE_DB = Path.home() / ".config" / "home-relay" / "sensor_cache.db"
 MAX_CACHE_AGE = 90 * 60  # 90 min - older cached data treated as unavailable
 
@@ -194,14 +195,13 @@ def feels_like(temp_c: float, humidity: float) -> float:
 
 
 def get_trend(current: float, history: deque, attr: str) -> str:
-    """Calculate trend: 'rising', 'falling', or 'steady'."""
-    if len(history) < TREND_WINDOW:
+    """Calculate trend by comparing current reading to the previous one."""
+    if len(history) < 2:
         return "steady"
 
-    recent = list(history)[-TREND_WINDOW:]
-    avg = sum(getattr(r, attr) for r in recent) / len(recent)
-    diff = current - avg
-    threshold = 0.5 if attr == "temperature" else 2.0
+    prev = getattr(history[-2], attr)
+    diff = current - prev
+    threshold = TREND_THRESHOLD_TEMP if attr == "temperature" else TREND_THRESHOLD_HUMIDITY
 
     if diff > threshold:
         return "rising"
