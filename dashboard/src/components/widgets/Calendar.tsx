@@ -208,6 +208,25 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
   const headerHeight = calendarConfig?.headerHeight ?? 0; // Extra height in pixels for header section
 
+  // Dynamically calculate how many events fit per day cell
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [maxEventsPerCell, setMaxEventsPerCell] = useState(3);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      const cellHeight = el.clientHeight / weeksToShow;
+      // ~20px for date number, ~18px per event line, ~16px for "+N more" row
+      const available = cellHeight - 20;
+      const perEvent = 18;
+      const maxEvents = Math.max(2, Math.floor((available - 16) / perEvent));
+      setMaxEventsPerCell(maxEvents);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [weeksToShow]);
+
   // Google OAuth
   const {
     isSignedIn,
@@ -950,6 +969,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
 
         {/* Days grid */}
         <div
+          ref={gridRef}
           className="flex-1 grid grid-cols-7 overflow-y-auto"
           style={{ gridTemplateRows: `repeat(${weeksToShow}, 1fr)` }}
         >
@@ -979,7 +999,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                   {date.getDate()}
                 </div>
                 <div className="space-y-0.5 overflow-hidden">
-                  {dayEvents.slice(0, 3).map((event) => {
+                  {dayEvents.slice(0, maxEventsPerCell).map((event) => {
                     const isAllDay = !event.start.dateTime;
                     const timeRange = isAllDay
                       ? ''
@@ -1006,8 +1026,8 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                       </div>
                     );
                   })}
-                  {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-text-muted">+{dayEvents.length - 3} more</div>
+                  {dayEvents.length > maxEventsPerCell && (
+                    <div className="text-[10px] text-text-muted">+{dayEvents.length - maxEventsPerCell} more</div>
                   )}
                 </div>
               </div>
