@@ -186,6 +186,24 @@ select {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Calendar day cells - always-visible thin scrollbar for touch */
+.cal-day-cell {
+  scrollbar-width: thin;
+}
+.cal-day-cell::-webkit-scrollbar {
+  width: 3px;
+}
+.cal-day-cell::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cal-day-cell::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+}
+.dark .cal-day-cell::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Cursor hiding for kiosk mode */
 .hide-cursor {
   cursor: none !important;
