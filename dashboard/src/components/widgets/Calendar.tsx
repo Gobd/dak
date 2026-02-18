@@ -208,25 +208,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
   const headerHeight = calendarConfig?.headerHeight ?? 0; // Extra height in pixels for header section
 
-  // Dynamically calculate how many events fit per day cell
-  const gridRef = useRef<HTMLDivElement>(null);
-  const [maxEventsPerCell, setMaxEventsPerCell] = useState(3);
-
-  useEffect(() => {
-    const el = gridRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => {
-      const cellHeight = el.clientHeight / weeksToShow;
-      // ~20px for date number, ~18px per event line, ~16px for "+N more" row
-      const available = cellHeight - 20;
-      const perEvent = 18;
-      const maxEvents = Math.max(2, Math.floor((available - 16) / perEvent));
-      setMaxEventsPerCell(maxEvents);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [weeksToShow]);
-
   // Google OAuth
   const {
     isSignedIn,
@@ -969,7 +950,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
 
         {/* Days grid */}
         <div
-          ref={gridRef}
           className="flex-1 grid grid-cols-7 overflow-y-auto"
           style={{ gridTemplateRows: `repeat(${weeksToShow}, 1fr)` }}
         >
@@ -982,7 +962,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             return (
               <div
                 key={dateStr}
-                className={`border-r border-b border-border p-1 min-h-0 overflow-hidden cursor-pointer
+                className={`cal-day-cell border-r border-b border-border p-1 min-h-0 overflow-y-auto cursor-pointer
                            hover:bg-surface-sunken/30 ${isPastDate ? 'opacity-50' : ''}`}
                 onClick={() => {
                   setSelectedDate(date);
@@ -999,7 +979,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                   {date.getDate()}
                 </div>
                 <div className="space-y-0.5 overflow-hidden">
-                  {dayEvents.slice(0, maxEventsPerCell).map((event) => {
+                  {dayEvents.map((event) => {
                     const isAllDay = !event.start.dateTime;
                     const timeRange = isAllDay
                       ? ''
@@ -1010,7 +990,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                     return (
                       <div
                         key={event.id}
-                        className="text-[11px] line-clamp-2 px-1 rounded"
+                        className="text-[11px] truncate px-1 rounded"
                         style={{
                           backgroundColor: bgColor,
                           color: textColor,
@@ -1026,11 +1006,6 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                       </div>
                     );
                   })}
-                  {dayEvents.length > maxEventsPerCell && (
-                    <div className="text-[10px] text-text-muted">
-                      +{dayEvents.length - maxEventsPerCell} more
-                    </div>
-                  )}
                 </div>
               </div>
             );
