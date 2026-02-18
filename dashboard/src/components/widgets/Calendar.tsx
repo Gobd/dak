@@ -1027,7 +1027,9 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                     );
                   })}
                   {dayEvents.length > maxEventsPerCell && (
-                    <div className="text-[10px] text-text-muted">+{dayEvents.length - maxEventsPerCell} more</div>
+                    <div className="text-[10px] text-text-muted">
+                      +{dayEvents.length - maxEventsPerCell} more
+                    </div>
                   )}
                 </div>
               </div>
