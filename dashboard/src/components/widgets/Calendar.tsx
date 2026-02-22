@@ -495,13 +495,18 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       .filter((event) => {
         if (hiddenCalendarIds.includes(event.calendarId)) return false;
 
-        const startDate = event.start.dateTime?.split('T')[0] ?? event.start.date ?? '';
-        const endDate = event.end.dateTime?.split('T')[0] ?? event.end.date ?? '';
         const isAllDay = !event.start.dateTime;
 
         if (isAllDay) {
+          // All-day events use date strings directly (no timezone issues)
+          const startDate = event.start.date ?? '';
+          const endDate = event.end.date ?? '';
           return dateStr >= startDate && dateStr < endDate;
         }
+
+        // For timed events, parse to Date first so timezone offsets are resolved to local time
+        const startDate = formatLocalDate(new Date(event.start.dateTime!));
+        const endDate = formatLocalDate(new Date(event.end.dateTime!));
         return dateStr >= startDate && dateStr <= endDate;
       })
       .sort((a, b) => {
@@ -619,10 +624,17 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     let startTime = '09:00';
     let endTime = '10:00';
 
-    // Parse the event date
-    const eventDateStr = event.start.dateTime?.split('T')[0] || event.start.date || '';
-    const [year, month, day] = eventDateStr.split('-').map(Number);
-    const eventDate = new Date(year, month - 1, day);
+    // Parse the event date — use Date constructor for timed events so timezone offsets
+    // are resolved to local time (some calendars return UTC, others local offset)
+    let eventDate: Date;
+    if (event.start.dateTime) {
+      const parsed = new Date(event.start.dateTime);
+      eventDate = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    } else {
+      const eventDateStr = event.start.date || '';
+      const [year, month, day] = eventDateStr.split('-').map(Number);
+      eventDate = new Date(year, month - 1, day);
+    }
 
     if (!isAllDay && event.start.dateTime && event.end.dateTime) {
       const start = new Date(event.start.dateTime);
