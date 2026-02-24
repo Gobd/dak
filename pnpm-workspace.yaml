@@ -33,7 +33,7 @@ catalog:
   react-dom: ^19.2.4
   react-router-dom: ^7.13.0
   rollup-plugin-visualizer: ^6.0.5
-  tailwindcss: ^4.1.18
+  tailwindcss: ^4.2.1
   typescript: ~5.9.3
   vite: 8.0.0-beta.13
   vite-plugin-pwa: ^1.2.0
