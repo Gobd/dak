@@ -259,9 +259,12 @@ def update_subscriptions():
 
 
 def on_connect(client, _userdata, _flags, rc, _properties=None):
-    global mqtt_connected
+    global mqtt_connected, subscribed_topics
     mqtt_connected = rc == 0
     if mqtt_connected:
+        # Clear tracked subscriptions so update_subscriptions() re-subscribes after reconnect
+        # (the broker doesn't remember subscriptions from a previous connection)
+        subscribed_topics = set()
         # Subscribe to bridge topics for device management
         client.subscribe("zigbee2mqtt/bridge/devices")
         client.subscribe("zigbee2mqtt/bridge/info")

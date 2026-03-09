@@ -315,7 +315,7 @@ export type BrightnessSettings = {
      * Transitionmins
      */
     transitionMins?: number | null;
-    [key: string]: unknown | number | null | number | null | boolean | null | number | null | number | null | number | null | undefined;
+    [key: string]: unknown;
 };
 
 /**
@@ -350,7 +350,7 @@ export type CommandResult = {
      * Speak
      */
     speak?: string | null;
-    [key: string]: unknown | boolean | string | null | string | null | undefined;
+    [key: string]: unknown;
 };
 
 /**
@@ -1338,7 +1338,7 @@ export type VoiceCommand = {
      * Command
      */
     command?: string | null;
-    [key: string]: unknown | string | string | null | string | null | string | null | string | null | undefined;
+    [key: string]: unknown;
 };
 
 /**

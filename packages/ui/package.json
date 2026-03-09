@@ -13,7 +13,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@ncdai/react-wheel-picker": "^1.1.0",
+    "@ncdai/react-wheel-picker": "^1.2.0",
     "@supabase/supabase-js": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
@@ -23,14 +23,14 @@
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@storybook/addon-a11y": "^10.2.7",
-    "@storybook/react": "^10.2.7",
-    "@storybook/react-vite": "^10.2.7",
+    "@storybook/addon-a11y": "^10.2.16",
+    "@storybook/react": "^10.2.16",
+    "@storybook/react-vite": "^10.2.16",
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "storybook": "^10.2.7",
+    "storybook": "^10.2.16",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"

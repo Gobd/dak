@@ -166,10 +166,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       });
       if (response.ok) {
         get().removeNotification(id);
+      } else {
+        console.error('Dismiss failed:', response.status, response.statusText);
       }
-    } catch {
-      // Still remove from local state
-      get().removeNotification(id);
+    } catch (err) {
+      console.error('Dismiss request failed:', err);
     }
   },
 

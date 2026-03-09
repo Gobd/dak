@@ -155,7 +155,7 @@ if ! command -v node &>/dev/null || [[ "$(node -v)" != v24* ]]; then
   sudo apt-get install -y nodejs
 fi
 
-ZIGBEE2MQTT_VERSION="2.7.2"
+ZIGBEE2MQTT_VERSION="2.9.1"
 echo "Installing Zigbee2MQTT $ZIGBEE2MQTT_VERSION..."
 sudo mkdir -p /opt/zigbee2mqtt
 sudo chown -R "$USER:$USER" /opt/zigbee2mqtt
