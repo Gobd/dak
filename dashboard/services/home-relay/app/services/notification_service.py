@@ -93,12 +93,26 @@ def _init_db():
 
 
 def _cleanup_old_events():
-    """Remove notifications that are more than 10 days past due."""
+    """Remove notifications that are more than 10 days past due.
+
+    Skips events with active (non-expired) dismissals so that permanently
+    dismissed notifications aren't deleted and re-created by iframe
+    re-registration, which would lose the dismissal.
+    """
     cutoff = (date.today() - timedelta(days=10)).isoformat()
+    now_iso = datetime.now().isoformat()
 
     with closing(_get_db()) as conn:
-        # Get IDs of events with due_date more than 10 days ago
-        rows = conn.execute("SELECT id FROM events WHERE due_date < ?", (cutoff,)).fetchall()
+        # Only clean up old events that are NOT actively dismissed
+        rows = conn.execute(
+            """
+            SELECT e.id FROM events e
+            LEFT JOIN dismissed d ON e.id = d.event_id
+            WHERE e.due_date < ?
+              AND (d.dismissed_until IS NULL OR d.dismissed_until < ?)
+            """,
+            (cutoff, now_iso),
+        ).fetchall()
 
         if rows:
             ids = [r["id"] for r in rows]
