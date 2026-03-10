@@ -12,7 +12,7 @@ packages:
   - packages/*
 
 catalog:
-  '@supabase/supabase-js': ^2.98.0
+  '@supabase/supabase-js': ^2.99.0
   '@tiptap/core': ^3.20.1
   '@tiptap/extension-placeholder': ^3.20.1
   '@tiptap/extension-task-item': ^3.20.1
