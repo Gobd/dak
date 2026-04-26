@@ -46,7 +46,7 @@ jobs:
         if: steps.changes.outputs.python == 'true'
         run: uv run pyright
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: steps.changes.outputs.python == 'true'
 
       - uses: actions/setup-node@v6
@@ -58,6 +58,8 @@ jobs:
       - name: Install Node dependencies
         if: steps.changes.outputs.python == 'true'
         working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm install --frozen-lockfile
 
       - name: Check generated API client

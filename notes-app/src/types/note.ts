@@ -40,3 +40,20 @@ export function getNoteTitle(content: string | null, maxLength = 100): string {
   if (firstLine.length <= maxLength) return firstLine;
   return firstLine.slice(0, maxLength) + '...';
 }
+
+const TASK_LINE_RE = /^\s*[-*+]\s+\[([ xX])\]\s+/;
+
+export function hasTasks(content: string | null): boolean {
+  if (!content) return false;
+  return content.split('\n').some((line) => TASK_LINE_RE.test(line));
+}
+
+export function countUncheckedTasks(content: string | null): number {
+  if (!content) return 0;
+  let count = 0;
+  for (const line of content.split('\n')) {
+    const match = line.match(TASK_LINE_RE);
+    if (match && match[1] === ' ') count += 1;
+  }
+  return count;
+}

@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v6
         with:
@@ -21,6 +21,12 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
+        # GITHUB_TOKEN authenticates the shellcheck npm package's binary download
+        # (from GitHub Releases) so CI doesn't hit the anonymous 60-req/hr rate
+        # limit. This is the job-scoped token Actions auto-issues — it expires
+        # when the job ends and is read-only on public API by default.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm install --frozen-lockfile
 
       - name: Check all apps

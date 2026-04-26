@@ -1,7 +1,7 @@
 import { Pin, Lock, Users, CircleUser, SquareCheck, Square } from 'lucide-react';
 import { Button } from '@dak/ui';
 import type { Note } from '../types/note';
-import { getNoteTitle } from '../types/note';
+import { countUncheckedTasks, getNoteTitle, hasTasks } from '../types/note';
 
 interface NoteListItemProps {
   note: Note;
@@ -100,6 +100,8 @@ export function NoteListItem({
   const title = getNoteTitle(note.content);
   const query = searchQuery?.trim() || '';
   const isSharedWithMe = !!note.owner_email;
+  const showTaskCount = hasTasks(note.content);
+  const uncheckedCount = showTaskCount ? countUncheckedTasks(note.content) : 0;
 
   return (
     <Button
@@ -133,6 +135,15 @@ export function NoteListItem({
             query={query}
             className="font-medium text-base flex-1 min-w-0 text-text"
           />
+          {showTaskCount && (
+            <span
+              className={`ml-1.5 text-xs flex-shrink-0 ${
+                uncheckedCount > 0 ? 'text-warning' : 'text-text-muted'
+              }`}
+            >
+              ({uncheckedCount})
+            </span>
+          )}
         </div>
         <span className="text-xs flex-shrink-0 text-text-muted">
           {formatRelativeTime(note.updated_at)}
