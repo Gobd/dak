@@ -161,8 +161,8 @@ export function useNoteEditor({
       if (!li) return;
       // Match by DOM order against taskItem nodes in the doc. Only count
       // <li>s that have a checkbox child (i.e. task items, not bullets).
-      const allLis = Array.from(root.querySelectorAll<HTMLElement>('li')).filter(
-        (el) => el.querySelector(':scope > label > input[type="checkbox"]'),
+      const allLis = Array.from(root.querySelectorAll<HTMLElement>('li')).filter((el) =>
+        el.querySelector(':scope > label > input[type="checkbox"]'),
       );
       const liIndex = allLis.indexOf(li);
       if (liIndex < 0) return;
@@ -202,9 +202,7 @@ export function useNoteEditor({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (editorRef.current) {
-        lastContentRef.current = stripNbspFromListLines(
-          editorRef.current.getMarkdown?.() ?? '',
-        );
+        lastContentRef.current = stripNbspFromListLines(editorRef.current.getMarkdown?.() ?? '');
       }
       isInitPhaseRef.current = false;
     }, 400);
@@ -234,9 +232,7 @@ export function useNoteEditor({
       // normalized output as the clean baseline (see init-phase effect).
       setTimeout(() => {
         if (editorRef.current) {
-          lastContentRef.current = stripNbspFromListLines(
-            editorRef.current.getMarkdown?.() ?? '',
-          );
+          lastContentRef.current = stripNbspFromListLines(editorRef.current.getMarkdown?.() ?? '');
         }
         isInitPhaseRef.current = false;
       }, 400);
