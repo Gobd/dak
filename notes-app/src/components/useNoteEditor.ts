@@ -61,7 +61,9 @@ export function useNoteEditor({
   maxLength = 50000,
   placeholder = 'Start writing...',
 }: UseNoteEditorOptions) {
-  const lastContentRef = useRef(content);
+  // Store the sanitized form so later comparisons against editor.getMarkdown()
+  // (also sanitized) don't falsely flag the note as edited on mount/unmount.
+  const lastContentRef = useRef(stripNbspFromListLines(content));
   const isInitPhaseRef = useRef(true);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onUpdateRef = useRef(onUpdate);
@@ -80,26 +82,11 @@ export function useNoteEditor({
       TaskList,
       TaskItem.configure({
         nested: true,
-        // Allow toggling checkboxes in read-only mode, and — unlike the default
-        // which only flips the DOM checkbox — also update the underlying doc
-        // so `getMarkdown()` reflects the change and "Delete checked" works.
-        onReadOnlyChecked: (node, checked) => {
-          const ed = editorRef.current;
-          if (!ed) return false;
-          const { state, view } = ed;
-          let pos: number | null = null;
-          state.doc.descendants((n, p) => {
-            if (pos !== null) return false;
-            if (n === node) {
-              pos = p;
-              return false;
-            }
-            return true;
-          });
-          if (pos === null) return false;
-          view.dispatch(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked }));
-          return true;
-        },
+        // Let Tiptap keep the checkbox's new state in read-only mode. Doc
+        // updates are handled by the handleDOMEvents.change hook below, which
+        // looks up the node by DOM position (reliable across toggles) rather
+        // than by the stale closure `node` Tiptap would pass here.
+        onReadOnlyChecked: () => true,
       }),
       Placeholder.configure({
         placeholder,
@@ -155,10 +142,70 @@ export function useNoteEditor({
 
   editorRef.current = editor;
 
-  // Handle init phase (absorb Tiptap's markdown normalization)
-  // Must exceed TipTap's debounce (see DEBOUNCE_MS)
+  // In view-only mode, Tiptap's default task-item handler only toggles the
+  // DOM checkbox without updating the doc (so state isn't saved, "(N)"
+  // doesn't update, and Delete-checked sees stale content). We attach a
+  // capture-phase change listener on the editor's root to find the toggled
+  // checkbox's taskItem by DOM index and dispatch setNodeMarkup ourselves.
+  useEffect(() => {
+    if (!editor) return;
+    const root = editor.view.dom;
+    const handler = (event: Event) => {
+      const target = event.target as HTMLInputElement | null;
+      if (!target || target.tagName !== 'INPUT' || target.type !== 'checkbox') return;
+      if (editor.isEditable) return;
+      // Walk up to the nearest <li>. TaskItem's nodeView puts the checkbox
+      // inside <li><label><input/></label>…</li>; we don't match on
+      // data-type because it isn't always set on the nodeView's bare <li>.
+      const li = target.closest('li') as HTMLElement | null;
+      if (!li) return;
+      // Match by DOM order against taskItem nodes in the doc. Only count
+      // <li>s that have a checkbox child (i.e. task items, not bullets).
+      const allLis = Array.from(root.querySelectorAll<HTMLElement>('li')).filter(
+        (el) => el.querySelector(':scope > label > input[type="checkbox"]'),
+      );
+      const liIndex = allLis.indexOf(li);
+      if (liIndex < 0) return;
+      const { state, view } = editor;
+      let taskPos = -1;
+      let taskNode: ReturnType<typeof state.doc.nodeAt> = null;
+      let seen = 0;
+      state.doc.descendants((n, p) => {
+        if (taskPos >= 0) return false;
+        if (n.type.name === 'taskItem') {
+          if (seen === liIndex) {
+            taskPos = p;
+            taskNode = n;
+            return false;
+          }
+          seen += 1;
+        }
+        return true;
+      });
+      if (!taskNode || taskPos < 0) return;
+      view.dispatch(
+        state.tr.setNodeMarkup(taskPos, undefined, {
+          ...(taskNode as any).attrs,
+          checked: target.checked,
+        }),
+      );
+    };
+    root.addEventListener('change', handler, true);
+    return () => root.removeEventListener('change', handler, true);
+  }, [editor]);
+
+  // Handle init phase (absorb Tiptap's markdown normalization).
+  // Must exceed TipTap's debounce (see DEBOUNCE_MS). Also captures the
+  // editor's own normalized output as the "clean" baseline so an open+close
+  // without edits doesn't fire a false save (which bumps updated_at and
+  // reorders the note list).
   useEffect(() => {
     const timer = setTimeout(() => {
+      if (editorRef.current) {
+        lastContentRef.current = stripNbspFromListLines(
+          editorRef.current.getMarkdown?.() ?? '',
+        );
+      }
       isInitPhaseRef.current = false;
     }, 400);
     return () => clearTimeout(timer);
@@ -166,12 +213,13 @@ export function useNoteEditor({
 
   // Update content when it changes externally
   useEffect(() => {
-    if (editor && content !== lastContentRef.current) {
-      lastContentRef.current = content;
+    if (!editor) return;
+    const sanitized = stripNbspFromListLines(content);
+    if (sanitized !== lastContentRef.current) {
+      lastContentRef.current = sanitized;
       isInitPhaseRef.current = true;
 
       if (content) {
-        const sanitized = stripNbspFromListLines(content);
         (editor as any).commands.setContent(sanitized, { contentType: 'markdown' });
         // Delay focus until after browser has finished rendering the new content
         requestAnimationFrame(() => focusAtContentEnd(editor));
@@ -182,8 +230,14 @@ export function useNoteEditor({
         editor.commands.focus();
       }
 
-      // Reset init phase after content is set
+      // Reset init phase after content is set, capturing the editor's
+      // normalized output as the clean baseline (see init-phase effect).
       setTimeout(() => {
+        if (editorRef.current) {
+          lastContentRef.current = stripNbspFromListLines(
+            editorRef.current.getMarkdown?.() ?? '',
+          );
+        }
         isInitPhaseRef.current = false;
       }, 400);
     }
@@ -226,7 +280,16 @@ export function useNoteEditor({
     if (!editor) return;
     const sanitized = stripNbspFromListLines(markdown);
     lastContentRef.current = sanitized;
+    // `setContent` is gated on editable=true. In view-only mode (e.g. the
+    // "Delete checked lines" button used on a kiosk display) we need to
+    // flip editable on for the write, then restore it.
+    const wasEditable = editor.isEditable;
+    if (!wasEditable) editor.setEditable(true);
     (editor as any).commands.setContent(sanitized, { contentType: 'markdown' });
+    if (!wasEditable) {
+      editor.setEditable(false);
+      editor.commands.blur();
+    }
     onUpdateRef.current(sanitized);
   };
 
