@@ -6,6 +6,20 @@ import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
 
+// Tiptap's Paragraph extension emits `&nbsp;` as the markdown for an empty
+// paragraph to preserve blank lines. Its own parser reverses that, but
+// TaskItem/ListItem parsers do not — so an empty list line round-trips as
+// literal "&nbsp;" text inside the list item. Strip it from list lines on
+// load and before save so it never surfaces to the user.
+const NBSP_IN_LIST_RE = /^(\s*(?:[-*+]|\d+\.)\s+(?:\[[ xX]\]\s+)?)(?:&nbsp;| )\s*$/;
+function stripNbspFromListLines(markdown: string): string {
+  if (!markdown) return markdown;
+  return markdown
+    .split('\n')
+    .map((line) => line.replace(NBSP_IN_LIST_RE, '$1'))
+    .join('\n');
+}
+
 // Focus at end of actual content, skipping empty trailing paragraphs that TipTap creates
 function focusAtContentEnd(editor: ReturnType<typeof useEditor>): void {
   if (!editor) return;
@@ -51,13 +65,14 @@ export function useNoteEditor({
   const isInitPhaseRef = useRef(true);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onUpdateRef = useRef(onUpdate);
+  const editorRef = useRef<ReturnType<typeof useEditor> | null>(null);
 
   // Keep ref updated with latest callback
   useEffect(() => {
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
 
-  const initialContent = content;
+  const initialContent = stripNbspFromListLines(content);
 
   const editor = useEditor({
     extensions: [
@@ -65,7 +80,26 @@ export function useNoteEditor({
       TaskList,
       TaskItem.configure({
         nested: true,
-        onReadOnlyChecked: () => true,
+        // Allow toggling checkboxes in read-only mode, and — unlike the default
+        // which only flips the DOM checkbox — also update the underlying doc
+        // so `getMarkdown()` reflects the change and "Delete checked" works.
+        onReadOnlyChecked: (node, checked) => {
+          const ed = editorRef.current;
+          if (!ed) return false;
+          const { state, view } = ed;
+          let pos: number | null = null;
+          state.doc.descendants((n, p) => {
+            if (pos !== null) return false;
+            if (n === node) {
+              pos = p;
+              return false;
+            }
+            return true;
+          });
+          if (pos === null) return false;
+          view.dispatch(state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, checked }));
+          return true;
+        },
       }),
       Placeholder.configure({
         placeholder,
@@ -80,6 +114,7 @@ export function useNoteEditor({
     contentType: 'markdown',
     autofocus: false, // Handle focus manually after DOM is ready
     onCreate: ({ editor }) => {
+      editorRef.current = editor;
       // For new/empty notes, start with an h1 heading for the title
       if (!initialContent) {
         (editor as any).commands.setContent('# ', { contentType: 'markdown' });
@@ -99,6 +134,7 @@ export function useNoteEditor({
       },
     },
     onUpdate: ({ editor }) => {
+      editorRef.current = editor;
       // Skip updates during init phase (TipTap normalizing markdown)
       if (isInitPhaseRef.current) return;
 
@@ -108,7 +144,7 @@ export function useNoteEditor({
       }
 
       debounceTimerRef.current = setTimeout(() => {
-        const markdown = editor.getMarkdown();
+        const markdown = stripNbspFromListLines(editor.getMarkdown());
         if (markdown !== lastContentRef.current && markdown.length <= maxLength) {
           lastContentRef.current = markdown;
           onUpdate(markdown);
@@ -116,6 +152,8 @@ export function useNoteEditor({
       }, DEBOUNCE_MS);
     },
   });
+
+  editorRef.current = editor;
 
   // Handle init phase (absorb Tiptap's markdown normalization)
   // Must exceed TipTap's debounce (see DEBOUNCE_MS)
@@ -133,7 +171,8 @@ export function useNoteEditor({
       isInitPhaseRef.current = true;
 
       if (content) {
-        (editor as any).commands.setContent(content, { contentType: 'markdown' });
+        const sanitized = stripNbspFromListLines(content);
+        (editor as any).commands.setContent(sanitized, { contentType: 'markdown' });
         // Delay focus until after browser has finished rendering the new content
         requestAnimationFrame(() => focusAtContentEnd(editor));
       } else {
@@ -159,7 +198,7 @@ export function useNoteEditor({
       }
       // Flush any pending changes before unmount
       if (editorInstance && !isInitPhaseRef.current) {
-        const markdown = editorInstance.getMarkdown?.() ?? '';
+        const markdown = stripNbspFromListLines(editorInstance.getMarkdown?.() ?? '');
         if (markdown && markdown !== lastContentRef.current && markdown.length <= maxLength) {
           onUpdateRef.current(markdown);
         }
@@ -181,13 +220,14 @@ export function useNoteEditor({
   const blur = () => editor?.commands.blur();
   const getMarkdown = () => {
     if (!editor) return '';
-    return editor.getMarkdown() ?? '';
+    return stripNbspFromListLines(editor.getMarkdown() ?? '');
   };
   const setMarkdown = (markdown: string) => {
     if (!editor) return;
-    lastContentRef.current = markdown;
-    (editor as any).commands.setContent(markdown, { contentType: 'markdown' });
-    onUpdateRef.current(markdown);
+    const sanitized = stripNbspFromListLines(markdown);
+    lastContentRef.current = sanitized;
+    (editor as any).commands.setContent(sanitized, { contentType: 'markdown' });
+    onUpdateRef.current(sanitized);
   };
 
   return {
