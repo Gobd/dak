@@ -58,6 +58,8 @@ jobs:
       - name: Install Node dependencies
         if: steps.changes.outputs.python == 'true'
         working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm install --frozen-lockfile
 
       - name: Check generated API client
