@@ -1,23 +1,73 @@
 // Cloudflare Pages Function for scraping recipe JSON-LD from URLs
 import { getCorsHeaders, handleOptions } from '../_cors.js';
 
-// Extract JSON-LD scripts using HTMLRewriter (proper HTML parsing)
-async function extractJsonLd(response) {
+// Extract JSON-LD scripts and recipe notes using HTMLRewriter (proper HTML parsing).
+// Notes are rarely present in JSON-LD — most WordPress recipe plugins only render them
+// into the page HTML — so we grab them via CSS selectors covering the common plugins.
+async function extractFromHtml(response) {
   const jsonLdContents = [];
   let currentScript = '';
 
-  const rewriter = new HTMLRewriter().on('script[type="application/ld+json"]', {
-    text(text) {
-      currentScript += text.text;
-      if (text.lastInTextNode) {
-        jsonLdContents.push(currentScript);
-        currentScript = '';
-      }
-    },
-  });
+  // Collect <li> text inside known "notes" containers. We track which container we're
+  // inside via enter/exit handlers so that <li> text elsewhere on the page is ignored.
+  const notes = [];
+  let noteDepth = 0;
+  let currentNote = '';
+  let inNoteLi = false;
+
+  const noteContainerSelectors = [
+    '.wprm-recipe-notes', // WP Recipe Maker
+    '.tasty-recipes-notes-body', // Tasty Recipes
+    '.mv-create-notes', // MV Create (Mediavine)
+    '.recipe-notes',
+    '[itemprop="recipeNotes"]',
+  ].join(', ');
+
+  const rewriter = new HTMLRewriter()
+    .on('script[type="application/ld+json"]', {
+      text(text) {
+        currentScript += text.text;
+        if (text.lastInTextNode) {
+          jsonLdContents.push(currentScript);
+          currentScript = '';
+        }
+      },
+    })
+    .on(noteContainerSelectors, {
+      element(el) {
+        noteDepth++;
+        el.onEndTag(() => {
+          noteDepth--;
+        });
+      },
+    })
+    .on('li, p', {
+      element(el) {
+        if (noteDepth > 0) {
+          inNoteLi = true;
+          currentNote = '';
+          el.onEndTag(() => {
+            const cleaned = currentNote.trim();
+            if (cleaned) notes.push(cleaned);
+            currentNote = '';
+            inNoteLi = false;
+          });
+        }
+      },
+      text(text) {
+        if (inNoteLi) currentNote += text.text;
+      },
+    });
 
   await rewriter.transform(response).text();
-  return jsonLdContents;
+  return { jsonLdContents, notes };
+}
+
+// Check if a JSON-LD node is a Recipe. @type can be a string OR an array of strings.
+function isRecipe(node) {
+  const t = node && node['@type'];
+  if (!t) return false;
+  return Array.isArray(t) ? t.includes('Recipe') : t === 'Recipe';
 }
 
 // Find Recipe in JSON-LD data
@@ -25,16 +75,13 @@ function findRecipe(jsonLdContents) {
   for (const content of jsonLdContents) {
     try {
       const data = JSON.parse(content);
-
-      // Check if it's directly a Recipe
-      if (data['@type'] === 'Recipe') {
-        return data;
-      }
-
-      // Check in @graph array
-      if (data['@graph'] && Array.isArray(data['@graph'])) {
-        const found = data['@graph'].find((item) => item['@type'] === 'Recipe');
-        if (found) return found;
+      const nodes = Array.isArray(data) ? data : [data];
+      for (const node of nodes) {
+        if (isRecipe(node)) return node;
+        if (Array.isArray(node['@graph'])) {
+          const found = node['@graph'].find(isRecipe);
+          if (found) return found;
+        }
       }
     } catch {
       // Invalid JSON, continue to next
@@ -73,8 +120,8 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Extract JSON-LD using HTMLRewriter
-    const jsonLdContents = await extractJsonLd(response);
+    // Extract JSON-LD and scraped notes using HTMLRewriter
+    const { jsonLdContents, notes: htmlNotes } = await extractFromHtml(response);
 
     if (jsonLdContents.length === 0) {
       return new Response(JSON.stringify({ error: 'No JSON-LD found on page' }), {
@@ -106,19 +153,45 @@ export async function onRequestPost(context) {
       return iso;
     };
 
+    // Recipe instructions can be a string, an array of strings, an array of HowToStep
+    // objects, or a mix that includes HowToSection groupings (e.g. "For the sauce" +
+    // its own steps). We flatten everything into a flat list of step strings, with the
+    // section name prefixed as a pseudo-heading so grouping isn't lost.
     const formatInstructions = (instructions) => {
       if (!instructions) return [];
       if (typeof instructions === 'string') return [instructions];
-      if (Array.isArray(instructions)) {
-        return instructions.map((step) => {
-          if (typeof step === 'string') return step;
-          if (step.text) return step.text;
-          if (step['@type'] === 'HowToStep') return step.text || step.name || '';
-          return String(step);
-        });
-      }
-      return [];
+      if (!Array.isArray(instructions)) return [];
+
+      const out = [];
+      const visit = (step) => {
+        if (!step) return;
+        if (typeof step === 'string') {
+          const s = step.trim();
+          if (s) out.push(s);
+          return;
+        }
+        if (step['@type'] === 'HowToSection' && Array.isArray(step.itemListElement)) {
+          if (step.name) out.push(`### ${step.name}`);
+          for (const child of step.itemListElement) visit(child);
+          return;
+        }
+        // HowToStep or generic object with a text/name field
+        const text = (step.text || step.name || '').toString().trim();
+        if (text) out.push(text);
+      };
+      for (const step of instructions) visit(step);
+      return out;
     };
+
+    // Notes: prefer JSON-LD if present (rare), otherwise fall back to the notes we
+    // scraped out of the rendered HTML.
+    const jsonLdNotes = (() => {
+      const raw = recipe.recipeNotes || recipe.notes;
+      if (!raw) return [];
+      if (typeof raw === 'string') return [raw.trim()].filter(Boolean);
+      if (Array.isArray(raw)) return raw.map((n) => (typeof n === 'string' ? n : n?.text || '')).filter(Boolean);
+      return [];
+    })();
 
     const result = {
       name: recipe.name || '',
@@ -132,6 +205,7 @@ export async function onRequestPost(context) {
         : recipe.recipeYield,
       ingredients: recipe.recipeIngredient || [],
       instructions: formatInstructions(recipe.recipeInstructions),
+      notes: jsonLdNotes.length > 0 ? jsonLdNotes : htmlNotes,
       nutrition: recipe.nutrition
         ? {
             calories: recipe.nutrition.calories,

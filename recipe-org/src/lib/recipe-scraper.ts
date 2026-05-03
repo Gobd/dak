@@ -12,6 +12,7 @@ export interface ScrapedRecipe {
   yield: string | null;
   ingredients: string[];
   instructions: string[];
+  notes: string[];
   nutrition: {
     calories?: string;
     protein?: string;
@@ -71,20 +72,42 @@ export function formatRecipeAsMarkdown(recipe: ScrapedRecipe): string {
     lines.push('');
   }
 
-  // Instructions
+  // Instructions. Steps may include section headings (prefixed with `### ` by the
+  // scraper) to preserve HowToSection groupings — emit them as headings and restart
+  // numbering for the steps that follow.
   if (recipe.instructions && recipe.instructions.length > 0) {
     lines.push('## Instructions');
     lines.push('');
-    for (let i = 0; i < recipe.instructions.length; i++) {
-      const step = recipe.instructions[i];
-      // Clean up HTML entities
-      const cleaned = step
+    let stepNum = 1;
+    for (const raw of recipe.instructions) {
+      const cleaned = raw
         .replace(/&#39;/g, "'")
         .replace(/&quot;/g, '"')
         .replace(/&amp;/g, '&');
-      lines.push(`${i + 1}. ${cleaned}`);
+      if (cleaned.startsWith('### ')) {
+        lines.push(cleaned);
+        lines.push('');
+        stepNum = 1;
+        continue;
+      }
+      lines.push(`${stepNum}. ${cleaned}`);
       lines.push('');
+      stepNum++;
     }
+  }
+
+  // Notes
+  if (recipe.notes && recipe.notes.length > 0) {
+    lines.push('## Notes');
+    lines.push('');
+    for (const note of recipe.notes) {
+      const cleaned = note
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&');
+      lines.push(`- ${cleaned}`);
+    }
+    lines.push('');
   }
 
   // Nutrition (optional, keep it brief)
