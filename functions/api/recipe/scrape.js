@@ -189,7 +189,8 @@ export async function onRequestPost(context) {
       const raw = recipe.recipeNotes || recipe.notes;
       if (!raw) return [];
       if (typeof raw === 'string') return [raw.trim()].filter(Boolean);
-      if (Array.isArray(raw)) return raw.map((n) => (typeof n === 'string' ? n : n?.text || '')).filter(Boolean);
+      if (Array.isArray(raw))
+        return raw.map((n) => (typeof n === 'string' ? n : n?.text || '')).filter(Boolean);
       return [];
     })();
 
