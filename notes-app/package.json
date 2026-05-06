@@ -14,18 +14,14 @@
   "dependencies": {
     "@dak/hooks": "workspace:*",
     "@dak/ui": "workspace:*",
-    "@tiptap/core": "catalog:",
-    "@tiptap/extension-placeholder": "catalog:",
-    "@tiptap/extension-task-item": "catalog:",
-    "@tiptap/extension-task-list": "catalog:",
-    "@tiptap/markdown": "catalog:",
-    "@tiptap/react": "catalog:",
-    "@tiptap/starter-kit": "catalog:",
     "jszip": "^3.10.1",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
+    "slate": "catalog:",
+    "slate-history": "catalog:",
+    "slate-react": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
