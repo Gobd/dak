@@ -10,7 +10,7 @@ export type CheckItem = { type: 'check-item'; checked: boolean; children: Inline
 
 export type Block = Heading | Paragraph | BulletList | BulletItem | CheckList | CheckItem;
 
-export type PlainText = { text: string };
+export type PlainText = { text: string; bold?: boolean };
 export type Link = { type: 'link'; url: string; children: PlainText[] };
 export type Inline = PlainText | Link;
 
@@ -19,7 +19,6 @@ export type EditorValue = (Heading | Paragraph | BulletList | CheckList)[];
 const HEADING_RE = /^(#{1,3})\s+(.*)$/;
 const BULLET_RE = /^(\s*)[-*+]\s+(.*)$/;
 const CHECK_RE = /^(\s*)[-*+]\s+\[([ xX])\]\s?(.*)$/;
-const LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
 
 export function parseMarkdown(md: string): EditorValue {
   const lines = md.split('\n');
@@ -80,20 +79,74 @@ export function parseMarkdown(md: string): EditorValue {
   return out;
 }
 
+// Single-pass tokenizer for inlines. Scans for the earliest `[label](url)` or
+// `**bold**` and emits plain text between them. Bold inside link labels is not
+// supported (links nest plain text only).
 function parseInlines(text: string): Inline[] {
   if (!text) return [{ text: '' }];
   const nodes: Inline[] = [];
-  let lastEnd = 0;
-  LINK_RE.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = LINK_RE.exec(text)) !== null) {
-    if (m.index > lastEnd) nodes.push({ text: text.slice(lastEnd, m.index) });
-    nodes.push({ type: 'link', url: m[2], children: [{ text: m[1] }] });
-    lastEnd = m.index + m[0].length;
+  let pos = 0;
+
+  while (pos < text.length) {
+    const boldStart = findDelim(text, pos, '**');
+    const linkStart = findLinkStart(text, pos);
+
+    let nextStart = -1;
+    let kind: 'bold' | 'link' | null = null;
+    if (boldStart >= 0 && (linkStart < 0 || boldStart < linkStart)) {
+      nextStart = boldStart;
+      kind = 'bold';
+    } else if (linkStart >= 0) {
+      nextStart = linkStart;
+      kind = 'link';
+    }
+
+    if (kind === null) {
+      nodes.push({ text: text.slice(pos) });
+      break;
+    }
+
+    if (nextStart > pos) nodes.push({ text: text.slice(pos, nextStart) });
+
+    if (kind === 'bold') {
+      const close = findDelim(text, nextStart + 2, '**');
+      if (close < 0) {
+        // No closing delimiter — treat the `**` as literal text
+        nodes.push({ text: text.slice(nextStart) });
+        break;
+      }
+      const inner = text.slice(nextStart + 2, close);
+      if (inner.length > 0) nodes.push({ text: inner, bold: true });
+      pos = close + 2;
+    } else {
+      const m = text.slice(nextStart).match(/^\[([^\]]+)\]\(([^)]+)\)/);
+      if (!m) {
+        nodes.push({ text: text.slice(nextStart, nextStart + 1) });
+        pos = nextStart + 1;
+      } else {
+        nodes.push({ type: 'link', url: m[2], children: [{ text: m[1] }] });
+        pos = nextStart + m[0].length;
+      }
+    }
   }
-  if (lastEnd < text.length) nodes.push({ text: text.slice(lastEnd) });
+
   if (nodes.length === 0) nodes.push({ text: '' });
   return nodes;
+}
+
+function findDelim(text: string, from: number, delim: string): number {
+  const idx = text.indexOf(delim, from);
+  return idx;
+}
+
+function findLinkStart(text: string, from: number): number {
+  // Only return an index that looks like the start of a well-formed link.
+  for (let i = from; i < text.length; i += 1) {
+    if (text[i] !== '[') continue;
+    const rest = text.slice(i);
+    if (/^\[([^\]]+)\]\(([^)]+)\)/.test(rest)) return i;
+  }
+  return -1;
 }
 
 export function serializeMarkdown(value: Descendant[]): string {
@@ -128,7 +181,8 @@ function serializeInlines(children: Inline[]): string {
         const label = c.children.map((t) => t.text).join('');
         return `[${label}](${c.url})`;
       }
-      return (c as PlainText).text;
+      const t = c as PlainText;
+      return t.bold && t.text.length > 0 ? `**${t.text}**` : t.text;
     })
     .join('');
 }

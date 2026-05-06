@@ -3,7 +3,7 @@ import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor } from './RichNoteEditor';
-import type { SlateEditorHandle } from './editor/SlateEditor';
+import type { SlateEditorHandle } from '@dak/markdown-editor';
 import { useUserStore } from '../stores/user-store';
 import type { Note, NoteUpdate } from '../types/note';
 import type { Tag } from '../types/tag';
@@ -415,8 +415,7 @@ export function NoteEditor({
               {availableTags
                 .filter(
                   (tag) =>
-                    !newTagName.trim() ||
-                    tag.name.toLowerCase().includes(newTagName.toLowerCase()),
+                    !newTagName.trim() || tag.name.toLowerCase().includes(newTagName.toLowerCase()),
                 )
                 .slice(0, 8)
                 .map((tag) => (

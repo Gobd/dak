@@ -394,6 +394,9 @@ importers:
       '@dak/hooks':
         specifier: workspace:*
         version: link:../packages/hooks
+      '@dak/markdown-editor':
+        specifier: workspace:*
+        version: link:../packages/markdown-editor
       '@dak/ui':
         specifier: workspace:*
         version: link:../packages/ui
@@ -412,15 +415,6 @@ importers:
       react-router-dom:
         specifier: 'catalog:'
         version: 7.17.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      slate:
-        specifier: 'catalog:'
-        version: 0.124.1
-      slate-history:
-        specifier: 'catalog:'
-        version: 0.113.1(slate@0.124.1)
-      slate-react:
-        specifier: 'catalog:'
-        version: 0.124.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(slate-dom@0.124.1(slate@0.124.1))(slate@0.124.1)
       zustand:
         specifier: 'catalog:'
         version: 5.0.14(@types/react@19.2.16)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
@@ -480,6 +474,31 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.2.7
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.16
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/markdown-editor:
+    dependencies:
+      react:
+        specifier: ^18.0.0 || ^19.0.0
+        version: 19.2.7
+      react-dom:
+        specifier: ^18.0.0 || ^19.0.0
+        version: 19.2.7(react@19.2.7)
+      slate:
+        specifier: 'catalog:'
+        version: 0.124.1
+      slate-history:
+        specifier: 'catalog:'
+        version: 0.113.1(slate@0.124.1)
+      slate-react:
+        specifier: 'catalog:'
+        version: 0.124.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(slate-dom@0.124.1(slate@0.124.1))(slate@0.124.1)
     devDependencies:
       '@types/react':
         specifier: 'catalog:'

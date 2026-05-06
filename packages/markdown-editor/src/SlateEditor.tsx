@@ -32,6 +32,7 @@ export interface SlateEditorHandle {
   toggleCheckList: () => void;
   toggleBulletList: () => void;
   toggleHeading: (level: 1 | 2 | 3) => void;
+  toggleBold: () => void;
   deleteCheckedItems: () => void;
   uncheckAll: () => void;
 }
@@ -64,7 +65,8 @@ export const SlateEditor = forwardRef<SlateEditorHandle, Props>(function SlateEd
   useEffect(() => {
     if (initialMarkdown === lastEmittedRef.current) return;
     const parsed = parseMarkdown(initialMarkdown || '');
-    const next: Descendant[] = parsed.length > 0 ? parsed : [{ type: 'paragraph', children: [{ text: '' }] }];
+    const next: Descendant[] =
+      parsed.length > 0 ? parsed : [{ type: 'paragraph', children: [{ text: '' }] }];
     // Replace entire document contents
     editor.children = next;
     Transforms.deselect(editor);
@@ -114,7 +116,8 @@ export const SlateEditor = forwardRef<SlateEditorHandle, Props>(function SlateEd
     getMarkdown: () => serializeMarkdown(editor.children),
     setMarkdown: (md) => {
       const parsed = parseMarkdown(md || '');
-      const next: Descendant[] = parsed.length > 0 ? parsed : [{ type: 'paragraph', children: [{ text: '' }] }];
+      const next: Descendant[] =
+        parsed.length > 0 ? parsed : [{ type: 'paragraph', children: [{ text: '' }] }];
       editor.children = next;
       Transforms.deselect(editor);
       editor.onChange();
@@ -129,6 +132,7 @@ export const SlateEditor = forwardRef<SlateEditorHandle, Props>(function SlateEd
     toggleCheckList: () => toggleBlockList(editor, 'check-list', 'check-item'),
     toggleBulletList: () => toggleBlockList(editor, 'bullet-list', 'bullet-item'),
     toggleHeading: (level) => toggleHeading(editor, level),
+    toggleBold: () => toggleMark(editor, 'bold'),
     deleteCheckedItems: () => deleteCheckedItems(editor),
     uncheckAll: () => uncheckAll(editor),
   }));
@@ -233,7 +237,8 @@ function CheckItemElement({
   );
 }
 
-function LeafRenderer({ attributes, children }: RenderLeafProps) {
+function LeafRenderer({ attributes, children, leaf }: RenderLeafProps) {
+  if (leaf.bold) return <strong {...attributes}>{children}</strong>;
   return <span {...attributes}>{children}</span>;
 }
 
@@ -243,9 +248,16 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
   const { selection } = editor;
   if (!selection) return;
 
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'b') {
+    event.preventDefault();
+    toggleMark(editor, 'bold');
+    return;
+  }
+
   if (event.key === 'Enter') {
     const [match] = Editor.nodes(editor, {
-      match: (n) => SlateElement.isElement(n) && (n.type === 'check-item' || n.type === 'bullet-item'),
+      match: (n) =>
+        SlateElement.isElement(n) && (n.type === 'check-item' || n.type === 'bullet-item'),
     });
     if (match) {
       const [node] = match;
@@ -254,7 +266,8 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
         // Exit the list: lift the item out and convert to paragraph
         event.preventDefault();
         Transforms.unwrapNodes(editor, {
-          match: (n) => SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+          match: (n) =>
+            SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
           split: true,
         });
         Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
@@ -275,7 +288,11 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
     if (headingMatch) {
       const [, path] = headingMatch;
       const end = Editor.end(editor, path);
-      if (Range.isCollapsed(selection) && selection.anchor.offset === end.offset && selection.anchor.path.join(',') === end.path.join(',')) {
+      if (
+        Range.isCollapsed(selection) &&
+        selection.anchor.offset === end.offset &&
+        selection.anchor.path.join(',') === end.path.join(',')
+      ) {
         event.preventDefault();
         Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: '' }] });
         return;
@@ -296,9 +313,13 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
     if (!match) return;
     const [node] = match;
     event.preventDefault();
-    if (SlateElement.isElement(node) && (node.type === 'check-item' || node.type === 'bullet-item')) {
+    if (
+      SlateElement.isElement(node) &&
+      (node.type === 'check-item' || node.type === 'bullet-item')
+    ) {
       Transforms.unwrapNodes(editor, {
-        match: (n) => SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+        match: (n) =>
+          SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
         split: true,
       });
       Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
@@ -346,16 +367,28 @@ function withShortcuts(editor: CustomEditor): CustomEditor {
         Transforms.select(editor, range);
         if (!Range.isCollapsed(editor.selection!)) Transforms.delete(editor);
         const checked = (checkMatch[1] || '').toLowerCase() === 'x';
-        Transforms.setNodes(
-          editor,
-          { type: 'check-item', checked } as Partial<CustomElement>,
-          { match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n) },
-        );
-        Transforms.wrapNodes(
-          editor,
-          { type: 'check-list', children: [] } as CustomElement,
-          { match: (n) => SlateElement.isElement(n) && n.type === 'check-item' },
-        );
+        Transforms.setNodes(editor, { type: 'check-item', checked } as Partial<CustomElement>, {
+          match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+        });
+        Transforms.wrapNodes(editor, { type: 'check-list', children: [] } as CustomElement, {
+          match: (n) => SlateElement.isElement(n) && n.type === 'check-item',
+        });
+        return;
+      }
+
+      // Inline bold shortcut: "**word**" (just triggered by trailing space after close)
+      const boldMatch = before.match(/\*\*([^*]+)\*\*$/);
+      if (boldMatch) {
+        const startOffset = before.length - boldMatch[0].length;
+        const boldRange = {
+          anchor: { path: anchor.path, offset: startOffset },
+          focus: anchor,
+        };
+        Transforms.select(editor, boldRange);
+        Transforms.delete(editor);
+        Transforms.insertNodes(editor, { text: boldMatch[1], bold: true });
+        // Insert a trailing space as plain text so the user doesn't stay bold
+        Transforms.insertNodes(editor, { text: ' ' });
         return;
       }
 
@@ -363,16 +396,12 @@ function withShortcuts(editor: CustomEditor): CustomEditor {
       if (/^[-*+]$/.test(before)) {
         Transforms.select(editor, range);
         if (!Range.isCollapsed(editor.selection!)) Transforms.delete(editor);
-        Transforms.setNodes(
-          editor,
-          { type: 'bullet-item' } as Partial<CustomElement>,
-          { match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n) },
-        );
-        Transforms.wrapNodes(
-          editor,
-          { type: 'bullet-list', children: [] } as CustomElement,
-          { match: (n) => SlateElement.isElement(n) && n.type === 'bullet-item' },
-        );
+        Transforms.setNodes(editor, { type: 'bullet-item' } as Partial<CustomElement>, {
+          match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+        });
+        Transforms.wrapNodes(editor, { type: 'bullet-list', children: [] } as CustomElement, {
+          match: (n) => SlateElement.isElement(n) && n.type === 'bullet-item',
+        });
         return;
       }
     }
@@ -418,7 +447,7 @@ function withShortcuts(editor: CustomEditor): CustomEditor {
     }
     // Strip unknown marks off text nodes
     if (!SlateElement.isElement(node) && 'text' in node) {
-      const knownKeys = new Set(['text']);
+      const knownKeys = new Set(['text', 'bold']);
       const extra = Object.keys(node).filter((k) => !knownKeys.has(k));
       if (extra.length > 0) {
         const clean: Record<string, unknown> = {};
@@ -435,7 +464,11 @@ function withShortcuts(editor: CustomEditor): CustomEditor {
 
 // --- Toolbar commands ---
 
-function toggleBlockList(editor: CustomEditor, listType: 'check-list' | 'bullet-list', itemType: 'check-item' | 'bullet-item') {
+function toggleBlockList(
+  editor: CustomEditor,
+  listType: 'check-list' | 'bullet-list',
+  itemType: 'check-item' | 'bullet-item',
+) {
   const [match] = Editor.nodes(editor, {
     match: (n) => SlateElement.isElement(n) && n.type === itemType,
   });
@@ -450,7 +483,8 @@ function toggleBlockList(editor: CustomEditor, listType: 'check-list' | 'bullet-
   }
   // Not in this list; convert current block
   Transforms.unwrapNodes(editor, {
-    match: (n) => SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+    match: (n) =>
+      SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
     split: true,
   });
   const setProps: Partial<CustomElement> =
@@ -460,11 +494,9 @@ function toggleBlockList(editor: CustomEditor, listType: 'check-list' | 'bullet-
   Transforms.setNodes(editor, setProps, {
     match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
   });
-  Transforms.wrapNodes(
-    editor,
-    { type: listType, children: [] } as CustomElement,
-    { match: (n) => SlateElement.isElement(n) && n.type === itemType },
-  );
+  Transforms.wrapNodes(editor, { type: listType, children: [] } as CustomElement, {
+    match: (n) => SlateElement.isElement(n) && n.type === itemType,
+  });
 }
 
 function toggleHeading(editor: CustomEditor, level: 1 | 2 | 3) {
@@ -477,7 +509,8 @@ function toggleHeading(editor: CustomEditor, level: 1 | 2 | 3) {
   }
   // Unwrap any list first so the block can become a heading
   Transforms.unwrapNodes(editor, {
-    match: (n) => SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+    match: (n) =>
+      SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
     split: true,
   });
   Transforms.setNodes(editor, { type: 'heading', level } as Partial<CustomElement>, {
@@ -499,6 +532,16 @@ function deleteCheckedItems(editor: CustomEditor) {
       Transforms.removeNodes(editor, { at: path });
     }
   });
+}
+
+function toggleMark(editor: CustomEditor, mark: 'bold') {
+  const marks = Editor.marks(editor);
+  const isActive = marks ? (marks as Record<string, unknown>)[mark] === true : false;
+  if (isActive) {
+    Editor.removeMark(editor, mark);
+  } else {
+    Editor.addMark(editor, mark, true);
+  }
 }
 
 function focusAtContentEnd(editor: CustomEditor) {

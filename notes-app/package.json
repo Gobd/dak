@@ -13,15 +13,13 @@
   },
   "dependencies": {
     "@dak/hooks": "workspace:*",
+    "@dak/markdown-editor": "workspace:*",
     "@dak/ui": "workspace:*",
     "jszip": "^3.10.1",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-router-dom": "catalog:",
-    "slate": "catalog:",
-    "slate-history": "catalog:",
-    "slate-react": "catalog:",
     "zustand": "catalog:"
   },
   "devDependencies": {
