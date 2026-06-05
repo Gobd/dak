@@ -1,6 +1,6 @@
 export { SlateEditor } from './SlateEditor';
 export type { SlateEditorHandle } from './SlateEditor';
-export { parseMarkdown, serializeMarkdown } from './markdown';
+export { parseMarkdown, serializeMarkdown, renderInlines, markdownToHtml } from './markdown';
 export type {
   EditorValue,
   Block,

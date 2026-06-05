@@ -21,7 +21,7 @@ import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
 import { RecipeEditor } from '../components/RecipeEditor';
 import { TagInput } from '../components/TagInput';
 import { StarRating } from '../components/StarRating';
-import { markdownToHtml } from '../lib/markdown-to-html';
+import { markdownToHtml } from '@dak/markdown-editor';
 import { scrapeRecipe, formatRecipeAsMarkdown } from '../lib/recipe-scraper';
 import { formatDeweyDecimal } from '../lib/utils';
 import { useRecipeStore } from '../stores/recipe-store';

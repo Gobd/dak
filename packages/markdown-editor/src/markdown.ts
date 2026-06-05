@@ -69,16 +69,15 @@ export function parseMarkdown(md: string): EditorValue {
       continue;
     }
 
-    // Paragraph (possibly empty). Blank lines stay as empty paragraphs so
     // blank-line intent round-trips.
-    // However, to avoid extra spacing from standard markdown serializers (like TipTap),
+    // However, to avoid extra spacing from standard markdown serializers,
     // we skip a single empty line if it immediately follows a structural block (list or heading).
     if (line.trim() === '') {
       const last = out[out.length - 1];
       const isAfterBlock = last && ['check-list', 'bullet-list', 'heading'].includes(last.type);
       // We also need to avoid collapsing multiple empty lines into nothing.
       // So we only skip if the previous line wasn't ALSO skipped... but we don't track that easily.
-      // A simpler way: only skip if the last item in `out` is a list or heading. 
+      // A simpler way: only skip if the last item in `out` is a list or heading.
       // If we skip it, we don't push anything. The NEXT empty line would see `last` is STILL a list/heading?
       // Actually, if we push an empty paragraph, the NEXT empty line sees `last.type === 'paragraph'`.
       // So `isAfterBlock` will only be true for the FIRST empty line after a block! Perfect.
@@ -202,4 +201,51 @@ function serializeInlines(children: Inline[]): string {
       return t.bold && t.text.length > 0 ? `**${t.text}**` : t.text;
     })
     .join('');
+}
+
+export function renderInlines(inlines: Inline[]): string {
+  return inlines
+    .map((inline) => {
+      if ('type' in inline && inline.type === 'link') {
+        return `<a href="${inline.url}" target="_blank" rel="noreferrer">${renderInlines(
+          inline.children,
+        )}</a>`;
+      }
+      const text = inline as { text: string; bold?: boolean };
+      const escaped = text.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return text.bold ? `<strong>${escaped}</strong>` : escaped;
+    })
+    .join('');
+}
+
+export function markdownToHtml(markdown: string): string {
+  if (!markdown) return '';
+
+  const blocks = parseMarkdown(markdown);
+
+  return blocks
+    .map((block) => {
+      switch (block.type) {
+        case 'heading':
+          return `<h${block.level}>${renderInlines(block.children)}</h${block.level}>`;
+        case 'paragraph':
+          return `<p>${renderInlines(block.children)}</p>`;
+        case 'bullet-list':
+          return `<ul>${block.children
+            .map((item) => `<li>${renderInlines(item.children)}</li>`)
+            .join('')}</ul>`;
+        case 'check-list':
+          return `<ul class="task-list" style="list-style: none; padding-left: 0;">${block.children
+            .map(
+              (item) =>
+                `<li style="display: flex; gap: 0.5rem;"><input type="checkbox" disabled ${
+                  item.checked ? 'checked' : ''
+                } /> <span>${renderInlines(item.children)}</span></li>`,
+            )
+            .join('')}</ul>`;
+        default:
+          return '';
+      }
+    })
+    .join('\n');
 }

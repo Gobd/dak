@@ -1,5 +1,5 @@
-import { Tiptap } from '@tiptap/react';
-import { useRecipeEditor } from './useRecipeEditor';
+import { SlateEditor } from '@dak/markdown-editor';
+import '@dak/markdown-editor/styles.css';
 import './recipe-editor.css';
 
 interface RecipeEditorProps {
@@ -17,20 +17,15 @@ export function RecipeEditor({
   editable = true,
   className = '',
 }: RecipeEditorProps) {
-  const { editor } = useRecipeEditor({
-    content,
-    onUpdate: onChange,
-    placeholder,
-    editable,
-  });
-
-  if (!editor) return null;
-
   return (
-    <Tiptap instance={editor}>
-      <div className={`recipe-editor ${className}`}>
-        <Tiptap.Content className="recipe-editor-wrapper" />
-      </div>
-    </Tiptap>
+    <div className={`recipe-editor ${className}`}>
+      <SlateEditor
+        initialMarkdown={content}
+        onChange={onChange}
+        editable={editable}
+        maxLength={50000}
+        placeholder={placeholder}
+      />
+    </div>
   );
 }
