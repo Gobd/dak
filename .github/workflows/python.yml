@@ -16,7 +16,7 @@ jobs:
 
       - name: Check for Python changes
         id: changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             python:
@@ -24,7 +24,7 @@ jobs:
 
       - name: Install uv
         if: steps.changes.outputs.python == 'true'
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8.2.0
 
       - name: Set up Python
         if: steps.changes.outputs.python == 'true'

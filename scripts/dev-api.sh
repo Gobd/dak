@@ -19,4 +19,4 @@ echo "(Ctrl+C to stop, .env.local will remain for next run)"
 echo ""
 
 cd "$MONOREPO_ROOT" || exit
-npx wrangler pages dev . --port "$PORT"
+pnpm dlx wrangler pages dev . --port "$PORT"

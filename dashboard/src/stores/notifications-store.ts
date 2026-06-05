@@ -125,7 +125,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         path: { event_type: type },
         query: { enabled },
       });
-      if (response.ok) {
+      if (response?.ok) {
         // Refresh preferences and due notifications
         get().fetchPreferences();
         get().fetchDue();
@@ -141,7 +141,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         baseUrl: getRelayUrl(),
         path: { event_type: type },
       });
-      if (response.ok) {
+      if (response?.ok) {
         // Refresh preferences and due notifications
         get().fetchPreferences();
         get().fetchDue();
@@ -164,10 +164,10 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         path: { event_id: id },
         body,
       });
-      if (response.ok) {
+      if (response?.ok) {
         get().removeNotification(id);
       } else {
-        console.error('Dismiss failed:', response.status, response.statusText);
+        console.error('Dismiss failed:', response?.status, response?.statusText);
       }
     } catch (err) {
       console.error('Dismiss request failed:', err);
@@ -180,7 +180,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         baseUrl: getRelayUrl(),
         path: { event_id: id },
       });
-      if (response.ok) {
+      if (response?.ok) {
         // Refresh to pick up the now-due notification
         get().fetchDue();
         get().fetchAllEvents();
