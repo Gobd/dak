@@ -778,26 +778,26 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   function handlePrevMonth() {
     const newDate = new Date(gridStartDate);
     newDate.setMonth(newDate.getMonth() - 1);
-    
+
     // Snap to week start
     const day = newDate.getDay();
     const daysBack = (day - weekStartsOn + 7) % 7;
     newDate.setDate(newDate.getDate() - daysBack);
     newDate.setHours(0, 0, 0, 0);
-    
+
     setGridStartDate(newDate);
   }
 
   function handleNextMonth() {
     const newDate = new Date(gridStartDate);
     newDate.setMonth(newDate.getMonth() + 1);
-    
+
     // Snap to week start
     const day = newDate.getDay();
     const daysBack = (day - weekStartsOn + 7) % 7;
     newDate.setDate(newDate.getDate() - daysBack);
     newDate.setHours(0, 0, 0, 0);
-    
+
     setGridStartDate(newDate);
   }
 
