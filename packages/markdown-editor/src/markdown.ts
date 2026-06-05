@@ -71,6 +71,23 @@ export function parseMarkdown(md: string): EditorValue {
 
     // Paragraph (possibly empty). Blank lines stay as empty paragraphs so
     // blank-line intent round-trips.
+    // However, to avoid extra spacing from standard markdown serializers (like TipTap),
+    // we skip a single empty line if it immediately follows a structural block (list or heading).
+    if (line.trim() === '') {
+      const last = out[out.length - 1];
+      const isAfterBlock = last && ['check-list', 'bullet-list', 'heading'].includes(last.type);
+      // We also need to avoid collapsing multiple empty lines into nothing.
+      // So we only skip if the previous line wasn't ALSO skipped... but we don't track that easily.
+      // A simpler way: only skip if the last item in `out` is a list or heading. 
+      // If we skip it, we don't push anything. The NEXT empty line would see `last` is STILL a list/heading?
+      // Actually, if we push an empty paragraph, the NEXT empty line sees `last.type === 'paragraph'`.
+      // So `isAfterBlock` will only be true for the FIRST empty line after a block! Perfect.
+      if (isAfterBlock) {
+        i += 1;
+        continue;
+      }
+    }
+
     out.push({ type: 'paragraph', children: parseInlines(line) });
     i += 1;
   }
