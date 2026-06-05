@@ -365,7 +365,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                     timeMin: new Date(viewTimeMin).toISOString(),
                     timeMax: new Date(viewTimeMax).toISOString(),
                     singleEvents: 'true',
-                    maxResults: '250',
+                    maxResults: '2500',
                   };
 
               const eventsResponse = await fetchCalendarApi<{
@@ -778,12 +778,26 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   function handlePrevMonth() {
     const newDate = new Date(gridStartDate);
     newDate.setMonth(newDate.getMonth() - 1);
+    
+    // Snap to week start
+    const day = newDate.getDay();
+    const daysBack = (day - weekStartsOn + 7) % 7;
+    newDate.setDate(newDate.getDate() - daysBack);
+    newDate.setHours(0, 0, 0, 0);
+    
     setGridStartDate(newDate);
   }
 
   function handleNextMonth() {
     const newDate = new Date(gridStartDate);
     newDate.setMonth(newDate.getMonth() + 1);
+    
+    // Snap to week start
+    const day = newDate.getDay();
+    const daysBack = (day - weekStartsOn + 7) % 7;
+    newDate.setDate(newDate.getDate() - daysBack);
+    newDate.setHours(0, 0, 0, 0);
+    
     setGridStartDate(newDate);
   }
 
@@ -990,7 +1004,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                 >
                   {date.getDate()}
                 </div>
-                <div className="space-y-0.5 overflow-hidden">
+                <div className="space-y-0.5">
                   {dayEvents.map((event) => {
                     const isAllDay = !event.start.dateTime;
                     const timeRange = isAllDay
