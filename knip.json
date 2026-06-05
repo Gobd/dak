@@ -1,11 +1,10 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignoreBinaries": ["sleep", "open", "uv"],
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreBinaries": ["open", "uv"],
   "rules": {
     "duplicates": "off",
     "types": "off"
   },
-  "ignore": ["**/*.css", "elixir/**"],
   "ignoreUnresolved": ["vite/client"],
   "workspaces": {
     ".": {
@@ -24,19 +23,17 @@
     "kasa-controller": {},
     "notes-app": {},
     "packages/api-client": {
-      "ignore": ["src/generated/**", "openapi-ts.config.ts"]
+      "ignore": ["src/generated/**"]
     },
     "packages/hooks": {
       "includeEntryExports": true
     },
     "packages/kasa-client": {},
     "packages/ui": {
-      "includeEntryExports": true,
-      "ignore": ["**/*.stories.tsx"]
+      "includeEntryExports": true
     },
     "packages/vite-shared-react": {
-      "ignoreDependencies": ["react", "react-dom", "zustand"],
-      "ignore": ["fonts/**"]
+      "ignoreDependencies": ["react", "react-dom", "zustand"]
     }
   }
 }
