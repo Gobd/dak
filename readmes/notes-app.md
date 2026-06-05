@@ -9,7 +9,7 @@ Rich-text note-taking app with real-time sync, sharing, and organization feature
 
 ## Features
 
-- Rich text editing with Tiptap (markdown, task lists, formatting)
+- Rich text editing with Slate (markdown, task lists, formatting)
 - Tag-based organization with colored labels
 - Search and sort (alphabetical, recently updated, oldest)
 - Note sharing with other users

@@ -41,7 +41,3 @@ yarn-error.*
 /android
 
 .wrangler
-
-# Generated TipTap editor HTML (built from src/tiptap-editor/)
-assets/tiptap-editor.html
-public/tiptap-editor.html

@@ -12,6 +12,7 @@ import type {
 } from '../types';
 import { DEFAULT_CONFIG, generateId } from '../types';
 import { healthHealthGet, getConfigConfigGet, setConfigConfigPost } from '@dak/api-client';
+import { useNotificationsStore } from './notifications-store';
 
 // API endpoint for home-relay config
 // Priority: URL param > globalSettings > default
@@ -497,9 +498,7 @@ function connectToConfigUpdates() {
           useConfigStore.getState()._loadFromRelay();
         } else if (data.type === 'notifications' && Array.isArray(data.notifications)) {
           // Forward to notifications store
-          import('./notifications-store').then(({ useNotificationsStore }) => {
-            useNotificationsStore.getState().addNotifications(data.notifications);
-          });
+          useNotificationsStore.getState().addNotifications(data.notifications);
         }
       } catch {
         // Ignore non-JSON messages (keepalive, etc)

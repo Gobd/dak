@@ -1,0 +1,128 @@
+/* Slate Editor Styles */
+
+.slate-editor {
+  min-height: 100%;
+  padding: 1rem;
+  outline: none;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.slate-editor:focus {
+  outline: none;
+}
+
+/* Placeholder (Slate renders via data attribute on first empty block) */
+.slate-editor [data-slate-placeholder] {
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* Headings */
+.slate-editor h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.slate-editor h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.slate-editor h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.slate-editor p {
+  margin-bottom: 0.5rem;
+}
+
+.slate-editor a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Bullet list */
+.slate-editor ul.bullet-list {
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  list-style-type: disc;
+}
+
+.slate-editor ul.bullet-list li {
+  margin-bottom: 0.25rem;
+}
+
+/* Check list */
+.slate-editor ul.check-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0.5rem;
+}
+
+.slate-editor ul.check-list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.slate-editor ul.check-list > li > .check-box {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  user-select: none;
+}
+
+.slate-editor ul.check-list > li > .check-box input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--color-warning);
+}
+
+.slate-editor ul.check-list > li > .check-text {
+  flex: 1;
+}
+
+.slate-editor ul.check-list > li.is-checked > .check-text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* Selection */
+.slate-editor ::selection {
+  background-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Scrollbar for editor container */
+.editor-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+.editor-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.dark .editor-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+.editor-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+.dark .editor-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45);
+}

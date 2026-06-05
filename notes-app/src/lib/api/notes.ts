@@ -93,7 +93,7 @@ export const notesApi = {
 
   async create(note: NoteInsert): Promise<Note> {
     // Auto-sharing with default shares is handled by database trigger
-    // Trim trailing whitespace from content (TipTap adds trailing newlines)
+    // Trim trailing whitespace from content (editor might add trailing newlines)
     const sanitized = {
       ...note,
       ...(note.content != null && { content: note.content.trimEnd() }),
@@ -105,7 +105,7 @@ export const notesApi = {
   },
 
   async update(id: string, updates: NoteUpdate): Promise<Note> {
-    // Trim trailing whitespace from content (TipTap adds trailing newlines)
+    // Trim trailing whitespace from content (editor might add trailing newlines)
     const sanitized = {
       ...updates,
       ...(updates.content != null && { content: updates.content.trimEnd() }),

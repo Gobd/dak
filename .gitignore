@@ -16,3 +16,5 @@ package-lock.json
 
 # Generated OpenAPI spec (source of truth is Python app)
 packages/api-client/openapi.json
+elixir
+PHOENIX_ASH_PLAN.md
