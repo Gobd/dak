@@ -32,6 +32,7 @@ export interface SlateEditorHandle {
   toggleCheckList: () => void;
   toggleBulletList: () => void;
   toggleHeading: (level: 1 | 2 | 3) => void;
+  setParagraph: () => void;
   toggleBold: () => void;
   deleteCheckedItems: () => void;
   uncheckAll: () => void;
@@ -132,6 +133,7 @@ export const SlateEditor = forwardRef<SlateEditorHandle, Props>(function SlateEd
     toggleCheckList: () => toggleBlockList(editor, 'check-list', 'check-item'),
     toggleBulletList: () => toggleBlockList(editor, 'bullet-list', 'bullet-item'),
     toggleHeading: (level) => toggleHeading(editor, level),
+    setParagraph: () => setParagraph(editor),
     toggleBold: () => toggleMark(editor, 'bold'),
     deleteCheckedItems: () => deleteCheckedItems(editor),
     uncheckAll: () => uncheckAll(editor),
@@ -514,6 +516,17 @@ function toggleHeading(editor: CustomEditor, level: 1 | 2 | 3) {
     split: true,
   });
   Transforms.setNodes(editor, { type: 'heading', level } as Partial<CustomElement>, {
+    match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
+  });
+}
+
+function setParagraph(editor: CustomEditor) {
+  Transforms.unwrapNodes(editor, {
+    match: (n) =>
+      SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+    split: true,
+  });
+  Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>, {
     match: (n) => SlateElement.isElement(n) && Editor.isBlock(editor, n),
   });
 }

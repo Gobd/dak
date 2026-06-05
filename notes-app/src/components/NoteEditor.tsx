@@ -316,9 +316,7 @@ export function NoteEditor({
                         editorRef.current?.toggleHeading(level as 1 | 2 | 3);
                         showHeadingDropdown.setFalse();
                       }}
-                      className={`w-full px-3 py-2 text-left rounded-none justify-start ${
-                        level < 3 ? 'border-b border-border' : ''
-                      }`}
+                      className="w-full px-3 py-2 text-left rounded-none justify-start border-b border-border"
                     >
                       <span
                         className="font-semibold text-text"
@@ -328,6 +326,18 @@ export function NoteEditor({
                       </span>
                     </Button>
                   ))}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      editorRef.current?.setParagraph();
+                      showHeadingDropdown.setFalse();
+                    }}
+                    className="w-full px-3 py-2 text-left rounded-none justify-start"
+                  >
+                    <span className="text-text" style={{ fontSize: 14 }}>
+                      Normal Text
+                    </span>
+                  </Button>
                 </div>
               </>
             )}
