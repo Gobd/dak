@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "jsdom": "^29.1.1",
     "typescript": "catalog:"
   },
   "peerDependencies": {
