@@ -220,86 +220,84 @@ export function NoteEditor({
 
           <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
-
           {/* Checkbox dropdown trigger */}
           <div className="relative">
-                <Button
-                  variant="secondary"
-                  size="icon-sm"
-                  onClick={() => showCheckboxDropdown.toggle()}
-                  className={`flex items-center gap-0.5 flex-shrink-0 ${
-                    showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
-                  }`}
-                >
-                  <SquareCheck
-                    size={16}
-                    className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
-                  />
-                  <ChevronDown
-                    size={12}
-                    className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
-                  />
-                </Button>
-                {showCheckboxDropdown.value && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-[99]"
-                      onClick={() => showCheckboxDropdown.setFalse()}
-                    />
-                    <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          editorRef.current?.toggleCheckList();
-                          showCheckboxDropdown.setFalse();
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
-                      >
-                        Insert checkbox
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          showCheckboxDropdown.setFalse();
-                          showDeleteCheckedConfirm.setTrue();
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
-                      >
-                        Delete checked lines
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          showCheckboxDropdown.setFalse();
-                          showUncheckAllConfirm.setTrue();
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm text-text rounded-none justify-start"
-                      >
-                        Uncheck all
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
+            <Button
+              variant="secondary"
+              size="icon-sm"
+              onClick={() => showCheckboxDropdown.toggle()}
+              className={`flex items-center gap-0.5 flex-shrink-0 ${
+                showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
+              }`}
+            >
+              <SquareCheck
+                size={16}
+                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
+              />
+              <ChevronDown
+                size={12}
+                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
+              />
+            </Button>
+            {showCheckboxDropdown.value && (
+              <>
+                <div
+                  className="fixed inset-0 z-[99]"
+                  onClick={() => showCheckboxDropdown.setFalse()}
+                />
+                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      editorRef.current?.toggleCheckList();
+                      showCheckboxDropdown.setFalse();
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
+                  >
+                    Insert checkbox
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      showCheckboxDropdown.setFalse();
+                      showDeleteCheckedConfirm.setTrue();
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
+                  >
+                    Delete checked lines
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      showCheckboxDropdown.setFalse();
+                      showUncheckAllConfirm.setTrue();
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm text-text rounded-none justify-start"
+                  >
+                    Uncheck all
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
 
+          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
 
-              <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
-
-              {/* Heading dropdown trigger */}
-              <div className="relative">
-                <Button
-                  variant="secondary"
-                  size="icon-sm"
-                  onClick={() => showHeadingDropdown.toggle()}
-                  className={`flex items-center gap-0.5 flex-shrink-0 ${
-                    showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
-                  }`}
-                >
-                  <Heading
-                    size={16}
-                    className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
-                  />
-                  <ChevronDown
+          {/* Heading dropdown trigger */}
+          <div className="relative">
+            <Button
+              variant="secondary"
+              size="icon-sm"
+              onClick={() => showHeadingDropdown.toggle()}
+              className={`flex items-center gap-0.5 flex-shrink-0 ${
+                showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
+              }`}
+            >
+              <Heading
+                size={16}
+                className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
+              />
+              <ChevronDown
                 size={12}
                 className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
               />

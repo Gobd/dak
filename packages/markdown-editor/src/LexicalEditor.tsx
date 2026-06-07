@@ -1,8 +1,13 @@
 import React, { useEffect, useImperativeHandle, forwardRef } from 'react';
 import type { EditorState } from 'lexical';
 import {
-  $getRoot, $getSelection, $isRangeSelection, $createParagraphNode,
-  CLICK_COMMAND, COMMAND_PRIORITY_HIGH, $getNearestNodeFromDOMNode,
+  $getRoot,
+  $getSelection,
+  $isRangeSelection,
+  $createParagraphNode,
+  CLICK_COMMAND,
+  COMMAND_PRIORITY_HIGH,
+  $getNearestNodeFromDOMNode,
 } from 'lexical';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -16,14 +21,27 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { HeadingNode, QuoteNode, $createHeadingNode } from '@lexical/rich-text';
 import type { HeadingTagType } from '@lexical/rich-text';
-import { ListItemNode, ListNode, $isListNode, INSERT_UNORDERED_LIST_COMMAND, INSERT_CHECK_LIST_COMMAND } from '@lexical/list';
+import {
+  ListItemNode,
+  ListNode,
+  $isListNode,
+  INSERT_UNORDERED_LIST_COMMAND,
+  INSERT_CHECK_LIST_COMMAND,
+} from '@lexical/list';
 import { CodeNode, CodeHighlightNode } from '@lexical/code';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
 import {
-  HEADING, QUOTE, UNORDERED_LIST, ORDERED_LIST, CHECK_LIST, CODE,
-  TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS,
-  $convertToMarkdownString, $convertFromMarkdownString,
+  HEADING,
+  QUOTE,
+  UNORDERED_LIST,
+  ORDERED_LIST,
+  CHECK_LIST,
+  CODE,
+  TEXT_FORMAT_TRANSFORMERS,
+  TEXT_MATCH_TRANSFORMERS,
+  $convertToMarkdownString,
+  $convertFromMarkdownString,
 } from '@lexical/markdown';
 import './editor-styles.css';
 
@@ -33,7 +51,12 @@ const CUSTOM_CHECK_LIST = {
   // Must come before UNORDERED_LIST in CUSTOM_TRANSFORMERS so "- [ ] text" isn't
   // consumed as a bullet point before we can recognise it as a checklist item.
   regExp: /^(\s*)(?:[-*+]\s)?\s?(\[(\s|x)?\])\s/i,
-  replace: (parentNode: Parameters<typeof CHECK_LIST.replace>[0], children: Parameters<typeof CHECK_LIST.replace>[1], match: Parameters<typeof CHECK_LIST.replace>[2], isImport: Parameters<typeof CHECK_LIST.replace>[3]) => {
+  replace: (
+    parentNode: Parameters<typeof CHECK_LIST.replace>[0],
+    children: Parameters<typeof CHECK_LIST.replace>[1],
+    match: Parameters<typeof CHECK_LIST.replace>[2],
+    isImport: Parameters<typeof CHECK_LIST.replace>[3],
+  ) => {
     const updatedMatch = [...match] as typeof match;
     if (updatedMatch[3] === undefined) updatedMatch[3] = ' ';
     return CHECK_LIST.replace(parentNode, children, updatedMatch, isImport);
@@ -160,40 +183,57 @@ function EditorRefPlugin({ editorRef }: { editorRef: React.ForwardedRef<LexicalE
     deleteCheckedItems: () => {
       const wasEditable = editor.isEditable();
       if (!wasEditable) editor.setEditable(true);
-      editor.update(() => {
-        const root = $getRoot();
-        const itemsToRemove: ListItemNode[] = [];
-        const dfs = (node: any) => {
-          if (node.getType() === 'listitem' && node.getChecked()) {
-            itemsToRemove.push(node);
-          } else if (node.getChildren) {
-            node.getChildren().forEach(dfs);
-          }
-        };
-        root.getChildren().forEach(dfs);
-        itemsToRemove.forEach(item => item.remove());
-      }, { onUpdate: () => { if (!wasEditable) editor.setEditable(false); } });
+      editor.update(
+        () => {
+          const root = $getRoot();
+          const itemsToRemove: ListItemNode[] = [];
+          const dfs = (node: any) => {
+            if (node.getType() === 'listitem' && node.getChecked()) {
+              itemsToRemove.push(node);
+            } else if (node.getChildren) {
+              node.getChildren().forEach(dfs);
+            }
+          };
+          root.getChildren().forEach(dfs);
+          itemsToRemove.forEach((item) => item.remove());
+        },
+        {
+          onUpdate: () => {
+            if (!wasEditable) editor.setEditable(false);
+          },
+        },
+      );
     },
     uncheckAll: () => {
       const wasEditable = editor.isEditable();
       if (!wasEditable) editor.setEditable(true);
-      editor.update(() => {
-        const root = $getRoot();
-        const dfs = (node: any) => {
-          if (node.getType() === 'listitem' && node.getChecked()) {
-            node.setChecked(false);
-          } else if (node.getChildren) {
-            node.getChildren().forEach(dfs);
-          }
-        };
-        root.getChildren().forEach(dfs);
-      }, { onUpdate: () => { if (!wasEditable) editor.setEditable(false); } });
+      editor.update(
+        () => {
+          const root = $getRoot();
+          const dfs = (node: any) => {
+            if (node.getType() === 'listitem' && node.getChecked()) {
+              node.setChecked(false);
+            } else if (node.getChildren) {
+              node.getChildren().forEach(dfs);
+            }
+          };
+          root.getChildren().forEach(dfs);
+        },
+        {
+          onUpdate: () => {
+            if (!wasEditable) editor.setEditable(false);
+          },
+        },
+      );
     },
     toggleCheckList: () => {
       editor.focus(() => {
-        editor.update(() => {
-          if (!$getSelection()) $getRoot().selectEnd();
-        }, { discrete: true });
+        editor.update(
+          () => {
+            if (!$getSelection()) $getRoot().selectEnd();
+          },
+          { discrete: true },
+        );
         editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
       });
     },
@@ -225,9 +265,12 @@ function EditorRefPlugin({ editorRef }: { editorRef: React.ForwardedRef<LexicalE
     },
     toggleBulletList: () => {
       editor.focus(() => {
-        editor.update(() => {
-          if (!$getSelection()) $getRoot().selectEnd();
-        }, { discrete: true });
+        editor.update(
+          () => {
+            if (!$getSelection()) $getRoot().selectEnd();
+          },
+          { discrete: true },
+        );
         editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
       });
     },
@@ -236,53 +279,61 @@ function EditorRefPlugin({ editorRef }: { editorRef: React.ForwardedRef<LexicalE
   return null;
 }
 
-export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>(({ content, onChange, placeholder = 'Type here...', editable = true }, ref) => {
-  const initialConfig = {
-    namespace: 'DakEditor',
-    theme,
-    editable,
-    nodes: [
-      HeadingNode,
-      QuoteNode,
-      ListItemNode,
-      ListNode,
-      CodeNode,
-      CodeHighlightNode,
-      AutoLinkNode,
-      LinkNode,
-    ],
-    onError: (error: Error) => {
-      console.error(error);
-    },
-  };
+export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>(
+  ({ content, onChange, placeholder = 'Type here...', editable = true }, ref) => {
+    const initialConfig = {
+      namespace: 'DakEditor',
+      theme,
+      editable,
+      nodes: [
+        HeadingNode,
+        QuoteNode,
+        ListItemNode,
+        ListNode,
+        CodeNode,
+        CodeHighlightNode,
+        AutoLinkNode,
+        LinkNode,
+      ],
+      onError: (error: Error) => {
+        console.error(error);
+      },
+    };
 
-  const handleEditorChange = (editorState: EditorState) => {
-    editorState.read(() => {
-      const markdown = $convertToMarkdownString(CUSTOM_TRANSFORMERS);
-      onChange(markdown);
-    });
-  };
+    const handleEditorChange = (editorState: EditorState) => {
+      editorState.read(() => {
+        const markdown = $convertToMarkdownString(CUSTOM_TRANSFORMERS);
+        onChange(markdown);
+      });
+    };
 
-  return (
-    <div className="lexical-editor-container h-full">
-      <LexicalComposer initialConfig={initialConfig}>
-        <div className="editor-inner relative h-full">
-          <RichTextPlugin
-            contentEditable={<ContentEditable className="editor-input outline-none min-h-[150px] h-full" />}
-            placeholder={<div className="editor-placeholder absolute top-0 left-0 text-gray-400 pointer-events-none">{placeholder}</div>}
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-          <HistoryPlugin />
-          <ListPlugin />
-          <CheckListPlugin />
-          <MarkdownShortcutPlugin transformers={CUSTOM_TRANSFORMERS} />
-          <OnChangePlugin onChange={handleEditorChange} ignoreSelectionChange />
-          <MarkdownPlugin content={content} />
-          <EditablePlugin editable={editable} />
-          <ReadOnlyCheckListPlugin />
-          <EditorRefPlugin editorRef={ref} />
-        </div>
-      </LexicalComposer>
-    </div>
-  );
-});
+    return (
+      <div className="lexical-editor-container h-full">
+        <LexicalComposer initialConfig={initialConfig}>
+          <div className="editor-inner relative h-full">
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable className="editor-input outline-none min-h-[150px] h-full" />
+              }
+              placeholder={
+                <div className="editor-placeholder absolute top-0 left-0 text-gray-400 pointer-events-none">
+                  {placeholder}
+                </div>
+              }
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+            <HistoryPlugin />
+            <ListPlugin />
+            <CheckListPlugin />
+            <MarkdownShortcutPlugin transformers={CUSTOM_TRANSFORMERS} />
+            <OnChangePlugin onChange={handleEditorChange} ignoreSelectionChange />
+            <MarkdownPlugin content={content} />
+            <EditablePlugin editable={editable} />
+            <ReadOnlyCheckListPlugin />
+            <EditorRefPlugin editorRef={ref} />
+          </div>
+        </LexicalComposer>
+      </div>
+    );
+  },
+);
