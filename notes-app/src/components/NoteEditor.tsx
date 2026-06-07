@@ -90,11 +90,14 @@ export function NoteEditor({
 
   // Initial content resolved once per note id — empty notes start with `# ` for title entry
   const initialMarkdown = note.content || '# ';
+  const latestMarkdownRef = useRef(initialMarkdown);
 
   const handleEditorChange = (markdown: string) => {
+    latestMarkdownRef.current = markdown;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onUpdateRef.current({ content: markdown });
+      debounceRef.current = null;
     }, DEBOUNCE_MS);
   };
 
@@ -103,7 +106,7 @@ export function NoteEditor({
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
-        const latest = editorRef.current?.getMarkdown();
+        const latest = latestMarkdownRef.current;
         if (latest !== undefined && latest !== note.content) {
           onUpdateRef.current({ content: latest });
         }

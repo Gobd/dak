@@ -56,6 +56,8 @@ export function RecipePage() {
   const [recipeUrl, setRecipeUrl] = useState('');
   const [recipeContent, setRecipeContent] = useState('');
   const [recipeNotes, setRecipeNotes] = useState('');
+  const recipeContentRef = useRef(recipeContent);
+  const recipeNotesRef = useRef(recipeNotes);
   const [recipeRating, setRecipeRating] = useState<number | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const [deweyDecimal, setDeweyDecimal] = useState('');
@@ -161,11 +163,14 @@ export function RecipePage() {
   const handleSave = async () => {
     if (!id || !recipe) return;
 
+    const currentContent = recipeContentRef.current;
+    const currentNotes = recipeNotesRef.current;
+
     const hasNameChanges = recipeName !== recipe.name;
     const hasPageChanges = recipePage !== (recipe.page || '');
     const hasUrlChanges = recipeUrl !== (recipe.url || '');
-    const hasRecipeChanges = recipeContent !== (recipe.recipe || '');
-    const hasNotesChanges = recipeNotes !== (recipe.notes || '');
+    const hasRecipeChanges = currentContent !== (recipe.recipe || '');
+    const hasNotesChanges = currentNotes !== (recipe.notes || '');
 
     if (
       !hasNameChanges &&
@@ -185,8 +190,8 @@ export function RecipePage() {
       if (hasNameChanges) updates.name = recipeName;
       if (hasPageChanges) updates.page = recipePage;
       if (hasUrlChanges) updates.url = recipeUrl;
-      if (hasRecipeChanges) updates.recipe = recipeContent;
-      if (hasNotesChanges) updates.notes = recipeNotes;
+      if (hasRecipeChanges) updates.recipe = currentContent;
+      if (hasNotesChanges) updates.notes = currentNotes;
 
       await updateRecipe(id, updates);
       await loadRecipe();
@@ -734,7 +739,10 @@ export function RecipePage() {
             <div className="border border-border rounded-md bg-surface overflow-hidden">
               <RecipeEditor
                 content={recipeContent}
-                onChange={setRecipeContent}
+                onChange={(val) => {
+                  setRecipeContent(val);
+                  recipeContentRef.current = val;
+                }}
                 placeholder="Paste or fetch recipe content (ingredients, instructions)..."
               />
             </div>
@@ -745,7 +753,10 @@ export function RecipePage() {
             <div className="border border-border rounded-md bg-surface overflow-hidden">
               <RecipeEditor
                 content={recipeNotes}
-                onChange={setRecipeNotes}
+                onChange={(val) => {
+                  setRecipeNotes(val);
+                  recipeNotesRef.current = val;
+                }}
                 placeholder="Your personal notes, modifications, tips..."
               />
             </div>

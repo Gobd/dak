@@ -1,5 +1,5 @@
 import { Globe } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Input, Modal, Toggle } from '@dak/ui';
 import { RecipeEditor } from '../components/RecipeEditor';
@@ -21,6 +21,8 @@ export function AddRecipePage() {
   const [scraping, setScraping] = useState(false);
   const [scrapePreview, setScrapePreview] = useState<string | null>(null);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
+
+  const recipeContentRef = useRef(recipeContent);
 
   const { tags: availableTags, deweyCategories, loadDeweyCategories, addRecipe } = useRecipeStore();
 
@@ -109,11 +111,14 @@ export function AddRecipePage() {
 
   const handleImportRecipe = () => {
     if (scrapePreview) {
+      let newContent = '';
       if (recipeContent.trim()) {
-        setRecipeContent(recipeContent + '\n\n---\n\n' + scrapePreview);
+        newContent = recipeContent + '\n\n---\n\n' + scrapePreview;
       } else {
-        setRecipeContent(scrapePreview);
+        newContent = scrapePreview;
       }
+      setRecipeContent(newContent);
+      recipeContentRef.current = newContent;
       setScrapePreview(null);
     }
   };
@@ -123,12 +128,14 @@ export function AddRecipePage() {
 
     if (!recipeName.trim()) return;
 
+    const currentContent = recipeContentRef.current;
+
     const newRecipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
       dewey_decimal: deweyDecimal || undefined,
       name: recipeName.trim(),
       page: recipePage.trim() || undefined,
       url: recipeUrl.trim() || undefined,
-      recipe: recipeContent.trim() || undefined,
+      recipe: currentContent.trim() || undefined,
       tags: tags,
     };
 
@@ -207,7 +214,10 @@ export function AddRecipePage() {
               <div className="border border-border rounded-md bg-surface overflow-hidden">
                 <RecipeEditor
                   content={recipeContent}
-                  onChange={setRecipeContent}
+                  onChange={(val) => {
+                    setRecipeContent(val);
+                    recipeContentRef.current = val;
+                  }}
                   placeholder="Recipe content..."
                 />
               </div>

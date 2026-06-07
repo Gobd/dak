@@ -250,9 +250,19 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
   const { selection } = editor;
   if (!selection) return;
 
+  // Let the browser handle IME composition natively
+  if (event.nativeEvent.isComposing) return;
+
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'b') {
     event.preventDefault();
     toggleMark(editor, 'bold');
+    return;
+  }
+
+  // Polyfill for virtual keyboards that dispatch keydown but not beforeinput
+  if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault();
+    Editor.insertText(editor, event.key);
     return;
   }
 
@@ -300,35 +310,52 @@ function handleKeyDown(editor: CustomEditor, event: React.KeyboardEvent) {
         return;
       }
     }
+
+    event.preventDefault();
+    Editor.insertBreak(editor);
+    return;
   }
 
   if (event.key === 'Backspace') {
-    if (!Range.isCollapsed(selection)) return;
+    if (!Range.isCollapsed(selection)) {
+      event.preventDefault();
+      Editor.deleteFragment(editor);
+      return;
+    }
     const { offset } = selection.anchor;
-    if (offset !== 0) return;
+    if (offset !== 0) {
+      event.preventDefault();
+      Editor.deleteBackward(editor, { unit: 'character' });
+      return;
+    }
     // At the start of a block. If it's a list item or heading, convert to paragraph.
     const [match] = Editor.nodes(editor, {
       match: (n) =>
         SlateElement.isElement(n) &&
         (n.type === 'check-item' || n.type === 'bullet-item' || n.type === 'heading'),
     });
-    if (!match) return;
-    const [node] = match;
-    event.preventDefault();
-    if (
-      SlateElement.isElement(node) &&
-      (node.type === 'check-item' || node.type === 'bullet-item')
-    ) {
-      Transforms.unwrapNodes(editor, {
-        match: (n) =>
-          SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
-        split: true,
-      });
-      Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
-    } else {
-      // heading
-      Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
+    if (match) {
+      const [node] = match;
+      event.preventDefault();
+      if (
+        SlateElement.isElement(node) &&
+        (node.type === 'check-item' || node.type === 'bullet-item')
+      ) {
+        Transforms.unwrapNodes(editor, {
+          match: (n) =>
+            SlateElement.isElement(n) && (n.type === 'check-list' || n.type === 'bullet-list'),
+          split: true,
+        });
+        Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
+      } else {
+        // heading
+        Transforms.setNodes(editor, { type: 'paragraph' } as Partial<CustomElement>);
+      }
+      return;
     }
+    
+    event.preventDefault();
+    Editor.deleteBackward(editor, { unit: 'character' });
     return;
   }
 }
