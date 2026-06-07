@@ -14,7 +14,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, ConfirmModal, Input, Modal, Spinner } from '@dak/ui';
 import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
@@ -588,7 +588,7 @@ export function RecipePage() {
         {/* Recipe content */}
         {recipe.recipe && (
           <div className="mb-8">
-            <RecipeEditor content={recipe.recipe} onChange={() => {}} editable={false} />
+            <RecipeEditor content={recipe.recipe} onChange={() => {}} readOnly={true} />
           </div>
         )}
 
@@ -597,7 +597,7 @@ export function RecipePage() {
           <div className="mb-8">
             <h2 className="text-sm font-medium text-text-secondary mb-3">Notes</h2>
             <div className="border-l-2 border-border pl-4">
-              <RecipeEditor content={recipe.notes} onChange={() => {}} editable={false} />
+              <RecipeEditor content={recipe.notes} onChange={() => {}} readOnly={true} />
             </div>
           </div>
         )}
@@ -910,7 +910,7 @@ export function RecipePage() {
             Preview the fetched recipe below. Click Import to add it to the recipe field.
           </p>
           <div className="border border-border rounded-md bg-surface-sunken max-h-96 overflow-y-auto">
-            <RecipeEditor content={scrapePreview || ''} onChange={() => {}} editable={false} />
+            <RecipeEditor content={scrapePreview || ''} onChange={() => {}} readOnly={true} />
           </div>
           <div className="flex justify-end gap-2">
             <Button

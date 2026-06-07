@@ -258,7 +258,7 @@ export function AddRecipePage() {
             Preview the fetched recipe below. Click Import to add it.
           </p>
           <div className="border border-border rounded-md bg-surface-sunken max-h-96 overflow-y-auto">
-            <RecipeEditor content={scrapePreview || ''} onChange={() => {}} editable={false} />
+            <RecipeEditor content={scrapePreview || ''} onChange={() => {}} readOnly={true} />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setScrapePreview(null)}>

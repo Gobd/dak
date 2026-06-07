@@ -3,7 +3,7 @@ import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor } from './RichNoteEditor';
-import type { SlateEditorHandle } from '@dak/markdown-editor';
+import type { LexicalEditorHandle } from '@dak/markdown-editor';
 import { useUserStore } from '../stores/user-store';
 import type { Note, NoteUpdate } from '../types/note';
 import type { Tag } from '../types/tag';
@@ -66,7 +66,7 @@ export function NoteEditor({
   onRemoveTag,
   onCreateTag,
 }: NoteEditorProps) {
-  const { planLimits } = useUserStore();
+  useUserStore();
   const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const showTagPicker = useToggle(false);
@@ -78,15 +78,13 @@ export function NoteEditor({
   const showDeleteCheckedConfirm = useToggle(false);
   const showUncheckAllConfirm = useToggle(false);
 
-  const editorRef = useRef<SlateEditorHandle>(null);
+  const editorRef = useRef<LexicalEditorHandle>(null);
   const onUpdateRef = useRef(onUpdate);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
-
-  const maxContentLength = planLimits.maxNoteLength;
 
   // Initial content resolved once per note id — empty notes start with `# ` for title entry
   const initialMarkdown = note.content || '# ';
@@ -222,84 +220,86 @@ export function NoteEditor({
 
           <div className="w-px h-4 mx-1 flex-shrink-0 bg-surface-sunken" />
 
+
           {/* Checkbox dropdown trigger */}
           <div className="relative">
-            <Button
-              variant="secondary"
-              size="icon-sm"
-              onClick={() => showCheckboxDropdown.toggle()}
-              className={`flex items-center gap-0.5 flex-shrink-0 ${
-                showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
-              }`}
-            >
-              <SquareCheck
-                size={16}
-                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
-              />
-              <ChevronDown
-                size={12}
-                className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
-              />
-            </Button>
-            {showCheckboxDropdown.value && (
-              <>
-                <div
-                  className="fixed inset-0 z-[99]"
-                  onClick={() => showCheckboxDropdown.setFalse()}
-                />
-                <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      editorRef.current?.toggleCheckList();
-                      showCheckboxDropdown.setFalse();
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
-                  >
-                    Insert checkbox
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      showCheckboxDropdown.setFalse();
-                      showDeleteCheckedConfirm.setTrue();
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
-                  >
-                    Delete checked lines
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      showCheckboxDropdown.setFalse();
-                      showUncheckAllConfirm.setTrue();
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm text-text rounded-none justify-start"
-                  >
-                    Uncheck all
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
+                  onClick={() => showCheckboxDropdown.toggle()}
+                  className={`flex items-center gap-0.5 flex-shrink-0 ${
+                    showCheckboxDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
+                  }`}
+                >
+                  <SquareCheck
+                    size={16}
+                    className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
+                  />
+                  <ChevronDown
+                    size={12}
+                    className={showCheckboxDropdown.value ? 'text-warning' : 'text-text-muted'}
+                  />
+                </Button>
+                {showCheckboxDropdown.value && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-[99]"
+                      onClick={() => showCheckboxDropdown.setFalse()}
+                    />
+                    <div className="absolute top-11 left-0 rounded-lg border shadow-lg z-[100] min-w-[160px] bg-surface-sunken border-border">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          editorRef.current?.toggleCheckList();
+                          showCheckboxDropdown.setFalse();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
+                      >
+                        Insert checkbox
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          showCheckboxDropdown.setFalse();
+                          showDeleteCheckedConfirm.setTrue();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm border-b border-border text-text rounded-none justify-start"
+                      >
+                        Delete checked lines
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          showCheckboxDropdown.setFalse();
+                          showUncheckAllConfirm.setTrue();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-text rounded-none justify-start"
+                      >
+                        Uncheck all
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
 
-          <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
 
-          {/* Heading dropdown trigger */}
-          <div className="relative">
-            <Button
-              variant="secondary"
-              size="icon-sm"
-              onClick={() => showHeadingDropdown.toggle()}
-              className={`flex items-center gap-0.5 flex-shrink-0 ${
-                showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
-              }`}
-            >
-              <Heading
-                size={16}
-                className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
-              />
-              <ChevronDown
+              <div className="w-px h-4 mx-0.5 flex-shrink-0 bg-surface-sunken" />
+
+              {/* Heading dropdown trigger */}
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
+                  onClick={() => showHeadingDropdown.toggle()}
+                  className={`flex items-center gap-0.5 flex-shrink-0 ${
+                    showHeadingDropdown.value ? 'bg-warning/20 dark:bg-warning/20' : ''
+                  }`}
+                >
+                  <Heading
+                    size={16}
+                    className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
+                  />
+                  <ChevronDown
                 size={12}
                 className={showHeadingDropdown.value ? 'text-warning' : 'text-text-muted'}
               />
@@ -371,10 +371,9 @@ export function NoteEditor({
       {/* Rich Text Editor */}
       <RichNoteEditor
         ref={editorRef}
-        initialMarkdown={initialMarkdown}
+        content={initialMarkdown}
         onChange={handleEditorChange}
-        editable={!isReadOnly.value}
-        maxLength={maxContentLength}
+        readOnly={isReadOnly.value}
         placeholder="Start writing..."
       />
 
