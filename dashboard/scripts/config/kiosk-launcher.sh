@@ -8,6 +8,7 @@
 DASHBOARD_URL="${DASHBOARD_URL:-https://dak.bkemper.me/dashboard}"
 
 export WLR_LIBINPUT_NO_DEVICES=1
+export WLR_NO_HARDWARE_CURSORS=1
 
 CHROMIUM_BIN=$(command -v chromium || command -v chromium-browser)
 
