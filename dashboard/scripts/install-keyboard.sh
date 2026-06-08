@@ -5,11 +5,11 @@
 #   branch:  branch name like main - downloads nightly build from GitHub Actions
 #   local:   'local /path/to/repo' - builds extension from local source directory
 #   user@host: optional remote host to install on via SSH
-#   default: v3.0.8
+#   default: v3.0.9
 
 set -e
 
-INPUT="${1:-v3.0.8}"
+INPUT="${1:-v3.0.9}"
 DEST_DIR=~/.config/chromium-extensions
 
 if [[ "$INPUT" == "local" ]]; then
