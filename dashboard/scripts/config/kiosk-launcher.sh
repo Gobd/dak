@@ -16,8 +16,7 @@ if [ -z "$CHROMIUM_BIN" ]; then
   exit 1
 fi
 
-# Allow VT switching when a mouse is connected; touchscreens are hidden via
-# the 99-hide-touchscreen-cursor.rules udev rule (LIBINPUT_IGNORE_DEVICE)
+# Allow VT switching when a mouse is connected
 if grep -qi 'Name=.*mouse' /proc/bus/input/devices 2>/dev/null; then
   CAGE_OPTS=""
 else
@@ -38,4 +37,4 @@ exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --disable-backgrounding-occluded-windows \
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \
   --ozone-platform=wayland \
-  "$DASHBOARD_URL"
+  --app="$DASHBOARD_URL"
