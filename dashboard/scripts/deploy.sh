@@ -103,6 +103,10 @@ echo "=== Installing kiosk startup script ==="
 cp ~/dashboard/scripts/config/kiosk-launcher.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
+echo "=== Installing empty cursor theme ==="
+mkdir -p ~/.local/share/icons
+cp -r ~/dashboard/scripts/config/empty-cursor-theme ~/.local/share/icons/empty
+
 echo "=== Setting up auto-start on login ==="
 cp ~/dashboard/scripts/config/bash_profile ~/.bash_profile
 
