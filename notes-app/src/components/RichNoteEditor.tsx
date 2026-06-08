@@ -1,20 +1,31 @@
 import { forwardRef } from 'react';
-import { SlateEditor, type SlateEditorHandle } from '@dak/markdown-editor';
+import { LexicalEditor, type LexicalEditorHandle } from '@dak/markdown-editor';
 import '@dak/markdown-editor/styles.css';
 
-interface Props {
-  initialMarkdown: string;
-  onChange: (markdown: string) => void;
-  editable: boolean;
-  maxLength: number;
+interface RichNoteEditorProps {
+  content: string;
+  onChange: (content: string) => void;
+  readOnly?: boolean;
   placeholder?: string;
 }
 
-export const RichNoteEditor = forwardRef<SlateEditorHandle, Props>(
-  function RichNoteEditor(props, ref) {
+export const RichNoteEditor = forwardRef<LexicalEditorHandle, RichNoteEditorProps>(
+  function RichNoteEditor({ content, onChange, readOnly = false, placeholder }, ref) {
     return (
-      <div className="flex-1 min-h-0 overflow-auto editor-scroll-container bg-surface">
-        <SlateEditor ref={ref} {...props} />
+      <div className="h-full flex flex-col">
+        <div className="flex-1 overflow-hidden relative group">
+          <div className="absolute inset-0 overflow-y-auto w-full custom-scrollbar pl-2.5 sm:pl-4">
+            <div className="min-h-full py-4 max-w-full">
+              <LexicalEditor
+                ref={ref}
+                content={content}
+                onChange={onChange}
+                editable={!readOnly}
+                placeholder={placeholder || 'Start typing your note...'}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     );
   },

@@ -3,7 +3,7 @@ import { useToggle, useCopyToClipboard } from '@dak/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { NoteSharing } from './NoteSharing';
 import { RichNoteEditor } from './RichNoteEditor';
-import type { SlateEditorHandle } from '@dak/markdown-editor';
+import type { LexicalEditorHandle } from '@dak/markdown-editor';
 import { useUserStore } from '../stores/user-store';
 import type { Note, NoteUpdate } from '../types/note';
 import type { Tag } from '../types/tag';
@@ -66,7 +66,7 @@ export function NoteEditor({
   onRemoveTag,
   onCreateTag,
 }: NoteEditorProps) {
-  const { planLimits } = useUserStore();
+  useUserStore();
   const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const showTagPicker = useToggle(false);
@@ -78,7 +78,7 @@ export function NoteEditor({
   const showDeleteCheckedConfirm = useToggle(false);
   const showUncheckAllConfirm = useToggle(false);
 
-  const editorRef = useRef<SlateEditorHandle>(null);
+  const editorRef = useRef<LexicalEditorHandle>(null);
   const onUpdateRef = useRef(onUpdate);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,15 +86,16 @@ export function NoteEditor({
     onUpdateRef.current = onUpdate;
   }, [onUpdate]);
 
-  const maxContentLength = planLimits.maxNoteLength;
-
   // Initial content resolved once per note id — empty notes start with `# ` for title entry
   const initialMarkdown = note.content || '# ';
+  const latestMarkdownRef = useRef(initialMarkdown);
 
   const handleEditorChange = (markdown: string) => {
+    latestMarkdownRef.current = markdown;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onUpdateRef.current({ content: markdown });
+      debounceRef.current = null;
     }, DEBOUNCE_MS);
   };
 
@@ -103,7 +104,7 @@ export function NoteEditor({
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
-        const latest = editorRef.current?.getMarkdown();
+        const latest = latestMarkdownRef.current;
         if (latest !== undefined && latest !== note.content) {
           onUpdateRef.current({ content: latest });
         }
@@ -368,10 +369,9 @@ export function NoteEditor({
       {/* Rich Text Editor */}
       <RichNoteEditor
         ref={editorRef}
-        initialMarkdown={initialMarkdown}
+        content={initialMarkdown}
         onChange={handleEditorChange}
-        editable={!isReadOnly.value}
-        maxLength={maxContentLength}
+        readOnly={isReadOnly.value}
         placeholder="Start writing..."
       />
 
