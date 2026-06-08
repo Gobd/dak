@@ -268,14 +268,7 @@ export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>
       namespace: 'DakEditor',
       theme,
       editable,
-      nodes: [
-        HeadingNode,
-        QuoteNode,
-        ListItemNode,
-        ListNode,
-        AutoLinkNode,
-        LinkNode,
-      ],
+      nodes: [HeadingNode, QuoteNode, ListItemNode, ListNode, AutoLinkNode, LinkNode],
       onError: (error: Error) => {
         console.error(error);
       },
