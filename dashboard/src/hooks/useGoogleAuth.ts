@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useConfigStore } from '../stores/config-store';
 
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = '386481992006-vc0ljc7cj1oefnd47mevvqgfd7d3rp0g.apps.googleusercontent.com';
@@ -11,9 +12,13 @@ const isLocalDev =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// Token API - use env var for self-hosting, fallback to production
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 const TOKEN_API = `${APP_URL}/api/oauth/token`;
+
+function getInternalKeyHeader(): Record<string, string> {
+  const key = useConfigStore.getState().globalSettings?.internalApiKey;
+  return key ? { 'X-Internal-Key': key } : {};
+}
 
 interface AuthState {
   accessToken: string | null;
@@ -129,7 +134,7 @@ export function useGoogleAuth(): UseGoogleAuthResult {
     try {
       const response = await fetch(TOKEN_API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getInternalKeyHeader() },
         body: JSON.stringify({
           code,
           code_verifier: codeVerifier,
@@ -165,7 +170,7 @@ export function useGoogleAuth(): UseGoogleAuthResult {
     try {
       const response = await fetch(TOKEN_API, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getInternalKeyHeader() },
         body: JSON.stringify({
           refresh_token: auth.refreshToken,
           grant_type: 'refresh_token',
