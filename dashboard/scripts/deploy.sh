@@ -103,9 +103,10 @@ echo "=== Installing kiosk startup script ==="
 cp ~/dashboard/scripts/config/kiosk-launcher.sh ~/.kiosk.sh
 chmod +x ~/.kiosk.sh
 
-echo "=== Installing empty cursor theme ==="
-mkdir -p ~/.local/share/icons
-cp -r ~/dashboard/scripts/config/empty-cursor-theme ~/.local/share/icons/empty
+echo "=== Installing udev rule to hide touchscreen cursor ==="
+sudo cp ~/dashboard/scripts/config/99-hide-touchscreen-cursor.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 
 echo "=== Setting up auto-start on login ==="
 cp ~/dashboard/scripts/config/bash_profile ~/.bash_profile

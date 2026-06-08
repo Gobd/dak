@@ -1,0 +1,4 @@
+# Tell libinput to ignore touchscreen devices so cage doesn't show a cursor for them.
+# Touchscreens register as pointer devices which causes cage to display a cursor even
+# with -s flag. This rule applies to all touchscreens generically via ID_INPUT_TOUCHSCREEN.
+ACTION=="add|change", KERNEL=="event[0-9]*", ENV{ID_INPUT_TOUCHSCREEN}=="1", ENV{LIBINPUT_IGNORE_DEVICE}="1"

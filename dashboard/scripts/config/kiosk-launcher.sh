@@ -16,17 +16,12 @@ if [ -z "$CHROMIUM_BIN" ]; then
   exit 1
 fi
 
-# Hide cursor unless a real mouse is connected
-# (real mice have "Mouse" in their name, touchscreens don't)
+# Allow VT switching when a mouse is connected; touchscreens are hidden via
+# the 99-hide-touchscreen-cursor.rules udev rule (LIBINPUT_IGNORE_DEVICE)
 if grep -qi 'Name=.*mouse' /proc/bus/input/devices 2>/dev/null; then
   CAGE_OPTS=""
 else
   CAGE_OPTS="-s"
-  # cage -s alone doesn't fully suppress the cursor on some wlroots versions
-  # when a touchscreen is present — disable hardware cursor plane and use invisible theme
-  export WLR_NO_HARDWARE_CURSORS=1
-  export XCURSOR_THEME=empty
-  export XCURSOR_SIZE=1
 fi
 
 exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
