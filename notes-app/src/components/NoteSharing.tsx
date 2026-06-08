@@ -22,17 +22,20 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
     fetchNoteShares,
     addNoteShare,
     removeNoteShare,
+    removeAllNoteShares,
     fetchUniqueShareCount,
   } = useSharesStore();
 
   const [newEmail, setNewEmail] = useState('');
   const isAdding = useToggle(false);
   const showAddForm = useToggle(false);
+  const isMakingPrivate = useToggle(false);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const showOwnerEmail = useToggle(false);
   const [removeConfirm, setRemoveConfirm] = useState<{ userId: string; email: string } | null>(
     null,
   );
+  const [showMakePrivateConfirm, setShowMakePrivateConfirm] = useState(false);
 
   const shares = noteShares[note.id] || [];
   const isOwner = note.user_id === user?.id;
@@ -88,6 +91,28 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
     }
   };
 
+  const handleMakePrivateClick = () => {
+    if (!note.is_private && shares.length > 0) {
+      setShowMakePrivateConfirm(true);
+    } else {
+      onTogglePrivate?.(!note.is_private);
+    }
+  };
+
+  const confirmMakePrivate = async () => {
+    if (!user?.id) return;
+    isMakingPrivate.setTrue();
+    try {
+      await removeAllNoteShares(note.id, user.id);
+      onTogglePrivate?.(true);
+    } catch {
+      showToast('Failed to remove shares', 'error');
+    } finally {
+      isMakingPrivate.setFalse();
+      setShowMakePrivateConfirm(false);
+    }
+  };
+
   // Non-owners see a read-only view showing who shared it
   if (!isOwner) {
     const ownerDisplay = note.owner_name || note.owner_email || 'the owner';
@@ -133,7 +158,7 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
         </div>
 
         {onTogglePrivate && (
-          <Button variant="secondary" size="sm" onClick={() => onTogglePrivate(!note.is_private)}>
+          <Button variant="secondary" size="sm" onClick={handleMakePrivateClick}>
             {note.is_private ? 'Make Shared' : 'Make Private'}
           </Button>
         )}
@@ -252,6 +277,17 @@ export function NoteSharing({ note, onTogglePrivate }: NoteSharingProps) {
         variant="danger"
         onConfirm={confirmRemoveShare}
         onClose={() => setRemoveConfirm(null)}
+      />
+
+      {/* Make private confirmation */}
+      <ConfirmModal
+        open={showMakePrivateConfirm}
+        title="Make note private?"
+        message={`This will remove access for ${shares.length === 1 ? '1 person' : `${shares.length} people`} who currently have access to this note.`}
+        confirmText={isMakingPrivate.value ? 'Removing...' : 'Make Private'}
+        variant="danger"
+        onConfirm={confirmMakePrivate}
+        onClose={() => setShowMakePrivateConfirm(false)}
       />
     </div>
   );

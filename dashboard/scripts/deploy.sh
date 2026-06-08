@@ -176,6 +176,9 @@ fi
 sudo usermod -a -G dialout "$USER"
 
 sudo cp ~/dashboard/services/zigbee2mqtt/99-zigbee.rules /etc/udev/rules.d/
+
+echo "=== Installing kiosk input udev rules ==="
+sudo cp ~/dashboard/scripts/config/99-kiosk-input.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 
 sed "s|__USER__|$USER|g" ~/dashboard/services/zigbee2mqtt/zigbee2mqtt.service \

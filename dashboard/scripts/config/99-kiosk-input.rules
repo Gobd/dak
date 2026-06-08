@@ -1,0 +1,4 @@
+# Ignore vc4 HDMI devices misdetected as input devices on Raspberry Pi
+# Prevents these from triggering cursor rendering in Cage/wlroots
+SUBSYSTEM=="input", ATTRS{name}=="vc4-hdmi-0", ENV{LIBINPUT_IGNORE_DEVICE}="1"
+SUBSYSTEM=="input", ATTRS{name}=="vc4-hdmi-1", ENV{LIBINPUT_IGNORE_DEVICE}="1"

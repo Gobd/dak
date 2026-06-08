@@ -16,8 +16,6 @@ import {
   EyeOff,
   Heading,
   List,
-  Lock,
-  LockOpen,
   Pin,
   SquareCheck,
   Trash2,
@@ -171,28 +169,6 @@ export function NoteEditor({
               <span className={`text-sm ${note.pinned ? 'text-warning' : 'text-text-muted'}`}>
                 {note.pinned ? 'Pinned' : 'Pin'}
               </span>
-            )}
-          </Button>
-
-          {/* Private Toggle */}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onUpdate({ is_private: !note.is_private })}
-            className={`flex items-center gap-1 flex-shrink-0 ${
-              note.is_private ? '' : 'bg-success/15 dark:bg-success/20'
-            }`}
-          >
-            {note.is_private ? (
-              <>
-                <Lock size={16} className="text-text-muted" />
-                {!isNarrow && <span className="text-sm text-text-muted">Private</span>}
-              </>
-            ) : (
-              <>
-                <LockOpen size={16} className="text-success" />
-                {!isNarrow && <span className="text-sm text-success">Shared</span>}
-              </>
             )}
           </Button>
 

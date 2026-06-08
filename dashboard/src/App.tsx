@@ -42,9 +42,10 @@ function App() {
     setDark(isDark);
   }, [theme, prefersDark, setDark]);
 
-  // Apply cursor hiding for kiosk mode — also broadcast to all iframes
+  // Apply cursor hiding for kiosk mode — persist for iframes to read on mount, broadcast to loaded ones
   useEffect(() => {
     document.documentElement.classList.toggle('hide-cursor', hideCursor);
+    localStorage.setItem('dak-hide-cursor', String(hideCursor));
     const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe');
     iframes.forEach((iframe) => {
       try {

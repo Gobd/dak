@@ -603,6 +603,24 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 
+-- Remove all shares for a note (owner only)
+CREATE FUNCTION public.unshare_all_note(p_note_id UUID)
+RETURNS void AS $$
+DECLARE
+  v_owner_id UUID;
+BEGIN
+  SELECT user_id INTO v_owner_id FROM public.notes WHERE id = p_note_id;
+
+  IF v_owner_id != auth.uid() THEN
+    RAISE EXCEPTION 'You can only unshare notes you own';
+  END IF;
+
+  DELETE FROM public.note_access
+  WHERE note_id = p_note_id AND is_owner = false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+
 -- Get users a note is shared with
 CREATE FUNCTION public.get_note_shares(p_note_id UUID)
 RETURNS TABLE (
