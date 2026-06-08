@@ -14,8 +14,8 @@ export const RichNoteEditor = forwardRef<LexicalEditorHandle, RichNoteEditorProp
     return (
       <div className="h-full flex flex-col">
         <div className="flex-1 overflow-hidden relative group">
-          <div className="absolute inset-0 overflow-y-auto w-full custom-scrollbar pl-2.5 sm:pl-4">
-            <div className="min-h-full py-4 max-w-full">
+          <div className="absolute inset-0 overflow-y-auto w-full custom-scrollbar">
+            <div className="min-h-full pt-2 max-w-full">
               <LexicalEditor
                 ref={ref}
                 content={content}

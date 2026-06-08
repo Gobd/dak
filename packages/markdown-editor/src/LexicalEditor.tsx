@@ -5,8 +5,6 @@ import {
   $getSelection,
   $isRangeSelection,
   $createParagraphNode,
-  CLICK_COMMAND,
-  COMMAND_PRIORITY_HIGH,
   $getNearestNodeFromDOMNode,
   CONTROLLED_TEXT_INSERTION_COMMAND,
   INSERT_LINE_BREAK_COMMAND,
@@ -26,13 +24,7 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { HeadingNode, QuoteNode, $createHeadingNode } from '@lexical/rich-text';
 import type { HeadingTagType } from '@lexical/rich-text';
-import {
-  ListItemNode,
-  ListNode,
-  $isListNode,
-  INSERT_UNORDERED_LIST_COMMAND,
-  INSERT_CHECK_LIST_COMMAND,
-} from '@lexical/list';
+import { ListItemNode, ListNode, $insertList } from '@lexical/list';
 import { CodeNode, CodeHighlightNode } from '@lexical/code';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
@@ -109,9 +101,10 @@ const theme = {
     h3: 'text-lg font-bold mb-2',
   },
   list: {
-    ul: 'list-disc pl-5 mb-4',
-    ol: 'list-decimal pl-5 mb-4',
-    listitem: 'mb-1',
+    ul: 'lexical-ul',
+    ol: 'lexical-ol',
+    listitem: 'lexical-listitem',
+    checklist: 'lexical-checklist',
     listitemChecked: 'lexical-list-item-checked',
     listitemUnchecked: 'lexical-list-item-unchecked',
   },
@@ -124,13 +117,12 @@ function MarkdownPlugin({ content }: { content: string }) {
 
   useEffect(() => {
     editor.update(() => {
-      const root = $getRoot();
-      if (root.getTextContent() === '') {
-        $convertFromMarkdownString(content, CUSTOM_TRANSFORMERS);
-        $getRoot().selectEnd();
-      }
+      $convertFromMarkdownString(content, CUSTOM_TRANSFORMERS);
+      $getRoot().selectEnd();
     });
-  }, [editor, content]);
+    // intentionally run once on mount only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
 
   return null;
 }
@@ -181,32 +173,32 @@ function ReadOnlyCheckListPlugin() {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    return editor.registerCommand(
-      CLICK_COMMAND,
-      (event: MouseEvent) => {
-        if (editor.isEditable()) return false;
+    const handleClick = (event: MouseEvent) => {
+      if (editor.isEditable()) return;
 
-        const target = event.target as HTMLElement;
-        if (target.tagName === 'LI') {
-          const rect = target.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          if (x >= 0 && x <= 30) {
-            editor.update(() => {
-              const node = $getNearestNodeFromDOMNode(target);
-              if (node instanceof ListItemNode) {
-                const parent = node.getParent();
-                if ($isListNode(parent) && parent.getListType() === 'check') {
-                  node.toggleChecked();
-                }
-              }
-            });
-            return true;
+      const target = event.target as HTMLElement;
+      if (target.tagName !== 'LI') return;
+
+      // @ts-ignore internal field
+      if (target.parentNode?.__lexicalListType !== 'check') return;
+
+      const rect = target.getBoundingClientRect();
+      const beforeWidth = parseFloat(window.getComputedStyle(target, '::before').width || '16');
+      const x = event.clientX - rect.left;
+      if (x >= 0 && x < beforeWidth + 4) {
+        editor.update(() => {
+          const node = $getNearestNodeFromDOMNode(target);
+          if (node instanceof ListItemNode) {
+            node.toggleChecked();
           }
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_HIGH,
-    );
+        });
+      }
+    };
+
+    return editor.registerRootListener((rootElement: HTMLElement | null) => {
+      rootElement?.addEventListener('click', handleClick);
+      return () => rootElement?.removeEventListener('click', handleClick);
+    });
   }, [editor]);
 
   return null;
@@ -215,105 +207,60 @@ function ReadOnlyCheckListPlugin() {
 function EditorRefPlugin({ editorRef }: { editorRef: React.ForwardedRef<LexicalEditorHandle> }) {
   const [editor] = useLexicalComposerContext();
 
-  useImperativeHandle(editorRef, () => ({
-    blur: () => {
-      editor.blur();
-    },
-    deleteCheckedItems: () => {
-      const wasEditable = editor.isEditable();
-      if (!wasEditable) editor.setEditable(true);
-      editor.update(
-        () => {
-          const root = $getRoot();
-          const itemsToRemove: ListItemNode[] = [];
-          const dfs = (node: any) => {
-            if (node.getType() === 'listitem' && node.getChecked()) {
-              itemsToRemove.push(node);
-            } else if (node.getChildren) {
-              node.getChildren().forEach(dfs);
-            }
-          };
-          root.getChildren().forEach(dfs);
-          itemsToRemove.forEach((item) => item.remove());
-        },
-        {
-          onUpdate: () => {
-            if (!wasEditable) editor.setEditable(false);
-          },
-        },
-      );
-    },
-    uncheckAll: () => {
-      const wasEditable = editor.isEditable();
-      if (!wasEditable) editor.setEditable(true);
-      editor.update(
-        () => {
-          const root = $getRoot();
-          const dfs = (node: any) => {
-            if (node.getType() === 'listitem' && node.getChecked()) {
-              node.setChecked(false);
-            } else if (node.getChildren) {
-              node.getChildren().forEach(dfs);
-            }
-          };
-          root.getChildren().forEach(dfs);
-        },
-        {
-          onUpdate: () => {
-            if (!wasEditable) editor.setEditable(false);
-          },
-        },
-      );
-    },
-    toggleCheckList: () => {
-      editor.focus(() => {
-        editor.update(
-          () => {
-            if (!$getSelection()) $getRoot().selectEnd();
-          },
-          { discrete: true },
-        );
-        editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-      });
-    },
-    toggleHeading: (level: 1 | 2 | 3) => {
+  useImperativeHandle(editorRef, () => {
+    const withSelection = (fn: () => void) => {
       editor.update(() => {
-        let selection = $getSelection();
-        if (!selection) {
-          $getRoot().selectEnd();
-          selection = $getSelection();
-        }
-        if ($isRangeSelection(selection)) {
-          $setBlocksType(selection, () => $createHeadingNode(`h${level}` as HeadingTagType));
-        }
+        if (!$getSelection()) $getRoot().selectEnd();
+        fn();
       });
       editor.focus();
-    },
-    setParagraph: () => {
-      editor.update(() => {
-        let selection = $getSelection();
-        if (!selection) {
-          $getRoot().selectEnd();
-          selection = $getSelection();
+    };
+
+    const forEachCheckedItem = (cb: (node: ListItemNode) => void) => {
+      const visit = (node: any) => {
+        if (node.getType() === 'listitem' && node.getChecked()) {
+          cb(node);
+        } else {
+          node.getChildren?.().forEach(visit);
         }
-        if ($isRangeSelection(selection)) {
-          $setBlocksType(selection, () => $createParagraphNode());
-        }
-      });
-      editor.focus();
-    },
-    toggleBulletList: () => {
-      editor.focus(() => {
-        editor.update(
-          () => {
-            if (!$getSelection()) $getRoot().selectEnd();
-          },
-          { discrete: true },
-        );
-        editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-      });
-    },
-  }));
+      };
+      $getRoot().getChildren().forEach(visit);
+    };
+
+    return {
+      blur: () => editor.blur(),
+      deleteCheckedItems: () => {
+        editor.update(() => {
+          const toRemove: ListItemNode[] = [];
+          forEachCheckedItem((node) => toRemove.push(node));
+          toRemove.forEach((node) => node.remove());
+        });
+      },
+      uncheckAll: () => {
+        editor.update(() => forEachCheckedItem((node) => node.setChecked(false)));
+      },
+      toggleCheckList: () => withSelection(() => $insertList('check')),
+      toggleBulletList: () => withSelection(() => $insertList('bullet')),
+      toggleHeading: (level: 1 | 2 | 3) =>
+        withSelection(() =>
+          editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+              $setBlocksType(selection, () => $createHeadingNode(`h${level}` as HeadingTagType));
+            }
+          }),
+        ),
+      setParagraph: () =>
+        withSelection(() =>
+          editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+              $setBlocksType(selection, () => $createParagraphNode());
+            }
+          }),
+        ),
+    };
+  });
 
   return null;
 }
