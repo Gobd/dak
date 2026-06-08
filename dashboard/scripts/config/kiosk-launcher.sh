@@ -17,7 +17,8 @@ if [ -z "$CHROMIUM_BIN" ]; then
   exit 1
 fi
 
-# Allow VT switching when a mouse is connected
+# Hide cursor unless a real mouse is connected
+# (real mice have "Mouse" in their name, touchscreens don't)
 if grep -qi 'Name=.*mouse' /proc/bus/input/devices 2>/dev/null; then
   CAGE_OPTS=""
 else
