@@ -13,6 +13,7 @@ interface SystemStats {
   memory_total_gb: number;
   disks: Array<{ path: string; percent: number; free_gb: number }>;
   uptime_seconds: number;
+  cpu_temp_c?: number | null;
 }
 
 async function fetchStats(): Promise<SystemStats> {
@@ -45,6 +46,12 @@ function getBarColor(percent: number): string {
   if (percent >= 90) return 'bg-danger';
   if (percent >= 75) return 'bg-warning';
   return 'bg-success';
+}
+
+function getTempColor(temp: number): string {
+  if (temp >= 75) return 'text-danger';
+  if (temp >= 60) return 'text-warning';
+  return 'text-success';
 }
 
 function StatBar({
@@ -138,6 +145,12 @@ function IconMode({
                 <span className="text-text-secondary">Uptime</span>
                 <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
               </div>
+              {data.cpu_temp_c != null && (
+                <div className="flex justify-between text-sm mt-2">
+                  <span className="text-text-secondary">CPU Temp</span>
+                  <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+                </div>
+              )}
             </div>
             <div className="pt-3 border-t border-border">
               <Toggle
@@ -208,6 +221,12 @@ function InlineMode({
       <StatBar label="CPU" percent={data.cpu_percent} action={settingsButton} />
       <StatBar label="RAM" percent={data.memory_percent} />
       {primaryDisk && <StatBar label="Disk" percent={primaryDisk.percent} />}
+      {data.cpu_temp_c != null && (
+        <div className="flex justify-between text-sm">
+          <span className="text-text-secondary">Temp</span>
+          <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+        </div>
+      )}
 
       <Modal
         open={showModal.value}
@@ -235,6 +254,12 @@ function InlineMode({
               <span className="text-text-secondary">Uptime</span>
               <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
             </div>
+            {data.cpu_temp_c != null && (
+              <div className="flex justify-between text-sm mt-2">
+                <span className="text-text-secondary">CPU Temp</span>
+                <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+              </div>
+            )}
           </div>
           <div className="pt-3 border-t border-border">
             <Toggle

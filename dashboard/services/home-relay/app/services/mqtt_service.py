@@ -435,7 +435,7 @@ def sensor_response(key: str) -> dict:
     """Build sensor response dict."""
     # Check if sensor is configured
     if not sensor_config.get(key):
-        return {"available": False}
+        return {"available": False, "error": "Not configured"}
 
     s = sensors[key]
     c = s.current
