@@ -25,7 +25,6 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { HeadingNode, QuoteNode, $createHeadingNode } from '@lexical/rich-text';
 import type { HeadingTagType } from '@lexical/rich-text';
 import { ListItemNode, ListNode, $insertList } from '@lexical/list';
-import { CodeNode, CodeHighlightNode } from '@lexical/code';
 import { AutoLinkNode, LinkNode } from '@lexical/link';
 import { $setBlocksType } from '@lexical/selection';
 import {
@@ -34,7 +33,6 @@ import {
   UNORDERED_LIST,
   ORDERED_LIST,
   CHECK_LIST,
-  CODE,
   TEXT_FORMAT_TRANSFORMERS,
   TEXT_MATCH_TRANSFORMERS,
   $convertToMarkdownString,
@@ -66,7 +64,6 @@ const CUSTOM_TRANSFORMERS = [
   CUSTOM_CHECK_LIST,
   UNORDERED_LIST,
   ORDERED_LIST,
-  CODE,
   ...TEXT_FORMAT_TRANSFORMERS,
   ...TEXT_MATCH_TRANSFORMERS,
 ];
@@ -276,8 +273,6 @@ export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>
         QuoteNode,
         ListItemNode,
         ListNode,
-        CodeNode,
-        CodeHighlightNode,
         AutoLinkNode,
         LinkNode,
       ],
