@@ -9,14 +9,9 @@ import {
   getStatusAdguardStatusPost,
   setProtectionAdguardProtectionPost,
   getVersionAdguardVersionPost,
+  type AdGuardRequest,
 } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
-
-interface AdguardConfig {
-  url: string;
-  username: string;
-  password: string;
-}
 
 interface AdguardStatus {
   protection_enabled: boolean;
@@ -37,7 +32,7 @@ const DURATION_OPTIONS = [
   { label: '2 hours', value: 2 * 60 * 60 * 1000 },
 ];
 
-async function fetchStatus(config: AdguardConfig): Promise<AdguardStatus> {
+async function fetchStatus(config: AdGuardRequest): Promise<AdguardStatus> {
   const { url, username, password } = config;
   if (!url || !username || !password) {
     throw new Error('Not configured');
@@ -53,7 +48,7 @@ async function fetchStatus(config: AdguardConfig): Promise<AdguardStatus> {
 }
 
 async function setProtection(
-  config: AdguardConfig,
+  config: AdGuardRequest,
   enabled: boolean,
   duration?: number,
 ): Promise<void> {
@@ -66,7 +61,7 @@ async function setProtection(
   });
 }
 
-async function fetchVersion(config: AdguardConfig): Promise<AdguardVersion> {
+async function fetchVersion(config: AdGuardRequest): Promise<AdguardVersion> {
   const { url, username, password } = config;
   if (!url || !username || !password) {
     throw new Error('Not configured');
@@ -82,7 +77,7 @@ async function fetchVersion(config: AdguardConfig): Promise<AdguardVersion> {
 }
 
 // Build URL with embedded credentials for auto-login
-function buildAuthUrl(config: AdguardConfig): string {
+function buildAuthUrl(config: AdGuardRequest): string {
   try {
     const url = new URL(config.url);
     url.username = config.username;
@@ -98,7 +93,7 @@ export default function Adguard({ panel }: WidgetComponentProps) {
   const getWidgetData = useConfigStore((s) => s.getWidgetData);
   const updateWidgetData = useConfigStore((s) => s.updateWidgetData);
 
-  const config = getWidgetData<AdguardConfig>(panel.id) ?? { url: '', username: '', password: '' };
+  const config = getWidgetData<AdGuardRequest>(panel.id) ?? { url: '', username: '', password: '' };
   const isConfigured = !!(config.url && config.username && config.password);
 
   const showSettings = useToggle(false);

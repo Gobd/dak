@@ -18,6 +18,8 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
+logger = logging.getLogger(__name__)
+
 # Disable uvicorn access logs for cleaner output
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
@@ -85,7 +87,11 @@ app.add_middleware(
 @app.middleware("http")
 async def add_private_network_access_headers(request: Request, call_next):
     """Add Private Network Access headers to all responses."""
-    response: Response = await call_next(request)
+    try:
+        response: Response = await call_next(request)
+    except Exception:
+        logger.exception("Unhandled error in request %s %s", request.method, request.url.path)
+        response = Response("Internal Server Error", status_code=500)
 
     # Allow Private Network Access (Chrome's CORS-PNA)
     response.headers["Access-Control-Allow-Private-Network"] = "true"

@@ -4,21 +4,13 @@ import { useToggle } from '@dak/hooks';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { Modal, Button, Spinner, Toggle } from '@dak/ui';
 import { client, getSystemStatsSystemStatsGet } from '@dak/api-client';
+import type { SystemStatsResponse } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
-interface SystemStats {
-  cpu_percent: number;
-  memory_percent: number;
-  memory_used_gb: number;
-  memory_total_gb: number;
-  disks: Array<{ path: string; percent: number; free_gb: number }>;
-  uptime_seconds: number;
-}
-
-async function fetchStats(): Promise<SystemStats> {
+async function fetchStats(): Promise<SystemStatsResponse> {
   client.setConfig({ baseUrl: getRelayUrl() });
   const result = await getSystemStatsSystemStatsGet({ throwOnError: true });
-  return result.data as SystemStats;
+  return result.data;
 }
 
 function formatUptime(seconds: number): string {
@@ -45,6 +37,12 @@ function getBarColor(percent: number): string {
   if (percent >= 90) return 'bg-danger';
   if (percent >= 75) return 'bg-warning';
   return 'bg-success';
+}
+
+function getTempColor(temp: number): string {
+  if (temp >= 75) return 'text-danger';
+  if (temp >= 60) return 'text-warning';
+  return 'text-success';
 }
 
 function StatBar({
@@ -86,7 +84,7 @@ function IconMode({
   panelId,
   currentMode,
 }: {
-  data?: SystemStats;
+  data?: SystemStatsResponse;
   isLoading: boolean;
   showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
   panelId: string;
@@ -138,6 +136,12 @@ function IconMode({
                 <span className="text-text-secondary">Uptime</span>
                 <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
               </div>
+              {data.cpu_temp_c != null && (
+                <div className="flex justify-between text-sm mt-2">
+                  <span className="text-text-secondary">CPU Temp</span>
+                  <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+                </div>
+              )}
             </div>
             <div className="pt-3 border-t border-border">
               <Toggle
@@ -166,7 +170,7 @@ function InlineMode({
   panelId,
   currentMode,
 }: {
-  data?: SystemStats;
+  data?: SystemStatsResponse;
   isLoading: boolean;
   showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
   panelId: string;
@@ -208,6 +212,12 @@ function InlineMode({
       <StatBar label="CPU" percent={data.cpu_percent} action={settingsButton} />
       <StatBar label="RAM" percent={data.memory_percent} />
       {primaryDisk && <StatBar label="Disk" percent={primaryDisk.percent} />}
+      {data.cpu_temp_c != null && (
+        <div className="flex justify-between text-sm">
+          <span className="text-text-secondary">Temp</span>
+          <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+        </div>
+      )}
 
       <Modal
         open={showModal.value}
@@ -235,6 +245,12 @@ function InlineMode({
               <span className="text-text-secondary">Uptime</span>
               <span className="text-text">{formatUptime(data.uptime_seconds)}</span>
             </div>
+            {data.cpu_temp_c != null && (
+              <div className="flex justify-between text-sm mt-2">
+                <span className="text-text-secondary">CPU Temp</span>
+                <span className={getTempColor(data.cpu_temp_c)}>{data.cpu_temp_c}°C</span>
+              </div>
+            )}
           </div>
           <div className="pt-3 border-t border-border">
             <Toggle

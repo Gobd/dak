@@ -1113,6 +1113,10 @@ export type SystemStatsResponse = {
      * Uptime Seconds
      */
     uptime_seconds: number;
+    /**
+     * Cpu Temp C
+     */
+    cpu_temp_c?: number | null;
 };
 
 /**

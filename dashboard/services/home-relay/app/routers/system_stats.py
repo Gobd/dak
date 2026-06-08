@@ -1,6 +1,7 @@
 """System stats endpoint for CPU, memory, disk, and uptime."""
 
 import time
+from pathlib import Path
 
 import psutil
 from fastapi import APIRouter
@@ -27,6 +28,7 @@ class SystemStatsResponse(BaseModel):
     memory_total_gb: float
     disks: list[DiskStats]
     uptime_seconds: int
+    cpu_temp_c: float | None = None
 
 
 # Mount points to ignore (boot partitions, etc.)
@@ -56,6 +58,15 @@ IGNORED_FSTYPES = frozenset(
         "fuse.lxcfs",
     ]
 )
+
+
+def _get_cpu_temp() -> float | None:
+    """Read CPU temp from thermal zone, works on Pi and most Linux."""
+    try:
+        with Path("/sys/class/thermal/thermal_zone0/temp").open() as f:
+            return round(int(f.read().strip()) / 1000, 1)
+    except (OSError, ValueError):
+        return None
 
 
 def _get_stats() -> dict:
@@ -103,6 +114,7 @@ def _get_stats() -> dict:
         "memory_total_gb": round(mem_total_gb, 1),
         "disks": disks,
         "uptime_seconds": uptime,
+        "cpu_temp_c": _get_cpu_temp(),
     }
 
 
