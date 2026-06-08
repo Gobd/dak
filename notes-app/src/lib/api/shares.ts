@@ -77,6 +77,14 @@ export const sharesApi = {
     if (error) throw error;
   },
 
+  async removeAllNoteShares(noteId: string): Promise<void> {
+    const { error } = await supabase.rpc('unshare_all_note', {
+      p_note_id: noteId,
+    });
+
+    if (error) throw error;
+  },
+
   // Get count of unique users shared with
   async getUniqueShareCount(userId: string): Promise<number> {
     const { data, error } = await supabase.rpc('count_unique_shares', {

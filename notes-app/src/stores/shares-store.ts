@@ -17,6 +17,7 @@ interface SharesStore {
   fetchNoteShares: (noteId: string) => Promise<void>;
   addNoteShare: (noteId: string, sharedBy: string, email: string) => Promise<void>;
   removeNoteShare: (noteId: string, userId: string) => Promise<void>;
+  removeAllNoteShares: (noteId: string, userId: string) => Promise<void>;
 
   fetchUniqueShareCount: (userId: string) => Promise<void>;
 }
@@ -114,6 +115,21 @@ export const useSharesStore = create<SharesStore>((set, get) => ({
       }));
     } catch (err) {
       set({ error: getErrorMessage(err), isLoading: false });
+    }
+  },
+
+  removeAllNoteShares: async (noteId: string, userId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await sharesApi.removeAllNoteShares(noteId);
+      set((state) => ({
+        noteShares: { ...state.noteShares, [noteId]: [] },
+        isLoading: false,
+      }));
+      get().fetchUniqueShareCount(userId);
+    } catch (err) {
+      set({ error: getErrorMessage(err), isLoading: false });
+      throw err;
     }
   },
 
