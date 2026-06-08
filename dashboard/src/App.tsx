@@ -42,9 +42,17 @@ function App() {
     setDark(isDark);
   }, [theme, prefersDark, setDark]);
 
-  // Apply cursor hiding for kiosk mode
+  // Apply cursor hiding for kiosk mode — also broadcast to all iframes
   useEffect(() => {
     document.documentElement.classList.toggle('hide-cursor', hideCursor);
+    const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe');
+    iframes.forEach((iframe) => {
+      try {
+        iframe.contentWindow?.postMessage({ action: 'hideCursor', hidden: hideCursor }, '*');
+      } catch {
+        // cross-origin iframes will throw — ignore
+      }
+    });
   }, [hideCursor]);
 
   // Keyboard shortcut: Ctrl+Shift+H to toggle cursor hiding

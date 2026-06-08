@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@dak/vite-shared-react/pwa-refresh';
+import '@dak/vite-shared-react/hide-cursor';
 import App from './App';
 import './index.css';
 

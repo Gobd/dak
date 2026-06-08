@@ -177,3 +177,9 @@
 
 /* Centralized dark mode variant - apps no longer define this */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Cursor hiding for kiosk mode - toggled by dashboard via postMessage */
+.hide-cursor,
+.hide-cursor * {
+  cursor: none !important;
+}

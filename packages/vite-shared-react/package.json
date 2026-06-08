@@ -9,7 +9,8 @@
     ".": "./index.js",
     "./fonts.css": "./fonts/fonts.css",
     "./theme.css": "./theme/theme.css",
-    "./pwa-refresh": "./pwa-refresh.js"
+    "./pwa-refresh": "./pwa-refresh.js",
+    "./hide-cursor": "./hide-cursor.js"
   },
   "scripts": {
     "build:vendor": "node build-vendor.js"
