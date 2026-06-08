@@ -4,22 +4,13 @@ import { useToggle } from '@dak/hooks';
 import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { Modal, Button, Spinner, Toggle } from '@dak/ui';
 import { client, getSystemStatsSystemStatsGet } from '@dak/api-client';
+import type { SystemStatsResponse } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 
-interface SystemStats {
-  cpu_percent: number;
-  memory_percent: number;
-  memory_used_gb: number;
-  memory_total_gb: number;
-  disks: Array<{ path: string; percent: number; free_gb: number }>;
-  uptime_seconds: number;
-  cpu_temp_c?: number | null;
-}
-
-async function fetchStats(): Promise<SystemStats> {
+async function fetchStats(): Promise<SystemStatsResponse> {
   client.setConfig({ baseUrl: getRelayUrl() });
   const result = await getSystemStatsSystemStatsGet({ throwOnError: true });
-  return result.data as SystemStats;
+  return result.data;
 }
 
 function formatUptime(seconds: number): string {
@@ -93,7 +84,7 @@ function IconMode({
   panelId,
   currentMode,
 }: {
-  data?: SystemStats;
+  data?: SystemStatsResponse;
   isLoading: boolean;
   showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
   panelId: string;
@@ -179,7 +170,7 @@ function InlineMode({
   panelId,
   currentMode,
 }: {
-  data?: SystemStats;
+  data?: SystemStatsResponse;
   isLoading: boolean;
   showModal: { value: boolean; setTrue: () => void; setFalse: () => void };
   panelId: string;

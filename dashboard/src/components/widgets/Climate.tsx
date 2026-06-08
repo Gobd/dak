@@ -11,7 +11,6 @@ import {
   devicesSensorsDevicesGet,
   type AllSensorsResponse,
   type DevicesResponse,
-  type SensorReadingResponse,
 } from '@dak/api-client';
 import type { WidgetComponentProps } from './index';
 import type { ClimateConfig } from '../../types';
@@ -108,17 +107,16 @@ export default function Climate({ dark }: WidgetComponentProps) {
         </div>
       );
     }
-    const s = sensor as SensorReadingResponse;
-    const tTemp = TREND_ICON[s.temperature_trend];
-    const tHum = TREND_ICON[s.humidity_trend];
+    const tTemp = TREND_ICON[sensor.temperature_trend];
+    const tHum = TREND_ICON[sensor.humidity_trend];
     return (
       <div className="contents">
         <span>{icon}</span>
         <span>
-          {s.temperature.toFixed(1)}°{tTemp}
+          {sensor.temperature.toFixed(1)}°{tTemp}
         </span>
         <span className="text-text-muted">
-          {Math.round(s.humidity)}%{tHum}
+          {Math.round(sensor.humidity)}%{tHum}
         </span>
       </div>
     );
