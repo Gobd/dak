@@ -8,6 +8,11 @@ import {
   CLICK_COMMAND,
   COMMAND_PRIORITY_HIGH,
   $getNearestNodeFromDOMNode,
+  CONTROLLED_TEXT_INSERTION_COMMAND,
+  INSERT_LINE_BREAK_COMMAND,
+  INSERT_PARAGRAPH_COMMAND,
+  KEY_BACKSPACE_COMMAND,
+  KEY_ENTER_COMMAND,
 } from 'lexical';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -135,6 +140,40 @@ function EditablePlugin({ editable }: { editable: boolean }) {
   useEffect(() => {
     editor.setEditable(editable);
   }, [editor, editable]);
+  return null;
+}
+
+function OskPlugin() {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    const root = editor.getRootElement();
+    if (!root) return;
+
+    const handler = (e: Event) => {
+      const { text } = (e as CustomEvent<{ text: string }>).detail;
+      e.preventDefault();
+      editor.focus();
+      if (text === '\n') {
+        editor.dispatchCommand(INSERT_LINE_BREAK_COMMAND, false);
+      } else if (text === '\n\n') {
+        editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+      } else if (text === 'Backspace') {
+        editor.dispatchCommand(
+          KEY_BACKSPACE_COMMAND,
+          new KeyboardEvent('keydown', { key: 'Backspace' }),
+        );
+      } else if (text === 'Enter') {
+        editor.dispatchCommand(KEY_ENTER_COMMAND, new KeyboardEvent('keydown', { key: 'Enter' }));
+      } else {
+        editor.dispatchCommand(CONTROLLED_TEXT_INSERTION_COMMAND, text);
+      }
+    };
+
+    root.addEventListener('osk-insert', handler);
+    return () => root.removeEventListener('osk-insert', handler);
+  }, [editor]);
+
   return null;
 }
 
@@ -313,7 +352,10 @@ export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>
           <div className="editor-inner relative h-full">
             <RichTextPlugin
               contentEditable={
-                <ContentEditable className="editor-input outline-none min-h-[150px] h-full" />
+                <ContentEditable
+                  id="lexical-editor"
+                  className="editor-input outline-none min-h-[150px] h-full"
+                />
               }
               placeholder={
                 <div className="editor-placeholder absolute top-0 left-0 text-gray-400 pointer-events-none">
@@ -330,6 +372,7 @@ export const LexicalEditor = forwardRef<LexicalEditorHandle, LexicalEditorProps>
             <MarkdownPlugin content={content} />
             <EditablePlugin editable={editable} />
             <ReadOnlyCheckListPlugin />
+            <OskPlugin />
             <EditorRefPlugin editorRef={ref} />
           </div>
         </LexicalComposer>

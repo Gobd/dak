@@ -92,6 +92,7 @@ export function NoteEditor({
 
   const handleEditorChange = (markdown: string) => {
     latestMarkdownRef.current = markdown;
+    if (markdown === initialMarkdown) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onUpdateRef.current({ content: markdown });
