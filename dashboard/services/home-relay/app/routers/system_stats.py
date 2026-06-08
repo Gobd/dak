@@ -1,6 +1,7 @@
 """System stats endpoint for CPU, memory, disk, and uptime."""
 
 import time
+from pathlib import Path
 
 import psutil
 from fastapi import APIRouter
@@ -62,7 +63,7 @@ IGNORED_FSTYPES = frozenset(
 def _get_cpu_temp() -> float | None:
     """Read CPU temp from thermal zone, works on Pi and most Linux."""
     try:
-        with open("/sys/class/thermal/thermal_zone0/temp") as f:
+        with Path("/sys/class/thermal/thermal_zone0/temp").open() as f:
             return round(int(f.read().strip()) / 1000, 1)
     except (OSError, ValueError):
         return None
