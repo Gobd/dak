@@ -278,6 +278,7 @@ export interface GlobalSettings {
   hideCursor: boolean;
   relayUrl?: string;
   zigbeeUrl?: string; // Zigbee2MQTT UI URL
+  internalApiKey?: string; // Shared secret for CF function endpoints
   // Voice control
   voiceEnabled?: boolean;
   wakeWord?: WakeWord;

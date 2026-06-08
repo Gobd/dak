@@ -9,6 +9,11 @@ const isLocalDev =
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 const MAPS_API_BASE = isLocalDev ? `${APP_URL}/api/maps` : '/api/maps';
 
+function getInternalHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const key = useConfigStore.getState().globalSettings?.internalApiKey;
+  return key ? { 'X-Internal-Key': key, ...extra } : extra;
+}
+
 export interface PlacePrediction {
   description: string;
   placeId: string;
@@ -29,7 +34,9 @@ export async function fetchPlacesAutocomplete(input: string): Promise<PlacePredi
 
   try {
     const params = new URLSearchParams({ input });
-    const response = await fetch(`${MAPS_API_BASE}/places-autocomplete?${params}`);
+    const response = await fetch(`${MAPS_API_BASE}/places-autocomplete?${params}`, {
+      headers: getInternalHeaders(),
+    });
     if (!response.ok) return [];
     const data = await response.json();
     return data.predictions || [];
@@ -44,7 +51,9 @@ export async function fetchPlacesAutocomplete(input: string): Promise<PlacePredi
 export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
   try {
     const params = new URLSearchParams({ placeId });
-    const response = await fetch(`${MAPS_API_BASE}/place-details?${params}`);
+    const response = await fetch(`${MAPS_API_BASE}/place-details?${params}`, {
+      headers: getInternalHeaders(),
+    });
     if (!response.ok) return null;
     return await response.json();
   } catch {

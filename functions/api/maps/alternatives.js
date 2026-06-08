@@ -1,7 +1,7 @@
 // Cloudflare Pages Function for fetching route alternatives
 // Returns multiple route options with summaries and extractable waypoints
 
-import { getCorsHeaders, handleOptions } from '../_cors.js';
+import { getCorsHeaders, handleOptions, requireInternalAuth } from '../_cors.js';
 
 // Extract waypoint coordinates along the route for reliable locking
 // Number of waypoints scales with route length to avoid clustering on short routes
@@ -69,6 +69,8 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   // Cache traffic data for 3 minutes to reduce API calls
   const corsHeaders = getCorsHeaders(request, env, { cacheSeconds: 180 });
+  const authError = requireInternalAuth(request, env, corsHeaders);
+  if (authError) return authError;
 
   try {
     const { origin, destination } = await request.json();
