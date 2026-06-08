@@ -1,5 +1,6 @@
 // Shared CORS utilities for Cloudflare Pages Functions
 // Set ALLOWED_ORIGIN env var in Cloudflare (e.g., https://yourdomain.com)
+// Set INTERNAL_API_KEY env var in Cloudflare + VITE_INTERNAL_API_KEY in frontend
 
 // Check if origin is localhost (any port)
 function isLocalhost(origin) {
@@ -23,7 +24,7 @@ export function getCorsHeaders(request, env, options = {}) {
   const headers = {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Internal-Key',
   };
 
   // Optional caching for static data endpoints
@@ -38,5 +39,22 @@ export function handleOptions(request, env) {
   return new Response(null, {
     status: 204,
     headers: getCorsHeaders(request, env),
+  });
+}
+
+/**
+ * Returns a 401 Response if the request is missing or has a wrong INTERNAL_API_KEY.
+ * Returns null if the request is authorized (caller should proceed).
+ * Skips check in local dev (no INTERNAL_API_KEY set) so dev workflow is unaffected.
+ */
+export function requireInternalAuth(request, env, corsHeaders) {
+  if (!env?.INTERNAL_API_KEY) return null; // not configured — skip (local dev)
+
+  const provided = request.headers.get('X-Internal-Key');
+  if (provided === env.INTERNAL_API_KEY) return null;
+
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    status: 401,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
   });
 }

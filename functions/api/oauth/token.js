@@ -1,11 +1,13 @@
 // Cloudflare Pages Function for OAuth token exchange
 // Keeps client_secret server-side
 
-import { getCorsHeaders, handleOptions } from '../_cors.js';
+import { getCorsHeaders, handleOptions, requireInternalAuth } from '../_cors.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
   const corsHeaders = getCorsHeaders(request, env);
+  const authError = requireInternalAuth(request, env, corsHeaders);
+  if (authError) return authError;
 
   try {
     const body = await request.json();

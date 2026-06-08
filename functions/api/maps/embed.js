@@ -1,12 +1,14 @@
 // Cloudflare Pages Function for Google Maps Embed URL
 // Returns an embed URL for visual route verification
 
-import { getCorsHeaders, handleOptions } from '../_cors.js';
+import { getCorsHeaders, handleOptions, requireInternalAuth } from '../_cors.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   const corsHeaders = getCorsHeaders(request, env);
+  const authError = requireInternalAuth(request, env, corsHeaders);
+  if (authError) return authError;
 
   try {
     const { origin, destination, via } = await request.json();

@@ -1,13 +1,15 @@
 // Cloudflare Pages Function for Google Distance Matrix API
 // Proxies requests to avoid CORS and keeps API key server-side
 
-import { getCorsHeaders, handleOptions } from '../_cors.js';
+import { getCorsHeaders, handleOptions, requireInternalAuth } from '../_cors.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
 
   // Cache traffic data for 3 minutes to reduce API calls
   const corsHeaders = getCorsHeaders(request, env, { cacheSeconds: 180 });
+  const authError = requireInternalAuth(request, env, corsHeaders);
+  if (authError) return authError;
 
   try {
     const { origin, destination } = await request.json();

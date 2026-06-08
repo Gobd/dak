@@ -22,6 +22,11 @@ const isLocalDev =
 const APP_URL = import.meta.env.VITE_APP_URL || 'https://dak.bkemper.me';
 const API_BASE = isLocalDev ? `${APP_URL}/api/maps` : '/api/maps';
 
+function getInternalHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const key = useConfigStore.getState().globalSettings?.internalApiKey;
+  return key ? { 'X-Internal-Key': key, ...extra } : extra;
+}
+
 const DAY_NAMES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -71,7 +76,7 @@ async function fetchDriveTime(
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getInternalHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
 
@@ -801,7 +806,7 @@ function RouteFormModal({ open, onClose, route, locations, onSave }: RouteFormMo
     try {
       const res = await fetch(`${API_BASE}/alternatives`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getInternalHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ origin: originAddr, destination: destAddr }),
       });
 

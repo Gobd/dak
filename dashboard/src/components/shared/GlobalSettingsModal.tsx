@@ -68,6 +68,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
   const [locationQuery, setLocationQuery] = useState('');
   const [relayUrlInput, setRelayUrlInput] = useState('');
   const [zigbeeUrlInput, setZigbeeUrlInput] = useState('');
+  const [internalApiKeyInput, setInternalApiKeyInput] = useState('');
   const [relayStatus, setRelayStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [zigbeeStatus, setZigbeeStatus] = useState<'idle' | 'testing' | 'success' | 'error'>(
     'idle',
@@ -95,6 +96,7 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
     if (open) {
       setRelayUrlInput(globalSettings?.relayUrl ?? getRelayUrl().replace(/^https?:\/\//, ''));
       setZigbeeUrlInput(globalSettings?.zigbeeUrl ?? 'https://zigbee2mqtt.bkemper.me');
+      setInternalApiKeyInput(globalSettings?.internalApiKey ?? '');
       setRelayStatus('idle');
       setZigbeeStatus('idle');
     }
@@ -759,6 +761,32 @@ export function GlobalSettingsModal({ open, onClose }: GlobalSettingsModalProps)
           </div>
           <p className="mt-1 text-xs text-text-muted">
             Zigbee2MQTT web interface for climate sensors
+          </p>
+        </div>
+
+        {/* Internal API Key */}
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-2">
+            Internal API Key
+          </label>
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                value={internalApiKeyInput}
+                onChange={(e) => setInternalApiKeyInput(e.target.value)}
+                placeholder="your-secret-key"
+                type="password"
+              />
+            </div>
+            <Button
+              onClick={() => updateGlobalSettings({ internalApiKey: internalApiKeyInput })}
+              disabled={internalApiKeyInput === (globalSettings?.internalApiKey ?? '')}
+            >
+              Save
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-text-muted">
+            Shared secret for Cloudflare API endpoints — must match INTERNAL_API_KEY in CF Pages env
           </p>
         </div>
       </div>
