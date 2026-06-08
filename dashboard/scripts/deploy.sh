@@ -49,16 +49,14 @@ fi
 DASHBOARD_URL="${DASHBOARD_URL:-https://dak.bkemper.me/dashboard}"
 DASHBOARD_ORIGIN="${DASHBOARD_URL%%/dashboard*}"
 
-echo "=== Pinning sid for cage only (wlroots 0.20 not in trixie) ==="
-echo 'deb http://deb.debian.org/debian sid main' | sudo tee /etc/apt/sources.list.d/sid.list > /dev/null
-printf 'Package: cage\nPin: release a=sid\nPin-Priority: 990\n\nPackage: *\nPin: release a=sid\nPin-Priority: 100\n' | sudo tee /etc/apt/preferences.d/sid-pin > /dev/null
-
 echo "=== Updating and upgrading system ==="
 sudo apt-get update
 sudo apt-get upgrade -y
+sudo apt-get full-upgrade -y
 
 echo "=== Installing packages ==="
 sudo apt-get install -y --no-install-recommends \
+  cage \
   ddcutil \
   curl \
   git \
@@ -66,8 +64,6 @@ sudo apt-get install -y --no-install-recommends \
   jq \
   fonts-noto-color-emoji \
   fonts-noto-core
-
-sudo apt-get install -y -t sid --no-install-recommends cage
 
 # Install chromium (package name varies by distro)
 if apt-cache show chromium &>/dev/null; then

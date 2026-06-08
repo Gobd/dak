@@ -38,4 +38,4 @@ exec cage $CAGE_OPTS -- "$CHROMIUM_BIN" \
   --disable-backgrounding-occluded-windows \
   --load-extension=/home/kiosk/.config/chromium-extensions/smartkey \
   --ozone-platform=wayland \
-  --app="$DASHBOARD_URL"
+  "$DASHBOARD_URL"
