@@ -105,8 +105,6 @@ const theme = {
     listitemChecked: 'lexical-list-item-checked',
     listitemUnchecked: 'lexical-list-item-unchecked',
   },
-  quote: 'border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4',
-  code: 'bg-gray-100 p-2 rounded font-mono text-sm block mb-4',
 };
 
 function MarkdownPlugin({ content }: { content: string }) {
