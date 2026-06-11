@@ -91,7 +91,7 @@ export default function Gallery() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-1 text-text-muted hover:text-text text-sm"
+            className="flex items-center gap-1 text-text-muted hover:text-text text-sm cursor-pointer"
           >
             <ArrowLeft size={18} />
             Back
@@ -101,6 +101,18 @@ export default function Gallery() {
             <span>r/{displayName}</span>
           </div>
         </div>
+        <button
+          onClick={() => setShowAuth(true)}
+          className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer ${
+            apiKey && oauthToken
+              ? 'bg-success/20 text-success hover:bg-success/30'
+              : apiKey
+                ? 'bg-warning/20 text-warning hover:bg-warning/30'
+                : 'bg-surface-raised text-text-muted hover:bg-surface-raised/80'
+          }`}
+        >
+          {apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Public only'}
+        </button>
       </header>
 
       <main className="flex-1 p-6">
@@ -120,8 +132,14 @@ export default function Gallery() {
         )}
 
         {error && posts.length === 0 && (
-          <div className="flex items-center justify-center pt-16">
+          <div className="flex flex-col items-center justify-center pt-16 gap-3">
             <p className="text-danger">{error}</p>
+            <button
+              onClick={() => setShowAuth(true)}
+              className="text-sm text-accent underline hover:no-underline cursor-pointer"
+            >
+              Add / update credentials
+            </button>
           </div>
         )}
 
