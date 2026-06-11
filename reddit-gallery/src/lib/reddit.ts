@@ -61,15 +61,6 @@ function filterAndMap(children: unknown[]): Post[] {
     });
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export async function fetchPosts(
   subreddit: string,
   sort: string,
@@ -100,11 +91,7 @@ export async function fetchPosts(
 
   if (!json.data?.children) throw new Error('Invalid response from Reddit');
 
-  let posts = filterAndMap(json.data.children);
-
-  if (targetSub.includes('+')) {
-    posts = shuffle(posts);
-  }
+  const posts = filterAndMap(json.data.children);
 
   return { posts, after: json.data.after ?? null };
 }
