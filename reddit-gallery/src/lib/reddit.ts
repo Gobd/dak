@@ -90,7 +90,7 @@ export async function fetchPosts(
 
   if (!response.ok) {
     const status = response.status;
-    if (status === 401) throw new Error('AUTH_EXPIRED');
+    if (status === 401 && (apiKey || oauthToken)) throw new Error('AUTH_EXPIRED');
     throw new Error(`Reddit fetch failed: ${status}`);
   }
 

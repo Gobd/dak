@@ -26,7 +26,7 @@ export default function Home() {
       return (
         <button
           onClick={() => setShowAuth(true)}
-          className="flex items-center gap-1 px-3 py-1 rounded-full bg-success/20 text-success text-sm hover:bg-success/30"
+          className="flex items-center gap-1 px-3 py-1 rounded-full bg-success/20 text-success text-sm hover:bg-success/30 cursor-pointer"
         >
           Authenticated
         </button>
@@ -36,7 +36,7 @@ export default function Home() {
       return (
         <button
           onClick={() => setShowAuth(true)}
-          className="flex items-center gap-1 px-3 py-1 rounded-full bg-warning/20 text-warning text-sm hover:bg-warning/30"
+          className="flex items-center gap-1 px-3 py-1 rounded-full bg-warning/20 text-warning text-sm hover:bg-warning/30 cursor-pointer"
         >
           No Reddit token
         </button>
@@ -45,7 +45,7 @@ export default function Home() {
     return (
       <button
         onClick={() => setShowAuth(true)}
-        className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-raised text-text-muted text-sm hover:bg-surface-raised/80"
+        className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-raised text-text-muted text-sm hover:bg-surface-raised/80 cursor-pointer"
       >
         Public only
       </button>
@@ -80,7 +80,7 @@ export default function Home() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="bg-surface-raised border border-border text-text rounded-lg px-3 py-2 text-sm"
+            className="bg-surface-raised border border-border text-text rounded-lg px-3 py-2 text-sm cursor-pointer"
           >
             <option value="hot">Hot</option>
             <option value="new">New</option>
