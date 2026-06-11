@@ -18,3 +18,4 @@ package-lock.json
 packages/api-client/openapi.json
 elixir
 PHOENIX_ASH_PLAN.md
+docs

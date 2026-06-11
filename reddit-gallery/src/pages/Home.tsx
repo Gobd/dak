@@ -36,7 +36,7 @@ export default function Home() {
       return (
         <button
           onClick={() => setShowAuth(true)}
-          className="flex items-center gap-1 px-3 py-1 rounded-full bg-warning/20 text-warning text-sm hover:bg-warning/30 cursor-pointer"
+          className="flex items-center gap-1 px-3 py-1 rounded-full bg-danger/20 text-danger text-sm hover:bg-danger/30 cursor-pointer"
         >
           No Reddit token
         </button>
@@ -45,9 +45,9 @@ export default function Home() {
     return (
       <button
         onClick={() => setShowAuth(true)}
-        className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-raised text-text-muted text-sm hover:bg-surface-raised/80 cursor-pointer"
+        className="flex items-center gap-1 px-3 py-1 rounded-full bg-danger/20 text-danger text-sm hover:bg-danger/30 cursor-pointer"
       >
-        Public only
+        Not configured
       </button>
     );
   };
