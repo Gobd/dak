@@ -107,11 +107,11 @@ export default function Gallery() {
             apiKey && oauthToken
               ? 'bg-success/20 text-success hover:bg-success/30'
               : apiKey
-                ? 'bg-warning/20 text-warning hover:bg-warning/30'
-                : 'bg-surface-raised text-text-muted hover:bg-surface-raised/80'
+                ? 'bg-danger/20 text-danger hover:bg-danger/30'
+                : 'bg-danger/20 text-danger hover:bg-danger/30'
           }`}
         >
-          {apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Public only'}
+          {apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Not configured'}
         </button>
       </header>
 

@@ -71,10 +71,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
         </div>
 
         <div>
-          <label className="block text-text-secondary text-sm mb-1">
-            Reddit OAuth Token{' '}
-            <span className="text-text-muted">(optional — required for NSFW)</span>
-          </label>
+          <label className="block text-text-secondary text-sm mb-1">Reddit OAuth Token</label>
           <Input
             type="password"
             placeholder="Paste token here (without Bearer prefix)"
