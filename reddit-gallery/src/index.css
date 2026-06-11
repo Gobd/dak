@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
+@source "../../packages/ui/src/**/*.tsx";
+
+@layer base {
+  * {
+    font-synthesis: weight;
+  }
+}

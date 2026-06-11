@@ -25,6 +25,7 @@ apps=(
   maintenance-tracker
   notes-app
   recipe-org
+  reddit-gallery
   tracker
 )
 
