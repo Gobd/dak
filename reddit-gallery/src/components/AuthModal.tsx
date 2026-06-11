@@ -90,10 +90,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
               <ol className="text-text-secondary text-sm space-y-1 list-decimal list-inside">
                 <li>
                   Drag this link to your bookmarks bar:{' '}
-                  <a
-                    ref={bookmarkletRef}
-                    className="text-accent underline font-medium"
-                  >
+                  <a ref={bookmarkletRef} className="text-accent underline font-medium">
                     Get Reddit Token
                   </a>
                 </li>
