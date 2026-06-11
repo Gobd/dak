@@ -1,28 +1,24 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Modal, Input, Button } from '@dak/ui';
-import { ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 
-const DEVTOOLS_SNIPPET = `(function() {
-  const orig = window.fetch;
-  window.fetch = async function(...args) {
-    const opts = args[1] || {};
-    let auth = null;
-    if (opts.headers instanceof Headers) {
-      auth = opts.headers.get('authorization');
-    } else if (opts.headers) {
-      auth = opts.headers['Authorization'] || opts.headers['authorization'];
-    }
-    if (auth && auth.toLowerCase().startsWith('bearer ')) {
-      console.clear();
-      console.log('%c🔑 Reddit token (paste this):', 'color:#ff4500;font-weight:bold');
-      console.log(auth.replace(/^bearer /i, ''));
-      window.fetch = orig;
-    }
-    return orig.apply(this, args);
-  };
-  console.log('%c✓ Interceptor ready — click anything on Reddit', 'color:#00cc44');
-})();`;
+const BOOKMARKLET_HREF =
+  `javascript:(function(){` +
+  `var orig=window.fetch;` +
+  `window.fetch=async function(url,opts){` +
+  `opts=opts||{};` +
+  `var auth=null;` +
+  `if(opts.headers instanceof Headers){auth=opts.headers.get('authorization');}` +
+  `else if(opts.headers){auth=opts.headers['Authorization']||opts.headers['authorization'];}` +
+  `if(auth&&auth.toLowerCase().startsWith('bearer ')){` +
+  `window.fetch=orig;` +
+  `var token=auth.replace(/^bearer /i,'');` +
+  `prompt('Copy your Reddit token (Cmd+A, Cmd+C):',token);` +
+  `}` +
+  `return orig.call(this,url,opts);` +
+  `};` +
+  `})();`;
 
 interface AuthModalProps {
   onClose: () => void;
@@ -33,7 +29,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
   const [localApiKey, setLocalApiKey] = useState(apiKey);
   const [localToken, setLocalToken] = useState(oauthToken);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (bookmarkletRef.current) {
+      bookmarkletRef.current.setAttribute('href', BOOKMARKLET_HREF);
+    }
+  }, [showInstructions]);
 
   const handleSave = () => {
     setCredentials(localApiKey.trim(), localToken.trim());
@@ -45,13 +47,6 @@ export function AuthModal({ onClose }: AuthModalProps) {
     setLocalApiKey('');
     setLocalToken('');
     onClose();
-  };
-
-  const handleCopySnippet = () => {
-    void navigator.clipboard.writeText(DEVTOOLS_SNIPPET).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
   };
 
   return (
@@ -92,26 +87,19 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
           {showInstructions && (
             <div className="mt-3 space-y-3">
-              <p className="text-text-secondary text-sm">
-                Go to <strong>reddit.com</strong> (not old.reddit.com — the snippet only works on
-                new Reddit). Open DevTools <kbd>F12</kbd>, click the <strong>Console</strong> tab,
-                paste the snippet below, and press Enter. Then click anything on Reddit — the token
-                will print in the console.
-              </p>
-
-              <div className="relative">
-                <pre className="bg-surface-sunken text-text-secondary text-xs rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
-                  {DEVTOOLS_SNIPPET}
-                </pre>
-                <button
-                  type="button"
-                  onClick={handleCopySnippet}
-                  className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded bg-surface-raised text-text-muted text-xs hover:text-text"
-                >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
+              <ol className="text-text-secondary text-sm space-y-1 list-decimal list-inside">
+                <li>
+                  Drag this link to your bookmarks bar:{' '}
+                  <a ref={bookmarkletRef} className="text-accent underline font-medium">
+                    Get Reddit Token
+                  </a>
+                </li>
+                <li>
+                  Go to <strong>reddit.com</strong> (not old.reddit.com)
+                </li>
+                <li>Click the bookmark — an alert will confirm it&apos;s ready</li>
+                <li>Click anything on Reddit — a prompt will pop up with your token</li>
+              </ol>
 
               <p className="text-text-muted text-xs">
                 Token lasts ~1 hour. When it expires you&apos;ll see a banner to refresh.
