@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { SearchInput } from '@dak/ui';
 
 export function JumpBar() {
   const [value, setValue] = useState('');
@@ -25,21 +25,13 @@ export function JumpBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-1">
-      <input
+    <form onSubmit={handleSubmit} className="w-44">
+      <SearchInput
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={setValue}
         placeholder="r/sub or u/user"
-        className="bg-surface-raised border border-border text-text placeholder:text-text-muted rounded-lg px-3 py-1 text-sm w-40 focus:outline-none focus:border-accent"
+        onClear={() => setValue('')}
       />
-      <button
-        type="submit"
-        disabled={!value.trim()}
-        className="p-1.5 text-text-muted hover:text-accent disabled:opacity-40 cursor-pointer disabled:cursor-default"
-        aria-label="Go"
-      >
-        <Search size={15} />
-      </button>
     </form>
   );
 }

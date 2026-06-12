@@ -30,12 +30,6 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
     v.currentTime = 0;
   };
 
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/u/${post.author}`);
-  };
-
   const galleryImages = post.galleryImages ?? [];
   const galleryTotal = galleryImages.length;
 
@@ -139,30 +133,49 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
 
       <div className="p-3">
         <div className="flex items-center gap-1 text-xs text-text-muted mb-1 flex-wrap">
-          {/* In user mode: show which subreddit this was posted to */}
+          {/* User mode: show subreddit with internal + external links */}
           {mode === 'user' && postSubreddit && (
-            <button
-              onClick={() => navigate(`/r/${postSubreddit}`)}
-              className="hover:underline hover:text-accent font-medium cursor-pointer"
-            >
-              r/{postSubreddit}
-            </button>
+            <>
+              <a
+                href={`/reddit-gallery/r/${postSubreddit}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/r/${postSubreddit}`);
+                }}
+                className="hover:underline hover:text-accent font-medium cursor-pointer"
+              >
+                r/{postSubreddit}
+              </a>
+              <a
+                href={`https://www.reddit.com/r/${postSubreddit}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-accent text-text-muted/50"
+                onClick={(e) => e.stopPropagation()}
+                title="Open subreddit on Reddit"
+              >
+                ↗
+              </a>
+            </>
           )}
-          {/* In subreddit/multi mode: show author, linkable to user gallery */}
+          {/* Subreddit/multi mode: show author with internal gallery + external Reddit links */}
           {mode !== 'user' && (
             <>
-              <button
-                onClick={handleAuthorClick}
+              <a
+                href={`/reddit-gallery/u/${post.author}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/u/${post.author}`);
+                }}
                 className="hover:underline hover:text-accent font-medium cursor-pointer"
               >
                 u/{post.author}
-              </button>
-              <span className="text-text-muted/40">·</span>
+              </a>
               <a
                 href={`https://www.reddit.com/user/${post.author}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-accent"
+                className="hover:text-accent text-text-muted/50"
                 onClick={(e) => e.stopPropagation()}
                 title="View profile on Reddit"
               >
@@ -170,16 +183,20 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
               </a>
             </>
           )}
-          {/* In multi-subreddit mode: also show which sub */}
+          {/* Multi mode: also show which subreddit */}
           {mode === 'multi' && postSubreddit && (
             <>
               <span className="text-text-muted/40">in</span>
-              <button
-                onClick={() => navigate(`/r/${postSubreddit}`)}
-                className="hover:underline hover:text-accent cursor-pointer"
+              <a
+                href={`/reddit-gallery/r/${postSubreddit}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/r/${postSubreddit}`);
+                }}
+                className="hover:underline hover:text-accent"
               >
                 r/{postSubreddit}
-              </button>
+              </a>
             </>
           )}
         </div>

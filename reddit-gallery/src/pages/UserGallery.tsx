@@ -1,9 +1,10 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, FileText, ArrowUpDown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, FileText, ArrowUpDown, ExternalLink, Moon, Sun } from 'lucide-react';
 import { Spinner, Toggle } from '@dak/ui';
 import { fetchUserPosts } from '../lib/reddit';
 import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
 import { ImageCard } from '../components/ImageCard';
 import { MasonryGrid } from '../components/MasonryGrid';
 import { AuthModal } from '../components/AuthModal';
@@ -15,6 +16,7 @@ export default function UserGallery() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { apiKey, oauthToken } = useAuthStore();
+  const { dark, toggle: toggleDark } = useThemeStore();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,7 @@ export default function UserGallery() {
     setTokenExpired(false);
     load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username, sort, includeTextOnly]);
+  }, [username, sort, includeTextOnly, apiKey, oauthToken]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -113,7 +115,7 @@ export default function UserGallery() {
         </div>
         <JumpBar />
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-text-secondary text-sm cursor-pointer select-none">
             <ArrowUpDown size={15} />
             <select
               value={sort}
@@ -129,7 +131,7 @@ export default function UserGallery() {
               <option value="top">Top</option>
             </select>
           </label>
-          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-text-secondary text-sm cursor-pointer select-none">
             <FileText size={15} />
             Include text posts
             <Toggle
@@ -140,6 +142,13 @@ export default function UserGallery() {
               }}
             />
           </label>
+          <button
+            onClick={toggleDark}
+            className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-raised cursor-pointer"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           <button
             onClick={() => setShowAuth(true)}
             className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer ${
@@ -170,7 +179,7 @@ export default function UserGallery() {
                 setTokenExpired(false);
                 setShowAuth(true);
               }}
-              className="text-warning text-sm underline hover:no-underline"
+              className="text-warning text-sm underline hover:no-underline cursor-pointer"
             >
               Update token
             </button>
@@ -216,10 +225,6 @@ export default function UserGallery() {
         <AuthModal
           onClose={() => {
             setShowAuth(false);
-            setPosts([]);
-            afterRef.current = null;
-            setHasMore(true);
-            load(false);
           }}
         />
       )}

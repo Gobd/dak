@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LayoutGrid, FileText, User } from 'lucide-react';
+import { Search, LayoutGrid, FileText, User, Moon, Sun } from 'lucide-react';
 import { Input, Button, Toggle } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
+import { useThemeStore } from '../stores/theme-store';
 import { AuthModal } from '../components/AuthModal';
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
   const { apiKey, oauthToken } = useAuthStore();
+  const { dark, toggle: toggleDark } = useThemeStore();
   const hasApiKey = !!apiKey;
   const hasToken = !!oauthToken;
 
@@ -75,7 +77,16 @@ export default function Home() {
           <LayoutGrid size={24} />
           <span>Reddit Gallery</span>
         </div>
-        {authBadge()}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleDark}
+            className="p-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-raised cursor-pointer"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          {authBadge()}
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-16">
@@ -121,7 +132,7 @@ export default function Home() {
         </form>
 
         {!isUserInput && (
-          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none mt-4">
+          <label className="flex items-center gap-2 text-text-secondary text-sm cursor-pointer select-none mt-4">
             <FileText size={15} />
             Include text posts
             <Toggle checked={includeText} onChange={setIncludeText} />
