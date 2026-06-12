@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, LayoutGrid, FileText, User, Moon, Sun } from 'lucide-react';
-import { Input, Button, Toggle } from '@dak/ui';
+import { Button, Toggle } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
 import { AuthModal } from '../components/AuthModal';
+import { SubredditTypeahead } from '../components/SubredditTypeahead';
 
 export default function Home() {
   const [input, setInput] = useState('');
@@ -98,21 +99,16 @@ export default function Home() {
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
-          <div className="relative flex-1">
-            <Input
-              type="text"
-              placeholder="pics, aww  or  u/username"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full"
-              autoFocus
-            />
-            {isUserInput && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <User size={15} className="text-accent" />
-              </span>
-            )}
-          </div>
+          <SubredditTypeahead
+            value={input}
+            onChange={setInput}
+            placeholder="pics, aww  or  u/username"
+          />
+          {isUserInput && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <User size={15} className="text-accent" />
+            </span>
+          )}
           {!isUserInput && (
             <select
               value={sort}
