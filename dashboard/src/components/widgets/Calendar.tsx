@@ -206,7 +206,8 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   const calendarNames = calendarConfig?.names ?? {};
   const weekStartsOn = (panel.args?.weekStart === 'sunday' ? 0 : 1) as number;
   const weeksToShow = (panel.args?.weeks as number) ?? 4;
-  const headerHeight = calendarConfig?.headerHeight ?? 0; // Extra height in pixels for header section
+  const headerHeight = calendarConfig?.headerHeight ?? 0;
+  const showMonthPrefix = calendarConfig?.showMonthPrefix ?? false;
 
   // Google OAuth
   const {
@@ -998,11 +999,13 @@ export default function Calendar({ panel }: WidgetComponentProps) {
                 <div
                   className={`text-xs font-medium mb-0.5 ${
                     isTodayDate
-                      ? 'w-5 h-5 rounded-full bg-accent text-text flex items-center justify-center'
+                      ? 'rounded-full bg-accent text-text flex items-center justify-center px-1 h-5 w-fit min-w-5'
                       : 'text-text-muted'
                   }`}
                 >
-                  {date.getDate()}
+                  {showMonthPrefix
+                    ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : date.getDate()}
                 </div>
                 <div className="space-y-0.5">
                   {dayEvents.map((event) => {
@@ -1067,6 +1070,13 @@ export default function Calendar({ panel }: WidgetComponentProps) {
               Extra space in header for overlaying other widgets
             </p>
           </div>
+
+          {/* Month prefix on dates */}
+          <Toggle
+            checked={showMonthPrefix}
+            onChange={(checked) => updateCalendar({ showMonthPrefix: checked })}
+            label="Show month on dates (e.g. Jun 1)"
+          />
 
           {/* Calendars */}
           {calendars.length > 0 && (

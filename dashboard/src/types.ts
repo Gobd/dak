@@ -203,6 +203,7 @@ export interface CalendarConfig {
   hidden?: string[];
   names?: Record<string, string>;
   headerHeight?: number; // Extra height in pixels for header section (0-200)
+  showMonthPrefix?: boolean; // Show 3-char month prefix on each date (e.g. "Jun 1")
 }
 
 // Location configuration (for weather widgets)
