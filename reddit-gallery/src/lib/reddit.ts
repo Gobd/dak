@@ -9,7 +9,7 @@ export function formatNumber(num: number): string {
   return num >= 1000 ? (num / 1000).toFixed(1) + 'k' : String(num);
 }
 
-function filterAndMap(children: unknown[]): Post[] {
+function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
   return (children as Array<{ data: Record<string, unknown> }>)
     .filter((child) => {
       const d = child.data;
@@ -20,11 +20,12 @@ function filterAndMap(children: unknown[]): Post[] {
       if (/\.(mp4|webm)$/i.test(url)) return true;
       if (/\.(jpeg|jpg|gif|png|webp)$/i.test(url)) return true;
       if ((d.preview as Record<string, unknown> | undefined)?.images) return true;
+      if (includeTextOnly && d.is_self) return true;
       return false;
     })
     .map((child) => {
       const d = child.data;
-      let type: 'image' | 'video' = 'image';
+      let type: 'image' | 'video' | 'text' = 'image';
       let mediaUrl = d.url as string;
 
       const redditVideo = (d.media as Record<string, unknown> | undefined)?.reddit_video as
@@ -33,7 +34,10 @@ function filterAndMap(children: unknown[]): Post[] {
       const videoPreview = (d.preview as Record<string, unknown> | undefined)
         ?.reddit_video_preview as Record<string, unknown> | undefined;
 
-      if (d.is_video && redditVideo?.fallback_url) {
+      if (d.is_self) {
+        type = 'text';
+        mediaUrl = '';
+      } else if (d.is_video && redditVideo?.fallback_url) {
         type = 'video';
         mediaUrl = redditVideo.fallback_url as string;
       } else if (videoPreview?.fallback_url) {
@@ -57,6 +61,7 @@ function filterAndMap(children: unknown[]): Post[] {
         permalink: d.permalink as string,
         ups: d.ups as number,
         numComments: d.num_comments as number,
+        selftext: d.is_self ? (d.selftext as string | undefined) : undefined,
       };
     });
 }
@@ -67,6 +72,7 @@ export async function fetchPosts(
   after: string | null,
   apiKey: string,
   oauthToken: string,
+  includeTextOnly = false,
 ): Promise<FetchPostsResult> {
   const targetSub = subreddit.replace(/\s+/g, '').replace(/,/g, '+');
   const sortPath = sort && sort !== 'hot' ? `/${sort}` : '';
@@ -91,7 +97,7 @@ export async function fetchPosts(
 
   if (!json.data?.children) throw new Error('Invalid response from Reddit');
 
-  const posts = filterAndMap(json.data.children);
+  const posts = filterAndMap(json.data.children, includeTextOnly);
 
   return { posts, after: json.data.after ?? null };
 }
