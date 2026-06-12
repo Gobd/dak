@@ -28,21 +28,20 @@ export async function onRequest(context) {
   }
 
   const oauthToken = request.headers.get('X-Reddit-Token');
-  const headers = new Headers();
-  let targetBase;
 
-  if (oauthToken) {
-    targetBase = 'https://oauth.reddit.com';
-    headers.set('Authorization', `Bearer ${oauthToken}`);
-    headers.set('User-Agent', 'web:dak-reddit-gallery:v1.0.0 (by /u/dev)');
-  } else {
-    targetBase = 'https://www.reddit.com';
-    headers.set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36');
+  if (!oauthToken) {
+    return new Response(JSON.stringify({ subreddits: [] }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
   }
+
+  const headers = new Headers();
+  headers.set('Authorization', `Bearer ${oauthToken}`);
+  headers.set('User-Agent', 'web:dak-reddit-gallery:v1.0.0 (by /u/dev)');
   headers.set('Accept', 'application/json');
 
-  const suffix = oauthToken ? '' : '.json';
-  const targetUrl = `${targetBase}/subreddits/search${suffix}?q=${encodeURIComponent(q)}&include_over_18=${nsfw}&limit=8&sort=relevance`;
+  const targetUrl = `https://oauth.reddit.com/subreddits/search?q=${encodeURIComponent(q)}&include_over_18=${nsfw}&limit=8&sort=relevance`;
 
   const response = await fetch(targetUrl, { headers });
 

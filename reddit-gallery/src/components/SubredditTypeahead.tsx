@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Users } from 'lucide-react';
 import { Input, Toggle } from '@dak/ui';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth-store';
 import { useLocalStorage } from '@dak/hooks';
 import { formatNumber } from '../lib/reddit';
@@ -10,7 +11,6 @@ interface SubredditResult {
   title: string;
   subscribers: number;
   over18: boolean;
-  icon: string | null;
 }
 
 interface Props {
@@ -21,6 +21,7 @@ interface Props {
 
 export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
   const { apiKey, oauthToken } = useAuthStore();
+  const navigate = useNavigate();
   const [includeNsfw, setIncludeNsfw] = useLocalStorage('rg-typeahead-nsfw', false);
   const [results, setResults] = useState<SubredditResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -74,7 +75,6 @@ export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
     };
   }, [activeSegment, shouldSearch, search]);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -84,14 +84,6 @@ export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-
-  const selectResult = (name: string) => {
-    const parts = value.split(/([,+])/);
-    parts[parts.length - 1] = name;
-    onChange(parts.join(''));
-    setOpen(false);
-    setActiveIdx(-1);
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!open || results.length === 0) return;
@@ -103,12 +95,14 @@ export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
       setActiveIdx((i) => Math.max(i - 1, -1));
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault();
-      selectResult(results[activeIdx].name);
+      navigate(`/r/${results[activeIdx].name}`);
+      setOpen(false);
     } else if (e.key === 'Escape') {
       setOpen(false);
     } else if (e.key === 'Tab' && activeIdx >= 0) {
       e.preventDefault();
-      selectResult(results[activeIdx].name);
+      navigate(`/r/${results[activeIdx].name}`);
+      setOpen(false);
     }
   };
 
@@ -139,28 +133,21 @@ export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
           <ul>
             {results.map((sub, i) => (
               <li key={sub.name}>
-                <button
-                  type="button"
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-surface-sunken cursor-pointer transition-colors ${i === activeIdx ? 'bg-surface-sunken' : ''}`}
-                  onMouseDown={(e) => {
+                <a
+                  href={`/reddit-gallery/r/${sub.name}`}
+                  className={`flex items-center gap-3 px-3 py-2 hover:bg-surface-sunken transition-colors ${i === activeIdx ? 'bg-surface-sunken' : ''}`}
+                  onClick={(e) => {
                     e.preventDefault();
-                    selectResult(sub.name);
+                    navigate(`/r/${sub.name}`);
+                    setOpen(false);
                   }}
                   onMouseEnter={() => setActiveIdx(i)}
                 >
-                  {sub.icon ? (
-                    <img
-                      src={sub.icon}
-                      alt=""
-                      className="w-6 h-6 rounded-full shrink-0 object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                      <span className="text-accent text-xs font-bold">
-                        {sub.name[0]?.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                    <span className="text-accent text-xs font-bold">
+                      {sub.name[0]?.toUpperCase()}
+                    </span>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-text text-sm font-medium">r/{sub.name}</span>
                     {sub.over18 && (
@@ -172,7 +159,7 @@ export function SubredditTypeahead({ value, onChange, placeholder }: Props) {
                     <Users size={11} />
                     {formatNumber(sub.subscribers)}
                   </div>
-                </button>
+                </a>
               </li>
             ))}
           </ul>

@@ -26,28 +26,21 @@ export async function onRequest(context) {
 
   const oauthToken = request.headers.get('X-Reddit-Token');
 
-  let targetBase;
-  const headers = new Headers();
-
-  if (oauthToken) {
-    targetBase = 'https://oauth.reddit.com';
-    headers.set('Authorization', `Bearer ${oauthToken}`);
-    headers.set('User-Agent', 'web:dak-reddit-gallery:v1.0.0 (by /u/dev)');
-  } else {
-    targetBase = 'https://www.reddit.com';
-    const incomingUA = request.headers.get('User-Agent');
-    headers.set(
-      'User-Agent',
-      incomingUA ?? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-    );
+  if (!oauthToken) {
+    return new Response(JSON.stringify({ error: 'No OAuth token provided' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
   }
 
+  const headers = new Headers();
+  headers.set('Authorization', `Bearer ${oauthToken}`);
+  headers.set('User-Agent', 'web:dak-reddit-gallery:v1.0.0 (by /u/dev)');
   headers.set('Accept', 'application/json');
 
-  const suffix = oauthToken ? '' : '.json';
   const isUser = url.searchParams.get('target') === 'user';
   url.searchParams.delete('target');
-  const targetUrl = `${targetBase}/${isUser ? 'user' : 'r'}/${subPath}${suffix}${url.search}`;
+  const targetUrl = `https://oauth.reddit.com/${isUser ? 'user' : 'r'}/${subPath}${url.search}`;
 
   const response = await fetch(targetUrl, { headers });
 
