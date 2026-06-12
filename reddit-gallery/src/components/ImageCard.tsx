@@ -60,6 +60,17 @@ export function ImageCard({ post }: ImageCardProps) {
       )}
 
       <div className="p-3">
+        <div className="flex items-center gap-1 text-xs text-text-muted mb-1">
+          <a
+            href={`https://www.reddit.com/user/${post.author}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline hover:text-accent font-medium"
+            onClick={(e) => e.stopPropagation()}
+          >
+            u/{post.author}
+          </a>
+        </div>
         <p className="text-text text-sm font-medium line-clamp-2 mb-2">{post.title}</p>
         <div className="flex items-center gap-4 text-text-muted text-xs">
           <span className="flex items-center gap-1">

@@ -7,4 +7,5 @@ export interface Post {
   ups: number;
   numComments: number;
   selftext?: string;
+  author: string;
 }

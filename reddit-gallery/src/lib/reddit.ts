@@ -62,6 +62,7 @@ function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
         ups: d.ups as number,
         numComments: d.num_comments as number,
         selftext: d.is_self ? (d.selftext as string | undefined) : undefined,
+        author: d.author as string,
       };
     });
 }

@@ -32,10 +32,3 @@ apps=(
 for app in "${apps[@]}"; do
   cp -r "$app/dist" "_site/$app"
 done
-
-# Generate _redirects for SPA client-side routing (Cloudflare Pages)
-{
-  for app in "${apps[@]}"; do
-    echo "/$app/*  /$app/index.html  200"
-  done
-} > _site/_redirects
