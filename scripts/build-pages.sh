@@ -29,19 +29,6 @@ apps=(
   tracker
 )
 
-mkdir -p _site/_spa
-
 for app in "${apps[@]}"; do
   cp -r "$app/dist" "_site/$app"
-  # Copy index.html into _spa/ subdirectory as the SPA fallback target.
-  # Must live outside /$app/* to avoid Cloudflare detecting a redirect loop,
-  # and inside a real directory so Pretty URLs doesn't strip the .html extension.
-  cp "$app/dist/index.html" "_site/_spa/${app}"
 done
-
-# Generate _redirects for SPA client-side routing (Cloudflare Pages)
-{
-  for app in "${apps[@]}"; do
-    echo "/$app/* /_spa/${app} 200"
-  done
-} > _site/_redirects
