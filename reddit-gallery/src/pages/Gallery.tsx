@@ -18,7 +18,6 @@ import { MasonryGrid } from '../components/MasonryGrid';
 import { AuthModal } from '../components/AuthModal';
 import { JumpBar } from '../components/JumpBar';
 import type { Post } from '../types';
-
 export default function Gallery() {
   const { subreddit = '', sort = 'hot' } = useParams<{ subreddit: string; sort?: string }>();
   const navigate = useNavigate();
@@ -36,7 +35,6 @@ export default function Gallery() {
 
   const afterRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(
     async (isLoadMore: boolean) => {
@@ -82,18 +80,6 @@ export default function Gallery() {
     load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subreddit, sort, includeTextOnly, apiKey, oauthToken]);
-
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && hasMore && !loadingRef.current) {
-        load(true);
-      }
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, load]);
 
   const displayName = subreddit.replace(/\+/g, ' + ');
   // For single subreddit, offer a link to Reddit; for multi (+) omit
@@ -221,14 +207,13 @@ export default function Gallery() {
         )}
 
         {posts.length > 0 && (
-          <MasonryGrid>
-            {posts.map((post) => (
-              <ImageCard key={post.id} post={post} mode={cardMode} />
-            ))}
-          </MasonryGrid>
+          <MasonryGrid
+            items={posts}
+            renderItem={(post) => <ImageCard post={post as Post} mode={cardMode} />}
+            hasMore={hasMore}
+            onLoadMore={() => load(true)}
+          />
         )}
-
-        <div ref={sentinelRef} className="h-1" />
 
         {loading && (
           <div className="flex justify-center py-8">
