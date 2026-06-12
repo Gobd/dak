@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LayoutGrid } from 'lucide-react';
-import { Input, Button } from '@dak/ui';
+import { Search, LayoutGrid, FileText } from 'lucide-react';
+import { Input, Button, Toggle } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
 import { AuthModal } from '../components/AuthModal';
 
 export default function Home() {
   const [subreddit, setSubreddit] = useState('');
   const [sort, setSort] = useState('hot');
+  const [includeText, setIncludeText] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
   const { apiKey, oauthToken } = useAuthStore();
@@ -18,7 +19,7 @@ export default function Home() {
     e.preventDefault();
     const sub = subreddit.trim().replace(/\s+/g, '').replace(/,+/g, '+').replace(/\++/g, '+');
     if (!sub) return;
-    navigate(`/r/${sub}/${sort}`);
+    navigate(`/r/${sub}/${sort}${includeText ? '?text=1' : ''}`);
   };
 
   const authBadge = () => {
@@ -92,6 +93,11 @@ export default function Home() {
             Go
           </Button>
         </form>
+        <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none mt-4">
+          <FileText size={15} />
+          Include text posts
+          <Toggle checked={includeText} onChange={setIncludeText} />
+        </label>
       </main>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}

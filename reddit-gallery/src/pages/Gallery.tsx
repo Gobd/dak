@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutGrid } from 'lucide-react';
-import { Spinner } from '@dak/ui';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, LayoutGrid, FileText } from 'lucide-react';
+import { Spinner, Toggle } from '@dak/ui';
 import { fetchPosts } from '../lib/reddit';
 import { useAuthStore } from '../stores/auth-store';
 import { ImageCard } from '../components/ImageCard';
@@ -12,6 +12,7 @@ import type { Post } from '../types';
 export default function Gallery() {
   const { subreddit = '', sort = 'hot' } = useParams<{ subreddit: string; sort?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { apiKey, oauthToken } = useAuthStore();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -20,6 +21,7 @@ export default function Gallery() {
   const [tokenExpired, setTokenExpired] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
+  const [includeTextOnly, setIncludeTextOnly] = useState(() => searchParams.get('text') === '1');
 
   const afterRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
@@ -41,6 +43,7 @@ export default function Gallery() {
           isLoadMore ? afterRef.current : null,
           apiKey,
           oauthToken,
+          includeTextOnly,
         );
         afterRef.current = result.after;
         if (!result.after) setHasMore(false);
@@ -57,10 +60,10 @@ export default function Gallery() {
         setLoading(false);
       }
     },
-    [subreddit, sort, apiKey, oauthToken, hasMore],
+    [subreddit, sort, apiKey, oauthToken, hasMore, includeTextOnly],
   );
 
-  // Reset and fetch fresh when subreddit/sort changes
+  // Reset and fetch fresh when subreddit/sort/includeTextOnly changes
   useEffect(() => {
     setPosts([]);
     afterRef.current = null;
@@ -68,7 +71,7 @@ export default function Gallery() {
     setTokenExpired(false);
     load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subreddit, sort]);
+  }, [subreddit, sort, includeTextOnly]);
 
   // Infinite scroll via IntersectionObserver on sentinel div
   useEffect(() => {
@@ -101,18 +104,31 @@ export default function Gallery() {
             <span>r/{displayName}</span>
           </div>
         </div>
-        <button
-          onClick={() => setShowAuth(true)}
-          className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer ${
-            apiKey && oauthToken
-              ? 'bg-success/20 text-success hover:bg-success/30'
-              : apiKey
-                ? 'bg-danger/20 text-danger hover:bg-danger/30'
-                : 'bg-danger/20 text-danger hover:bg-danger/30'
-          }`}
-        >
-          {apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Not configured'}
-        </button>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none">
+            <FileText size={15} />
+            Include text posts
+            <Toggle
+              checked={includeTextOnly}
+              onChange={(val) => {
+                setIncludeTextOnly(val);
+                setSearchParams(val ? { text: '1' } : {}, { replace: true });
+              }}
+            />
+          </label>
+          <button
+            onClick={() => setShowAuth(true)}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm cursor-pointer ${
+              tokenExpired
+                ? 'bg-warning/20 text-warning hover:bg-warning/30'
+                : apiKey && oauthToken
+                  ? 'bg-success/20 text-success hover:bg-success/30'
+                  : 'bg-danger/20 text-danger hover:bg-danger/30'
+            }`}
+          >
+            {tokenExpired ? 'Token expired' : apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Not configured'}
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 p-6">
