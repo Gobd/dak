@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, LayoutGrid, FileText } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, FileText, ArrowUpDown } from 'lucide-react';
 import { Spinner, Toggle } from '@dak/ui';
 import { fetchPosts } from '../lib/reddit';
 import { useAuthStore } from '../stores/auth-store';
@@ -105,6 +105,23 @@ export default function Gallery() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none">
+            <ArrowUpDown size={15} />
+            <select
+              value={sort}
+              onChange={(e) => {
+                const newSort = e.target.value;
+                const qs = includeTextOnly ? '?text=1' : '';
+                navigate(`/r/${subreddit}/${newSort}${qs}`, { replace: true });
+              }}
+              className="bg-surface-raised border border-border text-text rounded-lg px-2 py-1 text-sm cursor-pointer"
+            >
+              <option value="hot">Hot</option>
+              <option value="new">New</option>
+              <option value="top">Top</option>
+              <option value="rising">Rising</option>
+            </select>
+          </label>
           <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none">
             <FileText size={15} />
             Include text posts

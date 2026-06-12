@@ -40,7 +40,7 @@ export function ImageCard({ post }: ImageCardProps) {
           )}
         </a>
       ) : post.type === 'video' ? (
-        <a href={redditLink} target="_blank" rel="noopener noreferrer" className="block">
+        <a href={post.mediaUrl} target="_blank" rel="noopener noreferrer" className="block">
           <video
             ref={videoRef}
             src={post.mediaUrl}
@@ -54,7 +54,7 @@ export function ImageCard({ post }: ImageCardProps) {
           />
         </a>
       ) : (
-        <a href={redditLink} target="_blank" rel="noopener noreferrer" className="block">
+        <a href={post.mediaUrl} target="_blank" rel="noopener noreferrer" className="block">
           <img src={post.mediaUrl} alt={post.title} loading="lazy" className="w-full block" />
         </a>
       )}
