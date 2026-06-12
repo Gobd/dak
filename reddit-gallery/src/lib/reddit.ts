@@ -9,7 +9,7 @@ export function formatNumber(num: number): string {
   return num >= 1000 ? (num / 1000).toFixed(1) + 'k' : String(num);
 }
 
-export function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
+function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
   return (children as Array<{ data: Record<string, unknown> }>)
     .filter((child) => {
       const d = child.data;
