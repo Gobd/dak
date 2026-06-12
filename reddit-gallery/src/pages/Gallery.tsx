@@ -126,7 +126,13 @@ export default function Gallery() {
                   : 'bg-danger/20 text-danger hover:bg-danger/30'
             }`}
           >
-            {tokenExpired ? 'Token expired' : apiKey && oauthToken ? 'Authenticated' : apiKey ? 'No Reddit token' : 'Not configured'}
+            {tokenExpired
+              ? 'Token expired'
+              : apiKey && oauthToken
+                ? 'Authenticated'
+                : apiKey
+                  ? 'No Reddit token'
+                  : 'Not configured'}
           </button>
         </div>
       </header>
