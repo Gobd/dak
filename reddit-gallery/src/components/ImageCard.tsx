@@ -1,6 +1,14 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, ArrowUp, FileText, ChevronLeft, ChevronRight, Images } from 'lucide-react';
+import {
+  MessageCircle,
+  ArrowUp,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  Play,
+} from 'lucide-react';
 import type { Post } from '../types';
 import { formatNumber } from '../lib/reddit';
 
@@ -101,7 +109,12 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
 
     if (post.type === 'video') {
       return (
-        <a href={post.mediaUrl} target="_blank" rel="noopener noreferrer" className="block">
+        <a
+          href={post.mediaUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block relative group"
+        >
           <video
             ref={videoRef}
             src={post.mediaUrl}
@@ -113,6 +126,11 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
             onMouseEnter={handleVideoMouseEnter}
             onMouseLeave={handleVideoMouseLeave}
           />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200 opacity-100 group-hover:opacity-0">
+            <div className="bg-black/50 rounded-full p-3">
+              <Play className="w-8 h-8 text-white fill-white" />
+            </div>
+          </div>
         </a>
       );
     }

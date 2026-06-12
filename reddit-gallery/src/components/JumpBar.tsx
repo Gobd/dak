@@ -25,7 +25,7 @@ export function JumpBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-64">
+    <form onSubmit={handleSubmit} className="w-72">
       <SearchInput
         value={value}
         onChange={setValue}
