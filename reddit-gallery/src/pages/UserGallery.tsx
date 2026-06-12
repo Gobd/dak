@@ -28,7 +28,6 @@ export default function UserGallery() {
 
   const afterRef = useRef<string | null>(null);
   const loadingRef = useRef(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(
     async (isLoadMore: boolean) => {
@@ -74,18 +73,6 @@ export default function UserGallery() {
     load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username, sort, includeTextOnly, apiKey, oauthToken]);
-
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && hasMore && !loadingRef.current) {
-        load(true);
-      }
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, load]);
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -205,14 +192,13 @@ export default function UserGallery() {
         )}
 
         {posts.length > 0 && (
-          <MasonryGrid>
-            {posts.map((post) => (
-              <ImageCard key={post.id} post={post} mode="user" />
-            ))}
-          </MasonryGrid>
+          <MasonryGrid
+            items={posts}
+            renderItem={(post) => <ImageCard post={post as Post} mode="user" />}
+            hasMore={hasMore}
+            onLoadMore={() => load(true)}
+          />
         )}
-
-        <div ref={sentinelRef} className="h-1" />
 
         {loading && (
           <div className="flex justify-center py-8">
