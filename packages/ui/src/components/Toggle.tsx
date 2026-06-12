@@ -34,12 +34,12 @@ export function Toggle({ checked, onChange, disabled, size = 'md', label }: Togg
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${sizes.track} ${
-          checked ? 'bg-accent' : 'bg-surface-sunken border border-border'
+          checked ? 'bg-accent' : 'bg-surface-sunken border-2 border-border-strong'
         }`}
       >
         <span
-          className={`inline-block rounded-full bg-surface shadow transform transition-transform duration-200 ease-in-out ${sizes.thumb} ${
-            checked ? sizes.translate : 'translate-x-0.5'
+          className={`inline-block rounded-full shadow transform transition-transform duration-200 ease-in-out ${sizes.thumb} ${
+            checked ? `${sizes.translate} bg-surface` : 'translate-x-0.5 bg-text-muted'
           }`}
           style={{ marginTop: size === 'md' ? '2px' : '2px' }}
         />
