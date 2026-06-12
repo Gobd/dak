@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, LayoutGrid, FileText } from 'lucide-react';
+import { Search, LayoutGrid, FileText, User } from 'lucide-react';
 import { Input, Button, Toggle } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
 import { AuthModal } from '../components/AuthModal';
 
 export default function Home() {
-  const [subreddit, setSubreddit] = useState('');
+  const [input, setInput] = useState('');
   const [sort, setSort] = useState('hot');
   const [includeText, setIncludeText] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -15,10 +15,25 @@ export default function Home() {
   const hasApiKey = !!apiKey;
   const hasToken = !!oauthToken;
 
+  const isUserInput = /^\/?(u|user)\//i.test(input.trim());
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const sub = subreddit.trim().replace(/\s+/g, '').replace(/,+/g, '+').replace(/\++/g, '+');
-    if (!sub) return;
+    const raw = input.trim();
+    if (!raw) return;
+
+    const userMatch = raw.match(/^\/?(u|user)\/(.+)$/i);
+    if (userMatch) {
+      const username = userMatch[2].trim();
+      navigate(`/u/${username}`);
+      return;
+    }
+
+    const sub = raw
+      .replace(/^\/?(r)\//i, '')
+      .replace(/\s+/g, '')
+      .replace(/,+/g, '+')
+      .replace(/\++/g, '+');
     navigate(`/r/${sub}/${sort}${includeText ? '?text=1' : ''}`);
   };
 
@@ -64,40 +79,54 @@ export default function Home() {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-16">
-        <h1 className="text-text text-3xl font-light mb-2">Explore Subreddits</h1>
-        <p className="text-text-muted mb-8">
-          Enter a subreddit, or multiple separated by commas, to view a mixed gallery.
+        <h1 className="text-text text-3xl font-light mb-2">Explore Reddit</h1>
+        <p className="text-text-muted mb-8 text-center">
+          Enter a subreddit (e.g. <span className="text-text">pics</span>) or user (e.g.{' '}
+          <span className="text-text">u/username</span>), or multiple subreddits separated by
+          commas.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
-          <Input
-            type="text"
-            placeholder="e.g. pics, aww, wallpapers"
-            value={subreddit}
-            onChange={(e) => setSubreddit(e.target.value)}
-            className="flex-1"
-            autoFocus
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="bg-surface-raised border border-border text-text rounded-lg px-3 py-2 text-sm cursor-pointer"
-          >
-            <option value="hot">Hot</option>
-            <option value="new">New</option>
-            <option value="top">Top</option>
-            <option value="rising">Rising</option>
-          </select>
-          <Button type="submit" disabled={!subreddit.trim()}>
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="pics, aww  or  u/username"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="w-full"
+              autoFocus
+            />
+            {isUserInput && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <User size={15} className="text-accent" />
+              </span>
+            )}
+          </div>
+          {!isUserInput && (
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="bg-surface-raised border border-border text-text rounded-lg px-3 py-2 text-sm cursor-pointer"
+            >
+              <option value="hot">Hot</option>
+              <option value="new">New</option>
+              <option value="top">Top</option>
+              <option value="rising">Rising</option>
+            </select>
+          )}
+          <Button type="submit" disabled={!input.trim()}>
             <Search size={18} />
             Go
           </Button>
         </form>
-        <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none mt-4">
-          <FileText size={15} />
-          Include text posts
-          <Toggle checked={includeText} onChange={setIncludeText} />
-        </label>
+
+        {!isUserInput && (
+          <label className="flex items-center gap-2 text-text-muted text-sm cursor-pointer select-none mt-4">
+            <FileText size={15} />
+            Include text posts
+            <Toggle checked={includeText} onChange={setIncludeText} />
+          </label>
+        )}
       </main>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
