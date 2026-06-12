@@ -12,7 +12,7 @@ interface SliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'
 }
 
 const thumbColors = {
-  default: '[&::-webkit-slider-thumb]:bg-surface',
+  default: '[&::-webkit-slider-thumb]:bg-surface-raised',
   accent: '[&::-webkit-slider-thumb]:bg-accent',
   warning: '[&::-webkit-slider-thumb]:bg-warning',
   success: '[&::-webkit-slider-thumb]:bg-success',

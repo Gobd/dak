@@ -1,16 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  ArrowLeft,
-  LayoutGrid,
-  FileText,
-  ArrowUpDown,
-  ExternalLink,
-  Moon,
-  Sun,
-} from 'lucide-react';
+import { ArrowLeft, User, FileText, ArrowUpDown, ExternalLink, Moon, Sun } from 'lucide-react';
 import { Spinner, Toggle } from '@dak/ui';
-import { fetchPosts } from '../lib/reddit';
+import { fetchUserPosts } from '../lib/reddit';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
 import { ImageCard } from '../components/ImageCard';
@@ -19,8 +11,8 @@ import { AuthModal } from '../components/AuthModal';
 import { JumpBar } from '../components/JumpBar';
 import type { Post } from '../types';
 
-export default function Gallery() {
-  const { subreddit = '', sort = 'hot' } = useParams<{ subreddit: string; sort?: string }>();
+export default function UserGallery() {
+  const { username = '', sort = 'new' } = useParams<{ username: string; sort?: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { apiKey, oauthToken } = useAuthStore();
@@ -48,8 +40,8 @@ export default function Gallery() {
       if (!isLoadMore) setError(null);
 
       try {
-        const result = await fetchPosts(
-          subreddit,
+        const result = await fetchUserPosts(
+          username,
           sort,
           isLoadMore ? afterRef.current : null,
           apiKey,
@@ -71,7 +63,7 @@ export default function Gallery() {
         setLoading(false);
       }
     },
-    [subreddit, sort, apiKey, oauthToken, hasMore, includeTextOnly],
+    [username, sort, apiKey, oauthToken, hasMore, includeTextOnly],
   );
 
   useEffect(() => {
@@ -81,7 +73,7 @@ export default function Gallery() {
     setTokenExpired(false);
     load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subreddit, sort, includeTextOnly, apiKey, oauthToken]);
+  }, [username, sort, includeTextOnly, apiKey, oauthToken]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -95,11 +87,6 @@ export default function Gallery() {
     return () => observer.disconnect();
   }, [hasMore, load]);
 
-  const displayName = subreddit.replace(/\+/g, ' + ');
-  // For single subreddit, offer a link to Reddit; for multi (+) omit
-  const isSingle = !subreddit.includes('+');
-  const cardMode = isSingle ? 'subreddit' : 'multi';
-
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-surface z-10">
@@ -112,21 +99,19 @@ export default function Gallery() {
             Back
           </button>
           <div className="flex items-center gap-2 text-text font-semibold">
-            <LayoutGrid size={20} />
-            <span>r/{displayName}</span>
+            <User size={20} />
+            <span>u/{username}</span>
           </div>
-          {isSingle && (
-            <a
-              href={`https://www.reddit.com/r/${subreddit}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-text-muted hover:text-accent text-xs"
-              title="Open on Reddit"
-            >
-              <ExternalLink size={13} />
-              Reddit
-            </a>
-          )}
+          <a
+            href={`https://www.reddit.com/user/${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-text-muted hover:text-accent text-xs"
+            title="Open profile on Reddit"
+          >
+            <ExternalLink size={13} />
+            Reddit
+          </a>
         </div>
         <JumpBar />
         <div className="flex items-center gap-4">
@@ -137,14 +122,13 @@ export default function Gallery() {
               onChange={(e) => {
                 const newSort = e.target.value;
                 const qs = includeTextOnly ? '?text=1' : '';
-                navigate(`/r/${subreddit}/${newSort}${qs}`, { replace: true });
+                navigate(`/u/${username}/${newSort}${qs}`, { replace: true });
               }}
               className="bg-surface-raised border border-border text-text rounded-lg px-2 py-1 text-sm cursor-pointer"
             >
-              <option value="hot">Hot</option>
               <option value="new">New</option>
+              <option value="hot">Hot</option>
               <option value="top">Top</option>
-              <option value="rising">Rising</option>
             </select>
           </label>
           <label className="flex items-center gap-2 text-text-secondary text-sm cursor-pointer select-none">
@@ -216,14 +200,14 @@ export default function Gallery() {
 
         {!loading && !error && posts.length === 0 && (
           <div className="flex items-center justify-center pt-16">
-            <p className="text-text-muted">No media posts found in r/{subreddit}</p>
+            <p className="text-text-muted">No media posts found for u/{username}</p>
           </div>
         )}
 
         {posts.length > 0 && (
           <MasonryGrid>
             {posts.map((post) => (
-              <ImageCard key={post.id} post={post} mode={cardMode} />
+              <ImageCard key={post.id} post={post} mode="user" />
             ))}
           </MasonryGrid>
         )}

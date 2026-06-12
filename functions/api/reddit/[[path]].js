@@ -45,7 +45,9 @@ export async function onRequest(context) {
   headers.set('Accept', 'application/json');
 
   const suffix = oauthToken ? '' : '.json';
-  const targetUrl = `${targetBase}/r/${subPath}${suffix}${url.search}`;
+  const isUser = url.searchParams.get('target') === 'user';
+  url.searchParams.delete('target');
+  const targetUrl = `${targetBase}/${isUser ? 'user' : 'r'}/${subPath}${suffix}${url.search}`;
 
   const response = await fetch(targetUrl, { headers });
 
