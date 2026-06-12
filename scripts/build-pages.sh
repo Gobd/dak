@@ -31,11 +31,14 @@ apps=(
 
 for app in "${apps[@]}"; do
   cp -r "$app/dist" "_site/$app"
+  # Create a copy of index.html outside the app directory to use as the SPA fallback
+  # This prevents Cloudflare Pages from detecting an infinite loop (since the target won't match /$app/*)
+  cp "$app/dist/index.html" "_site/${app}_spa.html"
 done
 
 # Generate _redirects for SPA client-side routing (Cloudflare Pages)
 {
   for app in "${apps[@]}"; do
-    echo "/$app/*  /$app/index.html  200"
+    echo "/$app/* /${app}_spa.html 200"
   done
 } > _site/_redirects
