@@ -155,6 +155,10 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
             onClick={() =>
               window.open(post.sourceUrl ?? post.mediaUrl, '_blank', 'noopener,noreferrer')
             }
+            onAuxClick={(e) => {
+              if (e.button === 1)
+                window.open(post.sourceUrl ?? post.mediaUrl, '_blank', 'noopener,noreferrer');
+            }}
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200 opacity-100 group-hover:opacity-0">
             <div className="bg-black/50 rounded-full p-3">
@@ -272,7 +276,14 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
             </>
           )}
         </div>
-        <p className="text-text text-sm font-medium line-clamp-2 mb-2">{post.title}</p>
+        <a
+          href={post.type === 'video' ? (post.sourceUrl ?? post.mediaUrl) : redditLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text text-sm font-medium line-clamp-2 mb-2 hover:underline block"
+        >
+          {post.title}
+        </a>
         <div className="flex items-center gap-4 text-text-muted text-xs">
           <span className="flex items-center gap-1">
             <ArrowUp size={14} />
