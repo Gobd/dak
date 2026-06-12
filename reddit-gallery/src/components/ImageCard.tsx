@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MessageCircle,
@@ -23,19 +23,47 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const [galleryIdx, setGalleryIdx] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoCurrentTime, setVideoCurrentTime] = useState(0);
+  const [videoHovered, setVideoHovered] = useState(false);
 
   // permalink is /r/subname/comments/...
   const postSubreddit = post.permalink.split('/')[2] ?? '';
 
   const handleVideoMouseEnter = () => {
+    setVideoHovered(true);
     videoRef.current?.play();
   };
 
   const handleVideoMouseLeave = () => {
+    setVideoHovered(false);
     const v = videoRef.current;
     if (!v) return;
     v.pause();
     v.currentTime = 0;
+    setVideoCurrentTime(0);
+  };
+
+  const handleVideoTimeUpdate = () => {
+    setVideoCurrentTime(videoRef.current?.currentTime ?? 0);
+  };
+
+  const handleVideoLoadedMetadata = () => {
+    setVideoDuration(videoRef.current?.duration ?? 0);
+  };
+
+  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const t = parseFloat(e.target.value);
+    if (videoRef.current) {
+      videoRef.current.currentTime = t;
+      setVideoCurrentTime(t);
+    }
+  }, []);
+
+  const formatVideoTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
   const galleryImages = post.galleryImages ?? [];
@@ -109,11 +137,10 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
 
     if (post.type === 'video') {
       return (
-        <a
-          href={post.mediaUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block relative group"
+        <div
+          className="relative group"
+          onMouseEnter={handleVideoMouseEnter}
+          onMouseLeave={handleVideoMouseLeave}
         >
           <video
             ref={videoRef}
@@ -123,15 +150,42 @@ export function ImageCard({ post, mode = 'subreddit' }: ImageCardProps) {
             playsInline
             className="w-full block cursor-pointer"
             title={post.title}
-            onMouseEnter={handleVideoMouseEnter}
-            onMouseLeave={handleVideoMouseLeave}
+            onTimeUpdate={handleVideoTimeUpdate}
+            onLoadedMetadata={handleVideoLoadedMetadata}
+            onClick={() =>
+              window.open(post.sourceUrl ?? post.mediaUrl, '_blank', 'noopener,noreferrer')
+            }
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200 opacity-100 group-hover:opacity-0">
             <div className="bg-black/50 rounded-full p-3">
               <Play className="w-8 h-8 text-white fill-white" />
             </div>
           </div>
-        </a>
+          {videoHovered && videoDuration > 0 && (
+            <div
+              className="absolute bottom-0 left-0 right-0 px-2 pb-2 pt-6 bg-gradient-to-t from-black/70 to-transparent"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-white text-xs tabular-nums shrink-0">
+                  {formatVideoTime(videoCurrentTime)}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={videoDuration}
+                  step={0.1}
+                  value={videoCurrentTime}
+                  onChange={handleScrub}
+                  className="flex-1 h-1 accent-white cursor-pointer"
+                />
+                <span className="text-white/70 text-xs tabular-nums shrink-0">
+                  {formatVideoTime(videoDuration)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
       );
     }
 

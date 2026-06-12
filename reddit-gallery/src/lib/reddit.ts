@@ -28,6 +28,7 @@ function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
       const d = child.data;
       let type: Post['type'] = 'image';
       let mediaUrl = d.url as string;
+      const sourceUrl = d.url as string;
 
       const redditVideo = (d.media as Record<string, unknown> | undefined)?.reddit_video as
         | Record<string, unknown>
@@ -93,6 +94,7 @@ function filterAndMap(children: unknown[], includeTextOnly = false): Post[] {
         numComments: d.num_comments as number,
         selftext: d.is_self ? (d.selftext as string | undefined) : undefined,
         author: d.author as string,
+        ...(sourceUrl !== mediaUrl ? { sourceUrl } : {}),
       };
     });
 }

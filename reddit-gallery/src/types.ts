@@ -10,4 +10,6 @@ export interface Post {
   author: string;
   /** URLs for multi-image gallery posts */
   galleryImages?: string[];
+  /** Original source URL when mediaUrl is a CDN mp4 */
+  sourceUrl?: string;
 }
