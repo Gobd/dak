@@ -22,11 +22,11 @@ fi
 
 SSH="sshpass -p ${SSH_PASS} ssh -o StrictHostKeyChecking=no ${SSH_USER}@${HOST}"
 
-echo "==> Connecting ${HOST} to WiFi: ${SSID}..."
-$SSH "sudo nmcli dev wifi connect '${SSID}' password '${WIFI_PASS}'"
+echo "==> Saving WiFi profile for: ${SSID}..."
+$SSH "sudo nmcli con add type wifi con-name '${SSID}' ssid '${SSID}' wifi-sec.key-mgmt wpa-psk wifi-sec.psk '${WIFI_PASS}'"
 
-echo "==> Verifying connection..."
-$SSH "nmcli -t -f NAME,STATE con show --active"
+echo "==> Verifying profile was saved..."
+$SSH "nmcli con show | grep '${SSID}'"
 
 echo ""
-echo "Done. ${HOST} should now be on '${SSID}'."
+echo "Done. ${HOST} will auto-connect to '${SSID}' when in range."
