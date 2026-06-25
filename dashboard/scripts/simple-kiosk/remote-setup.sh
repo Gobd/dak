@@ -35,6 +35,11 @@ rm /tmp/kiosk-cron
 echo "==> Configuring HDMI display output..."
 # Pi 4 and 5 use the KMS/DRM stack (vc4-kms-v3d overlay), which ignores legacy
 # hdmi_group/hdmi_mode config.txt params. Force 1080p60 via kernel cmdline instead.
+# hdmi_force_hotplug is kept as it may still have effect with some displays.
+CONFIG=/boot/firmware/config.txt
+if ! grep -q "hdmi_force_hotplug" "${CONFIG}"; then
+  echo "hdmi_force_hotplug=1" >> "${CONFIG}"
+fi
 CMDLINE=/boot/firmware/cmdline.txt
 if ! grep -q "video=HDMI-A-1:" "${CMDLINE}"; then
   sed -i 's/$/ video=HDMI-A-1:1920x1080@60e/' "${CMDLINE}"
