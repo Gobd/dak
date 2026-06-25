@@ -51,7 +51,7 @@ The Pi will reboot automatically when done. On next boot it will launch Chromium
 - Installs cage, chromium, wlopm, cec-utils, ddcutil
 - Configures console autologin
 - Launches kiosk on login via `~/.bash_profile`
-- Schedules screen on (7am) and off (6pm) local time via cron, trying CEC → DDC → wlopm in order
+- Schedules screen on (7am Tue/Thu) and off (6pm daily) via cron, trying CEC → wlr-randr in order
 
 ## Re-running
 
