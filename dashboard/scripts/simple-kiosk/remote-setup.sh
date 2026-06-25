@@ -15,7 +15,8 @@ echo "==> Configuring console autologin..."
 raspi-config nonint do_boot_behaviour B2
 
 echo "==> Installing /home/${SSH_USER}/.kiosk.sh..."
-sed "s|KIOSK_URL_PLACEHOLDER|${URL}|" /tmp/kiosk.sh > "/home/${SSH_USER}/.kiosk.sh"
+ESCAPED_URL=$(printf '%s' "${URL}" | sed 's/[&/\]/\\&/g')
+sed "s|KIOSK_URL_PLACEHOLDER|${ESCAPED_URL}|" /tmp/kiosk.sh > "/home/${SSH_USER}/.kiosk.sh"
 chmod +x "/home/${SSH_USER}/.kiosk.sh"
 rm /tmp/kiosk.sh
 
