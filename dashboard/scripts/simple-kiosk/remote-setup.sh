@@ -32,6 +32,14 @@ echo "==> Installing screen on/off cron jobs (7am on, 6pm off, Mountain Time)...
 crontab -u "${SSH_USER}" /tmp/kiosk-cron
 rm /tmp/kiosk-cron
 
+echo "==> Configuring HDMI display output..."
+# Pi 4 and 5 use the KMS/DRM stack (vc4-kms-v3d overlay), which ignores legacy
+# hdmi_group/hdmi_mode config.txt params. Force 1080p60 via kernel cmdline instead.
+CMDLINE=/boot/firmware/cmdline.txt
+if ! grep -q "video=HDMI-A-1:" "${CMDLINE}"; then
+  sed -i 's/$/ video=HDMI-A-1:1920x1080@60e/' "${CMDLINE}"
+fi
+
 echo ""
 echo "Done. Rebooting in 5 seconds — Ctrl+C to cancel."
 sleep 5

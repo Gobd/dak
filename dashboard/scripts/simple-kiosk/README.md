@@ -10,6 +10,16 @@ Sets up a Raspberry Pi 4 or 5 as a fullscreen Chromium kiosk running on Wayland/
 
 ## Usage
 
+### 0. Find the Pi on your network
+
+If you don't know the Pi's IP address:
+
+```bash
+sudo nmap -sn 192.168.1.0/24 | grep -A 1 -i "Raspberry Pi"
+```
+
+Once you find it, consider writing the MAC address on the device itself so you can look it up quickly next time (routers usually list IP→MAC in their DHCP table).
+
 ### 1. Connect to WiFi (if not already on ethernet)
 
 ```bash
