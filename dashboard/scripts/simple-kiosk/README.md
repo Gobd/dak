@@ -1,6 +1,6 @@
 # simple-kiosk
 
-Sets up a Raspberry Pi 5 as a fullscreen Chromium kiosk running on Wayland/Cage.
+Sets up a Raspberry Pi 4 or 5 as a fullscreen Chromium kiosk running on Wayland/Cage.
 
 ## Requirements
 
@@ -9,6 +9,16 @@ Sets up a Raspberry Pi 5 as a fullscreen Chromium kiosk running on Wayland/Cage.
 - `sshpass` installed locally: `brew install sshpass`
 
 ## Usage
+
+### 0. Find the Pi on your network
+
+If you don't know the Pi's IP address:
+
+```bash
+sudo nmap -sn 192.168.1.0/24 | grep -A 1 -i "Raspberry Pi"
+```
+
+Once you find it, consider writing the MAC address on the device itself so you can look it up quickly next time (routers usually list IP→MAC in their DHCP table).
 
 ### 1. Connect to WiFi (if not already on ethernet)
 
@@ -41,7 +51,7 @@ The Pi will reboot automatically when done. On next boot it will launch Chromium
 - Installs cage, chromium, wlopm, cec-utils, ddcutil
 - Configures console autologin
 - Launches kiosk on login via `~/.bash_profile`
-- Schedules screen on (7am) and off (6pm) Mountain Time via cron, trying CEC → DDC → wlopm in order
+- Schedules screen on (7am Tue/Thu) and off (6pm daily) via cron, trying CEC → wlr-randr in order
 
 ## Re-running
 
