@@ -17,6 +17,7 @@ bash wifi.sh <host> <ssh-user> <ssh-password> <ssid> <wifi-password>
 ```
 
 Example:
+
 ```bash
 bash wifi.sh 192.168.1.50 pi raspberry 'MyWiFi' 'wifipass'
 ```
@@ -28,6 +29,7 @@ bash setup.sh <host> <ssh-user> <ssh-password> <url>
 ```
 
 Example:
+
 ```bash
 bash setup.sh 192.168.1.50 pi raspberry https://example.com
 ```
