@@ -8,8 +8,8 @@ URL="${2}"
 echo "==> Updating and upgrading packages..."
 apt-get update && apt-get upgrade -y
 
-echo "==> Installing cage, chromium, wlopm, cec-utils, ddcutil..."
-apt-get install -y --no-install-recommends cage chromium-browser wlopm cec-utils ddcutil
+echo "==> Installing cage, chromium, wlr-randr, cec-utils..."
+apt-get install -y --no-install-recommends cage chromium-browser wlr-randr cec-utils
 
 echo "==> Configuring console autologin..."
 raspi-config nonint do_boot_behaviour B2
