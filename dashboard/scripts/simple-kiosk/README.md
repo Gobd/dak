@@ -1,6 +1,6 @@
 # simple-kiosk
 
-Sets up a Raspberry Pi 5 as a fullscreen Chromium kiosk running on Wayland/Cage.
+Sets up a Raspberry Pi 4 or 5 as a fullscreen Chromium kiosk running on Wayland/Cage.
 
 ## Requirements
 
@@ -41,7 +41,7 @@ The Pi will reboot automatically when done. On next boot it will launch Chromium
 - Installs cage, chromium, wlopm, cec-utils, ddcutil
 - Configures console autologin
 - Launches kiosk on login via `~/.bash_profile`
-- Schedules screen on (7am) and off (6pm) Mountain Time via cron, trying CEC → DDC → wlopm in order
+- Schedules screen on (7am) and off (6pm) local time via cron, trying CEC → DDC → wlopm in order
 
 ## Re-running
 
