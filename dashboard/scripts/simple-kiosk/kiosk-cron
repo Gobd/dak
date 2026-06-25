@@ -1,0 +1,6 @@
+WAYLAND_DISPLAY=wayland-0
+XDG_RUNTIME_DIR=/run/user/1000
+# Screen on at 7am — try CEC, DDC, then wlopm (first working one wins, others fail silently)
+0 7 * * * echo "on 0" | cec-client -s -d 1 2>/dev/null; ddcutil setvcp D6 1 2>/dev/null; /usr/bin/wlopm --on '*' 2>/dev/null
+# Screen off at 6pm
+0 18 * * * echo "standby 0" | cec-client -s -d 1 2>/dev/null; ddcutil setvcp D6 5 2>/dev/null; /usr/bin/wlopm --off '*' 2>/dev/null

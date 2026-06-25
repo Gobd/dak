@@ -22,7 +22,8 @@ fi
 
 SSH="sshpass -p ${SSH_PASS} ssh -o StrictHostKeyChecking=no ${SSH_USER}@${HOST}"
 
-echo "==> Saving WiFi profile for: ${SSID}..."
+echo "==> Saving WiFi profile for: ${SSID} (WPA2)..."
+$SSH "sudo nmcli con delete '${SSID}' 2>/dev/null || true"
 $SSH "sudo nmcli con add type wifi con-name '${SSID}' ssid '${SSID}' wifi-sec.key-mgmt wpa-psk wifi-sec.psk '${WIFI_PASS}'"
 
 echo "==> Verifying profile was saved..."
