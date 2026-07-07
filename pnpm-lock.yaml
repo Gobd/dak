@@ -13,8 +13,8 @@ catalogs:
       specifier: ^4.3.0
       version: 4.3.0
     '@tanstack/react-query':
-      specifier: ^5.101.0
-      version: 5.101.0
+      specifier: ^5.101.2
+      version: 5.101.2
     '@types/node':
       specifier: ^24.0.0
       version: 24.13.0
@@ -91,7 +91,7 @@ importers:
         version: link:../packages/ui
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.101.0(react@19.2.7)
+        version: 5.101.2(react@19.2.7)
       lucide-react:
         specifier: 'catalog:'
         version: 1.17.0(react@19.2.7)
@@ -143,7 +143,7 @@ importers:
         version: link:../packages/ui
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.101.0(react@19.2.7)
+        version: 5.101.2(react@19.2.7)
       lucide-react:
         specifier: 'catalog:'
         version: 1.17.0(react@19.2.7)
@@ -295,7 +295,7 @@ importers:
         version: link:../packages/ui
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.101.0(react@19.2.7)
+        version: 5.101.2(react@19.2.7)
       lucide-react:
         specifier: 'catalog:'
         version: 1.17.0(react@19.2.7)
@@ -461,7 +461,7 @@ importers:
         version: link:../api-client
       '@tanstack/react-query':
         specifier: 'catalog:'
-        version: 5.101.0(react@19.2.7)
+        version: 5.101.2(react@19.2.7)
       react:
         specifier: 'catalog:'
         version: 19.2.7
@@ -2693,11 +2693,11 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
 
-  '@tanstack/query-core@5.101.0':
-    resolution: {integrity: sha512-cQetA74EB+seWySv1TTKr828TnP0u39m6LykwDXIo84SNortpDkp30TMEjkqtYCNP9c40uT/iwl6MLiufEt0Ow==}
+  '@tanstack/query-core@5.101.2':
+    resolution: {integrity: sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw==}
 
-  '@tanstack/react-query@5.101.0':
-    resolution: {integrity: sha512-rLlJXSpkqfizLWgkR5+eLeIk0MvTx/meEIR7LRjxic+qxiQP8zVjq7BqQkiCMNLQBlLfuOLqqr6KO5GtrDlmSg==}
+  '@tanstack/react-query@5.101.2':
+    resolution: {integrity: sha512-seDkr6kzGzX1okaaTtZPtgA688CDPlXUz1C6xSg0ESqn04Vuc8tlrYms1s3de+znBqhPVxFRfpAfUf+6XvfPWg==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -6665,11 +6665,11 @@ snapshots:
       tailwindcss: 4.3.0
       vite: 8.0.16(@types/node@25.9.1)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  '@tanstack/query-core@5.101.0': {}
+  '@tanstack/query-core@5.101.2': {}
 
-  '@tanstack/react-query@5.101.0(react@19.2.7)':
+  '@tanstack/react-query@5.101.2(react@19.2.7)':
     dependencies:
-      '@tanstack/query-core': 5.101.0
+      '@tanstack/query-core': 5.101.2
       react: 19.2.7
 
   '@testing-library/dom@10.4.0':
