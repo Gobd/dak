@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState, type ReactNode, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 interface ModalProps {
   open: boolean;
@@ -190,7 +191,7 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
       >
         {/* Draggable header */}
         <div
-          className="px-6 pt-6 pb-4 cursor-move select-none shrink-0"
+          className="px-6 pt-6 pb-4 cursor-move select-none shrink-0 flex items-start justify-between gap-2"
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
         >
@@ -199,6 +200,19 @@ export function Modal({ open, onClose, title, children, actions, wide, fit }: Mo
               {title}
             </h3>
           )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="shrink-0 cursor-pointer text-text-muted hover:text-text rounded-full p-1 -m-1 -mt-1 -mr-1"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {/* Scrollable content */}

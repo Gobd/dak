@@ -399,7 +399,7 @@ def trigger_check():
 # === Type Preferences ===
 
 # Known notification types (pre-populated so users can configure before first notification)
-KNOWN_TYPES = ["shot", "maintenance", "weather"]
+KNOWN_TYPES = ["shot", "maintenance", "weather", "money"]
 
 
 def _ensure_known_types():

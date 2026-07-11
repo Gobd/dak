@@ -177,6 +177,31 @@ Dashboard uses home-relay backend instead of Supabase.
 
 ## Dashboard
 
+### Local Development
+
+The dashboard normally points at the production home-relay instance
+(`kiosk-relay.bkemper.me`, hardcoded as `DEFAULT_RELAY_URL` in
+`src/stores/config-store.ts`). To develop/test against a local home-relay
+instead of the Pi:
+
+```bash
+cd dashboard && pnpm dev:relay   # runs vite + home-relay together (ports 8080 / 5111)
+```
+
+Then open the dashboard with an explicit `?relay=` override so it never talks
+to the production Pi:
+
+```
+http://localhost:8080/dashboard/?relay=http://127.0.0.1:5111
+```
+
+The `relay` URL param always takes priority over the default and over saved
+settings (see `getRelayUrlFromParams` in `config-store.ts`), so this is safe
+to use without touching any persisted config. Home-relay's local SQLite state
+(notifications, money tracker, etc.) lives under `~/.config/home-relay/` on
+whichever machine it's running on — running it locally uses this machine's
+own state, fully isolated from the Pi's.
+
 ### Config Store
 
 Dashboard layout is stored in `stores/config-store.ts`. Default config defines:

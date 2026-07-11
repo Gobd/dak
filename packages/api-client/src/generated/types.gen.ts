@@ -333,6 +333,18 @@ export type BrightnessStatus = {
 };
 
 /**
+ * BudgetRequest
+ *
+ * Request to set the default monthly budget.
+ */
+export type BudgetRequest = {
+    /**
+     * Monthly Budget
+     */
+    monthly_budget: number;
+};
+
+/**
  * CommandResult
  *
  * Command execution result.
@@ -427,6 +439,25 @@ export type DeleteScheduleRequest = {
      * Rule Id
      */
     rule_id: string;
+};
+
+/**
+ * DepositSettingsRequest
+ *
+ * Request to configure paycheck matching and the large-deposit threshold.
+ *
+ * large_deposit_threshold=None disables large-deposit notifications entirely.
+ * A threshold of 0 is a valid, distinct value ("notify on any deposit").
+ */
+export type DepositSettingsRequest = {
+    /**
+     * Paycheck Strings
+     */
+    paycheck_strings: Array<string>;
+    /**
+     * Large Deposit Threshold
+     */
+    large_deposit_threshold?: number | null;
 };
 
 /**
@@ -558,6 +589,40 @@ export type DueNotification = {
 };
 
 /**
+ * ExcludeTransactionRequest
+ *
+ * Request to manually mark a transaction as excluded (or included).
+ */
+export type ExcludeTransactionRequest = {
+    /**
+     * Excluded
+     */
+    excluded: boolean;
+    /**
+     * Reason
+     */
+    reason?: string | null;
+};
+
+/**
+ * GenericSuccess
+ *
+ * Generic success response.
+ */
+export type GenericSuccess = {
+    /**
+     * Success
+     */
+    success: boolean;
+    /**
+     * Data
+     */
+    data?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -656,6 +721,42 @@ export type KasaDevice = {
 };
 
 /**
+ * LinkAccountRequest
+ *
+ * Request to link SimpleFIN accounts via a one-time setup token.
+ */
+export type LinkAccountRequest = {
+    /**
+     * Setup Token
+     */
+    setup_token: string;
+};
+
+/**
+ * LinkedAccountInfo
+ *
+ * A linked SimpleFIN account.
+ */
+export type LinkedAccountInfo = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Org Name
+     */
+    org_name: string;
+    /**
+     * Currency
+     */
+    currency: string;
+};
+
+/**
  * MacLookupErrorResponse
  *
  * MAC lookup error response.
@@ -689,6 +790,54 @@ export type MacLookupResponse = {
      * Mac
      */
     mac?: string | null;
+};
+
+/**
+ * MoneySettings
+ *
+ * Current money-tracker settings (for populating the settings modal).
+ */
+export type MoneySettings = {
+    /**
+     * Default Monthly Budget
+     */
+    default_monthly_budget: number;
+    /**
+     * Current Month Override
+     */
+    current_month_override: number | null;
+    /**
+     * Paycheck Strings
+     */
+    paycheck_strings: Array<string>;
+    /**
+     * Large Deposit Threshold
+     */
+    large_deposit_threshold: number | null;
+    /**
+     * Transfer Keywords
+     */
+    transfer_keywords: Array<string>;
+    /**
+     * Linked Accounts
+     */
+    linked_accounts: Array<LinkedAccountInfo>;
+};
+
+/**
+ * MonthlyOverrideRequest
+ *
+ * Request to set a one-off budget override for a given month.
+ */
+export type MonthlyOverrideRequest = {
+    /**
+     * Month
+     */
+    month: string;
+    /**
+     * Budget
+     */
+    budget: number;
 };
 
 /**
@@ -1062,6 +1211,54 @@ export type SpeakResponse = {
 };
 
 /**
+ * SpendSummary
+ *
+ * Current month spend vs. ghost pace vs. budget.
+ */
+export type SpendSummary = {
+    /**
+     * Monthly Budget
+     */
+    monthly_budget: number;
+    /**
+     * Is Override
+     */
+    is_override: boolean;
+    /**
+     * Month Start
+     */
+    month_start: string;
+    /**
+     * Days In Month
+     */
+    days_in_month: number;
+    /**
+     * Day Of Month
+     */
+    day_of_month: number;
+    /**
+     * Spent To Date
+     */
+    spent_to_date: number;
+    /**
+     * Ghost To Date
+     */
+    ghost_to_date: number;
+    /**
+     * Projected Month Total
+     */
+    projected_month_total: number;
+    /**
+     * Linked Accounts
+     */
+    linked_accounts: Array<LinkedAccountInfo>;
+    /**
+     * Last Synced At
+     */
+    last_synced_at: string | null;
+};
+
+/**
  * SunTimes
  *
  * Sunrise and sunset times.
@@ -1212,6 +1409,50 @@ export type ToggleResponse = {
 };
 
 /**
+ * TransactionOut
+ *
+ * A cached transaction, for the widget's recent-transactions list.
+ */
+export type TransactionOut = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Account Name
+     */
+    account_name: string;
+    /**
+     * Posted
+     */
+    posted: string;
+    /**
+     * Amount
+     */
+    amount: number;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Payee
+     */
+    payee: string;
+    /**
+     * Excluded
+     */
+    excluded: boolean;
+    /**
+     * Exclude Reason
+     */
+    exclude_reason: string | null;
+    /**
+     * Is Paycheck
+     */
+    is_paycheck: boolean;
+};
+
+/**
  * TranscribeAndExecuteResponse
  *
  * Transcribe and execute result.
@@ -1254,6 +1495,18 @@ export type TranscriptionResponse = {
      * Text
      */
     text: string;
+};
+
+/**
+ * TransferSettingsRequest
+ *
+ * Request to configure transfer/payment keyword matching.
+ */
+export type TransferSettingsRequest = {
+    /**
+     * Transfer Keywords
+     */
+    transfer_keywords: Array<string>;
 };
 
 /**
@@ -3009,3 +3262,272 @@ export type GetSystemStatsSystemStatsGetResponses = {
 };
 
 export type GetSystemStatsSystemStatsGetResponse = GetSystemStatsSystemStatsGetResponses[keyof GetSystemStatsSystemStatsGetResponses];
+
+export type UnlinkMoneyLinkDeleteData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/money/link';
+};
+
+export type UnlinkMoneyLinkDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type UnlinkMoneyLinkDeleteResponse = UnlinkMoneyLinkDeleteResponses[keyof UnlinkMoneyLinkDeleteResponses];
+
+export type LinkAccountsMoneyLinkPostData = {
+    body: LinkAccountRequest;
+    path?: never;
+    query?: never;
+    url: '/money/link';
+};
+
+export type LinkAccountsMoneyLinkPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LinkAccountsMoneyLinkPostError = LinkAccountsMoneyLinkPostErrors[keyof LinkAccountsMoneyLinkPostErrors];
+
+export type LinkAccountsMoneyLinkPostResponses = {
+    /**
+     * Response Link Accounts Money Link Post
+     *
+     * Successful Response
+     */
+    200: Array<LinkedAccountInfo>;
+};
+
+export type LinkAccountsMoneyLinkPostResponse = LinkAccountsMoneyLinkPostResponses[keyof LinkAccountsMoneyLinkPostResponses];
+
+export type GetSummaryMoneySummaryGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/money/summary';
+};
+
+export type GetSummaryMoneySummaryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SpendSummary;
+};
+
+export type GetSummaryMoneySummaryGetResponse = GetSummaryMoneySummaryGetResponses[keyof GetSummaryMoneySummaryGetResponses];
+
+export type GetSettingsMoneySettingsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/money/settings';
+};
+
+export type GetSettingsMoneySettingsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MoneySettings;
+};
+
+export type GetSettingsMoneySettingsGetResponse = GetSettingsMoneySettingsGetResponses[keyof GetSettingsMoneySettingsGetResponses];
+
+export type GetTransactionsMoneyTransactionsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/money/transactions';
+};
+
+export type GetTransactionsMoneyTransactionsGetResponses = {
+    /**
+     * Response Get Transactions Money Transactions Get
+     *
+     * Successful Response
+     */
+    200: Array<TransactionOut>;
+};
+
+export type GetTransactionsMoneyTransactionsGetResponse = GetTransactionsMoneyTransactionsGetResponses[keyof GetTransactionsMoneyTransactionsGetResponses];
+
+export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostData = {
+    body: ExcludeTransactionRequest;
+    path: {
+        /**
+         * Transaction Id
+         */
+        transaction_id: string;
+    };
+    query?: never;
+    url: '/money/transactions/{transaction_id}/exclude';
+};
+
+export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostError = SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostErrors[keyof SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostErrors];
+
+export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponse = SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponses[keyof SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponses];
+
+export type SetDefaultBudgetMoneyBudgetPostData = {
+    body: BudgetRequest;
+    path?: never;
+    query?: never;
+    url: '/money/budget';
+};
+
+export type SetDefaultBudgetMoneyBudgetPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetDefaultBudgetMoneyBudgetPostError = SetDefaultBudgetMoneyBudgetPostErrors[keyof SetDefaultBudgetMoneyBudgetPostErrors];
+
+export type SetDefaultBudgetMoneyBudgetPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SetDefaultBudgetMoneyBudgetPostResponse = SetDefaultBudgetMoneyBudgetPostResponses[keyof SetDefaultBudgetMoneyBudgetPostResponses];
+
+export type SetMonthlyOverrideMoneyBudgetOverridePostData = {
+    body: MonthlyOverrideRequest;
+    path?: never;
+    query?: never;
+    url: '/money/budget/override';
+};
+
+export type SetMonthlyOverrideMoneyBudgetOverridePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetMonthlyOverrideMoneyBudgetOverridePostError = SetMonthlyOverrideMoneyBudgetOverridePostErrors[keyof SetMonthlyOverrideMoneyBudgetOverridePostErrors];
+
+export type SetMonthlyOverrideMoneyBudgetOverridePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SetMonthlyOverrideMoneyBudgetOverridePostResponse = SetMonthlyOverrideMoneyBudgetOverridePostResponses[keyof SetMonthlyOverrideMoneyBudgetOverridePostResponses];
+
+export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Month
+         */
+        month: string;
+    };
+    query?: never;
+    url: '/money/budget/override/{month}';
+};
+
+export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteError = ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteErrors[keyof ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteErrors];
+
+export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponse = ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses[keyof ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses];
+
+export type SetDepositSettingsMoneySettingsDepositsPostData = {
+    body: DepositSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/money/settings/deposits';
+};
+
+export type SetDepositSettingsMoneySettingsDepositsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetDepositSettingsMoneySettingsDepositsPostError = SetDepositSettingsMoneySettingsDepositsPostErrors[keyof SetDepositSettingsMoneySettingsDepositsPostErrors];
+
+export type SetDepositSettingsMoneySettingsDepositsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SetDepositSettingsMoneySettingsDepositsPostResponse = SetDepositSettingsMoneySettingsDepositsPostResponses[keyof SetDepositSettingsMoneySettingsDepositsPostResponses];
+
+export type SetTransferKeywordsMoneySettingsTransfersPostData = {
+    body: TransferSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/money/settings/transfers';
+};
+
+export type SetTransferKeywordsMoneySettingsTransfersPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SetTransferKeywordsMoneySettingsTransfersPostError = SetTransferKeywordsMoneySettingsTransfersPostErrors[keyof SetTransferKeywordsMoneySettingsTransfersPostErrors];
+
+export type SetTransferKeywordsMoneySettingsTransfersPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SetTransferKeywordsMoneySettingsTransfersPostResponse = SetTransferKeywordsMoneySettingsTransfersPostResponses[keyof SetTransferKeywordsMoneySettingsTransfersPostResponses];
+
+export type SyncNowMoneySyncPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/money/sync';
+};
+
+export type SyncNowMoneySyncPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: GenericSuccess;
+};
+
+export type SyncNowMoneySyncPostResponse = SyncNowMoneySyncPostResponses[keyof SyncNowMoneySyncPostResponses];

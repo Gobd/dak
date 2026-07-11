@@ -21,7 +21,16 @@
           "x": 0,
           "y": 0,
           "width": 30,
-          "height": 100
+          "height": 80
+        },
+        {
+          "id": "panel-money",
+          "widget": "money",
+          "x": 0,
+          "y": 80,
+          "width": 30,
+          "height": 20,
+          "refresh": "15m"
         },
         {
           "id": "panel-calendar",

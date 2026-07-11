@@ -26,24 +26,25 @@ A smart home command center for wall-mounted displays. Designed to run 24/7 on a
 
 ## Widgets
 
-| Widget         | Description                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| **Weather**    | Current conditions, temperature, humidity, and multi-day forecast                          |
-| **Calendar**   | Month view with Google Calendar - one account, share others to see them                    |
-| **Clock**      | Time and date display with configurable format                                             |
-| **Drive Time** | Commute estimates with traffic via Google Maps API                                         |
-| **Sun/Moon**   | Sunrise, sunset, and moon phase                                                            |
-| **AQI**        | Air quality index with health recommendations                                              |
-| **UV**         | UV index with safe exposure threshold - shows when it's too harsh to be outside            |
-| **Climate**    | Indoor/outdoor temperature and humidity from Zigbee sensors                                |
-| **Kasa**       | Smart plug control (on/off, brightness, schedules)                                         |
-| **WoL**        | Wake-on-LAN with auto MAC detection - scans network, stores defaults, per-device overrides |
-| **Brightness** | Display brightness with auto-dim at sunset/sunrise based on your location                  |
-| **Timer**      | Countdown timer and stopwatch with alarm                                                   |
-| **PTT**        | Push-to-talk voice commands                                                                |
-| **MQTT**       | Publish messages to MQTT topics (control Zigbee devices, etc.)                             |
-| **AdGuard**    | DNS filtering stats from AdGuard Home                                                      |
-| **Iframe**     | Embed any URL (used for notes app, other internal tools)                                   |
+| Widget         | Description                                                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Weather**    | Current conditions, temperature, humidity, and multi-day forecast                                                                                           |
+| **Calendar**   | Month view with Google Calendar - one account, share others to see them                                                                                     |
+| **Clock**      | Time and date display with configurable format                                                                                                              |
+| **Drive Time** | Commute estimates with traffic via Google Maps API                                                                                                          |
+| **Sun/Moon**   | Sunrise, sunset, and moon phase                                                                                                                             |
+| **AQI**        | Air quality index with health recommendations                                                                                                               |
+| **UV**         | UV index with safe exposure threshold - shows when it's too harsh to be outside                                                                             |
+| **Climate**    | Indoor/outdoor temperature and humidity from Zigbee sensors                                                                                                 |
+| **Kasa**       | Smart plug control (on/off, brightness, schedules)                                                                                                          |
+| **WoL**        | Wake-on-LAN with auto MAC detection - scans network, stores defaults, per-device overrides                                                                  |
+| **Brightness** | Display brightness with auto-dim at sunset/sunrise based on your location                                                                                   |
+| **Timer**      | Countdown timer and stopwatch with alarm                                                                                                                    |
+| **PTT**        | Push-to-talk voice commands                                                                                                                                 |
+| **MQTT**       | Publish messages to MQTT topics (control Zigbee devices, etc.)                                                                                              |
+| **AdGuard**    | DNS filtering stats from AdGuard Home                                                                                                                       |
+| **Money**      | Spend tracker vs. monthly budget - links bank accounts via SimpleFIN, shows a donut of spend vs. a linear "ghost" pace, alerts on unexpected large deposits |
+| **Iframe**     | Embed any URL (used for notes app, other internal tools)                                                                                                    |
 
 ### Widget Screenshots
 

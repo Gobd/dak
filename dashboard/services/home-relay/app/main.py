@@ -31,6 +31,7 @@ from app.routers import (
     health,
     kasa,
     models,
+    money,
     mqtt,
     notifications,
     sensors,
@@ -61,6 +62,11 @@ async def lifespan(_app: FastAPI):
     from app.services.sse_manager import config_sse
 
     notification_service.init(config_sse.broadcast)
+
+    # Initialize money/spend-tracking service (depends on notification_service)
+    from app.services import money_service
+
+    money_service.init()
 
     yield
 
@@ -120,3 +126,4 @@ app.include_router(voices.router)
 app.include_router(adguard.router)
 app.include_router(notifications.router)
 app.include_router(system_stats.router)
+app.include_router(money.router)
