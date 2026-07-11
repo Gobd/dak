@@ -27,6 +27,7 @@ MQTT_PORT = 1883
 HISTORY_SIZE = 60  # Several hours of history
 TREND_THRESHOLD_TEMP = 0.3  # °C change to trigger trend
 TREND_THRESHOLD_HUMIDITY = 1.5  # % change to trigger trend
+TREND_THRESHOLD_BATTERY = 1.0  # % change to trigger trend
 CACHE_DB = Path.home() / ".config" / "home-relay" / "sensor_cache.db"
 MAX_CACHE_AGE = 90 * 60  # 90 min - older cached data treated as unavailable
 
@@ -37,6 +38,12 @@ class SensorReading:
     humidity: float = 0.0
     battery: int = 100
     timestamp: float = 0.0
+    uv_index: float | None = None
+    pm2_5: float | None = None
+    pm10: float | None = None
+    battery_pct: float | None = None
+    battery_voltage: float | None = None
+    battery_current_ma: float | None = None
 
 
 @dataclass
@@ -53,6 +60,7 @@ sensors: dict[str, SensorData] = {
 available_devices: list[dict] = []  # Climate sensors from Zigbee2MQTT
 all_devices: list[dict] = []  # All devices from Zigbee2MQTT
 bridge_info: dict = {}  # Bridge state (permit_join, version, etc.)
+custom_devices: list[dict] = []  # Non-Zigbee climate sensors (config-defined)
 sensor_config: dict[str, str] = {"indoor": "", "outdoor": "", "unit": "C"}  # C or F
 mqtt_client: mqtt.Client | None = None
 mqtt_connected = False
@@ -124,7 +132,7 @@ def _save_sensor_reading(role: str, reading: SensorReading):
 
 def load_config():
     """Load sensor config from dashboard config and update MQTT subscriptions if needed."""
-    global sensor_config
+    global sensor_config, custom_devices
     try:
         dashboard = load_dashboard_config()
         climate = dashboard.get("climate", {})
@@ -136,6 +144,7 @@ def load_config():
             "outdoor": climate.get("outdoor", ""),
             "unit": climate.get("unit", "C"),
         }
+        custom_devices = climate.get("custom_devices", [])
 
         # Update MQTT subscriptions if sensor assignments changed
         if old_indoor != sensor_config["indoor"] or old_outdoor != sensor_config["outdoor"]:
@@ -154,11 +163,34 @@ def save_config():
             "indoor": sensor_config.get("indoor", ""),
             "outdoor": sensor_config.get("outdoor", ""),
             "unit": sensor_config.get("unit", "C"),
+            "custom_devices": custom_devices,
         }
         save_dashboard_config(dashboard)
         logger.info("Saved sensor config: %s", sensor_config)
     except Exception:
         logger.exception("Failed to save sensor config")
+
+
+def get_available_devices() -> list[dict]:
+    """Get all climate sensor devices selectable in the UI (Zigbee + custom)."""
+    return available_devices + custom_devices
+
+
+def add_custom_device(friendly_name: str, model: str, description: str) -> None:
+    """Add a custom (non-Zigbee) climate sensor to the config."""
+    if any(d["friendly_name"] == friendly_name for d in custom_devices):
+        raise ValueError(f"Custom device '{friendly_name}' already exists")
+    custom_devices.append(
+        {"friendly_name": friendly_name, "model": model, "description": description}
+    )
+    save_config()
+
+
+def remove_custom_device(friendly_name: str) -> None:
+    """Remove a custom (non-Zigbee) climate sensor from the config."""
+    global custom_devices
+    custom_devices = [d for d in custom_devices if d["friendly_name"] != friendly_name]
+    save_config()
 
 
 def c_to_f(temp_c: float) -> float:
@@ -201,7 +233,12 @@ def get_trend(current: float, history: deque, attr: str) -> str:
 
     prev = getattr(history[-2], attr)
     diff = current - prev
-    threshold = TREND_THRESHOLD_TEMP if attr == "temperature" else TREND_THRESHOLD_HUMIDITY
+    if attr == "temperature":
+        threshold = TREND_THRESHOLD_TEMP
+    elif attr == "battery_pct":
+        threshold = TREND_THRESHOLD_BATTERY
+    else:
+        threshold = TREND_THRESHOLD_HUMIDITY
 
     if diff > threshold:
         return "rising"
@@ -227,6 +264,8 @@ def _has_temperature_expose(exposes: list) -> bool:
 
 def get_topic_for_device(friendly_name: str) -> str:
     """Get MQTT topic for a device."""
+    if any(d["friendly_name"] == friendly_name for d in custom_devices):
+        return f"home-relay/sensors/{friendly_name}"
     return f"zigbee2mqtt/{friendly_name}"
 
 
@@ -252,8 +291,10 @@ def update_subscriptions():
     for topic in needed_topics - subscribed_topics:
         mqtt_client.subscribe(topic)
         logger.info("Subscribed to %s", topic)
-        # Request current state from the device (empty object = report all attributes)
-        mqtt_client.publish(f"{topic}/get", json.dumps({"state": ""}))
+        # Request current state from Zigbee2MQTT devices (empty object = report all
+        # attributes) — custom sensors push on their own schedule, no /get protocol
+        if topic.startswith("zigbee2mqtt/"):
+            mqtt_client.publish(f"{topic}/get", json.dumps({"state": ""}))
 
     subscribed_topics = needed_topics
 
@@ -393,6 +434,12 @@ def on_message(_client, _userdata, msg):
             humidity=data.get("humidity", 0),
             battery=data.get("battery", 100),
             timestamp=time.time(),
+            uv_index=data.get("uv_index"),
+            pm2_5=data.get("pm2_5"),
+            pm10=data.get("pm10"),
+            battery_pct=data.get("battery_pct"),
+            battery_voltage=data.get("battery_voltage"),
+            battery_current_ma=data.get("battery_current_ma"),
         )
         sensors[key].history.append(reading)
         sensors[key].current = reading
@@ -431,6 +478,24 @@ def start_mqtt():
     logger.info("Started MQTT client thread")
 
 
+def pm25_to_aqi(pm25: float) -> int:
+    """Convert PM2.5 concentration (µg/m³) to US EPA AQI using breakpoint table."""
+    breakpoints = [
+        (0.0, 12.0, 0, 50),
+        (12.1, 35.4, 51, 100),
+        (35.5, 55.4, 101, 150),
+        (55.5, 150.4, 151, 200),
+        (150.5, 250.4, 201, 300),
+        (250.5, 350.4, 301, 400),
+        (350.5, 500.4, 401, 500),
+    ]
+    pm25 = max(0.0, min(pm25, 500.4))
+    for c_lo, c_hi, i_lo, i_hi in breakpoints:
+        if c_lo <= pm25 <= c_hi:
+            return round((i_hi - i_lo) / (c_hi - c_lo) * (pm25 - c_lo) + i_lo)
+    return 500
+
+
 def sensor_response(key: str) -> dict:
     """Build sensor response dict."""
     # Check if sensor is configured
@@ -456,7 +521,7 @@ def sensor_response(key: str) -> dict:
         temp = c_to_f(temp)
         fl = c_to_f(fl)
 
-    return {
+    result = {
         "available": True,
         "temperature": round(temp, 1),
         "humidity": round(c.humidity, 1),
@@ -466,6 +531,26 @@ def sensor_response(key: str) -> dict:
         "battery": c.battery,
         "age_seconds": round(time.time() - c.timestamp),
     }
+
+    if c.uv_index is not None:
+        result["uv_index"] = round(c.uv_index, 1)
+    if c.pm2_5 is not None:
+        result["pm2_5"] = round(c.pm2_5, 1)
+        result["aqi"] = pm25_to_aqi(c.pm2_5)
+    if c.pm10 is not None:
+        result["pm10"] = round(c.pm10, 1)
+    if c.battery_pct is not None:
+        result["battery_pct"] = round(c.battery_pct, 1)
+        result["battery_trend"] = get_trend(c.battery_pct, s.history, "battery_pct")
+    if c.battery_voltage is not None:
+        result["battery_voltage"] = round(c.battery_voltage, 2)
+    if c.battery_current_ma is not None:
+        # Positive = charging, negative = discharging - see ina219 wiring notes in
+        # esp32/esp32-outdoor.yaml. This is the numeric rate MAX17048's own CRATE
+        # register is too noisy to provide; battery_trend above is direction only.
+        result["battery_current_ma"] = round(c.battery_current_ma, 1)
+
+    return result
 
 
 def set_sensor_config(

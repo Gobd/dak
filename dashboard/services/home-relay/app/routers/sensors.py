@@ -39,9 +39,9 @@ async def status():
 
 @router.get("/devices", response_model=DevicesResponse)
 async def devices():
-    """List available climate sensors from Zigbee2MQTT."""
+    """List available climate sensors (Zigbee2MQTT + custom)."""
     return DevicesResponse(
-        devices=[SensorDevice(**d) for d in mqtt_service.available_devices],
+        devices=[SensorDevice(**d) for d in mqtt_service.get_available_devices()],
     )
 
 

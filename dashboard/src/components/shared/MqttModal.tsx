@@ -9,8 +9,12 @@ import {
   setPermitJoinMqttPermitJoinPost,
   renameDeviceMqttDevicesRenamePost,
   removeDeviceMqttDevicesRemovePost,
+  listCustomDevicesMqttCustomDevicesGet,
+  addCustomDeviceMqttCustomDevicesPost,
+  removeCustomDeviceMqttCustomDevicesRemovePost,
   type DeviceListResponse,
   type ZigbeeDevice,
+  type CustomDeviceListResponse,
 } from '@dak/api-client';
 
 async function fetchDevices(): Promise<DeviceListResponse> {
@@ -43,6 +47,32 @@ async function removeDevice(device: string, force: boolean = false): Promise<voi
   });
 }
 
+async function fetchCustomDevices(): Promise<CustomDeviceListResponse> {
+  client.setConfig({ baseUrl: getRelayUrl() });
+  const result = await listCustomDevicesMqttCustomDevicesGet({ throwOnError: true });
+  return result.data;
+}
+
+async function addCustomDevice(
+  friendlyName: string,
+  model: string,
+  description: string,
+): Promise<void> {
+  client.setConfig({ baseUrl: getRelayUrl() });
+  await addCustomDeviceMqttCustomDevicesPost({
+    body: { friendly_name: friendlyName, model, description },
+    throwOnError: true,
+  });
+}
+
+async function removeCustomDevice(friendlyName: string): Promise<void> {
+  client.setConfig({ baseUrl: getRelayUrl() });
+  await removeCustomDeviceMqttCustomDevicesRemovePost({
+    body: { friendly_name: friendlyName },
+    throwOnError: true,
+  });
+}
+
 const DEFAULT_ZIGBEE_URL = 'https://zigbee2mqtt.bkemper.me';
 
 export function MqttModal() {
@@ -56,6 +86,11 @@ export function MqttModal() {
   const [error, setError] = useState<string | null>(null);
   const [pairingCountdown, setPairingCountdown] = useState<number | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showAddCustom, setShowAddCustom] = useState(false);
+  const [customFriendlyName, setCustomFriendlyName] = useState('');
+  const [customModel, setCustomModel] = useState('');
+  const [customDescription, setCustomDescription] = useState('');
+  const [customDeleteConfirm, setCustomDeleteConfirm] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['mqtt-devices'],
@@ -65,6 +100,13 @@ export function MqttModal() {
       // Poll faster when actively pairing
       return query.state.data?.permit_join ? 1_000 : 3_000;
     },
+    staleTime: 1000,
+    enabled: showModal,
+  });
+
+  const { data: customData, isLoading: customLoading } = useQuery({
+    queryKey: ['custom-devices'],
+    queryFn: fetchCustomDevices,
     staleTime: 1000,
     enabled: showModal,
   });
@@ -130,8 +172,42 @@ export function MqttModal() {
     onError: (err) => setError(err instanceof Error ? err.message : 'Failed to remove device'),
   });
 
+  const addCustomMutation = useMutation({
+    mutationFn: ({
+      friendlyName,
+      model,
+      description,
+    }: {
+      friendlyName: string;
+      model: string;
+      description: string;
+    }) => addCustomDevice(friendlyName, model, description),
+    onSuccess: () => {
+      setError(null);
+      setShowAddCustom(false);
+      setCustomFriendlyName('');
+      setCustomModel('');
+      setCustomDescription('');
+      queryClient.invalidateQueries({ queryKey: ['custom-devices'] });
+      queryClient.invalidateQueries({ queryKey: ['climate-devices'] });
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : 'Failed to add sensor'),
+  });
+
+  const removeCustomMutation = useMutation({
+    mutationFn: (friendlyName: string) => removeCustomDevice(friendlyName),
+    onSuccess: () => {
+      setError(null);
+      setCustomDeleteConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ['custom-devices'] });
+      queryClient.invalidateQueries({ queryKey: ['climate-devices'] });
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : 'Failed to remove sensor'),
+  });
+
   const devices = data?.devices.filter((d) => d.type !== 'Coordinator') ?? [];
   const permitJoin = data?.permit_join ?? false;
+  const customDevices = customData?.devices ?? [];
 
   function handleStartEdit(device: ZigbeeDevice) {
     setEditingDevice(device.friendly_name);
@@ -157,6 +233,17 @@ export function MqttModal() {
     setEditingDevice(null);
     setDeleteConfirm(null);
     setError(null);
+    setShowAddCustom(false);
+    setCustomDeleteConfirm(null);
+  }
+
+  function handleAddCustomDevice() {
+    if (!customFriendlyName.trim()) return;
+    addCustomMutation.mutate({
+      friendlyName: customFriendlyName.trim(),
+      model: customModel.trim(),
+      description: customDescription.trim(),
+    });
   }
 
   return (
@@ -329,6 +416,117 @@ export function MqttModal() {
             <Spinner size="sm" /> Loading devices...
           </div>
         )}
+
+        {/* Custom Sensors */}
+        <div className="pt-2 border-t border-border space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="font-medium">Custom Sensors</div>
+            {!showAddCustom && (
+              <Button variant="ghost" size="icon-sm" onClick={() => setShowAddCustom(true)}>
+                <Plus size={14} />
+              </Button>
+            )}
+          </div>
+
+          {showAddCustom && (
+            <Card variant="sunken" padding="sm" className="bg-surface-sunken/40 space-y-2">
+              <Input
+                size="sm"
+                inline
+                placeholder="Friendly name (e.g. esp32-outdoor)"
+                value={customFriendlyName}
+                onChange={(e) => setCustomFriendlyName(e.target.value)}
+                autoFocus
+              />
+              <Input
+                size="sm"
+                inline
+                placeholder="Model (e.g. AM2301B + LTR390 + PMSA003I)"
+                value={customModel}
+                onChange={(e) => setCustomModel(e.target.value)}
+              />
+              <Input
+                size="sm"
+                inline
+                placeholder="Description (e.g. Solar outdoor sensor)"
+                value={customDescription}
+                onChange={(e) => setCustomDescription(e.target.value)}
+              />
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowAddCustom(false);
+                    setCustomFriendlyName('');
+                    setCustomModel('');
+                    setCustomDescription('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleAddCustomDevice}
+                  disabled={!customFriendlyName.trim() || addCustomMutation.isPending}
+                >
+                  {addCustomMutation.isPending ? <Spinner size="sm" /> : 'Add'}
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {customDevices.length === 0 && !customLoading && !showAddCustom && (
+            <p className="text-text-muted text-center py-2 text-sm">No custom sensors added.</p>
+          )}
+
+          {customDevices.length > 0 && (
+            <div className="space-y-2">
+              {customDevices.map((device) => (
+                <Card
+                  key={device.friendly_name}
+                  variant="sunken"
+                  padding="sm"
+                  className="bg-surface-sunken/40"
+                >
+                  {customDeleteConfirm === device.friendly_name ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-danger">Remove {device.friendly_name}?</span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="danger"
+                          onClick={() => removeCustomMutation.mutate(device.friendly_name)}
+                          disabled={removeCustomMutation.isPending}
+                        >
+                          {removeCustomMutation.isPending ? <Spinner size="sm" /> : 'Remove'}
+                        </Button>
+                        <Button onClick={() => setCustomDeleteConfirm(null)}>Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium truncate">{device.friendly_name}</div>
+                        <div className="text-xs text-text-muted truncate">
+                          {device.model}
+                          {device.description && ` - ${device.description}`}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setCustomDeleteConfirm(device.friendly_name)}
+                        className="hover:bg-danger/20 text-danger ml-2"
+                        title="Remove"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Zigbee2MQTT UI Link */}
         {zigbeeUrl && (

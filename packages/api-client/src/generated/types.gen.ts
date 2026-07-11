@@ -53,6 +53,26 @@ export type AdGuardRequest = {
 };
 
 /**
+ * AddCustomDeviceRequest
+ *
+ * Add a custom climate sensor.
+ */
+export type AddCustomDeviceRequest = {
+    /**
+     * Friendly Name
+     */
+    friendly_name: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Description
+     */
+    description: string;
+};
+
+/**
  * AddEventRequest
  *
  * Request to add/update a notification event.
@@ -411,6 +431,38 @@ export type CountdownResponse = {
      * Enabled
      */
     enabled: boolean;
+};
+
+/**
+ * CustomDevice
+ *
+ * Non-Zigbee climate sensor, config-defined.
+ */
+export type CustomDevice = {
+    /**
+     * Friendly Name
+     */
+    friendly_name: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Description
+     */
+    description: string;
+};
+
+/**
+ * CustomDeviceListResponse
+ *
+ * List of custom (non-Zigbee) climate sensors.
+ */
+export type CustomDeviceListResponse = {
+    /**
+     * Devices
+     */
+    devices: Array<CustomDevice>;
 };
 
 /**
@@ -935,6 +987,18 @@ export type PingResponse = {
 };
 
 /**
+ * RemoveCustomDeviceRequest
+ *
+ * Remove a custom climate sensor.
+ */
+export type RemoveCustomDeviceRequest = {
+    /**
+     * Friendly Name
+     */
+    friendly_name: string;
+};
+
+/**
  * RemoveRequest
  *
  * Remove device request.
@@ -1132,6 +1196,38 @@ export type SensorReadingResponse = {
      * Age Seconds
      */
     age_seconds: number;
+    /**
+     * Uv Index
+     */
+    uv_index?: number | null;
+    /**
+     * Pm2 5
+     */
+    pm2_5?: number | null;
+    /**
+     * Pm10
+     */
+    pm10?: number | null;
+    /**
+     * Aqi
+     */
+    aqi?: number | null;
+    /**
+     * Battery Pct
+     */
+    battery_pct?: number | null;
+    /**
+     * Battery Voltage
+     */
+    battery_voltage?: number | null;
+    /**
+     * Battery Trend
+     */
+    battery_trend?: 'rising' | 'falling' | 'steady' | null;
+    /**
+     * Battery Current Ma
+     */
+    battery_current_ma?: number | null;
 };
 
 /**
@@ -2620,6 +2716,72 @@ export type SetPermitJoinMqttPermitJoinPostResponses = {
 };
 
 export type SetPermitJoinMqttPermitJoinPostResponse = SetPermitJoinMqttPermitJoinPostResponses[keyof SetPermitJoinMqttPermitJoinPostResponses];
+
+export type ListCustomDevicesMqttCustomDevicesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/mqtt/custom-devices';
+};
+
+export type ListCustomDevicesMqttCustomDevicesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomDeviceListResponse;
+};
+
+export type ListCustomDevicesMqttCustomDevicesGetResponse = ListCustomDevicesMqttCustomDevicesGetResponses[keyof ListCustomDevicesMqttCustomDevicesGetResponses];
+
+export type AddCustomDeviceMqttCustomDevicesPostData = {
+    body: AddCustomDeviceRequest;
+    path?: never;
+    query?: never;
+    url: '/mqtt/custom-devices';
+};
+
+export type AddCustomDeviceMqttCustomDevicesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddCustomDeviceMqttCustomDevicesPostError = AddCustomDeviceMqttCustomDevicesPostErrors[keyof AddCustomDeviceMqttCustomDevicesPostErrors];
+
+export type AddCustomDeviceMqttCustomDevicesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomDeviceListResponse;
+};
+
+export type AddCustomDeviceMqttCustomDevicesPostResponse = AddCustomDeviceMqttCustomDevicesPostResponses[keyof AddCustomDeviceMqttCustomDevicesPostResponses];
+
+export type RemoveCustomDeviceMqttCustomDevicesRemovePostData = {
+    body: RemoveCustomDeviceRequest;
+    path?: never;
+    query?: never;
+    url: '/mqtt/custom-devices/remove';
+};
+
+export type RemoveCustomDeviceMqttCustomDevicesRemovePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveCustomDeviceMqttCustomDevicesRemovePostError = RemoveCustomDeviceMqttCustomDevicesRemovePostErrors[keyof RemoveCustomDeviceMqttCustomDevicesRemovePostErrors];
+
+export type RemoveCustomDeviceMqttCustomDevicesRemovePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: CustomDeviceListResponse;
+};
+
+export type RemoveCustomDeviceMqttCustomDevicesRemovePostResponse = RemoveCustomDeviceMqttCustomDevicesRemovePostResponses[keyof RemoveCustomDeviceMqttCustomDevicesRemovePostResponses];
 
 export type SendCommandVoiceCommandPostData = {
     body: VoiceCommand;

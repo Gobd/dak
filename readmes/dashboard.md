@@ -102,6 +102,10 @@ Dashboard displays reminder notifications from iframed apps (health-tracker, mai
 
 Connects to `home-relay` (Python/FastAPI) which handles Kasa device control, Zigbee2MQTT sensors, voice processing, config sync, Wake-on-LAN, display brightness, MQTT publishing, and notification management. All processing stays local on your network.
 
+### Home Assistant
+
+Home Assistant Core runs alongside Zigbee2MQTT on the kiosk device (`home-assistant.service`, installed via `dashboard/scripts/deploy.sh`, config at `~/homeassistant/configuration.yaml`, web UI on port 8123). It shares the same local Mosquitto MQTT broker as Zigbee2MQTT, so any device paired in Zigbee2MQTT's UI is auto-discovered in Home Assistant with no extra setup - Zigbee2MQTT owns pairing/radio, Home Assistant owns automations/dashboards.
+
 ## Development
 
 ```bash

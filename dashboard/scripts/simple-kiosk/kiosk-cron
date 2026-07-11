@@ -1,5 +1,8 @@
 WAYLAND_DISPLAY=wayland-0
 XDG_RUNTIME_DIR=/run/user/1000
+# Restart kiosk (frees up memory) shortly before screen on and after screen off
+55 6 * * * pkill -f cage 2>/dev/null
+5 18 * * * pkill -f cage 2>/dev/null
 # Screen on at 7am Tuesday and Thursday (tries CEC → wlr-randr)
 0 7 * * 2,4 echo "on 0" | cec-client -s -d 1 2>/dev/null; /usr/bin/wlr-randr --output HDMI-A-1 --on 2>/dev/null
 # Screen off at 6pm every day (tries CEC → wlr-randr)

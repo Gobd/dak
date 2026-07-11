@@ -190,6 +190,47 @@ if [[ -z "$NO_RESTART" ]]; then
 fi
 
 # =============================================================================
+# HOME ASSISTANT SETUP
+# =============================================================================
+echo "=== Setting up Home Assistant ==="
+
+echo "Installing Home Assistant build dependencies..."
+sudo apt-get install -y \
+  python3-dev \
+  libffi-dev \
+  libssl-dev \
+  libjpeg-dev \
+  zlib1g-dev \
+  autoconf \
+  build-essential \
+  libopenjp2-7 \
+  libtiff6
+
+mkdir -p ~/homeassistant
+~/.local/bin/uv venv ~/homeassistant/.venv --python 3.13
+~/.local/bin/uv pip install --python ~/homeassistant/.venv homeassistant
+
+# Preserve existing Home Assistant config (paired entities, automations, etc.)
+# To start fresh: rm -rf ~/homeassistant/.storage ~/homeassistant/configuration.yaml
+if [ -f ~/homeassistant/configuration.yaml ]; then
+  echo "Preserving existing Home Assistant configuration"
+else
+  cp ~/dashboard/services/home-assistant/configuration.yaml ~/homeassistant/configuration.yaml
+fi
+
+sed "s|__USER__|$USER|g" ~/dashboard/services/home-assistant/home-assistant.service \
+  | sudo tee /etc/systemd/system/home-assistant.service > /dev/null
+
+sudo systemctl daemon-reload
+sudo systemctl enable home-assistant
+if [[ -z "$NO_RESTART" ]]; then
+  sudo systemctl restart --no-block home-assistant
+  echo "Home Assistant service installed and restarted"
+else
+  echo "Home Assistant service installed"
+fi
+
+# =============================================================================
 # VOICE CONTROL SETUP
 # =============================================================================
 echo "=== Setting up voice control ==="

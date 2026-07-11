@@ -52,6 +52,7 @@ The Pi will reboot automatically when done. On next boot it will launch Chromium
 - Configures console autologin
 - Launches kiosk on login via `~/.bash_profile`
 - Schedules screen on (7am Tue/Thu) and off (6pm daily) via cron, trying CEC → wlr-randr in order
+- Restarts the kiosk daily (6:55am and 6:05pm) via `pkill -f cage` to guard against memory leaks; console autologin relaunches it automatically
 
 ## Re-running
 

@@ -10,6 +10,10 @@ secrets.local.js
 .env.local
 *.local
 
+# ESPHome secrets and build output
+dashboard/esp32/secrets.yaml
+dashboard/esp32/.esphome
+
 # Build analysis
 stats.html
 package-lock.json
