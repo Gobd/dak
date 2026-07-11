@@ -30,6 +30,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   schedule: lazy(() => import('./Schedule')),
   'iframe-popup': lazy(() => import('./IframePopup')),
   'system-stats': lazy(() => import('./SystemStats')),
+  money: lazy(() => import('./Money')),
 };
 
 // Loading placeholder

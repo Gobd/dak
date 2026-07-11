@@ -721,6 +721,8 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
             'notifications',
             'drive-time',
             'ptt',
+            'mqtt',
+            'system-stats',
           ].includes(panel.widget) && (
             <div className="border-t border-border pt-4">
               <Input

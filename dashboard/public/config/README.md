@@ -69,6 +69,7 @@ Each panel supports:
 | `wol`        | Wake on LAN                | -                                                                               |
 | `brightness` | Auto-brightness settings   | -                                                                               |
 | `iframe`     | Embedded URL               | `src: string` + any other args passed as query params                           |
+| `money`      | Spend tracker vs. budget   | -                                                                               |
 
 ### iframe Widget
 

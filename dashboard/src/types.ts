@@ -19,7 +19,8 @@ export type WidgetType =
   | 'notifications'
   | 'schedule'
   | 'iframe-popup'
-  | 'system-stats';
+  | 'system-stats'
+  | 'money';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -170,6 +171,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
     offsetX: 16,
     offsetY: 16,
   },
+  money: { width: 25, height: 20, refresh: '15m' },
 };
 
 // Screen configuration
