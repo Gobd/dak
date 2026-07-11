@@ -554,9 +554,17 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
           </div>
 
           {/* Only show refresh for widgets that use panel.refresh */}
-          {['weather', 'aqi', 'uv', 'sun-moon', 'climate', 'mqtt', 'adguard', 'iframe'].includes(
-            panel.widget,
-          ) && (
+          {[
+            'weather',
+            'aqi',
+            'uv',
+            'sun-moon',
+            'climate',
+            'mqtt',
+            'adguard',
+            'iframe',
+            'money',
+          ].includes(panel.widget) && (
             <div>
               <label className="block text-sm font-medium mb-2">Refresh Rate</label>
               <select

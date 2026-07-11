@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { Modal, ConfirmModal, Button, Input, Spinner, Badge, Toggle, EmptyState } from '@dak/ui';
 import {
@@ -191,18 +191,20 @@ export default function Money({ panel }: WidgetComponentProps) {
     await Promise.all([refetchTransactions(), refetchSummary()]);
   }
 
+  useEffect(() => {
+    if (!settings) return;
+    setDefaultBudgetInput(String(settings.default_monthly_budget));
+    setOverrideInput(
+      settings.current_month_override != null ? String(settings.current_month_override) : '',
+    );
+    setPaycheckInput(settings.paycheck_strings.join(', '));
+    setThresholdInput(
+      settings.large_deposit_threshold != null ? String(settings.large_deposit_threshold) : '',
+    );
+    setTransferInput(settings.transfer_keywords.join(', '));
+  }, [settings]);
+
   function openSettings() {
-    if (settings) {
-      setDefaultBudgetInput(String(settings.default_monthly_budget));
-      setOverrideInput(
-        settings.current_month_override != null ? String(settings.current_month_override) : '',
-      );
-      setPaycheckInput(settings.paycheck_strings.join(', '));
-      setThresholdInput(
-        settings.large_deposit_threshold != null ? String(settings.large_deposit_threshold) : '',
-      );
-      setTransferInput(settings.transfer_keywords.join(', '));
-    }
     setShowSettings(true);
   }
 

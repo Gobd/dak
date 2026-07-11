@@ -156,6 +156,11 @@ def link_accounts(setup_token: str) -> list[dict]:
         )
         conn.commit()
 
+    try:
+        sync_transactions()
+    except Exception:
+        logger.exception("Initial money sync after link failed")
+
     return [
         {
             "id": a["id"],
