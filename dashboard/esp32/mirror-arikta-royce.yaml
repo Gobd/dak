@@ -33,6 +33,38 @@
 # NOTE: B3/fan wiring and the PIR GPIO are pulled but inert until the humidity+PIR fan
 # automation is designed - do not assume they're connected in the config below.
 # ============================================================================
+# CONFIRMED BY MULTIMETER (mobo still connected/powered, back-probed at the LED connector):
+#   Mirror's stock CCT LED strip, 3-wire:
+#     Red    -> shared V+ (steady +24V rail)
+#     White  -> CCT channel 1 (reads ~-24V relative to Red when this channel is driven)
+#     Yellow -> CCT channel 2 (same behavior, mutually exclusive with White)
+#   Warm-vs-cool mapping (which of White/Yellow is WW vs CW) not yet confirmed - TODO
+#   before wiring into the Penta's two PWM channel terminals. Doesn't matter if guessed
+#   wrong at first; swapping which channel is "warm" is a mired-value fix in this YAML,
+#   not a rewiring job.
+#   Penta side: Red -> Penta's shared LED V+ terminal; White/Yellow -> Penta's two CCT
+#   PWM output terminals (terminal numbers TBD - confirm against QuinLED's silkscreen/docs,
+#   still a placeholder in this file, see "Known placeholders" below).
+#
+#   Mirror's touch button harness, 5-wire, NOT YET PROBED (day/night/heater + backlights):
+#     Expected: 1 shared V+, 1 shared GND, 3 independent per-button touch-sense signals
+#     (day, night, heater/defogger) - to confirm, back-probe each of the 5 wires while
+#     tapping each button in turn; the two that stay steady regardless of any button touch
+#     are V+/GND, the three that react only to their own button are the touch-sense lines.
+#   Heater/defogger: separate 3rd button, independent of day/night (can run concurrently
+#   with either). Believed ~120V on the heater element itself, NOT probed - do not probe
+#   that circuit with the same low-voltage technique used above. If confirmed to be a
+#   mains-side load switched via a relay off the mobo's low-voltage logic, only the
+#   relay-trigger signal (low voltage) needs identifying; the 120V side can stay untouched
+#   and wired to the mobo, since it's independent of day/night and doesn't need to move.
+#   Button backlights: dim at rest, brighten on touch, independently per button - likely
+#   driven locally by each button's own touch IC rather than central mobo firmware (common
+#   for touch ICs with a built-in indicator-LED driver pin). If so, backlights keep working
+#   for free as long as that button's local V+/GND stays connected - no new Penta GPIO or
+#   YAML logic needed. To confirm: check whether backlight brightness change is present
+#   even after tracing touch-sense to a wire that goes straight to the mobo's main chip
+#   (central) vs. staying local to a small sub-board right at the button (local).
+# ============================================================================
 
 esphome:
   name: mirror-arikta-royce
@@ -157,6 +189,17 @@ globals:
     type: int
     restore_value: no
     initial_value: '0'
+  # Last non-night brightness/color temp, so the day button's off->on tap restores
+  # wherever day mode was left, not night mode's values (light.turn_on's own
+  # "last state" is night-mode-aware, since night mode calls light.turn_on too).
+  - id: last_day_brightness
+    type: float
+    restore_value: no
+    initial_value: '0.60'
+  - id: last_day_color_temp
+    type: float
+    restore_value: no
+    initial_value: '320'
 
 # Color temps to step through on rapid day-button taps, warm to cool (mireds).
 # Adjust count/values to taste.
@@ -182,10 +225,13 @@ script:
           condition:
             lambda: 'return !id(mirror_light).current_values.is_on();'
           then:
+            # Restore last day-mode brightness/color temp explicitly - can't rely on
+            # light.turn_on's own "last state" here, since night mode also calls
+            # light.turn_on and would leave night's warm/dim values in place.
             - light.turn_on:
                 id: mirror_light
-                brightness: 60%
-                color_temperature: 320 mireds
+                brightness: !lambda 'return id(last_day_brightness);'
+                color_temperature: !lambda 'return id(last_day_color_temp);'
           else:
             - script.execute: cycle_color_temp
 
@@ -198,7 +244,9 @@ script:
           id: mirror_light
           color_temperature: !lambda |-
             static const float steps[] = {153, 250, 320, 500}; // cool -> warm, mireds
-            return steps[id(color_temp_index)];
+            float temp = steps[id(color_temp_index)];
+            id(last_day_color_temp) = temp;
+            return temp;
 
   - id: brightness_ramp
     mode: restart
@@ -226,6 +274,7 @@ script:
                 auto call = id(mirror_light).turn_on();
                 call.set_brightness(current);
                 call.perform();
+                id(last_day_brightness) = current;
             - delay: 100ms
 
 # --- Future: presence (STHS34PF80, at the mirror) + AHT20 humidity (attic), both I2C ---
