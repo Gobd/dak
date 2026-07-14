@@ -62,7 +62,8 @@ def _init_db() -> None:
                 access_url TEXT NOT NULL,
                 linked_account_ids TEXT NOT NULL,
                 linked_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                last_synced_at TEXT
+                last_synced_at TEXT,
+                last_sync_error TEXT
             );
 
             CREATE TABLE IF NOT EXISTS settings (
@@ -102,6 +103,11 @@ def _init_db() -> None:
             INSERT OR IGNORE INTO settings (id, default_monthly_budget) VALUES (1, 0);
         """)
         conn.commit()
+
+        existing_columns = {row["name"] for row in conn.execute("PRAGMA table_info(link)")}
+        if "last_sync_error" not in existing_columns:
+            conn.execute("ALTER TABLE link ADD COLUMN last_sync_error TEXT")
+            conn.commit()
 
 
 # === SimpleFIN link ===
@@ -187,19 +193,52 @@ def _get_link() -> sqlite3.Row | None:
 
 
 def get_linked_accounts() -> list[dict]:
-    """Get info about currently linked accounts (names only, no credentials)."""
+    """Get info about currently linked accounts (names only, no credentials).
+
+    Falls back to cached account names if the live SimpleFIN fetch fails, so a
+    transient outage or auth error degrades to stale data instead of an error.
+    """
     link = _get_link()
     if not link:
         return []
 
-    access_url = link["access_url"]
-    accounts = _fetch_accounts(access_url, start_date=datetime.now() - timedelta(days=1))
+    with closing(_get_db()) as conn:
+        last_posted_by_account = {
+            row["account_id"]: row["last_posted"]
+            for row in conn.execute(
+                "SELECT account_id, MAX(posted) AS last_posted "
+                "FROM transactions_cache GROUP BY account_id"
+            ).fetchall()
+        }
+
+    try:
+        accounts = _fetch_accounts(
+            link["access_url"], start_date=datetime.now() - timedelta(days=1)
+        )
+    except Exception:
+        logger.exception("Failed to fetch live account info, falling back to cache")
+        with closing(_get_db()) as conn:
+            cached_accounts = conn.execute(
+                "SELECT DISTINCT account_id, account_name FROM transactions_cache"
+            ).fetchall()
+        return [
+            {
+                "id": row["account_id"],
+                "name": row["account_name"],
+                "org_name": "Unknown",
+                "currency": "USD",
+                "last_transaction_posted": last_posted_by_account.get(row["account_id"]),
+            }
+            for row in cached_accounts
+        ]
+
     return [
         {
             "id": a["id"],
             "name": a["name"],
             "org_name": a.get("org", {}).get("name", "Unknown"),
             "currency": a.get("currency", "USD"),
+            "last_transaction_posted": last_posted_by_account.get(a["id"]),
         }
         for a in accounts
     ]
@@ -457,17 +496,25 @@ def sync_transactions() -> dict:
     if not link:
         return {"success": False, "error": "No linked accounts"}
 
-    start_date = datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)
-    accounts = _fetch_accounts(link["access_url"], start_date=start_date)
-    new_rows = _upsert_transactions(accounts)
+    try:
+        start_date = datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)
+        accounts = _fetch_accounts(link["access_url"], start_date=start_date)
+        new_rows = _upsert_transactions(accounts)
 
-    if new_rows:
-        _detect_transfers(new_rows)
-        _detect_deposits(new_rows)
+        if new_rows:
+            _detect_transfers(new_rows)
+            _detect_deposits(new_rows)
+    except Exception as exc:
+        logger.exception("Money sync failed")
+        with closing(_get_db()) as conn:
+            conn.execute("UPDATE link SET last_sync_error = ? WHERE id = 1", (str(exc),))
+            conn.commit()
+        return {"success": False, "error": str(exc)}
 
     with closing(_get_db()) as conn:
         conn.execute(
-            "UPDATE link SET last_synced_at = ? WHERE id = 1", (datetime.now().isoformat(),)
+            "UPDATE link SET last_synced_at = ?, last_sync_error = NULL WHERE id = 1",
+            (datetime.now().isoformat(),),
         )
         conn.commit()
 
@@ -500,8 +547,11 @@ def get_spend_summary() -> dict:
         ).fetchone()
         spent_to_date = row["spent"]
 
-        link = conn.execute("SELECT last_synced_at FROM link WHERE id = 1").fetchone()
+        link = conn.execute(
+            "SELECT last_synced_at, last_sync_error FROM link WHERE id = 1"
+        ).fetchone()
         last_synced_at = link["last_synced_at"] if link else None
+        last_sync_error = link["last_sync_error"] if link else None
 
     ghost_to_date = monthly_budget * (day_of_month / days_in_month)
     projected_month_total = (spent_to_date / day_of_month) * days_in_month if day_of_month else 0
@@ -517,6 +567,7 @@ def get_spend_summary() -> dict:
         "projected_month_total": projected_month_total,
         "linked_accounts": get_linked_accounts() if _get_link() else [],
         "last_synced_at": last_synced_at,
+        "last_sync_error": last_sync_error,
     }
 
 

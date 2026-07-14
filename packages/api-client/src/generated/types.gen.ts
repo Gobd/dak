@@ -754,6 +754,10 @@ export type LinkedAccountInfo = {
      * Currency
      */
     currency: string;
+    /**
+     * Last Transaction Posted
+     */
+    last_transaction_posted?: string | null;
 };
 
 /**
@@ -1256,6 +1260,10 @@ export type SpendSummary = {
      * Last Synced At
      */
     last_synced_at: string | null;
+    /**
+     * Last Sync Error
+     */
+    last_sync_error?: string | null;
 };
 
 /**

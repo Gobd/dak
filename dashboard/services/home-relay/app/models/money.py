@@ -18,6 +18,7 @@ class LinkedAccountInfo(BaseModel):
     name: str
     org_name: str
     currency: str
+    last_transaction_posted: str | None = None
 
 
 class BudgetRequest(BaseModel):
@@ -70,6 +71,7 @@ class SpendSummary(BaseModel):
     projected_month_total: float
     linked_accounts: list[LinkedAccountInfo]
     last_synced_at: str | None
+    last_sync_error: str | None = None
 
 
 class TransactionOut(BaseModel):

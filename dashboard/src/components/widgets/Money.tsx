@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Settings } from 'lucide-react';
-import { Modal, ConfirmModal, Button, Input, Spinner, Badge, Toggle, EmptyState } from '@dak/ui';
+import { Modal, ConfirmModal, Button, Input, Spinner, Badge, Toggle, EmptyState, Alert } from '@dak/ui';
 import {
   getSummaryMoneySummaryGet,
   getSettingsMoneySettingsGet,
@@ -37,6 +37,26 @@ function formatMoney(amount: number): string {
     currency: 'USD',
     maximumFractionDigits: 0,
   });
+}
+
+function formatRelativeDate(iso: string): string {
+  const date = new Date(iso);
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysAgo = Math.round(
+    (startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  if (daysAgo <= 0) return 'today';
+  if (daysAgo === 1) return 'yesterday';
+  return `${daysAgo}d ago`;
+}
+
+function formatShortDate(iso: string): string {
+  const date = new Date(iso);
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    options.year = 'numeric';
+  }
+  return date.toLocaleDateString('en-US', options);
 }
 
 interface DonutProps {
@@ -303,6 +323,20 @@ export default function Money({ panel }: WidgetComponentProps) {
     <div className="w-full h-full flex flex-col bg-surface text-text p-3 gap-2">
       <div className="flex items-center justify-end shrink-0">
         <div className="flex items-center gap-1.5">
+          {summary?.last_sync_error && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openSettings();
+              }}
+              title={summary.last_sync_error}
+            >
+              <Badge variant="danger" size="sm">
+                sync error
+              </Badge>
+            </button>
+          )}
           {summary?.is_override && (
             <Badge variant="warning" size="sm">
               adjusted
@@ -361,6 +395,16 @@ export default function Money({ panel }: WidgetComponentProps) {
                     {formatMoney(summary.monthly_budget)} budget
                   </span>
                 </p>
+                <p className="text-text-muted space-x-1.5">
+                  {summary.linked_accounts.map((a) => (
+                    <span key={a.id}>
+                      {a.name}:{' '}
+                      {a.last_transaction_posted
+                        ? formatRelativeDate(a.last_transaction_posted)
+                        : 'no data'}
+                    </span>
+                  ))}
+                </p>
               </div>
             ) : (
               <p
@@ -391,6 +435,9 @@ export default function Money({ panel }: WidgetComponentProps) {
             </div>
           ) : (
             <>
+              {summary?.last_sync_error && (
+                <Alert variant="error">Last sync failed: {summary.last_sync_error}</Alert>
+              )}
               <div>
                 <p className="text-sm font-medium text-text-secondary mb-1">Linked accounts</p>
                 <ul className="text-sm space-y-0.5">
@@ -475,7 +522,8 @@ export default function Money({ panel }: WidgetComponentProps) {
                             )}
                           </p>
                           <p className="text-text-muted">
-                            {txn.account_name} · {formatMoney(txn.amount)}
+                            {formatShortDate(txn.posted)} · {txn.account_name} ·{' '}
+                            {formatMoney(txn.amount)}
                           </p>
                         </div>
                         <Toggle
