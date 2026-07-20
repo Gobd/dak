@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
-import { Modal, ConfirmModal, Button, Input, Spinner, Badge, Toggle, EmptyState, Alert } from '@dak/ui';
+import {
+  Modal,
+  ConfirmModal,
+  Button,
+  Input,
+  Spinner,
+  Badge,
+  Toggle,
+  EmptyState,
+  Alert,
+} from '@dak/ui';
 import {
   getSummaryMoneySummaryGet,
   getSettingsMoneySettingsGet,
@@ -350,7 +360,9 @@ export default function Money({ panel }: WidgetComponentProps) {
   return (
     <div
       className="w-full h-full flex flex-col bg-surface text-text p-3 gap-2"
-      onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+      onTouchStart={(e) => {
+        touchStartX.current = e.touches[0].clientX;
+      }}
       onTouchEnd={(e) => {
         if (touchStartX.current === null) return;
         const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -467,7 +479,9 @@ export default function Money({ panel }: WidgetComponentProps) {
                 className={`text-[11px] text-center shrink-0 ${aheadOfGhost ? 'text-danger' : 'text-success'}`}
               >
                 {daysDelta === 0
-                  ? isCurrentMonth ? 'right on pace' : 'finished on pace'
+                  ? isCurrentMonth
+                    ? 'right on pace'
+                    : 'finished on pace'
                   : `${daysDelta} day${daysDelta === 1 ? '' : 's'} ${aheadOfGhost ? 'ahead of' : 'behind'} pace${isCurrentMonth ? '' : ' at month end'}`}
               </p>
             ))}
