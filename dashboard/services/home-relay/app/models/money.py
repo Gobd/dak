@@ -64,8 +64,10 @@ class SpendSummary(BaseModel):
     monthly_budget: float
     is_override: bool
     month_start: str
+    month_str: str
     days_in_month: int
     day_of_month: int
+    is_current_month: bool
     spent_to_date: float
     ghost_to_date: float
     projected_month_total: float

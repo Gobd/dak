@@ -1233,6 +1233,10 @@ export type SpendSummary = {
      */
     month_start: string;
     /**
+     * Month Str
+     */
+    month_str: string;
+    /**
      * Days In Month
      */
     days_in_month: number;
@@ -1240,6 +1244,10 @@ export type SpendSummary = {
      * Day Of Month
      */
     day_of_month: number;
+    /**
+     * Is Current Month
+     */
+    is_current_month: boolean;
     /**
      * Spent To Date
      */
@@ -3317,9 +3325,25 @@ export type LinkAccountsMoneyLinkPostResponse = LinkAccountsMoneyLinkPostRespons
 export type GetSummaryMoneySummaryGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Month
+         *
+         * YYYY-MM
+         */
+        month?: string | null;
+    };
     url: '/money/summary';
 };
+
+export type GetSummaryMoneySummaryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetSummaryMoneySummaryGetError = GetSummaryMoneySummaryGetErrors[keyof GetSummaryMoneySummaryGetErrors];
 
 export type GetSummaryMoneySummaryGetResponses = {
     /**

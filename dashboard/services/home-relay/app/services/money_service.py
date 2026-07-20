@@ -30,12 +30,18 @@ logger = logging.getLogger(__name__)
 DB_PATH = Path.home() / ".config" / "home-relay" / "money.db"
 
 SYNC_INTERVAL_SECONDS = 4 * 60 * 60  # 4 hours
+MIN_MANUAL_SYNC_INTERVAL_SECONDS = 2 * 60 * 60  # 2 hours — rate-limit "Sync now"
 TRANSACTION_LOOKBACK_DAYS = 45
 TRANSFER_PAIR_WINDOW_DAYS = 3
 TRANSFER_PAIR_AMOUNT_TOLERANCE = 0.01
 
 _scheduler_thread: threading.Thread | None = None
 _scheduler_stop = threading.Event()
+
+# In-memory cache for linked_accounts to avoid a live SimpleFIN call on every summary read.
+_linked_accounts_cache: list[dict] = []
+_linked_accounts_cache_time: datetime | None = None
+_LINKED_ACCOUNTS_CACHE_TTL = timedelta(hours=4)
 
 
 def init() -> None:
@@ -192,15 +198,27 @@ def _get_link() -> sqlite3.Row | None:
         return conn.execute("SELECT * FROM link WHERE id = 1").fetchone()
 
 
-def get_linked_accounts() -> list[dict]:
+def get_linked_accounts(force_refresh: bool = False) -> list[dict]:
     """Get info about currently linked accounts (names only, no credentials).
 
-    Falls back to cached account names if the live SimpleFIN fetch fails, so a
-    transient outage or auth error degrades to stale data instead of an error.
+    Results are cached in memory for 4 hours to avoid a live SimpleFIN call on
+    every summary read. Falls back to the SQLite transaction cache on error.
+    Pass force_refresh=True (e.g. after a sync) to bypass the in-memory cache.
     """
+    global _linked_accounts_cache, _linked_accounts_cache_time
+
     link = _get_link()
     if not link:
         return []
+
+    now = datetime.now()
+    cache_valid = (
+        not force_refresh
+        and _linked_accounts_cache_time is not None
+        and now - _linked_accounts_cache_time < _LINKED_ACCOUNTS_CACHE_TTL
+    )
+    if cache_valid and _linked_accounts_cache:
+        return _linked_accounts_cache
 
     with closing(_get_db()) as conn:
         last_posted_by_account = {
@@ -232,7 +250,7 @@ def get_linked_accounts() -> list[dict]:
             for row in cached_accounts
         ]
 
-    return [
+    result = [
         {
             "id": a["id"],
             "name": a["name"],
@@ -242,6 +260,9 @@ def get_linked_accounts() -> list[dict]:
         }
         for a in accounts
     ]
+    _linked_accounts_cache = result
+    _linked_accounts_cache_time = now
+    return result
 
 
 # === Settings ===
@@ -490,11 +511,27 @@ def _detect_deposits(new_rows: list[dict]) -> None:
         conn.commit()
 
 
-def sync_transactions() -> dict:
-    """Fetch latest transactions from SimpleFIN and run detection on new rows."""
+def sync_transactions(force: bool = False) -> dict:
+    """Fetch latest transactions from SimpleFIN and run detection on new rows.
+
+    Enforces a minimum interval between manual syncs (MIN_MANUAL_SYNC_INTERVAL_SECONDS)
+    to prevent hammering the SimpleFIN API. Pass force=True to bypass (used internally
+    by the scheduler, which already manages its own interval).
+    """
     link = _get_link()
     if not link:
         return {"success": False, "error": "No linked accounts"}
+
+    if not force and link["last_synced_at"]:
+        last_synced = datetime.fromisoformat(link["last_synced_at"])
+        seconds_since = (datetime.now() - last_synced).total_seconds()
+        if seconds_since < MIN_MANUAL_SYNC_INTERVAL_SECONDS:
+            wait_mins = int((MIN_MANUAL_SYNC_INTERVAL_SECONDS - seconds_since) / 60)
+            return {
+                "success": False,
+                "error": f"Synced recently. Next sync available in ~{wait_mins} min.",
+                "rate_limited": True,
+            }
 
     try:
         start_date = datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)
@@ -518,20 +555,38 @@ def sync_transactions() -> dict:
         )
         conn.commit()
 
+    # Bust the linked-accounts cache so the next summary read reflects fresh data.
+    get_linked_accounts(force_refresh=True)
+
     return {"success": True, "new_transactions": len(new_rows)}
 
 
 # === Spend summary ===
 
 
-def get_spend_summary() -> dict:
-    """Compute current month spend vs. ghost pace vs. effective budget."""
+def get_spend_summary(month: str | None = None) -> dict:
+    """Compute spend vs. ghost pace vs. effective budget for a given month.
+
+    month: "YYYY-MM" string. Defaults to the current calendar month.
+    For past months, day_of_month equals days_in_month and ghost_to_date equals
+    the full budget (i.e. the month is complete).
+    """
     settings = _get_settings()
     today = date.today()
-    month_str = today.strftime("%Y-%m")
-    month_start = today.replace(day=1)
-    days_in_month = monthrange(today.year, today.month)[1]
-    day_of_month = today.day
+
+    if month:
+        try:
+            year, mon = int(month[:4]), int(month[5:7])
+            month_date = date(year, mon, 1)
+        except (ValueError, IndexError):
+            month_date = today.replace(day=1)
+    else:
+        month_date = today.replace(day=1)
+
+    month_str = month_date.strftime("%Y-%m")
+    days_in_month = monthrange(month_date.year, month_date.month)[1]
+    is_current_month = month_date.year == today.year and month_date.month == today.month
+    day_of_month = today.day if is_current_month else days_in_month
 
     override = _get_override_for_month(month_str)
     monthly_budget = override if override is not None else settings["default_monthly_budget"]
@@ -541,9 +596,15 @@ def get_spend_summary() -> dict:
             """
             SELECT COALESCE(SUM(-amount), 0) as spent
             FROM transactions_cache
-            WHERE amount < 0 AND excluded = 0 AND posted >= ?
+            WHERE amount < 0 AND excluded = 0
+              AND posted >= ? AND posted < ?
             """,
-            (month_start.isoformat(),),
+            (
+                month_date.isoformat(),
+                date(month_date.year, month_date.month, days_in_month + 1).isoformat()
+                if month_date.month < 12
+                else date(month_date.year + 1, 1, 1).isoformat(),
+            ),
         ).fetchone()
         spent_to_date = row["spent"]
 
@@ -559,9 +620,11 @@ def get_spend_summary() -> dict:
     return {
         "monthly_budget": monthly_budget,
         "is_override": override is not None,
-        "month_start": month_start.isoformat(),
+        "month_start": month_date.isoformat(),
+        "month_str": month_str,
         "days_in_month": days_in_month,
         "day_of_month": day_of_month,
+        "is_current_month": is_current_month,
         "spent_to_date": spent_to_date,
         "ghost_to_date": ghost_to_date,
         "projected_month_total": projected_month_total,
@@ -622,7 +685,7 @@ def _scheduler_loop() -> None:
     while not _scheduler_stop.is_set():
         try:
             if _get_link():
-                sync_transactions()
+                sync_transactions(force=True)
         except Exception:
             logger.exception("Money sync error")
         _scheduler_stop.wait(SYNC_INTERVAL_SECONDS)
