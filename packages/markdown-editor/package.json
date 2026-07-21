@@ -18,7 +18,7 @@
     "@lexical/react": "^0.45.0",
     "@lexical/rich-text": "^0.45.0",
     "@lexical/selection": "^0.45.0",
-    "lexical": "^0.45.0"
+    "lexical": "^0.48.0"
   },
   "devDependencies": {
     "@types/react": "catalog:",
