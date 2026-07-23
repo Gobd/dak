@@ -107,5 +107,14 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
     return () => {
       unsubscribe();
     };
-  }, [userId, enabled, fetchNotes, fetchTrashedNotes, fetchTags, selectNote, refreshNote, refreshData]);
+  }, [
+    userId,
+    enabled,
+    fetchNotes,
+    fetchTrashedNotes,
+    fetchTags,
+    selectNote,
+    refreshNote,
+    refreshData,
+  ]);
 }
