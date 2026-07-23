@@ -15,6 +15,7 @@ import type { PostgresChangeEvent } from '@dak/ui';
 export function useRealtimeSync(userId: string | undefined, enabled: boolean = true) {
   const fetchNotes = useNotesStore((s) => s.fetchNotes);
   const fetchTrashedNotes = useNotesStore((s) => s.fetchTrashedNotes);
+  const refreshNote = useNotesStore((s) => s.refreshNote);
   const selectNote = useNotesStore((s) => s.selectNote);
   const fetchTags = useTagsStore((s) => s.fetchTags);
 
@@ -46,27 +47,20 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
       if (event.type === 'postgres_change') {
         switch (event.table) {
           case 'notes':
-            // A note I own changed - refresh notes list
-            fetchNotes(userId).then(() => {
-              // If viewing a note and it's not our own pending edit, refresh editor
-              const noteId = currentNoteIdRef.current;
-              if (noteId && !hasPendingEdit(noteId)) {
-                selectNote(noteId);
-              }
-            });
             if (event.eventType === 'DELETE') {
+              // Note permanently deleted — remove from list and refresh trash
+              fetchNotes(userId);
               fetchTrashedNotes(userId);
+            } else if (event.record?.id) {
+              // Single note changed — upsert it without fetching the whole list
+              refreshNote(event.record.id as string);
+            } else {
+              fetchNotes(userId);
             }
             break;
           case 'note_access':
-            // A shared note changed (via propagate_note_update_to_access trigger)
-            // or sharing changed - refresh notes and current note if viewing
-            fetchNotes(userId).then(() => {
-              const noteId = currentNoteIdRef.current;
-              if (noteId && !hasPendingEdit(noteId)) {
-                selectNote(noteId);
-              }
-            });
+            // Sharing changed — need full list refresh (shared set may have changed)
+            fetchNotes(userId);
             break;
           case 'tags':
             fetchTags(userId);
@@ -80,8 +74,8 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
       // Handle broadcast events (from shared notes)
       switch (event.type) {
         case 'note_changed':
-          // Refetch list, and if viewing this note, refresh editor
-          fetchNotes(userId).then(() => {
+          // Single note changed on another device — upsert just that note
+          refreshNote(event.noteId).then(() => {
             if (currentNoteIdRef.current === event.noteId && !hasPendingEdit(event.noteId)) {
               selectNote(event.noteId);
             }
@@ -113,5 +107,5 @@ export function useRealtimeSync(userId: string | undefined, enabled: boolean = t
     return () => {
       unsubscribe();
     };
-  }, [userId, enabled, fetchNotes, fetchTrashedNotes, fetchTags, selectNote, refreshData]);
+  }, [userId, enabled, fetchNotes, fetchTrashedNotes, fetchTags, selectNote, refreshNote, refreshData]);
 }

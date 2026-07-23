@@ -36,6 +36,7 @@ interface NotesStore {
 
   fetchNotes: (userId: string) => Promise<void>;
   fetchTrashedNotes: (userId: string) => Promise<void>;
+  refreshNote: (id: string) => Promise<void>;
   createNote: (userId: string, isPrivate?: boolean) => Promise<Note>;
   updateNote: (id: string, updates: NoteUpdate) => Promise<void>;
   trashNote: (id: string, userId: string) => Promise<void>;
@@ -81,6 +82,29 @@ export const useNotesStore = create<NotesStore>((set, get) => ({
       set({ trashedNotes, isLoading: false });
     } catch (err) {
       set({ error: getErrorMessage(err), isLoading: false });
+    }
+  },
+
+  // Fetch a single note by id and upsert into the list — avoids a full re-fetch
+  // when only one note changed on another device.
+  refreshNote: async (id: string) => {
+    try {
+      const note = await notesApi.getById(id);
+      if (!note) return;
+      set((state) => {
+        const exists = state.notes.some((n) => n.id === id);
+        const notes = exists
+          ? state.notes.map((n) => (n.id === id ? note : n))
+          : [note, ...state.notes];
+        notes.sort((a, b) => {
+          if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        });
+        const currentNote = state.currentNote?.id === id ? note : state.currentNote;
+        return { notes, currentNote };
+      });
+    } catch {
+      // Ignore — note may have been deleted
     }
   },
 

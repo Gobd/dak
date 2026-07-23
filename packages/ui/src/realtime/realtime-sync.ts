@@ -32,7 +32,7 @@ export interface PostgresChangeEvent {
 }
 
 // Polling interval as fallback (5 minutes)
-const POLLING_INTERVAL_MS = 5 * 60 * 1000;
+const POLLING_INTERVAL_MS = 30 * 60 * 1000;
 
 // Debounce delay for event handling (prevents rapid-fire fetches)
 const DEBOUNCE_MS = 1000;
