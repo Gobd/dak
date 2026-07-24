@@ -70,8 +70,13 @@ function formatMoney(amount: number): string {
   });
 }
 
+function parseLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function formatRelativeDate(iso: string): string {
-  const date = new Date(iso);
+  const date = parseLocalDate(iso);
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const daysAgo = Math.round(
     (startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / (1000 * 60 * 60 * 24),
@@ -82,7 +87,7 @@ function formatRelativeDate(iso: string): string {
 }
 
 function formatShortDate(iso: string): string {
-  const date = new Date(iso);
+  const date = parseLocalDate(iso);
   const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   if (date.getFullYear() !== new Date().getFullYear()) {
     options.year = 'numeric';
@@ -97,11 +102,11 @@ interface DonutProps {
 }
 
 function SpendDonut({ spent, ghost, budget }: DonutProps) {
-  const spentFraction = budget > 0 ? Math.min(spent / budget, 1) : 0;
+  const spentFraction = budget > 0 ? spent / budget : 0;
   const ghostFraction = budget > 0 ? Math.min(ghost / budget, 1) : 0;
   const isAhead = spent > ghost;
 
-  const spentOffset = CIRCUMFERENCE * (1 - spentFraction);
+  const spentOffset = CIRCUMFERENCE * (1 - Math.min(spentFraction, 1));
   const ghostAngle = ghostFraction * 360 - 90;
   const ghostX = 90 + RADIUS * Math.cos((ghostAngle * Math.PI) / 180);
   const ghostY = 90 + RADIUS * Math.sin((ghostAngle * Math.PI) / 180);
