@@ -71,7 +71,7 @@ function formatMoney(amount: number): string {
 }
 
 function parseLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
@@ -597,7 +597,7 @@ export default function Money({ panel }: WidgetComponentProps) {
                             )}
                           </p>
                           <p className="text-text-muted">
-                            {formatShortDate(txn.posted)} · {txn.account_name} ·{' '}
+                            {txn.posted ? formatShortDate(txn.posted) : '—'} · {txn.account_name} ·{' '}
                             {formatMoney(txn.amount)}
                           </p>
                         </div>
