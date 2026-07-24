@@ -1,6 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Settings } from 'lucide-react';
-import { Modal, ConfirmModal, Button, Input, Spinner, Badge, Toggle, EmptyState } from '@dak/ui';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import {
+  Modal,
+  ConfirmModal,
+  Button,
+  Input,
+  Spinner,
+  Badge,
+  Toggle,
+  EmptyState,
+  Alert,
+} from '@dak/ui';
 import {
   getSummaryMoneySummaryGet,
   getSettingsMoneySettingsGet,
@@ -31,12 +41,53 @@ function currentMonthStr(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
+function monthLabel(monthStr: string): string {
+  const [year, mon] = monthStr.split('-').map(Number);
+  const d = new Date(year, mon - 1, 1);
+  const now = new Date();
+  if (year === now.getFullYear() && mon - 1 === now.getMonth()) return 'This month';
+  if (year === now.getFullYear()) return d.toLocaleString('en-US', { month: 'long' });
+  return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function prevMonth(monthStr: string): string {
+  const [year, mon] = monthStr.split('-').map(Number);
+  const d = new Date(year, mon - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function nextMonth(monthStr: string): string {
+  const [year, mon] = monthStr.split('-').map(Number);
+  const d = new Date(year, mon, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function formatMoney(amount: number): string {
   return amount.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
   });
+}
+
+function formatRelativeDate(iso: string): string {
+  const date = new Date(iso);
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysAgo = Math.round(
+    (startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  if (daysAgo <= 0) return 'today';
+  if (daysAgo === 1) return 'yesterday';
+  return `${daysAgo}d ago`;
+}
+
+function formatShortDate(iso: string): string {
+  const date = new Date(iso);
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    options.year = 'numeric';
+  }
+  return date.toLocaleDateString('en-US', options);
 }
 
 interface DonutProps {
@@ -111,6 +162,10 @@ export default function Money({ panel }: WidgetComponentProps) {
   const [setupToken, setSetupToken] = useState('');
   const [linkError, setLinkError] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
+  const [viewMonth, setViewMonth] = useState(currentMonthStr());
+  const touchStartX = useRef<number | null>(null);
+
+  const isCurrentMonth = viewMonth === currentMonthStr();
 
   const [defaultBudgetInput, setDefaultBudgetInput] = useState('');
   const [overrideInput, setOverrideInput] = useState('');
@@ -123,12 +178,15 @@ export default function Money({ panel }: WidgetComponentProps) {
     isLoading,
     refetch: refetchSummary,
   } = useWidgetQuery<SpendSummary>(
-    ['money-summary'],
+    ['money-summary', viewMonth],
     async () => {
-      const { data } = await getSummaryMoneySummaryGet({ baseUrl: getRelayUrl() });
+      const { data } = await getSummaryMoneySummaryGet({
+        baseUrl: getRelayUrl(),
+        query: isCurrentMonth ? undefined : { month: viewMonth },
+      });
       return data as SpendSummary;
     },
-    { refresh: panel.refresh ?? '15m' },
+    { refresh: isCurrentMonth ? (panel.refresh ?? '15m') : undefined },
   );
 
   const { data: settings, refetch: refetchSettings } = useWidgetQuery<MoneySettings>(
@@ -300,9 +358,53 @@ export default function Money({ panel }: WidgetComponentProps) {
   const daysDelta = dailyRate > 0 ? Math.round(Math.abs(diff) / dailyRate) : 0;
 
   return (
-    <div className="w-full h-full flex flex-col bg-surface text-text p-3 gap-2">
-      <div className="flex items-center justify-end shrink-0">
+    <div
+      className="w-full h-full flex flex-col bg-surface text-text p-3 gap-2"
+      onTouchStart={(e) => {
+        touchStartX.current = e.touches[0].clientX;
+      }}
+      onTouchEnd={(e) => {
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        touchStartX.current = null;
+        if (Math.abs(dx) < 40) return;
+        if (dx < 0) setViewMonth((m) => nextMonth(m));
+        else setViewMonth((m) => prevMonth(m));
+      }}
+    >
+      <div className="flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setViewMonth((m) => prevMonth(m))}
+            className="opacity-50 hover:opacity-100 p-0.5"
+          >
+            <ChevronLeft size={13} />
+          </button>
+          <span className="text-[11px] text-text-muted">{monthLabel(viewMonth)}</span>
+          <button
+            type="button"
+            onClick={() => setViewMonth((m) => nextMonth(m))}
+            className={`p-0.5 ${isCurrentMonth ? 'opacity-20 pointer-events-none' : 'opacity-50 hover:opacity-100'}`}
+          >
+            <ChevronRight size={13} />
+          </button>
+        </div>
         <div className="flex items-center gap-1.5">
+          {summary?.last_sync_error && isCurrentMonth && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openSettings();
+              }}
+              title={summary.last_sync_error}
+            >
+              <Badge variant="danger" size="sm">
+                sync error
+              </Badge>
+            </button>
+          )}
           {summary?.is_override && (
             <Badge variant="warning" size="sm">
               adjusted
@@ -361,14 +463,26 @@ export default function Money({ panel }: WidgetComponentProps) {
                     {formatMoney(summary.monthly_budget)} budget
                   </span>
                 </p>
+                <p className="text-text-muted space-x-1.5">
+                  {summary.linked_accounts.map((a) => (
+                    <span key={a.id}>
+                      {a.name}:{' '}
+                      {a.last_transaction_posted
+                        ? formatRelativeDate(a.last_transaction_posted)
+                        : 'no data'}
+                    </span>
+                  ))}
+                </p>
               </div>
             ) : (
               <p
                 className={`text-[11px] text-center shrink-0 ${aheadOfGhost ? 'text-danger' : 'text-success'}`}
               >
                 {daysDelta === 0
-                  ? 'right on pace'
-                  : `${daysDelta} day${daysDelta === 1 ? '' : 's'} ${aheadOfGhost ? 'ahead of' : 'behind'} pace`}
+                  ? isCurrentMonth
+                    ? 'right on pace'
+                    : 'finished on pace'
+                  : `${daysDelta} day${daysDelta === 1 ? '' : 's'} ${aheadOfGhost ? 'ahead of' : 'behind'} pace${isCurrentMonth ? '' : ' at month end'}`}
               </p>
             ))}
         </button>
@@ -391,6 +505,9 @@ export default function Money({ panel }: WidgetComponentProps) {
             </div>
           ) : (
             <>
+              {summary?.last_sync_error && (
+                <Alert variant="error">Last sync failed: {summary.last_sync_error}</Alert>
+              )}
               <div>
                 <p className="text-sm font-medium text-text-secondary mb-1">Linked accounts</p>
                 <ul className="text-sm space-y-0.5">
@@ -475,7 +592,8 @@ export default function Money({ panel }: WidgetComponentProps) {
                             )}
                           </p>
                           <p className="text-text-muted">
-                            {txn.account_name} · {formatMoney(txn.amount)}
+                            {formatShortDate(txn.posted)} · {txn.account_name} ·{' '}
+                            {formatMoney(txn.amount)}
                           </p>
                         </div>
                         <Toggle

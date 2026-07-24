@@ -18,6 +18,7 @@ class LinkedAccountInfo(BaseModel):
     name: str
     org_name: str
     currency: str
+    last_transaction_posted: str | None = None
 
 
 class BudgetRequest(BaseModel):
@@ -63,13 +64,16 @@ class SpendSummary(BaseModel):
     monthly_budget: float
     is_override: bool
     month_start: str
+    month_str: str
     days_in_month: int
     day_of_month: int
+    is_current_month: bool
     spent_to_date: float
     ghost_to_date: float
     projected_month_total: float
     linked_accounts: list[LinkedAccountInfo]
     last_synced_at: str | None
+    last_sync_error: str | None = None
 
 
 class TransactionOut(BaseModel):

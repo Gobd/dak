@@ -30,12 +30,18 @@ logger = logging.getLogger(__name__)
 DB_PATH = Path.home() / ".config" / "home-relay" / "money.db"
 
 SYNC_INTERVAL_SECONDS = 4 * 60 * 60  # 4 hours
+MIN_MANUAL_SYNC_INTERVAL_SECONDS = 2 * 60 * 60  # 2 hours — rate-limit "Sync now"
 TRANSACTION_LOOKBACK_DAYS = 45
 TRANSFER_PAIR_WINDOW_DAYS = 3
 TRANSFER_PAIR_AMOUNT_TOLERANCE = 0.01
 
 _scheduler_thread: threading.Thread | None = None
 _scheduler_stop = threading.Event()
+
+# In-memory cache for linked_accounts to avoid a live SimpleFIN call on every summary read.
+_linked_accounts_cache: list[dict] = []
+_linked_accounts_cache_time: datetime | None = None
+_LINKED_ACCOUNTS_CACHE_TTL = timedelta(hours=4)
 
 
 def init() -> None:
@@ -62,7 +68,8 @@ def _init_db() -> None:
                 access_url TEXT NOT NULL,
                 linked_account_ids TEXT NOT NULL,
                 linked_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                last_synced_at TEXT
+                last_synced_at TEXT,
+                last_sync_error TEXT
             );
 
             CREATE TABLE IF NOT EXISTS settings (
@@ -102,6 +109,11 @@ def _init_db() -> None:
             INSERT OR IGNORE INTO settings (id, default_monthly_budget) VALUES (1, 0);
         """)
         conn.commit()
+
+        existing_columns = {row["name"] for row in conn.execute("PRAGMA table_info(link)")}
+        if "last_sync_error" not in existing_columns:
+            conn.execute("ALTER TABLE link ADD COLUMN last_sync_error TEXT")
+            conn.commit()
 
 
 # === SimpleFIN link ===
@@ -186,23 +198,71 @@ def _get_link() -> sqlite3.Row | None:
         return conn.execute("SELECT * FROM link WHERE id = 1").fetchone()
 
 
-def get_linked_accounts() -> list[dict]:
-    """Get info about currently linked accounts (names only, no credentials)."""
+def get_linked_accounts(force_refresh: bool = False) -> list[dict]:
+    """Get info about currently linked accounts (names only, no credentials).
+
+    Results are cached in memory for 4 hours to avoid a live SimpleFIN call on
+    every summary read. Falls back to the SQLite transaction cache on error.
+    Pass force_refresh=True (e.g. after a sync) to bypass the in-memory cache.
+    """
+    global _linked_accounts_cache, _linked_accounts_cache_time
+
     link = _get_link()
     if not link:
         return []
 
-    access_url = link["access_url"]
-    accounts = _fetch_accounts(access_url, start_date=datetime.now() - timedelta(days=1))
-    return [
+    now = datetime.now()
+    cache_valid = (
+        not force_refresh
+        and _linked_accounts_cache_time is not None
+        and now - _linked_accounts_cache_time < _LINKED_ACCOUNTS_CACHE_TTL
+    )
+    if cache_valid and _linked_accounts_cache:
+        return _linked_accounts_cache
+
+    with closing(_get_db()) as conn:
+        last_posted_by_account = {
+            row["account_id"]: row["last_posted"]
+            for row in conn.execute(
+                "SELECT account_id, MAX(posted) AS last_posted "
+                "FROM transactions_cache GROUP BY account_id"
+            ).fetchall()
+        }
+
+    try:
+        accounts = _fetch_accounts(
+            link["access_url"], start_date=datetime.now() - timedelta(days=1)
+        )
+    except Exception:
+        logger.exception("Failed to fetch live account info, falling back to cache")
+        with closing(_get_db()) as conn:
+            cached_accounts = conn.execute(
+                "SELECT DISTINCT account_id, account_name FROM transactions_cache"
+            ).fetchall()
+        return [
+            {
+                "id": row["account_id"],
+                "name": row["account_name"],
+                "org_name": "Unknown",
+                "currency": "USD",
+                "last_transaction_posted": last_posted_by_account.get(row["account_id"]),
+            }
+            for row in cached_accounts
+        ]
+
+    result = [
         {
             "id": a["id"],
             "name": a["name"],
             "org_name": a.get("org", {}).get("name", "Unknown"),
             "currency": a.get("currency", "USD"),
+            "last_transaction_posted": last_posted_by_account.get(a["id"]),
         }
         for a in accounts
     ]
+    _linked_accounts_cache = result
+    _linked_accounts_cache_time = now
+    return result
 
 
 # === Settings ===
@@ -451,25 +511,52 @@ def _detect_deposits(new_rows: list[dict]) -> None:
         conn.commit()
 
 
-def sync_transactions() -> dict:
-    """Fetch latest transactions from SimpleFIN and run detection on new rows."""
+def sync_transactions(force: bool = False) -> dict:
+    """Fetch latest transactions from SimpleFIN and run detection on new rows.
+
+    Enforces a minimum interval between manual syncs (MIN_MANUAL_SYNC_INTERVAL_SECONDS)
+    to prevent hammering the SimpleFIN API. Pass force=True to bypass (used internally
+    by the scheduler, which already manages its own interval).
+    """
     link = _get_link()
     if not link:
         return {"success": False, "error": "No linked accounts"}
 
-    start_date = datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)
-    accounts = _fetch_accounts(link["access_url"], start_date=start_date)
-    new_rows = _upsert_transactions(accounts)
+    if not force and link["last_synced_at"]:
+        last_synced = datetime.fromisoformat(link["last_synced_at"])
+        seconds_since = (datetime.now() - last_synced).total_seconds()
+        if seconds_since < MIN_MANUAL_SYNC_INTERVAL_SECONDS:
+            wait_mins = int((MIN_MANUAL_SYNC_INTERVAL_SECONDS - seconds_since) / 60)
+            return {
+                "success": False,
+                "error": f"Synced recently. Next sync available in ~{wait_mins} min.",
+                "rate_limited": True,
+            }
 
-    if new_rows:
-        _detect_transfers(new_rows)
-        _detect_deposits(new_rows)
+    try:
+        start_date = datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)
+        accounts = _fetch_accounts(link["access_url"], start_date=start_date)
+        new_rows = _upsert_transactions(accounts)
+
+        if new_rows:
+            _detect_transfers(new_rows)
+            _detect_deposits(new_rows)
+    except Exception as exc:
+        logger.exception("Money sync failed")
+        with closing(_get_db()) as conn:
+            conn.execute("UPDATE link SET last_sync_error = ? WHERE id = 1", (str(exc),))
+            conn.commit()
+        return {"success": False, "error": str(exc)}
 
     with closing(_get_db()) as conn:
         conn.execute(
-            "UPDATE link SET last_synced_at = ? WHERE id = 1", (datetime.now().isoformat(),)
+            "UPDATE link SET last_synced_at = ?, last_sync_error = NULL WHERE id = 1",
+            (datetime.now().isoformat(),),
         )
         conn.commit()
+
+    # Bust the linked-accounts cache so the next summary read reflects fresh data.
+    get_linked_accounts(force_refresh=True)
 
     return {"success": True, "new_transactions": len(new_rows)}
 
@@ -477,14 +564,29 @@ def sync_transactions() -> dict:
 # === Spend summary ===
 
 
-def get_spend_summary() -> dict:
-    """Compute current month spend vs. ghost pace vs. effective budget."""
+def get_spend_summary(month: str | None = None) -> dict:
+    """Compute spend vs. ghost pace vs. effective budget for a given month.
+
+    month: "YYYY-MM" string. Defaults to the current calendar month.
+    For past months, day_of_month equals days_in_month and ghost_to_date equals
+    the full budget (i.e. the month is complete).
+    """
     settings = _get_settings()
     today = date.today()
-    month_str = today.strftime("%Y-%m")
-    month_start = today.replace(day=1)
-    days_in_month = monthrange(today.year, today.month)[1]
-    day_of_month = today.day
+
+    if month:
+        try:
+            year, mon = int(month[:4]), int(month[5:7])
+            month_date = date(year, mon, 1)
+        except (ValueError, IndexError):
+            month_date = today.replace(day=1)
+    else:
+        month_date = today.replace(day=1)
+
+    month_str = month_date.strftime("%Y-%m")
+    days_in_month = monthrange(month_date.year, month_date.month)[1]
+    is_current_month = month_date.year == today.year and month_date.month == today.month
+    day_of_month = today.day if is_current_month else days_in_month
 
     override = _get_override_for_month(month_str)
     monthly_budget = override if override is not None else settings["default_monthly_budget"]
@@ -494,14 +596,23 @@ def get_spend_summary() -> dict:
             """
             SELECT COALESCE(SUM(-amount), 0) as spent
             FROM transactions_cache
-            WHERE amount < 0 AND excluded = 0 AND posted >= ?
+            WHERE amount < 0 AND excluded = 0
+              AND posted >= ? AND posted < ?
             """,
-            (month_start.isoformat(),),
+            (
+                month_date.isoformat(),
+                date(month_date.year, month_date.month, days_in_month + 1).isoformat()
+                if month_date.month < 12
+                else date(month_date.year + 1, 1, 1).isoformat(),
+            ),
         ).fetchone()
         spent_to_date = row["spent"]
 
-        link = conn.execute("SELECT last_synced_at FROM link WHERE id = 1").fetchone()
+        link = conn.execute(
+            "SELECT last_synced_at, last_sync_error FROM link WHERE id = 1"
+        ).fetchone()
         last_synced_at = link["last_synced_at"] if link else None
+        last_sync_error = link["last_sync_error"] if link else None
 
     ghost_to_date = monthly_budget * (day_of_month / days_in_month)
     projected_month_total = (spent_to_date / day_of_month) * days_in_month if day_of_month else 0
@@ -509,14 +620,17 @@ def get_spend_summary() -> dict:
     return {
         "monthly_budget": monthly_budget,
         "is_override": override is not None,
-        "month_start": month_start.isoformat(),
+        "month_start": month_date.isoformat(),
+        "month_str": month_str,
         "days_in_month": days_in_month,
         "day_of_month": day_of_month,
+        "is_current_month": is_current_month,
         "spent_to_date": spent_to_date,
         "ghost_to_date": ghost_to_date,
         "projected_month_total": projected_month_total,
         "linked_accounts": get_linked_accounts() if _get_link() else [],
         "last_synced_at": last_synced_at,
+        "last_sync_error": last_sync_error,
     }
 
 
@@ -571,7 +685,7 @@ def _scheduler_loop() -> None:
     while not _scheduler_stop.is_set():
         try:
             if _get_link():
-                sync_transactions()
+                sync_transactions(force=True)
         except Exception:
             logger.exception("Money sync error")
         _scheduler_stop.wait(SYNC_INTERVAL_SECONDS)

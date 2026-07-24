@@ -1,6 +1,6 @@
 """Money/spend-tracking endpoints: SimpleFIN link, budget, sync, transactions."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.models.money import (
     BudgetRequest,
@@ -36,9 +36,9 @@ async def unlink():
 
 
 @router.get("/summary", response_model=SpendSummary)
-async def get_summary():
-    """Get current month spend vs. ghost pace vs. effective budget."""
-    return money_service.get_spend_summary()
+async def get_summary(month: str | None = Query(default=None, description="YYYY-MM")):
+    """Get spend vs. ghost pace vs. budget for a month (defaults to current)."""
+    return money_service.get_spend_summary(month=month)
 
 
 @router.get("/settings", response_model=MoneySettings)
@@ -93,6 +93,6 @@ async def set_transfer_keywords(request: TransferSettingsRequest):
 
 @router.post("/sync", response_model=GenericSuccess)
 async def sync_now():
-    """Manually trigger a SimpleFIN transaction sync."""
-    result = money_service.sync_transactions()
+    """Manually trigger a SimpleFIN transaction sync (rate-limited to once per 2 hours)."""
+    result = money_service.sync_transactions(force=False)
     return {"success": result["success"], "data": result}
