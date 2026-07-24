@@ -601,9 +601,11 @@ def get_spend_summary(month: str | None = None) -> dict:
             """,
             (
                 month_date.isoformat(),
-                date(month_date.year, month_date.month, days_in_month + 1).isoformat()
-                if month_date.month < 12
-                else date(month_date.year + 1, 1, 1).isoformat(),
+                date(
+                    month_date.year + (1 if month_date.month == 12 else 0),
+                    1 if month_date.month == 12 else month_date.month + 1,
+                    1,
+                ).isoformat(),
             ),
         ).fetchone()
         spent_to_date = row["spent"]
