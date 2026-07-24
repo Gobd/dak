@@ -365,7 +365,7 @@ export function Dashboard() {
     }
 
     return (
-      <div className="flex flex-col min-h-screen relative bg-surface">
+      <div className="flex flex-col h-screen overflow-hidden relative bg-surface">
         {/* Backdrop to close menus when tapping outside */}
         {(showMobileMenu.value || showSortMenu.value || showCreateMenu.value) && (
           <div
