@@ -29,6 +29,7 @@ export interface PostgresChangeEvent {
   type: 'postgres_change';
   table: string;
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  record?: Record<string, unknown>;
 }
 
 // Polling interval as fallback (5 minutes)
@@ -438,6 +439,10 @@ export class RealtimeSync<TEvent> {
             type: 'postgres_change',
             table: tableConfig.table,
             eventType: payload.eventType,
+            ...(payload.new &&
+              Object.keys(payload.new).length > 0 && {
+                record: payload.new as Record<string, unknown>,
+              }),
           } as PostgresChangeEvent);
         },
       );
