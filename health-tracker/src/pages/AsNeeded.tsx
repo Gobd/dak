@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useInterval } from '@dak/hooks';
 import { usePeopleStore } from '../stores/people-store';
 import { usePrnStore } from '../stores/prn-store';
@@ -31,8 +31,8 @@ import {
 } from 'date-fns';
 
 export function AsNeeded() {
-  const { people, fetchPeople } = usePeopleStore();
-  const { meds, logs, fetchMeds, addMed, deleteMed, giveMed, undoLastDose } = usePrnStore();
+  const { people } = usePeopleStore();
+  const { meds, logs, addMed, deleteMed, giveMed, undoLastDose } = usePrnStore();
   const { showToast } = useToastStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedPersons, setExpandedPersons] = useState<Set<string>>(new Set());
@@ -57,11 +57,6 @@ export function AsNeeded() {
   const [personId, setPersonId] = useState('');
   const [name, setName] = useState('');
   const [minHours, setMinHours] = useState(6);
-
-  useEffect(() => {
-    fetchPeople();
-    fetchMeds();
-  }, [fetchPeople, fetchMeds]);
 
   // Force re-render for relative timestamps
   const [, setTick] = useState(0);

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useToggle } from '@dak/hooks';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
@@ -17,11 +17,10 @@ import { Plus, Syringe, ChevronRight, ChevronLeft, History, Trash2 } from 'lucid
 import { format } from 'date-fns';
 
 export function Shots() {
-  const { people, fetchPeople } = usePeopleStore();
+  const { people } = usePeopleStore();
   const {
     schedules,
     logs,
-    fetchSchedules,
     fetchLogs,
     addSchedule,
     logShot,
@@ -49,11 +48,6 @@ export function Shots() {
   const [logNotes, setLogNotes] = useState('');
   const [logTime, setLogTime] = useState<Date | null>(null);
   const useCustomTime = useToggle(false);
-
-  useEffect(() => {
-    fetchPeople();
-    fetchSchedules();
-  }, [fetchPeople, fetchSchedules]);
 
   const handleAddSchedule = async (e: React.FormEvent) => {
     e.preventDefault();

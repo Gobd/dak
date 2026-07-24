@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePeopleStore } from '../stores/people-store';
 import { useShotsStore } from '../stores/shots-store';
@@ -17,17 +16,10 @@ import { Syringe, Pill, AlertCircle, CheckCircle2, Clock, Check } from 'lucide-r
 import { Card } from '@dak/ui';
 
 export function Home() {
-  const { people, fetchPeople } = usePeopleStore();
-  const { schedules, fetchSchedules } = useShotsStore();
-  const { courses, doses, fetchCourses } = useMedicineStore();
-  const { meds: prnMeds, logs: prnLogs, fetchMeds: fetchPrnMeds } = usePrnStore();
-
-  useEffect(() => {
-    fetchPeople();
-    fetchSchedules();
-    fetchCourses();
-    fetchPrnMeds();
-  }, [fetchPeople, fetchSchedules, fetchCourses, fetchPrnMeds]);
+  const { people } = usePeopleStore();
+  const { schedules } = useShotsStore();
+  const { courses, doses } = useMedicineStore();
+  const { meds: prnMeds, logs: prnLogs } = usePrnStore();
 
   // Get upcoming shots (hide if 3x overdue - likely discontinued)
   const upcomingShots = schedules
