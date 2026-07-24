@@ -31,7 +31,7 @@ DB_PATH = Path.home() / ".config" / "home-relay" / "money.db"
 
 SYNC_INTERVAL_SECONDS = 4 * 60 * 60  # 4 hours
 MIN_MANUAL_SYNC_INTERVAL_SECONDS = 2 * 60 * 60  # 2 hours — rate-limit "Sync now"
-TRANSACTION_LOOKBACK_DAYS = 45
+TRANSACTION_LOOKBACK_DAYS = 60
 TRANSFER_PAIR_WINDOW_DAYS = 3
 TRANSFER_PAIR_AMOUNT_TOLERANCE = 0.01
 
@@ -369,9 +369,15 @@ def _upsert_transactions(accounts: list[dict]) -> list[dict]:
         for account in accounts:
             for txn in account.get("transactions", []):
                 existing = conn.execute(
-                    "SELECT id FROM transactions_cache WHERE id = ?", (txn["id"],)
+                    "SELECT id, posted FROM transactions_cache WHERE id = ?", (txn["id"],)
                 ).fetchone()
                 if existing:
+                    if not existing["posted"]:
+                        posted = datetime.fromtimestamp(txn["posted"]).isoformat()
+                        conn.execute(
+                            "UPDATE transactions_cache SET posted = ? WHERE id = ?",
+                            (posted, txn["id"]),
+                        )
                     continue
 
                 posted = datetime.fromtimestamp(txn["posted"]).isoformat()
