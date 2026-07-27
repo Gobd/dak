@@ -26,11 +26,14 @@ is_safe_target() {
   local info
   info="$(diskutil info "$disk" 2>/dev/null)" || return 1
 
-  grep -q "Device Location:\s*External" <<<"$info" || return 1
-  grep -qE "Removable Media:\s*(Removable|Yes)|Ejectable:\s*Yes" <<<"$info" || return 1
+  # Accept External disks, or Internal disks that are Removable (built-in SD card reader)
+  local is_external is_removable
+  grep -q "Device Location:\s*External" <<<"$info" && is_external=1 || is_external=0
+  grep -qE "Removable Media:\s*(Removable|Yes)|Ejectable:\s*Yes" <<<"$info" && is_removable=1 || is_removable=0
+  [[ "$is_external" -eq 1 || "$is_removable" -eq 1 ]] || return 1
 
   local size_bytes
-  size_bytes="$(diskutil info -plist "$disk" 2>/dev/null | plutil -extract Size xml1 -o - - 2>/dev/null | grep -oE '[0-9]+' || echo 0)"
+  size_bytes="$(diskutil info -plist "$disk" 2>/dev/null | plutil -extract Size raw -o - - 2>/dev/null || echo 0)"
   local size_gb=$(( size_bytes / 1000 / 1000 / 1000 ))
   [[ "$size_gb" -gt 0 && "$size_gb" -le "$MAX_SIZE_GB" ]] || return 1
 
@@ -39,10 +42,12 @@ is_safe_target() {
 
 echo "=== Candidate SD/USB disks (external + removable only, <= ${MAX_SIZE_GB}GB) ==="
 FOUND=0
+CANDIDATES=()
 for disk in $(diskutil list -plist physical 2>/dev/null | plutil -extract WholeDisks xml1 -o - - | grep -oE '<string>disk[0-9]+</string>' | sed -E 's#</?string>##g'); do
   if is_safe_target "$disk"; then
     echo ""
     diskutil info "$disk" | grep -E "Device Node|Media Name|Disk Size"
+    CANDIDATES+=("$disk")
     FOUND=1
   fi
 done
@@ -53,7 +58,8 @@ if [[ "$FOUND" -eq 0 ]]; then
 fi
 
 echo ""
-read -rp "Enter the disk identifier to use (e.g. disk4): " DISK
+read -rp "Enter disk identifier [default: ${CANDIDATES[0]}]: " DISK
+DISK="${DISK:-${CANDIDATES[0]}}"
 
 if [[ ! "$DISK" =~ ^disk[0-9]+$ ]]; then
   echo "ERROR: expected something like 'disk4', got '$DISK'"

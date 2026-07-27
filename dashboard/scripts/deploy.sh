@@ -207,7 +207,7 @@ sudo apt-get install -y \
   libtiff6
 
 mkdir -p ~/homeassistant
-~/.local/bin/uv venv ~/homeassistant/.venv --python 3.13
+~/.local/bin/uv venv ~/homeassistant/.venv --python 3.13 --clear
 ~/.local/bin/uv pip install --python ~/homeassistant/.venv homeassistant
 
 # Preserve existing Home Assistant config (paired entities, automations, etc.)
