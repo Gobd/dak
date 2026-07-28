@@ -9,8 +9,8 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 # Configure logging for the app (not just uvicorn)
 logging.basicConfig(
@@ -114,7 +114,6 @@ async def add_private_network_access_headers(request: Request, call_next):
         response.headers["Access-Control-Allow-Origin"] = origin
 
     return response
-
 
 
 @app.get("/", response_class=HTMLResponse)

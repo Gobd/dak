@@ -6,7 +6,7 @@ default_config:
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - 192.168.84.1  # OPNsense/Caddy IP
+    - 192.168.84.1 # OPNsense/Caddy IP
 
 mqtt:
   broker: localhost
