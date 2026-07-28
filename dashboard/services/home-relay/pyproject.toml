@@ -61,6 +61,7 @@ ignore = [
   "N815", # Mixed case variable names (match frontend JSON)
   "FBT", # Boolean positional arguments
   "RET504", # Unnecessary assignment before return
+  "CPY001", # Copyright header not required
   "UP007", # Union syntax (prefer Union for response_model readability)
   "B904", # raise from (HTTPException pattern is idiomatic)
   "FAST002", # Annotated FastAPI params (prefer Query(...) style)

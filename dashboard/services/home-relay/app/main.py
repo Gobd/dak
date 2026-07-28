@@ -126,9 +126,32 @@ async def root():
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kiosk</title>
 <style>
-  body { font-family: system-ui, sans-serif; background: #111; color: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; gap: 1rem; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #111;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    gap: 1rem;
+  }
   h1 { font-size: 1.2rem; color: #888; margin-bottom: 0.5rem; }
-  a { display: block; padding: 0.75rem 2rem; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #60a5fa; text-decoration: none; font-size: 1.1rem; width: 260px; text-align: center; transition: background 0.15s; }
+  a {
+    display: block;
+    padding: 0.75rem 2rem;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #60a5fa;
+    text-decoration: none;
+    font-size: 1.1rem;
+    width: 260px;
+    text-align: center;
+    transition: background 0.15s;
+  }
   a:hover { background: #2a2a2a; border-color: #555; }
 </style>
 </head>
