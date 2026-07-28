@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 # Configure logging for the app (not just uvicorn)
 logging.basicConfig(
@@ -113,6 +114,57 @@ async def add_private_network_access_headers(request: Request, call_next):
         response.headers["Access-Control-Allow-Origin"] = origin
 
     return response
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiosk</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #111;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    gap: 1rem;
+  }
+  h1 { font-size: 1.2rem; color: #888; margin-bottom: 0.5rem; }
+  a {
+    display: block;
+    padding: 0.75rem 2rem;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #60a5fa;
+    text-decoration: none;
+    font-size: 1.1rem;
+    width: 260px;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  a:hover { background: #2a2a2a; border-color: #555; }
+</style>
+</head>
+<body>
+<h1>kiosk.home.arpa</h1>
+<a href="https://dak.bkemper.me">dak.bkemper.me</a>
+<a href="https://home-relay.bkemper.me">home-relay.bkemper.me</a>
+<a href="https://ha.bkemper.me">ha.bkemper.me</a>
+<a href="https://zigbee2mqtt.bkemper.me">zigbee2mqtt.bkemper.me</a>
+<a href="http://boo.home.arpa">boo.home.arpa</a>
+</body>
+</html>
+"""
 
 
 # Register routers

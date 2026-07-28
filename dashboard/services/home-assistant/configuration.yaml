@@ -3,9 +3,14 @@
 
 default_config:
 
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.84.1 # OPNsense/Caddy IP
+
 mqtt:
   broker: localhost
 
-# Devices published by Zigbee2MQTT (services/zigbee2mqtt/configuration.yaml,
-# same Mosquitto broker) are auto-discovered here once Zigbee2MQTT's own
-# `homeassistant: true` setting is on - no per-device config needed in this file.
+# Add MQTT via UI: Settings → Devices & Services → Add Integration → MQTT
+# Point it at localhost:1883. Zigbee2MQTT devices auto-discover once
+# zigbee2mqtt's homeassistant: true setting is on.

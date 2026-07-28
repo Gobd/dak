@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.15.12", "pyright>=1.1.409"]
+dev = ["ruff>=0.16.0", "pyright>=1.1.409"]
 voice = ["openwakeword>=0.6.0", "pyaudio>=0.2.14"]
 
 [tool.ruff]
@@ -61,6 +61,7 @@ ignore = [
   "N815", # Mixed case variable names (match frontend JSON)
   "FBT", # Boolean positional arguments
   "RET504", # Unnecessary assignment before return
+  "CPY001", # Copyright header not required
   "UP007", # Union syntax (prefer Union for response_model readability)
   "B904", # raise from (HTTPException pattern is idiomatic)
   "FAST002", # Annotated FastAPI params (prefer Query(...) style)
@@ -69,6 +70,8 @@ ignore = [
   "SIM102", # Nested if statements (readable as-is)
   "SIM105", # contextlib.suppress (try/except/pass is clearer)
   "B009", # getattr with constant (needed to satisfy pyright for legacy APIs)
+  "ISC004", # Unparenthesized implicit string concatenation (intentional for multi-line regex)
+  "PLR0917", # Too many positional arguments (internal service methods)
 ]
 
 exclude = ["export_openapi.py"]
