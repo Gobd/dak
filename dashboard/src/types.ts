@@ -20,7 +20,9 @@ export type WidgetType =
   | 'schedule'
   | 'iframe-popup'
   | 'system-stats'
-  | 'money';
+  | 'money'
+  | 'battery-status'
+  | 'private-mode';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -43,6 +45,8 @@ export interface PanelConfig {
   heightPx?: number; // fixed pixel height
   refresh?: string; // Duration string like "5m", "1h"
   args?: Record<string, unknown>;
+  // Visible/usable in front of the blur while Private Mode is active (default: hidden)
+  public?: boolean;
 }
 
 // Default settings per widget type (used when adding new widgets)
@@ -172,6 +176,25 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
     offsetY: 16,
   },
   money: { width: 25, height: 20, refresh: '15m' },
+  'battery-status': {
+    width: 6,
+    height: 6,
+    refresh: '5m',
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 336,
+    offsetY: 16,
+  },
+  'private-mode': {
+    width: 6,
+    height: 6,
+    anchor: 'bottom-right',
+    widthPx: 56,
+    heightPx: 56,
+    offsetX: 400,
+    offsetY: 16,
+  },
 };
 
 // Screen configuration

@@ -1,0 +1,11 @@
+# Home Assistant configuration - minimal seed for first install
+# Full docs: https://www.home-assistant.io/docs/configuration/
+
+default_config:
+
+mqtt:
+  broker: localhost
+
+# Devices published by Zigbee2MQTT (services/zigbee2mqtt/configuration.yaml,
+# same Mosquitto broker) are auto-discovered here once Zigbee2MQTT's own
+# `homeassistant: true` setting is on - no per-device config needed in this file.

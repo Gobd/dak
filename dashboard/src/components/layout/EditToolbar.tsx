@@ -40,6 +40,16 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
   { type: 'adguard', label: 'AdGuard Home', description: 'DNS ad-blocking control' },
   { type: 'system-stats', label: 'System Stats', description: 'CPU, RAM, disk & uptime' },
   { type: 'money', label: 'Money', description: 'Spend tracker vs. monthly budget' },
+  {
+    type: 'battery-status',
+    label: 'Battery Status',
+    description: 'Outdoor sensor battery level & trend',
+  },
+  {
+    type: 'private-mode',
+    label: 'Private Mode',
+    description: 'Blur/lock the screen behind a PIN',
+  },
 ];
 
 /**

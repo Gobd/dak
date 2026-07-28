@@ -1,0 +1,381 @@
+# ============================================================================
+# Wiring reference - QuinLED An-Penta-Mini hosted in the ATTIC (kept out of the bathroom's
+# heat/humidity), one Ethernet bundle run down to behind the mirror carrying every signal
+# that might ever be needed there - pulled now while there's attic access, whether or not
+# each conductor is actually wired up yet. Separate 16/3 (or similar) cable also run down
+# for 24V power to the LED strip, since Ethernet conductors aren't sized for that current.
+# ============================================================================
+# Cat5/6 wire color      | Penta terminal / STEMMA QT   | Mirror side               | Purpose / status
+# ------------------------|-------------------------------|---------------------------|--------------------------------------
+# Solid Brown             | 3V3 (STEMMA red)              | Red - STEMMA tail         | Sensor power (3.3V) - USED (I2C sensors live at Penta/attic end; only needed if sensors relocate to mirror side)
+# Solid Green             | GND (STEMMA black)            | Black - STEMMA tail       | System ground - tied with bathroom switch grounds - USED
+# Solid Orange            | SDA (STEMMA yellow)           | Yellow - STEMMA tail      | I2C data - USED once AHT20 wired
+# Striped Orange          | SCL (STEMMA blue)             | Blue - STEMMA tail        | I2C clock - USED once AHT20 wired
+# Solid Blue              | B1 terminal                   | Day touch pad             | Day button signal - USED (day_button below)
+# Striped Blue            | B2 terminal                   | Night touch pad           | Night button signal - USED (night_button below)
+# Striped Green           | B3 terminal                   | Fan switch / override     | SPARE - pulled for later fan automation (PIR + humidity driven), not yet wired
+# Striped Brown           | Spare GPIO (e.g. GPIO40)      | Reserved                  | SPARE - fallback for a plain GPIO PIR only if the STHS34PF80 (I2C, below) doesn't pan out
+#
+# 16/3 (or similar, separately run): 24V+ and 24V- from the mirror's original LED brick,
+# up to the attic Penta input; Penta's output channels drive the LED strip back down over
+# the same run (mobo's original driver fully disconnected, see below).
+#
+# At the mirror: touch pads wire straight to their dry-contact signal wires (no local
+# electronics). LED strip's +/- wires join the 16/3 run instead of the old mobo output.
+#
+# In the attic: Penta's B1/B2/B3 take the button signal wires directly. A short 50mm
+# STEMMA QT cable connects the Penta directly to an Adafruit LTC4311 I2C Extender/Active
+# Terminator, which then feeds the long I2C run down to the mirror side, where the
+# STHS34PF80 presence sensor actually lives (mounted atop the mirror, aimed out into the
+# room - it needs to see the room to detect someone walking in, so it can't live in the
+# attic like the AHT20 can) - the LTC4311 boosts signal integrity over that distance.
+#
+# NOTE: B3/fan wiring and the PIR GPIO are pulled but inert until the humidity+PIR fan
+# automation is designed - do not assume they're connected in the config below.
+# ============================================================================
+# CONFIRMED BY MULTIMETER (mobo still connected/powered, back-probed at the LED connector):
+#   Mirror's stock CCT LED strip, 3-wire:
+#     Red    -> shared V+ (steady +24V rail)
+#     White  -> CCT channel 1 (reads ~-24V relative to Red when this channel is driven)
+#     Yellow -> CCT channel 2 (same behavior, mutually exclusive with White)
+#   Warm-vs-cool mapping (which of White/Yellow is WW vs CW) not yet confirmed - TODO
+#   before wiring into the Penta's two PWM channel terminals. Doesn't matter if guessed
+#   wrong at first; swapping which channel is "warm" is a mired-value fix in this YAML,
+#   not a rewiring job.
+#   Penta side: Red -> Penta's shared LED V+ terminal; White/Yellow -> Penta's two CCT
+#   PWM output terminals (terminal numbers TBD - confirm against QuinLED's silkscreen/docs,
+#   still a placeholder in this file, see "Known placeholders" below).
+#
+#   Mirror's touch button harness, 5-wire, NOT YET PROBED (day/night/heater + backlights):
+#     Expected: 1 shared V+, 1 shared GND, 3 independent per-button touch-sense signals
+#     (day, night, heater/defogger) - to confirm, back-probe each of the 5 wires while
+#     tapping each button in turn; the two that stay steady regardless of any button touch
+#     are V+/GND, the three that react only to their own button are the touch-sense lines.
+#   Heater/defogger: separate 3rd button, independent of day/night (can run concurrently
+#   with either). Believed ~120V on the heater element itself, NOT probed - do not probe
+#   that circuit with the same low-voltage technique used above. If confirmed to be a
+#   mains-side load switched via a relay off the mobo's low-voltage logic, only the
+#   relay-trigger signal (low voltage) needs identifying; the 120V side can stay untouched
+#   and wired to the mobo, since it's independent of day/night and doesn't need to move.
+#   Button backlights: dim at rest, brighten on touch, independently per button - likely
+#   driven locally by each button's own touch IC rather than central mobo firmware (common
+#   for touch ICs with a built-in indicator-LED driver pin). If so, backlights keep working
+#   for free as long as that button's local V+/GND stays connected - no new Penta GPIO or
+#   YAML logic needed. To confirm: check whether backlight brightness change is present
+#   even after tracing touch-sense to a wire that goes straight to the mobo's main chip
+#   (central) vs. staying local to a small sub-board right at the button (local).
+# ============================================================================
+
+esphome:
+  name: mirror-arikta-royce
+  friendly_name: 'Bathroom Mirror'
+
+esp32:
+  board: esp32-c3-devkitm-1 # QuinLED An-Penta-Mini is ESP32-C3 based - confirm against your unit
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# M5Stack's maintained ESPHome driver for the STHS34PF80 (their "Unit TMOS PIR" board,
+# see the commented sensor: block near the end of this file for usage/wiring notes).
+# `refresh: 0s` avoids re-fetching the component from GitHub on every build once cached.
+external_components:
+  - source: github://m5stack/esphome-yaml/components
+    components: [sths34pf80]
+    refresh: 0s
+
+mqtt:
+  # kiosk.home.arpa = the RPi5 running Mosquitto/Zigbee2MQTT/home-relay on the local LAN.
+  # Same broker as esp32-outdoor.yaml - PIR/humidity below publish here so anything on the
+  # network (HA, home-relay, a script) can subscribe, not just Home Assistant's ESPHome
+  # integration specifically.
+  broker: kiosk.home.arpa
+  discovery: false
+
+logger:
+  level: WARN
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+
+# Mobo is fully disconnected (buttons rerouted here, LED strip rerouted to output_pins
+# below) - it still receives 24V from the brick but has nothing left to drive or read.
+
+# --- Touch button inputs (dry contact, mirror's own touch pads wired directly to these
+# pins after bypassing the mobo entirely) ---
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO5
+      mode: INPUT_PULLUP
+      inverted: true
+    id: night_button
+    name: 'Mirror Night Button'
+    filters:
+      - delayed_on_off: 20ms # debounce
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(night_mode_active);'
+          then:
+            - light.turn_off: mirror_light
+            - lambda: 'id(night_mode_active) = false;'
+          else:
+            - light.turn_on:
+                id: mirror_light
+                color_temperature: 500 mireds # warmest available - adjust to strip's actual warm-white mireds
+                brightness: 10%
+            - lambda: 'id(night_mode_active) = true;'
+
+  - platform: gpio
+    pin:
+      number: GPIO6
+      mode: INPUT_PULLUP
+      inverted: true
+    id: day_button
+    name: 'Mirror Day Button'
+    filters:
+      - delayed_on_off: 20ms # debounce
+    on_press:
+      - lambda: 'id(night_mode_active) = false;'
+      - script.execute: day_button_pressed
+    on_release:
+      - script.execute: day_button_released
+
+# --- LED output (mirror's 24V CCT strip, driven directly by Penta channels instead of
+# the mobo's original driver - mobo-to-strip wire fully disconnected) ---
+output:
+  - platform: ledc # swap to the correct platform/pins for the An-Penta-Mini's actual
+    pin: GPIO1 # MOSFET output pin numbering - placeholders until channels are wired
+    id: warm_white_channel
+    frequency: 1000Hz
+  - platform: ledc
+    pin: GPIO2
+    id: cool_white_channel
+    frequency: 1000Hz
+
+light:
+  - platform: cwww
+    id: mirror_light
+    name: 'Bathroom Mirror Light'
+    warm_white: warm_white_channel
+    cold_white: cool_white_channel
+    warm_white_color_temperature: 500 mireds # measure/adjust to strip's actual warm point
+    cold_white_color_temperature: 153 mireds # measure/adjust to strip's actual cool point
+    constant_brightness: true
+    default_transition_length: 250ms
+
+globals:
+  - id: night_mode_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: hold_direction_up
+    type: bool
+    restore_value: no
+    initial_value: 'true' # first-ever hold ramps up from off/dim
+  - id: day_tap_count
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: color_temp_index
+    type: int
+    restore_value: no
+    initial_value: '0'
+  # Last non-night brightness/color temp, so the day button's off->on tap restores
+  # wherever day mode was left, not night mode's values (light.turn_on's own
+  # "last state" is night-mode-aware, since night mode calls light.turn_on too).
+  - id: last_day_brightness
+    type: float
+    restore_value: no
+    initial_value: '0.60'
+  - id: last_day_color_temp
+    type: float
+    restore_value: no
+    initial_value: '320'
+
+# Color temps to step through on rapid day-button taps, warm to cool (mireds).
+# Adjust count/values to taste.
+script:
+  - id: day_button_pressed
+    then:
+      - lambda: 'id(day_tap_count) += 1;'
+      - delay: 400ms # hold threshold - press+release faster than this counts as a tap
+      - if:
+          condition:
+            lambda: 'return id(day_tap_count) > 0;'
+          then:
+            # Still "pressed" after 400ms with no release seen -> treat as a hold, start ramping.
+            - script.execute: brightness_ramp
+
+  - id: day_button_released
+    then:
+      - lambda: |-
+          bool was_short_tap = id(day_tap_count) > 0;
+          id(day_tap_count) = 0;
+      - script.stop: brightness_ramp
+      - if:
+          condition:
+            lambda: 'return !id(mirror_light).current_values.is_on();'
+          then:
+            # Restore last day-mode brightness/color temp explicitly - can't rely on
+            # light.turn_on's own "last state" here, since night mode also calls
+            # light.turn_on and would leave night's warm/dim values in place.
+            - light.turn_on:
+                id: mirror_light
+                brightness: !lambda 'return id(last_day_brightness);'
+                color_temperature: !lambda 'return id(last_day_color_temp);'
+          else:
+            - script.execute: cycle_color_temp
+
+  - id: cycle_color_temp
+    then:
+      - lambda: |-
+          static const int NUM_STEPS = 4;
+          id(color_temp_index) = (id(color_temp_index) + 1) % NUM_STEPS;
+      - light.control:
+          id: mirror_light
+          color_temperature: !lambda |-
+            static const float steps[] = {153, 250, 320, 500}; // cool -> warm, mireds
+            float temp = steps[id(color_temp_index)];
+            id(last_day_color_temp) = temp;
+            return temp;
+
+  - id: brightness_ramp
+    mode: restart
+    then:
+      - while:
+          condition:
+            lambda: 'return true;'
+          then:
+            - lambda: |-
+                float current = id(mirror_light).current_values.get_brightness();
+                float step = 0.02f; // ~2%/100ms ramp rate, adjust to taste
+                if (id(hold_direction_up)) {
+                  current += step;
+                  if (current >= 1.0f) {
+                    current = 1.0f;
+                    id(hold_direction_up) = false;
+                  }
+                } else {
+                  current -= step;
+                  if (current <= 0.0f) {
+                    current = 0.0f;
+                    id(hold_direction_up) = true;
+                  }
+                }
+                auto call = id(mirror_light).turn_on();
+                call.set_brightness(current);
+                call.perform();
+                id(last_day_brightness) = current;
+            - delay: 100ms
+
+# --- Future: presence (STHS34PF80, at the mirror) + AHT20 humidity (attic), both I2C ---
+# Published over MQTT to the shared broker (mqtt: block above), same pattern as
+# esp32-outdoor.yaml - not via ESPHome's native API/HA integration. This keeps the sensor
+# useful to anything subscribing to the broker (HA, home-relay, a script), not just HA's
+# ESPHome integration specifically. All decision logic (sunrise/sunset, guest override)
+# still belongs in a Home Assistant automation - it just subscribes to these MQTT topics
+# as its trigger instead of watching a native ESPHome entity.
+#
+# i2c:
+#   sda: GPIOxx  # Solid Orange / STEMMA yellow
+#   scl: GPIOxx  # Striped Orange / STEMMA blue
+#
+# sensor:
+#   - platform: aht10
+#     variant: AHT20
+#     temperature:
+#       name: "Mirror Room Temperature"
+#       internal: true # not exposed via API - published over MQTT below instead
+#       on_value:
+#         - mqtt.publish:
+#             topic: home-relay/sensors/mirror-arikta-royce/temperature
+#             payload: !lambda return to_string(x);
+#     humidity:
+#       name: "Mirror Room Humidity"
+#       internal: true
+#       on_value:
+#         - mqtt.publish:
+#             topic: home-relay/sensors/mirror-arikta-royce/humidity
+#             payload: !lambda return to_string(x);
+#     update_interval: 60s # on_value only fires from this interval, not continuously
+#
+# Preferred sensor: M5Stack "Unit TMOS PIR" (STHS34PF80, https://shop.m5stack.com/products/tmos-pir-unit-sths34pf80,
+# ~$6.50). Same chip as the Adafruit/SparkFun STEMMA QT boards, same I2C address (0x5A),
+# but M5Stack ships a real maintained ESPHome external_component for it (see
+# `external_components:` block near the top of this file, and https://docs.m5stack.com/en/homeassistant/sensor/unit_tmos_pir)
+# - no custom driver needed. Mount it atop the mirror, aimed out into the room.
+#
+# CONNECTOR MISMATCH: this board uses M5's Grove-style HY2.0-4P connector, not STEMMA
+# QT/JST-SH like the AHT20/LTC4311 chain above. Same 4 signals (3V3/GND/SDA/SCL), just a
+# different housing - either use a Grove-to-STEMMA-QT adapter cable, or cut/splice the
+# included HY2.0 cable onto the STEMMA QT tail wires at the mirror (same splicing approach
+# already used elsewhere in this build per the header comment - no signal integrity
+# concern at I2C speeds over these short lengths).
+#
+# Uses the `sths34pf80` sensor platform (not binary_sensor) - it reports two separate
+# flags: `pres_flag` (presence - stays "on" while someone's in frame, less twitchy) and
+# `mot_flag` (raw motion - fires on any movement, noisier). For a walked-in -> light-on
+# trigger, `pres_flag` is what we want; `mot_flag` is omitted here since it isn't needed.
+# `presence_threshold`/`presence_hysteresis`/`odr` values below are the values from
+# M5Stack's own example config - a reasonable starting point, but exact tuning (avoiding
+# false triggers from hallway traffic through the doorway, HVAC vents, etc.) needs doing
+# against the physical sensor once it's mounted - not verified from here.
+#
+# Fallback options if this board is ever unavailable - both work fine for this simple
+# walked-in -> light-on use case:
+#   - Plain GPIO PIR (Adafruit #189 or #4871) on the spare Striped Brown GPIO - see wiring
+#     table above.
+#   - Adafruit LD2410 mmWave presence sensor (#5920) - holds "presence" through
+#     stillness better than PIR/TMOS, but that solves a problem (auto-off while
+#     stationary) this project doesn't have - more capability than needed here.
+#
+# ALTERNATE DRIVER (documented, not switched to): github.com/jamesjharper/esphome_sths34pf80
+# is a different, more actively-tunable external_component for this same chip (generic
+# I2C wiring, not tied to M5Stack's hardware). Uses binary_sensor entries (`presence`,
+# `motion`, `thermal_shock`, device_class-native) instead of M5Stack's sensor-platform
+# `pres_flag`/`mot_flag`, and additionally exposes runtime `number`/`select` entities so
+# presence_threshold/hysteresis can be nudged live from Home Assistant while testing
+# false-trigger sensitivity (hallway traffic, HVAC vents) instead of edit-reflash-repeat.
+# Smaller/newer project than M5Stack's (thinner track record), so sticking with M5Stack's
+# driver for now - worth revisiting if live threshold tuning becomes worth the switch:
+#   external_components:
+#     - source: github://jamesjharper/esphome_sths34pf80
+#       components: [ sths34pf80 ]
+#
+# sensor:
+#   - platform: sths34pf80
+#     pres_flag:
+#       name: "Mirror Presence"
+#       internal: true # not exposed via API - published over MQTT below instead
+#       on_press:
+#         - mqtt.publish:
+#             topic: home-relay/sensors/mirror-arikta-royce/pir
+#             payload: "ON"
+#       on_release:
+#         - mqtt.publish:
+#             topic: home-relay/sensors/mirror-arikta-royce/pir
+#             payload: "OFF"
+#     presence_threshold: 200
+#     presence_hysteresis: 50
+#     odr: 8
+#     update_interval: 1s # keep short - motion needs to reach HA within about a second
+#                          # for the light automation to feel responsive
+#
+# Humidity/temp above publish on their own 60s update_interval (slow-changing, no
+# urgency) - deliberately different cadence from presence's 1s.
+#
+# HA-side automation (not part of this file): subscribe to the MQTT PIR topic above (via
+# an MQTT binary_sensor in HA config, or home-relay forwarding it), condition on `sun.sun`
+# being below horizon (or a fixed time window) and on an `input_boolean.mirror_pir_enabled`
+# toggle (for disabling during guest visits), then call `light.turn_on`/`light.turn_off` on
+# the mirror's light entity with the night preset values - don't try to "press" the
+# physical night_button from HA, just set the light state directly.

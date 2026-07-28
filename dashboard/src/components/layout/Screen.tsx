@@ -1,9 +1,32 @@
 import { useConfigStore } from '../../stores/config-store';
+import { usePrivateModeStore } from '../../stores/private-mode-store';
 import { Panel } from './Panel';
 import { EditToolbar } from './EditToolbar';
 import { WidgetRenderer } from '../widgets';
 import { Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@dak/ui';
+import { createPortal } from 'react-dom';
+
+const FRAMELESS_WIDGETS = [
+  'timer',
+  'ptt',
+  'wol',
+  'kasa',
+  'brightness',
+  'drive-time',
+  'adguard',
+  'notifications',
+  'iframe-popup',
+  'private-mode',
+];
+
+function isFramelessWidget(panel: { widget: string; args?: Record<string, unknown> }) {
+  return (
+    FRAMELESS_WIDGETS.includes(panel.widget) ||
+    (panel.widget === 'system-stats' && panel.args?.mode !== 'inline') ||
+    (panel.widget === 'battery-status' && panel.args?.mode !== 'inline')
+  );
+}
 
 /**
  * Screen component - renders all screens, hiding inactive ones to preserve iframe state
@@ -12,6 +35,8 @@ export function Screen() {
   const { dark, isEditMode, setEditMode, screens, activeScreenIndex, setActiveScreen } =
     useConfigStore();
   const activePanels = screens[activeScreenIndex]?.panels ?? [];
+  const isPrivateModeActive = usePrivateModeStore((s) => s.isActive);
+  const showPrivacyOverlay = isPrivateModeActive && !isEditMode;
 
   const goToPrevScreen = () => {
     const prevIndex = activeScreenIndex === 0 ? screens.length - 1 : activeScreenIndex - 1;
@@ -42,29 +67,13 @@ export function Screen() {
               aria-hidden={!isActive}
             >
               {sortedPanels.map((panel, index) => {
-                // Minimal widgets get no background (frameless)
-                const framelessWidgets = [
-                  'timer',
-                  'ptt',
-                  'wol',
-                  'kasa',
-                  'brightness',
-                  'drive-time',
-                  'adguard',
-                  'notifications',
-                  'iframe-popup',
-                ];
-                const isFrameless =
-                  framelessWidgets.includes(panel.widget) ||
-                  (panel.widget === 'system-stats' && panel.args?.mode !== 'inline');
-
                 return (
                   <Panel
                     key={panel.id}
                     panel={panel}
                     isEditMode={isActive && isEditMode}
                     zIndex={index + 1}
-                    frameless={isFrameless}
+                    frameless={isFramelessWidget(panel)}
                   >
                     <WidgetRenderer panel={panel} dark={dark} isEditMode={isActive && isEditMode} />
                   </Panel>
@@ -86,6 +95,31 @@ export function Screen() {
           </div>
         )}
       </div>
+
+      {/* Private Mode: blur/lock overlay + public panels rendered above it */}
+      {showPrivacyOverlay &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[60] backdrop-blur-xl bg-black/40" />
+            <div className="fixed inset-0 z-[70] pointer-events-none">
+              {activePanels
+                .filter((panel) => panel.public || panel.widget === 'private-mode')
+                .map((panel) => (
+                  <div key={panel.id} className="pointer-events-auto">
+                    <Panel
+                      panel={panel}
+                      isEditMode={false}
+                      zIndex={1}
+                      frameless={isFramelessWidget(panel)}
+                    >
+                      <WidgetRenderer panel={panel} dark={dark} isEditMode={false} />
+                    </Panel>
+                  </div>
+                ))}
+            </div>
+          </>,
+          document.body,
+        )}
 
       {/* Bottom right controls: nav + edit */}
       {!isEditMode && (

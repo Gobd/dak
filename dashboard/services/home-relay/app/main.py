@@ -52,6 +52,11 @@ async def lifespan(_app: FastAPI):
 
     start_mqtt()
 
+    # Start local AHT20 poller (no-op if sensor isn't wired up on this device)
+    from app.services.aht20_service import start_aht20_poller
+
+    start_aht20_poller()
+
     # Initialize Kasa event loop
     from app.services.kasa_service import get_event_loop
 

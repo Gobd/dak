@@ -3,10 +3,14 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models.mqtt import (
+    AddCustomDeviceRequest,
     BridgeInfo,
+    CustomDevice,
+    CustomDeviceListResponse,
     DeviceListResponse,
     PermitJoinRequest,
     PermitJoinResponse,
+    RemoveCustomDeviceRequest,
     RemoveRequest,
     RemoveResponse,
     RenameRequest,
@@ -80,3 +84,30 @@ async def set_permit_join(request: PermitJoinRequest):
         permit_join=request.enable,
         time=request.time if request.enable else None,
     )
+
+
+@router.get("/custom-devices", response_model=CustomDeviceListResponse)
+async def list_custom_devices():
+    """List custom (non-Zigbee) climate sensors."""
+    devices = [CustomDevice(**d) for d in mqtt_service.custom_devices]
+    return CustomDeviceListResponse(devices=devices)
+
+
+@router.post("/custom-devices", response_model=CustomDeviceListResponse)
+async def add_custom_device(request: AddCustomDeviceRequest):
+    """Add a custom (non-Zigbee) climate sensor."""
+    try:
+        mqtt_service.add_custom_device(request.friendly_name, request.model, request.description)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    devices = [CustomDevice(**d) for d in mqtt_service.custom_devices]
+    return CustomDeviceListResponse(devices=devices)
+
+
+@router.post("/custom-devices/remove", response_model=CustomDeviceListResponse)
+async def remove_custom_device(request: RemoveCustomDeviceRequest):
+    """Remove a custom (non-Zigbee) climate sensor."""
+    mqtt_service.remove_custom_device(request.friendly_name)
+    devices = [CustomDevice(**d) for d in mqtt_service.custom_devices]
+    return CustomDeviceListResponse(devices=devices)

@@ -1,0 +1,14 @@
+[Unit]
+Description=Home Assistant Core
+After=network.target mosquitto.service
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=/home/__USER__/homeassistant
+ExecStart=/home/__USER__/homeassistant/.venv/bin/hass -c /home/__USER__/homeassistant
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

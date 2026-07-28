@@ -40,6 +40,14 @@ class SensorReadingResponse(BaseModel):
     humidity_trend: Literal["rising", "falling", "steady"]
     battery: int
     age_seconds: int
+    uv_index: float | None = None
+    pm2_5: float | None = None
+    pm10: float | None = None
+    aqi: int | None = None
+    battery_pct: float | None = None
+    battery_voltage: float | None = None
+    battery_trend: Literal["rising", "falling", "steady"] | None = None
+    battery_current_ma: float | None = None
 
 
 class SensorUnavailableResponse(BaseModel):

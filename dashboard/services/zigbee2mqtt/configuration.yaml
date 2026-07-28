@@ -1,6 +1,6 @@
 # Zigbee2MQTT configuration
 
-homeassistant: false
+homeassistant: true
 permit_join: false
 mqtt:
   base_topic: zigbee2mqtt

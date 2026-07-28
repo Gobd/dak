@@ -29,7 +29,7 @@ echo "==> Writing /home/${SSH_USER}/.bash_profile..."
 cp /tmp/bash_profile "/home/${SSH_USER}/.bash_profile"
 rm /tmp/bash_profile
 
-echo "==> Installing screen on/off cron jobs (7am on, 6pm off, Mountain Time)..."
+echo "==> Installing screen on/off + kiosk restart cron jobs (7am on, 6pm off, Mountain Time)..."
 crontab -u "${SSH_USER}" /tmp/kiosk-cron
 rm /tmp/kiosk-cron
 

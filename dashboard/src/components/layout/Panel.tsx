@@ -194,6 +194,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
   const [tempIcon, setTempIcon] = useState((panel.args?.icon as string) ?? 'external-link');
   const [tempTitle, setTempTitle] = useState((panel.args?.title as string) ?? '');
   const [tempLabel, setTempLabel] = useState((panel.args?.label as string) ?? '');
+  const [tempPublic, setTempPublic] = useState(!!panel.public);
   const dragStart = useRef({ x: 0, y: 0, panelX: 0, panelY: 0, offsetX: 0, offsetY: 0 });
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0, widthPx: 0, heightPx: 0 });
 
@@ -544,6 +545,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
           setTempIcon((panel.args?.icon as string) ?? 'external-link');
           setTempTitle((panel.args?.title as string) ?? '');
           setTempLabel((panel.args?.label as string) ?? '');
+          setTempPublic(!!panel.public);
         }}
         title="Panel Settings"
       >
@@ -551,6 +553,13 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
           <div>
             <label className="block text-sm font-medium mb-2">Widget</label>
             <p className="text-sm text-text-muted capitalize">{panel.widget}</p>
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <Toggle checked={tempPublic} onChange={setTempPublic} label="Visible in private mode" />
+            <p className="text-xs text-text-muted mt-1">
+              When Private Mode is active, this widget stays visible and usable above the blur
+            </p>
           </div>
 
           {/* Only show refresh for widgets that use panel.refresh */}
@@ -762,6 +771,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
               setTempIcon((panel.args?.icon as string) ?? 'external-link');
               setTempTitle((panel.args?.title as string) ?? '');
               setTempLabel((panel.args?.label as string) ?? '');
+              setTempPublic(!!panel.public);
             }}
           >
             Cancel
@@ -769,7 +779,7 @@ export function Panel({ panel, children, isEditMode, zIndex = 1, frameless = fal
           <Button
             variant="primary"
             onClick={() => {
-              const updates: Partial<PanelConfig> = { refresh: tempRefresh };
+              const updates: Partial<PanelConfig> = { refresh: tempRefresh, public: tempPublic };
 
               if (useAnchorMode) {
                 // Anchor mode enabled - use temp values from inputs

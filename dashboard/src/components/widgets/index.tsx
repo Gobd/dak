@@ -31,6 +31,8 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   'iframe-popup': lazy(() => import('./IframePopup')),
   'system-stats': lazy(() => import('./SystemStats')),
   money: lazy(() => import('./Money')),
+  'battery-status': lazy(() => import('./BatteryStatus')),
+  'private-mode': lazy(() => import('./PrivateMode')),
 };
 
 // Loading placeholder

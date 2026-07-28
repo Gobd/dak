@@ -81,3 +81,31 @@ class BridgeInfo(BaseModel):
     log_level: str | None = None
     permit_join: bool = False
     permit_join_timeout: int | None = None
+
+
+class CustomDevice(BaseModel):
+    """Non-Zigbee climate sensor, config-defined."""
+
+    friendly_name: str
+    model: str
+    description: str
+
+
+class CustomDeviceListResponse(BaseModel):
+    """List of custom (non-Zigbee) climate sensors."""
+
+    devices: list[CustomDevice]
+
+
+class AddCustomDeviceRequest(BaseModel):
+    """Add a custom climate sensor."""
+
+    friendly_name: str
+    model: str
+    description: str
+
+
+class RemoveCustomDeviceRequest(BaseModel):
+    """Remove a custom climate sensor."""
+
+    friendly_name: str
