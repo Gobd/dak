@@ -1920,6 +1920,22 @@ export type ZigbeeDevice = {
     interview_completed?: boolean;
 };
 
+export type RootGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/';
+};
+
+export type RootGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type RootGetResponse = RootGetResponses[keyof RootGetResponses];
+
 export type HealthHealthGetData = {
     body?: never;
     path?: never;
