@@ -70,6 +70,8 @@ ignore = [
   "SIM102", # Nested if statements (readable as-is)
   "SIM105", # contextlib.suppress (try/except/pass is clearer)
   "B009", # getattr with constant (needed to satisfy pyright for legacy APIs)
+  "ISC004", # Unparenthesized implicit string concatenation (intentional for multi-line regex)
+  "PLR0917", # Too many positional arguments (internal service methods)
 ]
 
 exclude = ["export_openapi.py"]
