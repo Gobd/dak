@@ -3,10 +3,16 @@
 
 default_config:
 
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 192.168.84.1 # OPNsense/Caddy IP
+# Required for the Scripts/Scenes/Automations UI to save. Without these the
+# components never load and the UI silently fails to write anything.
+script: !include scripts.yaml
+scene: !include scenes.yaml
+automation: !include automations.yaml
+
+# HTTP settings (use_x_forwarded_for, trusted_proxies for the OPNsense/Caddy
+# reverse proxy) are configured via Settings -> System -> Network in the UI,
+# not YAML - the http: YAML config is deprecated as of HA 2026.8 and stops
+# working in 2027.2.
 
 mqtt:
   broker: localhost

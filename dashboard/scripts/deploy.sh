@@ -155,7 +155,7 @@ if ! command -v node &>/dev/null || [[ "$(node -v)" != v24* ]]; then
   sudo apt-get install -y nodejs
 fi
 
-ZIGBEE2MQTT_VERSION="2.11.0"
+ZIGBEE2MQTT_VERSION="2.13.0"
 echo "Installing Zigbee2MQTT $ZIGBEE2MQTT_VERSION..."
 sudo mkdir -p /opt/zigbee2mqtt
 sudo chown -R "$USER:$USER" /opt/zigbee2mqtt
@@ -217,6 +217,15 @@ if [ -f ~/homeassistant/configuration.yaml ]; then
 else
   cp ~/dashboard/services/home-assistant/configuration.yaml ~/homeassistant/configuration.yaml
 fi
+
+# The UI-managed include targets. HA rewrites these itself, so seed them only
+# when absent - copying unconditionally would wipe saved scripts/automations.
+# They must exist or HA fails to start on the !include in configuration.yaml.
+for f in scripts.yaml scenes.yaml automations.yaml; do
+  if [ ! -f ~/homeassistant/"$f" ]; then
+    cp ~/dashboard/services/home-assistant/"$f" ~/homeassistant/"$f"
+  fi
+done
 
 sed "s|__USER__|$USER|g" ~/dashboard/services/home-assistant/home-assistant.service \
   | sudo tee /etc/systemd/system/home-assistant.service > /dev/null

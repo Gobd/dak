@@ -1,0 +1,20 @@
+# OPTIONAL: a YAML-defined alternative to creating the helper by hand in
+# Settings -> Helpers (README_hue_tap_dial.md step 4). Lives in your HA
+# packages/ folder if used. The blueprint (blueprints/automation/hue_tap_dial/
+# hue_tap_dial.yaml) is what actually reads this helper - it doesn't care
+# whether it was created via this file or the UI, since you select it
+# by entity in the blueprint's form.
+#
+# To add a second Tap Dial's helper this way: copy this file to
+# packages/hue_tap_dial_2_helpers.yaml and rename the key below
+# (tap_dial_mode -> tap_dial_2_mode), then restart HA and pick the new
+# entity in a new blueprint-based automation.
+input_select:
+  tap_dial_mode:
+    name: Tap Dial Mode
+    options:
+      - dim
+      - white
+      - rgb
+    initial: dim
+    icon: mdi:tune-vertical
