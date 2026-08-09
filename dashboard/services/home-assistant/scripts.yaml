@@ -1,0 +1,83 @@
+# Scripts managed via the Home Assistant UI (Settings → Automations & Scenes → Scripts).
+# Keys are script IDs; HA rewrites this file when you save from the UI.
+
+light_effect_toggle:
+  alias: Light Effect Toggle
+  description: >-
+    Toggle a light effect on/off, restoring the light's prior state on the
+    second call. Uses scene.create for the snapshot, so no per-light helper
+    entities are needed. Caveat: scenes created this way live in memory and are
+    lost on HA restart - if HA restarts mid-effect, the restore falls back to
+    2700K / brightness 200.
+  mode: single
+  fields:
+    target_light:
+      name: Target Light
+      required: true
+      selector:
+        entity:
+          domain: light
+    effect:
+      name: Effect
+      default: colorloop
+      selector:
+        select:
+          options:
+            - colorloop
+            - candle
+            - fireplace
+            - sunset
+            - sunrise
+            - sparkle
+            - opal
+            - glisten
+            - underwater
+            - cosmos
+            - sunbeam
+            - enchant
+  sequence:
+    - variables:
+        snapshot: "scene.fx_{{ target_light | replace('.', '_') }}"
+        active: "{{ state_attr(target_light, 'effect') not in ['none', None] }}"
+    - choose:
+        # Effect is running -> stop it, then restore the snapshot scene.
+        - conditions:
+            - condition: template
+              value_template: '{{ active }}'
+          sequence:
+            # stop_hue_effect is Hue-specific; use `none` for other brands.
+            - action: light.turn_on
+              target:
+                entity_id: '{{ target_light }}'
+              data:
+                effect: stop_hue_effect
+            # Give the bulb time to settle before re-applying the old state.
+            - delay:
+                milliseconds: 500
+            - if:
+                - condition: template
+                  value_template: "{{ states(snapshot) not in ['unknown', 'unavailable'] }}"
+              then:
+                - action: scene.turn_on
+                  target:
+                    entity_id: '{{ snapshot }}'
+              else:
+                - action: light.turn_on
+                  target:
+                    entity_id: '{{ target_light }}'
+                  data:
+                    color_temp_kelvin: 2700
+                    brightness: 200
+      # No effect running -> snapshot current state, then start the effect.
+      default:
+        - action: scene.create
+          data:
+            scene_id: "fx_{{ target_light | replace('.', '_') }}"
+            snapshot_entities:
+              - '{{ target_light }}'
+        - action: light.turn_on
+          target:
+            entity_id: '{{ target_light }}'
+          data:
+            effect: '{{ effect }}'
+            brightness: 255

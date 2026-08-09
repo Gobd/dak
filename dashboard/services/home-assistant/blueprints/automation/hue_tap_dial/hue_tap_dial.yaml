@@ -1,0 +1,311 @@
+blueprint:
+  name: Hue Tap Dial - Dynamic Modes
+  description: >-
+    One blueprint, reusable for any number of Tap Dials. Fill in your dial's
+    Z2M MQTT topic, target light group, and mode helper via the form - no
+    YAML editing, no copy/paste/rename. See README_hue_tap_dial.md.
+
+    Triggers on the Z2M device's raw MQTT topic (zigbee2mqtt/<friendly_name>)
+    instead of a discovered `_action` sensor entity. Z2M 2.0 removed the
+    combined `_action` sensor by default (only a `legacy_action_sensor`
+    per-device option brings it back, and that's a deprecated shim) - the
+    MQTT topic is Z2M's own recommended trigger source now, and it works
+    the same whether or not legacy_action_sensor is enabled.
+
+    No native Zigbee binding for on/off (direct mesh binding of this
+    device's buttons to a light doesn't work reliably on this hardware,
+    per community reports) - B1 instead toggles on/off through this
+    automation via MQTT action events, same mechanism as B2/B3, which
+    works fine. B1 press: off if the light is on, or on at 100%
+    brightness and a fixed reset color temperature if it's off (hue
+    unchanged). The dial is also a fallback on/off: rotating left below
+    the auto-off floor turns the light off, rotating right from off
+    turns it back on and ramps brightness up from there. B2 toggles
+    white (kelvin) mode, B3 toggles rgb mode, and the dial is a pure
+    live dimmer / kelvin-stepper / hue-stepper depending on mode - no
+    memory for the dial itself.
+
+    Fast dial spins send fewer, larger MQTT messages (Z2M coalesces rapid
+    rotation) each carrying an action_step_size reflecting how much
+    physical rotation that message represents. Every step (brightness/
+    kelvin/hue) is scaled by that value relative to a baseline slow-tick
+    size of 8 (observed for a single detent) - so a fast flick moves
+    noticeably further than a slow single click, instead of every message
+    applying the same fixed step regardless of speed. Each mode has its
+    own configurable multiplier cap (1 = fast spins same as slow, higher
+    = fast spins move further), so dim/white/rgb can each be tuned
+    independently.
+  domain: automation
+  input:
+    tap_dial_mqtt_topic:
+      name: Tap Dial MQTT topic
+      description: >-
+        The Z2M device topic for this Tap Dial, e.g.
+        zigbee2mqtt/Kitchen Sink Tap Dial - matches the device's friendly
+        name in Z2M (Settings/device page). Do not include a trailing
+        /action or similar - just the base device topic.
+      selector:
+        text: {}
+    target_light:
+      name: Target light group
+      description: >-
+        The Z2M light GROUP this dial controls (not a single bulb) - add
+        bulbs to the group in Z2M later without touching this automation.
+        Every member bulb must support color (hs_color) for B3/rgb mode to
+        do anything - a brightness-only or white-only bulb in the group just
+        silently ignores the color command (no error), so rgb mode will look
+        like it does nothing for that bulb specifically.
+      selector:
+        entity:
+          domain: light
+    mode_helper:
+      name: Mode helper (input_select)
+      description: 'Dropdown helper with options: dim, white, rgb.'
+      selector:
+        entity:
+          domain: input_select
+    brightness_step_pct:
+      name: Dial brightness step (%)
+      description: How much brightness changes per dial "tick" in dim mode.
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+          unit_of_measurement: '%'
+    kelvin_step:
+      name: Dial kelvin step
+      description: How much color temperature changes per dial "tick" in white mode.
+      default: 300
+      selector:
+        number:
+          min: 50
+          max: 1000
+    hue_step:
+      name: Dial hue step (degrees)
+      description: How much hue shifts per dial "tick" in rgb mode.
+      default: 15
+      selector:
+        number:
+          min: 1
+          max: 90
+    off_brightness_floor:
+      name: Auto-off brightness floor
+      description: >-
+        In dim mode, dialing down below this brightness turns the light
+        fully off instead of just dimming further.
+      default: 26
+      selector:
+        number:
+          min: 0
+          max: 255
+    reset_kelvin:
+      name: B1 reset color temperature
+      description: >-
+        Color temperature the light is set to whenever B1 turns it on
+        (from off). Does not affect B1 turning the light off, or the
+        dial/B2/B3 behavior.
+      default: 2700
+      selector:
+        number:
+          min: 2000
+          max: 6500
+    brightness_max_multiplier:
+      name: Dim mode max speed multiplier
+      description: >-
+        Cap on how much a fast dial flick multiplies the brightness step,
+        relative to a slow single-detent turn. 1 = fast spins move the
+        same as slow ones; higher = fast spins move further.
+      default: 6
+      selector:
+        number:
+          min: 1
+          max: 10
+    kelvin_max_multiplier:
+      name: White mode max speed multiplier
+      description: >-
+        Cap on how much a fast dial flick multiplies the kelvin step,
+        relative to a slow single-detent turn. 1 = fast spins move the
+        same as slow ones; higher = fast spins move further.
+      default: 6
+      selector:
+        number:
+          min: 1
+          max: 10
+    hue_max_multiplier:
+      name: RGB mode max speed multiplier
+      description: >-
+        Cap on how much a fast dial flick multiplies the hue step,
+        relative to a slow single-detent turn. 1 = fast spins move the
+        same as slow ones; higher = fast spins move further.
+      default: 6
+      selector:
+        number:
+          min: 1
+          max: 10
+
+mode: restart
+
+triggers:
+  - trigger: mqtt
+    topic: !input tap_dial_mqtt_topic
+
+variables:
+  target_light: !input target_light
+  mode_helper: !input mode_helper
+  brightness_step_pct: !input brightness_step_pct
+  kelvin_step: !input kelvin_step
+  hue_step: !input hue_step
+  off_brightness_floor: !input off_brightness_floor
+  reset_kelvin: !input reset_kelvin
+  brightness_max_multiplier: !input brightness_max_multiplier
+  kelvin_max_multiplier: !input kelvin_max_multiplier
+  hue_max_multiplier: !input hue_max_multiplier
+  action: "{{ trigger.payload_json.action | default('', true) }}"
+  raw_step_size: '{{ trigger.payload_json.action_step_size | default(0, true) }}'
+  raw_speed_ratio: '{{ [(raw_step_size / 8), 1] | max }}'
+  brightness_speed_multiplier: '{{ [raw_speed_ratio, brightness_max_multiplier] | min }}'
+  kelvin_speed_multiplier: '{{ [raw_speed_ratio, kelvin_max_multiplier] | min }}'
+  hue_speed_multiplier: '{{ [raw_speed_ratio, hue_max_multiplier] | min }}'
+
+conditions:
+  - condition: template
+    value_template: "{{ action != '' }}"
+
+actions:
+  - choose:
+      # ============================================================
+      # BUTTON 1: FULL BRIGHTNESS ON/OFF TOGGLE
+      # ============================================================
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_1_press' }}"
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ is_state(target_light, 'on') }}"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: '{{ target_light }}'
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: '{{ target_light }}'
+                data:
+                  brightness_pct: 100
+                  color_temp_kelvin: '{{ reset_kelvin }}'
+
+      # ============================================================
+      # BUTTON 2: WHITE MODE TOGGLE
+      # ============================================================
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_2_press' }}"
+        sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: '{{ mode_helper }}'
+            data:
+              option: "{{ 'dim' if is_state(mode_helper, 'white') else 'white' }}"
+
+      # ============================================================
+      # BUTTON 3: RGB MODE TOGGLE
+      # ============================================================
+      - conditions:
+          - condition: template
+            value_template: "{{ action == 'button_3_press' }}"
+        sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: '{{ mode_helper }}'
+            data:
+              option: "{{ 'dim' if is_state(mode_helper, 'rgb') else 'rgb' }}"
+
+      # ============================================================
+      # DIAL ROTATE RIGHT (clockwise)
+      # ============================================================
+      - conditions:
+          - condition: template
+            value_template: "{{ 'dial_rotate_right' in action }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'dim') }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: '{{ target_light }}'
+                    data:
+                      brightness_step_pct: '{{ brightness_step_pct * brightness_speed_multiplier }}'
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'white') }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: '{{ target_light }}'
+                    data:
+                      color_temp_kelvin: >-
+                        {{ [state_attr(target_light, 'color_temp_kelvin') | default(3000, true) + (kelvin_step * kelvin_speed_multiplier), 6500] | min }}
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'rgb') }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: '{{ target_light }}'
+                    data:
+                      hs_color: >-
+                        {% set hs = state_attr(target_light, 'hs_color') | default([0, 100]) %}
+                        [{{ (hs[0] + (hue_step * hue_speed_multiplier)) % 360 }}, 100]
+
+      # ============================================================
+      # DIAL ROTATE LEFT (counter-clockwise)
+      # ============================================================
+      - conditions:
+          - condition: template
+            value_template: "{{ 'dial_rotate_left' in action }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'dim') }}"
+                sequence:
+                  - choose:
+                      - conditions:
+                          - condition: template
+                            value_template: >-
+                              {{ (state_attr(target_light, 'brightness') | default(0, true)) <= off_brightness_floor }}
+                        sequence:
+                          - action: light.turn_off
+                            target:
+                              entity_id: '{{ target_light }}'
+                    default:
+                      - action: light.turn_on
+                        target:
+                          entity_id: '{{ target_light }}'
+                        data:
+                          brightness_step_pct: '{{ -1 * brightness_step_pct * brightness_speed_multiplier }}'
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'white') }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: '{{ target_light }}'
+                    data:
+                      color_temp_kelvin: >-
+                        {{ [state_attr(target_light, 'color_temp_kelvin') | default(3000, true) - (kelvin_step * kelvin_speed_multiplier), 2000] | max }}
+              - conditions:
+                  - condition: template
+                    value_template: "{{ is_state(mode_helper, 'rgb') }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: '{{ target_light }}'
+                    data:
+                      hs_color: >-
+                        {% set hs = state_attr(target_light, 'hs_color') | default([0, 100]) %}
+                        [{{ (hs[0] - (hue_step * hue_speed_multiplier)) % 360 }}, 100]
