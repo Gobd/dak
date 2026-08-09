@@ -72,7 +72,7 @@ blueprint:
         number:
           min: 1
           max: 50
-          unit_of_measurement: "%"
+          unit_of_measurement: '%'
     kelvin_step:
       name: Dial kelvin step
       description: How much color temperature changes per dial "tick" in white mode.
@@ -162,11 +162,11 @@ variables:
   kelvin_max_multiplier: !input kelvin_max_multiplier
   hue_max_multiplier: !input hue_max_multiplier
   action: "{{ trigger.payload_json.action | default('', true) }}"
-  raw_step_size: "{{ trigger.payload_json.action_step_size | default(0, true) }}"
-  raw_speed_ratio: "{{ [(raw_step_size / 8), 1] | max }}"
-  brightness_speed_multiplier: "{{ [raw_speed_ratio, brightness_max_multiplier] | min }}"
-  kelvin_speed_multiplier: "{{ [raw_speed_ratio, kelvin_max_multiplier] | min }}"
-  hue_speed_multiplier: "{{ [raw_speed_ratio, hue_max_multiplier] | min }}"
+  raw_step_size: '{{ trigger.payload_json.action_step_size | default(0, true) }}'
+  raw_speed_ratio: '{{ [(raw_step_size / 8), 1] | max }}'
+  brightness_speed_multiplier: '{{ [raw_speed_ratio, brightness_max_multiplier] | min }}'
+  kelvin_speed_multiplier: '{{ [raw_speed_ratio, kelvin_max_multiplier] | min }}'
+  hue_speed_multiplier: '{{ [raw_speed_ratio, hue_max_multiplier] | min }}'
 
 conditions:
   - condition: template
@@ -187,14 +187,14 @@ actions:
             then:
               - action: light.turn_off
                 target:
-                  entity_id: "{{ target_light }}"
+                  entity_id: '{{ target_light }}'
             else:
               - action: light.turn_on
                 target:
-                  entity_id: "{{ target_light }}"
+                  entity_id: '{{ target_light }}'
                 data:
                   brightness_pct: 100
-                  color_temp_kelvin: "{{ reset_kelvin }}"
+                  color_temp_kelvin: '{{ reset_kelvin }}'
 
       # ============================================================
       # BUTTON 2: WHITE MODE TOGGLE
@@ -205,7 +205,7 @@ actions:
         sequence:
           - action: input_select.select_option
             target:
-              entity_id: "{{ mode_helper }}"
+              entity_id: '{{ mode_helper }}'
             data:
               option: "{{ 'dim' if is_state(mode_helper, 'white') else 'white' }}"
 
@@ -218,7 +218,7 @@ actions:
         sequence:
           - action: input_select.select_option
             target:
-              entity_id: "{{ mode_helper }}"
+              entity_id: '{{ mode_helper }}'
             data:
               option: "{{ 'dim' if is_state(mode_helper, 'rgb') else 'rgb' }}"
 
@@ -236,16 +236,16 @@ actions:
                 sequence:
                   - action: light.turn_on
                     target:
-                      entity_id: "{{ target_light }}"
+                      entity_id: '{{ target_light }}'
                     data:
-                      brightness_step_pct: "{{ brightness_step_pct * brightness_speed_multiplier }}"
+                      brightness_step_pct: '{{ brightness_step_pct * brightness_speed_multiplier }}'
               - conditions:
                   - condition: template
                     value_template: "{{ is_state(mode_helper, 'white') }}"
                 sequence:
                   - action: light.turn_on
                     target:
-                      entity_id: "{{ target_light }}"
+                      entity_id: '{{ target_light }}'
                     data:
                       color_temp_kelvin: >-
                         {{ [state_attr(target_light, 'color_temp_kelvin') | default(3000, true) + (kelvin_step * kelvin_speed_multiplier), 6500] | min }}
@@ -255,7 +255,7 @@ actions:
                 sequence:
                   - action: light.turn_on
                     target:
-                      entity_id: "{{ target_light }}"
+                      entity_id: '{{ target_light }}'
                     data:
                       hs_color: >-
                         {% set hs = state_attr(target_light, 'hs_color') | default([0, 100]) %}
@@ -281,20 +281,20 @@ actions:
                         sequence:
                           - action: light.turn_off
                             target:
-                              entity_id: "{{ target_light }}"
+                              entity_id: '{{ target_light }}'
                     default:
                       - action: light.turn_on
                         target:
-                          entity_id: "{{ target_light }}"
+                          entity_id: '{{ target_light }}'
                         data:
-                          brightness_step_pct: "{{ -1 * brightness_step_pct * brightness_speed_multiplier }}"
+                          brightness_step_pct: '{{ -1 * brightness_step_pct * brightness_speed_multiplier }}'
               - conditions:
                   - condition: template
                     value_template: "{{ is_state(mode_helper, 'white') }}"
                 sequence:
                   - action: light.turn_on
                     target:
-                      entity_id: "{{ target_light }}"
+                      entity_id: '{{ target_light }}'
                     data:
                       color_temp_kelvin: >-
                         {{ [state_attr(target_light, 'color_temp_kelvin') | default(3000, true) - (kelvin_step * kelvin_speed_multiplier), 2000] | max }}
@@ -304,7 +304,7 @@ actions:
                 sequence:
                   - action: light.turn_on
                     target:
-                      entity_id: "{{ target_light }}"
+                      entity_id: '{{ target_light }}'
                     data:
                       hs_color: >-
                         {% set hs = state_attr(target_light, 'hs_color') | default([0, 100]) %}

@@ -43,12 +43,12 @@ light_effect_toggle:
         # Effect is running -> stop it, then restore the snapshot scene.
         - conditions:
             - condition: template
-              value_template: "{{ active }}"
+              value_template: '{{ active }}'
           sequence:
             # stop_hue_effect is Hue-specific; use `none` for other brands.
             - action: light.turn_on
               target:
-                entity_id: "{{ target_light }}"
+                entity_id: '{{ target_light }}'
               data:
                 effect: stop_hue_effect
             # Give the bulb time to settle before re-applying the old state.
@@ -60,11 +60,11 @@ light_effect_toggle:
               then:
                 - action: scene.turn_on
                   target:
-                    entity_id: "{{ snapshot }}"
+                    entity_id: '{{ snapshot }}'
               else:
                 - action: light.turn_on
                   target:
-                    entity_id: "{{ target_light }}"
+                    entity_id: '{{ target_light }}'
                   data:
                     color_temp_kelvin: 2700
                     brightness: 200
@@ -74,10 +74,10 @@ light_effect_toggle:
           data:
             scene_id: "fx_{{ target_light | replace('.', '_') }}"
             snapshot_entities:
-              - "{{ target_light }}"
+              - '{{ target_light }}'
         - action: light.turn_on
           target:
-            entity_id: "{{ target_light }}"
+            entity_id: '{{ target_light }}'
           data:
-            effect: "{{ effect }}"
+            effect: '{{ effect }}'
             brightness: 255
