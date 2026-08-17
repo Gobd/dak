@@ -344,9 +344,7 @@ function WatchlistView() {
         <Button
           onClick={() => (editingId === null ? addEntry.mutate() : updateEntry.mutate())}
           disabled={
-            !label.trim() ||
-            (matchType !== 'unresolved' && !matchValue.trim()) ||
-            submitting
+            !label.trim() || (matchType !== 'unresolved' && !matchValue.trim()) || submitting
           }
           className="w-full gap-2"
         >

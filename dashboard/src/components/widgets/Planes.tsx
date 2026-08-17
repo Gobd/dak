@@ -1,15 +1,5 @@
 import { useState } from 'react';
-import {
-  Settings,
-  Plane,
-  Plus,
-  Trash2,
-  ExternalLink,
-  Pencil,
-  X,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Settings, Plane, Plus, Trash2, ExternalLink, Pencil, X, Eye, EyeOff } from 'lucide-react';
 import {
   livePlanesLiveGet,
   getSettingsPlanesSettingsGet,
@@ -140,11 +130,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
   }
 
   async function handleUpdateWatchlistEntry() {
-    if (
-      editingId === null ||
-      !label.trim() ||
-      (matchType !== 'unresolved' && !matchValue.trim())
-    ) {
+    if (editingId === null || !label.trim() || (matchType !== 'unresolved' && !matchValue.trim())) {
       return;
     }
     await updateWatchlistEntryPlanesWatchlistEntryIdPut({
@@ -359,9 +345,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
               placeholder="e.g. 10000"
             />
             <Button
-              onClick={
-                editingId === null ? handleAddWatchlistEntry : handleUpdateWatchlistEntry
-              }
+              onClick={editingId === null ? handleAddWatchlistEntry : handleUpdateWatchlistEntry}
               size="sm"
               className="w-full gap-2"
               disabled={!label.trim() || (matchType !== 'unresolved' && !matchValue.trim())}
