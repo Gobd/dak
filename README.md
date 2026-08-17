@@ -40,6 +40,7 @@ This SSHs into the Pi and sets up everything:
 | [Family Chores](readmes/family-chores.md)     | Chore management with points and leaderboards                     |
 | [Climate Display](readmes/climate-display.md) | Indoor/outdoor temperature display                                |
 | [Kasa Controller](readmes/kasa-controller.md) | Smart plug control app                                            |
+| [Plane Tracker](readmes/plane-tracker.md)     | Nearby aircraft geofence alerts via adsb.fi                       |
 
 ## Packages
 

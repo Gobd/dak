@@ -1,33 +1,56 @@
-PART 1 — find the 2 steady wires (V+ and GND)
+# Thermostat Button Probing Notes
 
-- [ ] Black probe → Blue. Red probe → Green. Reading at rest: _____
-- [ ] Tap day. Reading: _____
-- [ ] Tap night. Reading: _____
-- [ ] Tap heater. Reading: _____
-- [ ] Black probe → Blue (same). Red probe → Yellow. Reading at rest: _____
-- [ ] Tap day. Reading: _____
-- [ ] Tap night. Reading: _____
-- [ ] Tap heater. Reading: _____
-- [ ] Black probe → Blue (same). Red probe → Black. Reading at rest: _____
-- [ ] Tap day. Reading: _____
-- [ ] Tap night. Reading: _____
-- [ ] Tap heater. Reading: _____
-- [ ] Black probe → Blue (same). Red probe → Red. Reading at rest: _____
-- [ ] Tap day. Reading: _____
-- [ ] Tap night. Reading: _____
-- [ ] Tap heater. Reading: _____
+## Wire Mapping
 
-If Blue turns out to be a touch-sense line itself (everything looks like it's reacting no matter what you press), pick a different wire as the black-probe reference and redo Part 1 with that one — note in your reply if you had to switch.
+| Board wire | Ethernet wire |
+|------------|---------------|
+| Green      | Orange        |
+| Blue       | Blue          |
+| Yellow     | White/Blue    |
+| Red        | White/Orange  |
+| Black      | Green         |
 
-PART 2 — once you've found the 2 steady wires (call them V+ and GND):
+## Part 1 Results — Blue (ethernet) as reference
 
-- [ ] Black probe → GND wire. Red probe → V+ wire. Reading: _____
+| Board | Ethernet    | At rest | Day      | Night | Heater |
+|-------|-------------|---------|----------|-------|--------|
+| Green | Orange      | steady  | nothing  | nothing | nothing |
+| Red   | White/Orange| —       | 2.5V (kind-of-white mode), 5V (all-white mode) | nothing (likely bad positap) | — |
+| Yellow| White/Blue  | steady  | nothing  | nothing | nothing |
+| Black | Green       | steady  | nothing  | nothing | nothing |
+| Blue  | Blue        | (ref)   | —        | —     | — |
 
-PART 3 — backlight observation (eyeball, no meter)
+Re-referenced: Black probe on Orange, red on Blue → nothing anywhere (Orange and Blue are steady relative to each other).
 
-- [ ] Tap day — day button's light gets brighter? Y/N
-- [ ] Tap night — night button's light gets brighter? Y/N
-- [ ] Tap heater — heater button's light gets brighter? Y/N
-- [ ] While day is lit brighter: does its wire's reading (from Part 1) stay changed the whole time it's lit bright, or blip back to resting even though the light stays on? _____
+> Note: positap connections were unreliable — night signal on Red likely missed due to bad contact.
 
-Send back the filled-in numbers (with wire colors) and I'll map Blue/Green/Yellow/Black/Red to day/night/heater/V+/GND, update the YAML's wiring doc, and figure out the backlight situation from your Part 3 answers.
+## Part 2 — V+ and GND
+
+Not yet confirmed. Candidates for steady wires: Orange, Blue, Yellow, Black (4 wires showed no reaction).
+Need to find which two are V+ and GND — **to do: nick insulation on steady wires and probe directly**.
+
+## Part 3 — Backlight observation
+
+- Tap day → day button backlight gets brighter: **Y**
+- Tap night → night button backlight gets brighter: **Y**
+- Tap heater → not tested
+
+## Findings So Far
+
+- **White/Orange (board: Red)** — signal wire, reacts to day button color modes
+- **Night signal** — not yet identified, likely bad positap; almost certainly one of the other wires
+- Both buttons confirmed physically working (Part 3)
+
+## Next Steps
+
+1. Nick insulation on board wires directly (bypass positaps)
+2. Re-probe for night signal with bare wire contact
+3. Identify V+ among the steady wires (probe pairs for a stable ~3.3V or 5V)
+4. Solder splice day + night signal wires → QuinLED inputs
+5. Remove all positaps
+
+## QuinLED Plan
+
+- Day signal: White/Orange (board: Red) ← confirmed
+- Night signal: TBD
+- QuinLED taps in parallel — original thermostat stays functional

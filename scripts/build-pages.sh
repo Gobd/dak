@@ -24,6 +24,7 @@ apps=(
   kasa-controller
   maintenance-tracker
   notes-app
+  plane-tracker
   recipe-org
   reddit-gallery
   tracker

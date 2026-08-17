@@ -16,25 +16,22 @@ blueprint:
     device's buttons to a light doesn't work reliably on this hardware,
     per community reports) - B1 instead toggles on/off through this
     automation via MQTT action events, same mechanism as B2/B3, which
-    works fine. B1 press: off if the light is on, or on at 100%
-    brightness and a fixed reset color temperature if it's off (hue
-    unchanged). The dial is also a fallback on/off: rotating left below
-    the auto-off floor turns the light off, rotating right from off
-    turns it back on and ramps brightness up from there. B2 toggles
+    works fine. B1 press toggles the light and resets the dial to dim mode;
+    when turning on, it restores the light at 100% brightness and a fixed
+    reset color temperature. The dial is also a fallback on/off: rotating
+    left below the auto-off floor turns the light off, rotating right from
+    off turns it back on and ramps brightness up from there. B2 toggles
     white (kelvin) mode, B3 toggles rgb mode, and the dial is a pure
     live dimmer / kelvin-stepper / hue-stepper depending on mode - no
     memory for the dial itself.
 
-    Fast dial spins send fewer, larger MQTT messages (Z2M coalesces rapid
-    rotation) each carrying an action_step_size reflecting how much
-    physical rotation that message represents. Every step (brightness/
-    kelvin/hue) is scaled by that value relative to a baseline slow-tick
-    size of 8 (observed for a single detent) - so a fast flick moves
-    noticeably further than a slow single click, instead of every message
-    applying the same fixed step regardless of speed. Each mode has its
-    own configurable multiplier cap (1 = fast spins same as slow, higher
-    = fast spins move further), so dim/white/rgb can each be tuned
-    independently.
+    Z2M reports dial speed in the action name: single-detent `step`,
+    continuous `slow`, or continuous `fast`. Single detents use the base
+    step, slow turns use 2x, and fast turns use the configured maximum
+    multiplier. For step events that include an action_step_size, larger
+    values are still scaled relative to the observed single-detent value
+    of 8. Each mode has its own configurable multiplier cap, so
+    dim/white/rgb can be tuned independently.
   domain: automation
   input:
     tap_dial_mqtt_topic:
@@ -67,7 +64,7 @@ blueprint:
     brightness_step_pct:
       name: Dial brightness step (%)
       description: How much brightness changes per dial "tick" in dim mode.
-      default: 10
+      default: 15
       selector:
         number:
           min: 1
@@ -76,7 +73,7 @@ blueprint:
     kelvin_step:
       name: Dial kelvin step
       description: How much color temperature changes per dial "tick" in white mode.
-      default: 300
+      default: 450
       selector:
         number:
           min: 50
@@ -84,7 +81,7 @@ blueprint:
     hue_step:
       name: Dial hue step (degrees)
       description: How much hue shifts per dial "tick" in rgb mode.
-      default: 15
+      default: 25
       selector:
         number:
           min: 1
@@ -103,9 +100,9 @@ blueprint:
       name: B1 reset color temperature
       description: >-
         Color temperature the light is set to whenever B1 turns it on
-        (from off). Does not affect B1 turning the light off, or the
-        dial/B2/B3 behavior.
-      default: 2700
+        (from off), providing a full reset from RGB color mode. Does not
+        affect B1 turning the light off.
+      default: 5400
       selector:
         number:
           min: 2000
@@ -163,10 +160,19 @@ variables:
   hue_max_multiplier: !input hue_max_multiplier
   action: "{{ trigger.payload_json.action | default('', true) }}"
   raw_step_size: '{{ trigger.payload_json.action_step_size | default(0, true) }}'
-  raw_speed_ratio: '{{ [(raw_step_size / 8), 1] | max }}'
+  raw_speed_ratio: >-
+    {% if '_fast' in action %}
+      10
+    {% elif '_slow' in action %}
+      2
+    {% else %}
+      {{ [(raw_step_size / 8), 1] | max }}
+    {% endif %}
   brightness_speed_multiplier: '{{ [raw_speed_ratio, brightness_max_multiplier] | min }}'
   kelvin_speed_multiplier: '{{ [raw_speed_ratio, kelvin_max_multiplier] | min }}'
   hue_speed_multiplier: '{{ [raw_speed_ratio, hue_max_multiplier] | min }}'
+  brightness_step_amount: >-
+    {{ [brightness_step_pct * brightness_speed_multiplier, 100] | min }}
 
 conditions:
   - condition: template
@@ -175,12 +181,17 @@ conditions:
 actions:
   - choose:
       # ============================================================
-      # BUTTON 1: FULL BRIGHTNESS ON/OFF TOGGLE
+      # BUTTON 1: ON/OFF TOGGLE AND RETURN TO DIM MODE
       # ============================================================
       - conditions:
           - condition: template
             value_template: "{{ action == 'button_1_press' }}"
         sequence:
+          - action: input_select.select_option
+            target:
+              entity_id: '{{ mode_helper }}'
+            data:
+              option: dim
           - if:
               - condition: template
                 value_template: "{{ is_state(target_light, 'on') }}"
@@ -238,7 +249,7 @@ actions:
                     target:
                       entity_id: '{{ target_light }}'
                     data:
-                      brightness_step_pct: '{{ brightness_step_pct * brightness_speed_multiplier }}'
+                      brightness_step_pct: '{{ brightness_step_amount }}'
               - conditions:
                   - condition: template
                     value_template: "{{ is_state(mode_helper, 'white') }}"
@@ -287,7 +298,7 @@ actions:
                         target:
                           entity_id: '{{ target_light }}'
                         data:
-                          brightness_step_pct: '{{ -1 * brightness_step_pct * brightness_speed_multiplier }}'
+                          brightness_step_pct: '{{ -1 * brightness_step_amount }}'
               - conditions:
                   - condition: template
                     value_template: "{{ is_state(mode_helper, 'white') }}"
