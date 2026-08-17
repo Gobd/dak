@@ -441,11 +441,15 @@ def _detect_transfers(new_rows: list[dict]) -> None:
                 _mark_excluded(conn, row["id"], "transfer_keyword")
         conn.commit()
 
-        # Amount/date pairing across all recently-synced, still-included transactions.
+        # Amount/date pairing across recently-synced transactions. Include rows
+        # excluded by the keyword pass above: one side of a card payment often
+        # contains "payment" while the other side has an opaque description.
+        # Excluding the recognizable side from pairing would leave the positive
+        # card-side transaction looking like an unexpected deposit.
         candidates = conn.execute(
             """
             SELECT id, account_id, posted, amount FROM transactions_cache
-            WHERE excluded = 0
+            WHERE (excluded = 0 OR exclude_reason = 'transfer_keyword')
               AND posted >= ?
             """,
             ((datetime.now() - timedelta(days=TRANSACTION_LOOKBACK_DAYS)).isoformat(),),
@@ -467,7 +471,7 @@ def _detect_transfers(new_rows: list[dict]) -> None:
                     continue
                 a_date = datetime.fromisoformat(a["posted"])
                 b_date = datetime.fromisoformat(b["posted"])
-                if abs((a_date - b_date).days) > TRANSFER_PAIR_WINDOW_DAYS:
+                if abs(a_date - b_date) > timedelta(days=TRANSFER_PAIR_WINDOW_DAYS):
                     continue
 
                 _mark_excluded(conn, a["id"], "transfer_pair")

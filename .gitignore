@@ -4,6 +4,8 @@
 _site
 dist
 node_modules
+*.gz
+.pnpm-store
 
 # Local secrets for development
 secrets.local.js

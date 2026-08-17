@@ -657,24 +657,6 @@ export type ExcludeTransactionRequest = {
 };
 
 /**
- * GenericSuccess
- *
- * Generic success response.
- */
-export type GenericSuccess = {
-    /**
-     * Success
-     */
-    success: boolean;
-    /**
-     * Data
-     */
-    data?: {
-        [key: string]: unknown;
-    } | null;
-};
-
-/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -984,6 +966,201 @@ export type PingResponse = {
      * Online
      */
     online: boolean;
+};
+
+/**
+ * PlaneSettings
+ *
+ * Current plane-tracker settings.
+ */
+export type PlaneSettings = {
+    /**
+     * Home Lat
+     */
+    home_lat: number | null;
+    /**
+     * Home Lon
+     */
+    home_lon: number | null;
+    /**
+     * Radius Nm
+     */
+    radius_nm: number;
+    /**
+     * Target Warning Minutes
+     */
+    target_warning_minutes: number;
+    /**
+     * Max Miss Distance Nm
+     */
+    max_miss_distance_nm: number;
+    /**
+     * Max Altitude Ft
+     */
+    max_altitude_ft: number | null;
+    /**
+     * Poll Interval Seconds
+     */
+    poll_interval_seconds: number;
+    /**
+     * Ntfy Topic
+     */
+    ntfy_topic: string | null;
+    /**
+     * Ntfy Base Url
+     */
+    ntfy_base_url: string;
+};
+
+/**
+ * PlaneSettingsUpdate
+ *
+ * Request to update plane-tracker settings.
+ *
+ * All fields optional so the client can patch a subset; omitted fields
+ * keep their current stored value.
+ */
+export type PlaneSettingsUpdate = {
+    /**
+     * Home Lat
+     */
+    home_lat?: number | null;
+    /**
+     * Home Lon
+     */
+    home_lon?: number | null;
+    /**
+     * Radius Nm
+     */
+    radius_nm?: number | null;
+    /**
+     * Target Warning Minutes
+     */
+    target_warning_minutes?: number | null;
+    /**
+     * Max Miss Distance Nm
+     */
+    max_miss_distance_nm?: number | null;
+    /**
+     * Max Altitude Ft
+     */
+    max_altitude_ft?: number | null;
+    /**
+     * Clear Max Altitude
+     */
+    clear_max_altitude?: boolean;
+    /**
+     * Poll Interval Seconds
+     */
+    poll_interval_seconds?: number | null;
+    /**
+     * Ntfy Topic
+     */
+    ntfy_topic?: string | null;
+    /**
+     * Ntfy Base Url
+     */
+    ntfy_base_url?: string | null;
+};
+
+/**
+ * PlaneSighting
+ *
+ * A single aircraft from the most recent adsb.fi poll.
+ */
+export type PlaneSighting = {
+    /**
+     * Hex
+     */
+    hex: string;
+    /**
+     * Flight
+     */
+    flight?: string | null;
+    /**
+     * Registration
+     */
+    registration?: string | null;
+    /**
+     * Model
+     */
+    model?: string | null;
+    /**
+     * Desc
+     */
+    desc?: string | null;
+    /**
+     * Lat
+     */
+    lat?: number | null;
+    /**
+     * Lon
+     */
+    lon?: number | null;
+    /**
+     * Alt Baro
+     */
+    alt_baro?: number | null;
+    /**
+     * Ground Speed
+     */
+    ground_speed?: number | null;
+    /**
+     * Track
+     */
+    track?: number | null;
+    /**
+     * Distance Nm
+     */
+    distance_nm?: number | null;
+    /**
+     * Bearing Deg
+     */
+    bearing_deg?: number | null;
+    /**
+     * Closing Speed Kt
+     */
+    closing_speed_kt?: number | null;
+    /**
+     * Eta Minutes
+     */
+    eta_minutes?: number | null;
+    /**
+     * Miss Distance Nm
+     */
+    miss_distance_nm?: number | null;
+    /**
+     * In Geofence
+     */
+    in_geofence: boolean;
+    /**
+     * Matched Watchlist Id
+     */
+    matched_watchlist_id?: number | null;
+    /**
+     * Matched Label
+     */
+    matched_label?: string | null;
+};
+
+/**
+ * PlanesLiveResponse
+ *
+ * Live aircraft list plus poll metadata.
+ */
+export type PlanesLiveResponse = {
+    /**
+     * Aircraft
+     */
+    aircraft: Array<PlaneSighting>;
+    /**
+     * Last Polled At
+     */
+    last_polled_at: string | null;
+    /**
+     * Last Poll Error
+     */
+    last_poll_error?: string | null;
 };
 
 /**
@@ -1869,6 +2046,62 @@ export type WakeResponse = {
 };
 
 /**
+ * WatchlistEntry
+ *
+ * A single watch-list entry to alert on.
+ */
+export type WatchlistEntry = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Match Type
+     */
+    match_type: 'icao_hex' | 'callsign_prefix' | 'model' | 'unresolved';
+    /**
+     * Match Value
+     */
+    match_value: string;
+    /**
+     * Max Altitude Ft
+     */
+    max_altitude_ft?: number | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * WatchlistEntryRequest
+ *
+ * Request to create a watch-list entry.
+ */
+export type WatchlistEntryRequest = {
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Match Type
+     */
+    match_type: 'icao_hex' | 'callsign_prefix' | 'model' | 'unresolved';
+    /**
+     * Match Value
+     */
+    match_value: string;
+    /**
+     * Max Altitude Ft
+     */
+    max_altitude_ft?: number | null;
+};
+
+/**
  * ZigbeeDevice
  *
  * Zigbee device from Zigbee2MQTT.
@@ -1918,6 +2151,36 @@ export type ZigbeeDevice = {
      * Interview Completed
      */
     interview_completed?: boolean;
+};
+
+/**
+ * GenericSuccess
+ *
+ * Generic success response.
+ */
+export type AppModelsMoneyGenericSuccess = {
+    /**
+     * Success
+     */
+    success: boolean;
+    /**
+     * Data
+     */
+    data?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * GenericSuccess
+ *
+ * Generic success response.
+ */
+export type AppModelsPlanesGenericSuccess = {
+    /**
+     * Success
+     */
+    success: boolean;
 };
 
 export type RootGetData = {
@@ -3468,7 +3731,7 @@ export type UnlinkMoneyLinkDeleteResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type UnlinkMoneyLinkDeleteResponse = UnlinkMoneyLinkDeleteResponses[keyof UnlinkMoneyLinkDeleteResponses];
@@ -3591,7 +3854,7 @@ export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostRespo
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponse = SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponses[keyof SetTransactionExcludedMoneyTransactionsTransactionIdExcludePostResponses];
@@ -3616,7 +3879,7 @@ export type SetDefaultBudgetMoneyBudgetPostResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SetDefaultBudgetMoneyBudgetPostResponse = SetDefaultBudgetMoneyBudgetPostResponses[keyof SetDefaultBudgetMoneyBudgetPostResponses];
@@ -3641,7 +3904,7 @@ export type SetMonthlyOverrideMoneyBudgetOverridePostResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SetMonthlyOverrideMoneyBudgetOverridePostResponse = SetMonthlyOverrideMoneyBudgetOverridePostResponses[keyof SetMonthlyOverrideMoneyBudgetOverridePostResponses];
@@ -3671,7 +3934,7 @@ export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponse = ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses[keyof ClearMonthlyOverrideMoneyBudgetOverrideMonthDeleteResponses];
@@ -3696,7 +3959,7 @@ export type SetDepositSettingsMoneySettingsDepositsPostResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SetDepositSettingsMoneySettingsDepositsPostResponse = SetDepositSettingsMoneySettingsDepositsPostResponses[keyof SetDepositSettingsMoneySettingsDepositsPostResponses];
@@ -3721,7 +3984,7 @@ export type SetTransferKeywordsMoneySettingsTransfersPostResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SetTransferKeywordsMoneySettingsTransfersPostResponse = SetTransferKeywordsMoneySettingsTransfersPostResponses[keyof SetTransferKeywordsMoneySettingsTransfersPostResponses];
@@ -3737,7 +4000,167 @@ export type SyncNowMoneySyncPostResponses = {
     /**
      * Successful Response
      */
-    200: GenericSuccess;
+    200: AppModelsMoneyGenericSuccess;
 };
 
 export type SyncNowMoneySyncPostResponse = SyncNowMoneySyncPostResponses[keyof SyncNowMoneySyncPostResponses];
+
+export type LivePlanesLiveGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/planes/live';
+};
+
+export type LivePlanesLiveGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlanesLiveResponse;
+};
+
+export type LivePlanesLiveGetResponse = LivePlanesLiveGetResponses[keyof LivePlanesLiveGetResponses];
+
+export type GetSettingsPlanesSettingsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/planes/settings';
+};
+
+export type GetSettingsPlanesSettingsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlaneSettings;
+};
+
+export type GetSettingsPlanesSettingsGetResponse = GetSettingsPlanesSettingsGetResponses[keyof GetSettingsPlanesSettingsGetResponses];
+
+export type UpdateSettingsPlanesSettingsPutData = {
+    body: PlaneSettingsUpdate;
+    path?: never;
+    query?: never;
+    url: '/planes/settings';
+};
+
+export type UpdateSettingsPlanesSettingsPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSettingsPlanesSettingsPutError = UpdateSettingsPlanesSettingsPutErrors[keyof UpdateSettingsPlanesSettingsPutErrors];
+
+export type UpdateSettingsPlanesSettingsPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlaneSettings;
+};
+
+export type UpdateSettingsPlanesSettingsPutResponse = UpdateSettingsPlanesSettingsPutResponses[keyof UpdateSettingsPlanesSettingsPutResponses];
+
+export type ListWatchlistPlanesWatchlistGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/planes/watchlist';
+};
+
+export type ListWatchlistPlanesWatchlistGetResponses = {
+    /**
+     * Response List Watchlist Planes Watchlist Get
+     *
+     * Successful Response
+     */
+    200: Array<WatchlistEntry>;
+};
+
+export type ListWatchlistPlanesWatchlistGetResponse = ListWatchlistPlanesWatchlistGetResponses[keyof ListWatchlistPlanesWatchlistGetResponses];
+
+export type AddWatchlistEntryPlanesWatchlistPostData = {
+    body: WatchlistEntryRequest;
+    path?: never;
+    query?: never;
+    url: '/planes/watchlist';
+};
+
+export type AddWatchlistEntryPlanesWatchlistPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddWatchlistEntryPlanesWatchlistPostError = AddWatchlistEntryPlanesWatchlistPostErrors[keyof AddWatchlistEntryPlanesWatchlistPostErrors];
+
+export type AddWatchlistEntryPlanesWatchlistPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: WatchlistEntry;
+};
+
+export type AddWatchlistEntryPlanesWatchlistPostResponse = AddWatchlistEntryPlanesWatchlistPostResponses[keyof AddWatchlistEntryPlanesWatchlistPostResponses];
+
+export type DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Entry Id
+         */
+        entry_id: number;
+    };
+    query?: never;
+    url: '/planes/watchlist/{entry_id}';
+};
+
+export type DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteError = DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteErrors[keyof DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteErrors];
+
+export type DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppModelsPlanesGenericSuccess;
+};
+
+export type DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteResponse = DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteResponses[keyof DeleteWatchlistEntryPlanesWatchlistEntryIdDeleteResponses];
+
+export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutData = {
+    body: WatchlistEntryRequest;
+    path: {
+        /**
+         * Entry Id
+         */
+        entry_id: number;
+    };
+    query?: never;
+    url: '/planes/watchlist/{entry_id}';
+};
+
+export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutError = UpdateWatchlistEntryPlanesWatchlistEntryIdPutErrors[keyof UpdateWatchlistEntryPlanesWatchlistEntryIdPutErrors];
+
+export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: WatchlistEntry;
+};
+
+export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponse = UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses[keyof UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses];

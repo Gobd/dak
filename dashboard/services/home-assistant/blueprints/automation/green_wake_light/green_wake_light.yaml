@@ -1,0 +1,95 @@
+blueprint:
+  name: Green Wake Light
+  description: >-
+    Turns a light group green at a low brightness at a scheduled time,
+    regardless of its current on/off state. Make two instances of this
+    blueprint - one with the weekday time trigger on Mon-Fri, one with the
+    weekend time trigger on Sat-Sun - to get different wake times for
+    weekdays vs weekends. See README_green_wake_light.md.
+
+    Uses light.turn_on with hs_color + brightness_pct, which works whether
+    the light was off or already on - no separate "if off" branch needed,
+    Hue lights accept color/brightness in the same call that turns them on.
+  domain: automation
+  input:
+    target_light:
+      name: Target light group
+      description: >-
+        The light GROUP to turn green (a Z2M/Hue group, or any light
+        entity) - add/remove member bulbs on the group itself later
+        without touching this automation.
+      selector:
+        entity:
+          domain: light
+    trigger_time:
+      name: Trigger time
+      description: Time of day this automation fires.
+      selector:
+        time: {}
+    days:
+      name: Days of week
+      description: >-
+        Which days this instance should fire on. Use Mon-Fri for a weekday
+        instance and Sat-Sun for a weekend instance (make two separate
+        automations from this blueprint to get two different times).
+      default:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Monday
+              value: mon
+            - label: Tuesday
+              value: tue
+            - label: Wednesday
+              value: wed
+            - label: Thursday
+              value: thu
+            - label: Friday
+              value: fri
+            - label: Saturday
+              value: sat
+            - label: Sunday
+              value: sun
+    brightness_pct:
+      name: Brightness (%)
+      description: Brightness to set the light to.
+      default: 25
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: '%'
+    transition:
+      name: Transition (seconds)
+      description: How long the light takes to fade in/change to green.
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: s
+
+mode: single
+
+triggers:
+  - trigger: time
+    at: !input trigger_time
+
+conditions:
+  - condition: time
+    weekday: !input days
+
+actions:
+  - action: light.turn_on
+    target:
+      entity_id: !input target_light
+    data:
+      hs_color: [120, 100]
+      brightness_pct: !input brightness_pct
+      transition: !input transition

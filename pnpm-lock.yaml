@@ -83,6 +83,9 @@ importers:
 
   climate-display:
     dependencies:
+      '@dak/api-client':
+        specifier: workspace:*
+        version: link:../packages/api-client
       '@dak/hooks':
         specifier: workspace:*
         version: link:../packages/hooks
@@ -607,6 +610,55 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.16(@types/node@25.9.1)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
+
+  plane-tracker:
+    dependencies:
+      '@dak/api-client':
+        specifier: workspace:*
+        version: link:../packages/api-client
+      '@dak/hooks':
+        specifier: workspace:*
+        version: link:../packages/hooks
+      '@dak/ui':
+        specifier: workspace:*
+        version: link:../packages/ui
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.101.0(react@19.2.7)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.17.0(react@19.2.7)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.7
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.7(react@19.2.7)
+      zustand:
+        specifier: 'catalog:'
+        version: 5.0.14(@types/react@19.2.16)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
+    devDependencies:
+      '@dak/vite-shared-react':
+        specifier: workspace:*
+        version: link:../packages/vite-shared-react
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.0
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.16
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.16)
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.3.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.16(@types/node@24.13.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
 
   recipe-org:
     dependencies:

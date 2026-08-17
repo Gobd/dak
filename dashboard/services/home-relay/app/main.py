@@ -35,6 +35,7 @@ from app.routers import (
     money,
     mqtt,
     notifications,
+    planes,
     sensors,
     system_stats,
     transcribe,
@@ -74,6 +75,11 @@ async def lifespan(_app: FastAPI):
 
     money_service.init()
 
+    # Initialize plane-tracker service (polls adsb.fi, alerts via ntfy)
+    from app.services import plane_service
+
+    plane_service.init()
+
     yield
 
     # Cleanup on shutdown (if needed)
@@ -91,7 +97,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -184,3 +190,4 @@ app.include_router(adguard.router)
 app.include_router(notifications.router)
 app.include_router(system_stats.router)
 app.include_router(money.router)
+app.include_router(planes.router)

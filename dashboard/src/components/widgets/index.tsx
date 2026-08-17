@@ -33,6 +33,7 @@ const widgetComponents: Record<WidgetType, ComponentType<WidgetComponentProps>> 
   money: lazy(() => import('./Money')),
   'battery-status': lazy(() => import('./BatteryStatus')),
   'private-mode': lazy(() => import('./PrivateMode')),
+  planes: lazy(() => import('./Planes')),
 };
 
 // Loading placeholder

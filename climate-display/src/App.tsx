@@ -12,31 +12,14 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { allSensorsSensorsAllGet, type AllSensorsResponse } from '@dak/api-client';
 import { useDarkMode } from '@dak/hooks';
 import { Spinner, Button } from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
-interface SensorData {
-  available: boolean;
-  temperature: number;
-  humidity: number;
-  feels_like: number;
-  temperature_trend: 'rising' | 'falling' | 'steady';
-  humidity_trend: 'rising' | 'falling' | 'steady';
-  battery: number;
-  error?: string;
-}
-
-interface ClimateData {
-  indoor: SensorData;
-  outdoor: SensorData;
-  comparison: {
-    outside_feels_cooler: boolean;
-    outside_feels_warmer: boolean;
-    difference: number;
-  } | null;
-}
+type SensorData = AllSensorsResponse['indoor'];
+type ClimateData = AllSensorsResponse;
 
 type View = 'climate' | 'settings';
 
@@ -148,9 +131,9 @@ function ClimateView() {
   const { data, isLoading, error, refetch, isFetching } = useQuery<ClimateData>({
     queryKey: ['climate', relayUrl],
     queryFn: async () => {
-      const res = await fetch(`${relayUrl}/sensors/all`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
+      const { data } = await allSensorsSensorsAllGet({ baseUrl: relayUrl });
+      if (!data) throw new Error('Failed to fetch');
+      return data;
     },
     refetchInterval: 60000,
   });

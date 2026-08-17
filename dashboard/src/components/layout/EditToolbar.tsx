@@ -50,6 +50,7 @@ const WIDGET_OPTIONS: { type: WidgetType; label: string; description: string }[]
     label: 'Private Mode',
     description: 'Blur/lock the screen behind a PIN',
   },
+  { type: 'planes', label: 'Plane Tracker', description: 'Nearby aircraft geofence alerts' },
 ];
 
 /**

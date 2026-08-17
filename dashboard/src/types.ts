@@ -22,7 +22,8 @@ export type WidgetType =
   | 'system-stats'
   | 'money'
   | 'battery-status'
-  | 'private-mode';
+  | 'private-mode'
+  | 'planes';
 
 // Anchor positions for pixel-based positioning
 export type AnchorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -106,6 +107,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, Partial<PanelConfig>> = {
   'sun-moon': { width: 15, height: 15, refresh: '1h' },
   aqi: { width: 15, height: 15, refresh: '30m' },
   uv: { width: 15, height: 15, refresh: '30m' },
+  planes: { width: 20, height: 20, refresh: '1m' },
   iframe: { width: 40, height: 40 },
   climate: {
     width: 12,
