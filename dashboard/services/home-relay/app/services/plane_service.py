@@ -208,13 +208,18 @@ def add_location_profile(name: str) -> dict:
         except sqlite3.IntegrityError as exc:
             raise ValueError("A location profile with that name already exists") from exc
         profile_id = cursor.lastrowid
+        if profile_id is None:
+            raise RuntimeError("SQLite did not return a location profile ID")
         conn.execute(
             "UPDATE settings SET active_location_profile_id = ? WHERE id = 1", (profile_id,)
         )
         _clear_location_state(conn)
         conn.commit()
     _reset_poll_status()
-    return _get_location_profile(profile_id)
+    profile = _get_location_profile(profile_id)
+    if profile is None:
+        raise RuntimeError("New location profile could not be loaded")
+    return profile
 
 
 def update_location_profile(profile_id: int, update: dict) -> dict | None:

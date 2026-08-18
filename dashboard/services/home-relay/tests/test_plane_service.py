@@ -52,7 +52,9 @@ class WatchlistFilterTests(unittest.TestCase):
         plane_service.activate_location_profile(home["id"])
         settings = plane_service.get_settings()
         assert settings["active_location_profile_id"] == home["id"]
-        assert plane_service._get_location_profile(cabin["id"])["is_active"] is False
+        inactive_cabin = plane_service._get_location_profile(cabin["id"])
+        assert inactive_cabin is not None
+        assert inactive_cabin["is_active"] is False
 
     def test_aircraft_provider_falls_back_to_adsb_fi(self):
         fallback_response = Mock()
