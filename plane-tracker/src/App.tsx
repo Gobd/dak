@@ -14,6 +14,7 @@ import {
   X,
   Eye,
   EyeOff,
+  LocateFixed,
 } from 'lucide-react';
 import {
   livePlanesLiveGet,
@@ -21,11 +22,16 @@ import {
   addWatchlistEntryPlanesWatchlistPost,
   updateWatchlistEntryPlanesWatchlistEntryIdPut,
   deleteWatchlistEntryPlanesWatchlistEntryIdDelete,
+  listLocationProfilesPlanesLocationProfilesGet,
+  addLocationProfilePlanesLocationProfilesPost,
+  updateLocationProfilePlanesLocationProfilesProfileIdPut,
+  activateLocationProfilePlanesLocationProfilesProfileIdActivePut,
   type PlaneSighting,
   type WatchlistEntry,
+  type LocationProfile,
 } from '@dak/api-client';
 import { useDarkMode } from '@dak/hooks';
-import { Spinner, Button, Input } from '@dak/ui';
+import { Spinner, Button, Input, ToastContainer, useToastStore } from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -35,7 +41,7 @@ function adsbGlobeUrl(hex: string): string {
   return `https://globe.adsb.fi/?icao=${hex.toLowerCase()}`;
 }
 
-function AircraftCard({ ac }: { ac: PlaneSighting }) {
+function AircraftCard({ ac, isStale = false }: { ac: PlaneSighting; isStale?: boolean }) {
   const flight = ac.flight || ac.registration || ac.hex;
   const isMatch = ac.matched_watchlist_id != null;
 
@@ -54,12 +60,17 @@ function AircraftCard({ ac }: { ac: PlaneSighting }) {
                 {ac.matched_label}
               </span>
             )}
-            {ac.eta_minutes != null && (
+            {isStale && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium">
+                Stale snapshot
+              </span>
+            )}
+            {!isStale && ac.eta_minutes != null && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-warning/20 text-warning font-medium">
                 ETA {ac.eta_minutes.toFixed(1)}m
               </span>
             )}
-            {ac.miss_distance_nm != null && (
+            {!isStale && ac.miss_distance_nm != null && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-surface-sunken text-text-secondary font-medium">
                 CPA {ac.miss_distance_nm.toFixed(1)}nm
               </span>
@@ -85,7 +96,8 @@ function AircraftCard({ ac }: { ac: PlaneSighting }) {
         {ac.distance_nm != null && <span>{ac.distance_nm.toFixed(1)} nm</span>}
         {ac.alt_baro != null && <span>{ac.alt_baro.toLocaleString()} ft</span>}
         {ac.ground_speed != null && <span>{Math.round(ac.ground_speed)} kts</span>}
-        {ac.bearing_deg != null && <span>{Math.round(ac.bearing_deg)}°</span>}
+        {ac.track != null && <span>Heading {Math.round(ac.track)}°</span>}
+        {ac.bearing_deg != null && <span>Bearing {Math.round(ac.bearing_deg)}°</span>}
       </div>
     </div>
   );
@@ -131,6 +143,7 @@ function LiveView() {
   const aircraft = data?.aircraft ?? [];
   const matches = aircraft.filter((a) => a.matched_watchlist_id != null);
   const nearby = aircraft.filter((a) => a.matched_watchlist_id == null);
+  const isStale = Boolean(data?.last_poll_error);
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-auto">
@@ -145,8 +158,14 @@ function LiveView() {
         </Button>
       </div>
 
-      {data?.last_poll_error && (
-        <p className="text-sm text-warning">Last poll error: {data.last_poll_error}</p>
+      {isStale && (
+        <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
+          Aircraft provider unavailable. Showing the last snapshot from{' '}
+          {data?.last_polled_at
+            ? new Date(data.last_polled_at).toLocaleTimeString()
+            : 'before the outage'}
+          .
+        </div>
       )}
 
       {matches.length === 0 && (
@@ -168,7 +187,7 @@ function LiveView() {
             Filter matches ({matches.length})
           </h2>
           {matches.map((ac) => (
-            <AircraftCard key={ac.hex} ac={ac} />
+            <AircraftCard key={ac.hex} ac={ac} isStale={isStale} />
           ))}
         </div>
       )}
@@ -191,7 +210,7 @@ function LiveView() {
                 Other nearby ({nearby.length})
               </h2>
               {nearby.map((ac) => (
-                <AircraftCard key={ac.hex} ac={ac} />
+                <AircraftCard key={ac.hex} ac={ac} isStale={isStale} />
               ))}
             </div>
           )}
@@ -418,14 +437,138 @@ function WatchlistView() {
 export default function App() {
   const [view, setView] = useState<View>('live');
   const [isDark, setIsDark] = useDarkMode('plane-tracker-dark-mode');
+  const relayUrl = useSettingsStore((s) => s.relayUrl);
+  const queryClient = useQueryClient();
+  const showToast = useToastStore((s) => s.showToast);
+
+  const { data: locationProfiles = [] } = useQuery({
+    queryKey: ['planes-location-profiles', relayUrl],
+    queryFn: async () => {
+      const { data } = await listLocationProfilesPlanesLocationProfilesGet({ baseUrl: relayUrl });
+      return (data ?? []) as LocationProfile[];
+    },
+  });
+  const activeLocationProfile = locationProfiles.find((profile) => profile.is_active);
+
+  const selectLocationProfile = useMutation({
+    mutationFn: async (selection: { profileId?: number; newName?: string }) => {
+      if (selection.newName) {
+        await addLocationProfilePlanesLocationProfilesPost({
+          baseUrl: relayUrl,
+          throwOnError: true,
+          body: { name: selection.newName },
+        });
+        return;
+      }
+      if (selection.profileId == null) return;
+      await activateLocationProfilePlanesLocationProfilesProfileIdActivePut({
+        baseUrl: relayUrl,
+        throwOnError: true,
+        path: { profile_id: selection.profileId },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-settings', relayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
+    },
+    onError: () => showToast('Could not select that location profile', 'error'),
+  });
+
+  const handleProfileSelection = (value: string) => {
+    if (value === 'new') {
+      const name = window.prompt('Name this location profile');
+      if (name?.trim()) selectLocationProfile.mutate({ newName: name.trim() });
+      return;
+    }
+    const profileId = Number(value);
+    if (Number.isFinite(profileId)) selectLocationProfile.mutate({ profileId });
+  };
+
+  const updateCurrentLocation = useMutation({
+    mutationFn: async () => {
+      if (!activeLocationProfile) {
+        throw new Error('Create or select a location profile first');
+      }
+      if (!navigator.geolocation) {
+        throw new Error('Location is not available on this device');
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+        });
+      });
+
+      await updateLocationProfilePlanesLocationProfilesProfileIdPut({
+        baseUrl: relayUrl,
+        throwOnError: true,
+        path: { profile_id: activeLocationProfile.id },
+        body: {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        },
+      });
+
+      return position.coords.accuracy;
+    },
+    onSuccess: (accuracyMeters) => {
+      queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
+      showToast(
+        `${activeLocationProfile?.name ?? 'Profile'} location saved (accuracy ±${Math.round(accuracyMeters)}m)`,
+        'success',
+      );
+    },
+    onError: (error) => {
+      const message =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : 'Could not save your current location';
+      showToast(message, 'error');
+    },
+  });
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">
-      <header className="bg-surface-raised border-b border-border px-4 py-3 flex items-center justify-between">
+      <ToastContainer />
+      <header className="bg-surface-raised border-b border-border px-3 sm:px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-text flex items-center gap-2">
-          <Plane className="w-5 h-5" /> Plane Tracker
+          <Plane className="w-5 h-5" /> <span className="hidden sm:inline">Plane Tracker</span>
         </h1>
-        <nav className="flex gap-2">
+        <nav className="flex gap-1 sm:gap-2">
+          <select
+            value={activeLocationProfile?.id.toString() ?? ''}
+            onChange={(event) => handleProfileSelection(event.target.value)}
+            disabled={selectLocationProfile.isPending}
+            aria-label="Location profile"
+            title="Location profile"
+            className="max-w-28 sm:max-w-40 rounded-lg border border-border bg-surface-sunken px-2 text-sm text-text disabled:opacity-60"
+          >
+            {!activeLocationProfile && <option value="">Choose location</option>}
+            {locationProfiles.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.name}
+                {profile.lat == null || profile.lon == null ? ' (not set)' : ''}
+              </option>
+            ))}
+            <option value="new">+ New profile…</option>
+          </select>
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => updateCurrentLocation.mutate()}
+            disabled={updateCurrentLocation.isPending || !activeLocationProfile}
+            aria-label="Use my current location"
+            title="Use my current location"
+          >
+            {updateCurrentLocation.isPending ? (
+              <Spinner size="sm" />
+            ) : (
+              <LocateFixed className="w-5 h-5" />
+            )}
+          </Button>
           <Button
             variant="secondary"
             size="icon"

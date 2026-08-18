@@ -8,6 +8,9 @@ from fastapi import APIRouter, HTTPException
 
 from app.models.planes import (
     GenericSuccess,
+    LocationProfile,
+    LocationProfileCreate,
+    LocationProfileUpdate,
     PlaneSettings,
     PlaneSettingsUpdate,
     PlanesLiveResponse,
@@ -33,8 +36,55 @@ async def get_settings():
 
 @router.put("/settings", response_model=PlaneSettings)
 async def update_settings(request: PlaneSettingsUpdate):
-    """Update plane-tracker settings (geofence, altitude ceiling, poll interval, ntfy)."""
-    return plane_service.update_settings(request.model_dump())
+    """Update global plane-tracker settings (geofence, poll interval, ntfy)."""
+    return plane_service.update_settings(request.model_dump(exclude_unset=True))
+
+
+@router.get("/location-profiles", response_model=list[LocationProfile])
+async def list_location_profiles():
+    """List named locations and indicate the active one."""
+    return plane_service.list_location_profiles()
+
+
+@router.post("/location-profiles", response_model=LocationProfile)
+async def add_location_profile(request: LocationProfileCreate):
+    """Create a named location and make it active."""
+    name = request.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Profile name must not be empty")
+    try:
+        return plane_service.add_location_profile(name)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.put("/location-profiles/{profile_id}", response_model=LocationProfile)
+async def update_location_profile(profile_id: int, request: LocationProfileUpdate):
+    """Update a location profile's name or coordinates."""
+    try:
+        profile = plane_service.update_location_profile(
+            profile_id, request.model_dump(exclude_unset=True)
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Location profile not found")
+    return profile
+
+
+@router.put("/location-profiles/{profile_id}/active", response_model=LocationProfile)
+async def activate_location_profile(profile_id: int):
+    """Make a location profile the single active plane-tracker location."""
+    profile = plane_service.activate_location_profile(profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Location profile not found")
+    return profile
+
+
+@router.delete("/location-profiles/{profile_id}", response_model=GenericSuccess)
+async def delete_location_profile(profile_id: int):
+    """Delete a named location profile."""
+    return plane_service.delete_location_profile(profile_id)
 
 
 @router.get("/watchlist", response_model=list[WatchlistEntry])
