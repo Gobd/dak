@@ -58,7 +58,6 @@ class PlaneSettings(BaseModel):
     target_warning_minutes: float
     max_miss_distance_nm: float
     poll_interval_seconds: int
-    ntfy_topic: str | None
     ntfy_base_url: str
 
 
@@ -73,7 +72,6 @@ class PlaneSettingsUpdate(BaseModel):
     target_warning_minutes: float | None = None
     max_miss_distance_nm: float | None = None
     poll_interval_seconds: int | None = None
-    ntfy_topic: str | None = None
     ntfy_base_url: str | None = None
 
 
@@ -84,6 +82,7 @@ class LocationProfile(BaseModel):
     name: str
     lat: float | None
     lon: float | None
+    ntfy_topic: str | None
     is_active: bool
     created_at: str
 
@@ -100,6 +99,7 @@ class LocationProfileUpdate(BaseModel):
     name: str | None = None
     lat: float | None = None
     lon: float | None = None
+    ntfy_topic: str | None = None
 
 
 class PlanesLiveResponse(BaseModel):

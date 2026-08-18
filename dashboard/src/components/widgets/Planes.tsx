@@ -8,9 +8,12 @@ import {
   addWatchlistEntryPlanesWatchlistPost,
   updateWatchlistEntryPlanesWatchlistEntryIdPut,
   deleteWatchlistEntryPlanesWatchlistEntryIdDelete,
+  listLocationProfilesPlanesLocationProfilesGet,
+  updateLocationProfilePlanesLocationProfilesProfileIdPut,
   type PlanesLiveResponse,
   type PlaneSettings,
   type WatchlistEntry,
+  type LocationProfile,
 } from '@dak/api-client';
 import { Modal, Button, Input, Spinner } from '@dak/ui';
 import { useWidgetQuery } from '../../hooks/useWidgetQuery';
@@ -29,11 +32,11 @@ export default function Planes({ panel }: WidgetComponentProps) {
   const [filterMaxAltitudeFt, setFilterMaxAltitudeFt] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNearby, setShowNearby] = useState(false);
+  const [profileTopic, setProfileTopic] = useState('');
   const [form, setForm] = useState<{
     radius_nm: string;
     target_warning_minutes: string;
     max_miss_distance_nm: string;
-    ntfy_topic: string;
     ntfy_base_url: string;
   } | null>(null);
 
@@ -59,7 +62,6 @@ export default function Planes({ panel }: WidgetComponentProps) {
           radius_nm: data.radius_nm.toString(),
           target_warning_minutes: data.target_warning_minutes.toString(),
           max_miss_distance_nm: data.max_miss_distance_nm.toString(),
-          ntfy_topic: data.ntfy_topic ?? '',
           ntfy_base_url: data.ntfy_base_url,
         });
       }
@@ -67,6 +69,22 @@ export default function Planes({ panel }: WidgetComponentProps) {
     },
     { enabled: showSettings },
   );
+
+  const { data: locationProfiles = [], refetch: refetchLocationProfiles } = useWidgetQuery<
+    LocationProfile[]
+  >(
+    ['planes-location-profiles'],
+    async () => {
+      const { data } = await listLocationProfilesPlanesLocationProfilesGet({
+        baseUrl: getRelayUrl(),
+      });
+      const profiles = (data as LocationProfile[]) ?? [];
+      setProfileTopic(profiles.find((profile) => profile.is_active)?.ntfy_topic ?? '');
+      return profiles;
+    },
+    { enabled: showSettings },
+  );
+  const activeProfile = locationProfiles.find((profile) => profile.is_active);
 
   const { data: watchlist, refetch: refetchWatchlist } = useWidgetQuery<WatchlistEntry[]>(
     ['planes-watchlist'],
@@ -79,7 +97,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
 
   async function handleSaveSettings() {
     if (!form) return;
-    await updateSettingsPlanesSettingsPut({
+    const globalSettingsUpdate = updateSettingsPlanesSettingsPut({
       baseUrl: getRelayUrl(),
       throwOnError: true,
       body: {
@@ -88,11 +106,20 @@ export default function Planes({ panel }: WidgetComponentProps) {
           ? parseFloat(form.target_warning_minutes)
           : null,
         max_miss_distance_nm: Math.max(0, parseFloat(form.max_miss_distance_nm) || 0),
-        ntfy_topic: form.ntfy_topic || null,
         ntfy_base_url: form.ntfy_base_url || 'https://ntfy.sh',
       },
     });
+    const profileUpdate = activeProfile
+      ? updateLocationProfilePlanesLocationProfilesProfileIdPut({
+          baseUrl: getRelayUrl(),
+          throwOnError: true,
+          path: { profile_id: activeProfile.id },
+          body: { ntfy_topic: profileTopic || null },
+        })
+      : Promise.resolve();
+    await Promise.all([globalSettingsUpdate, profileUpdate]);
     refetchSettings();
+    refetchLocationProfiles();
   }
 
   function resetFilterForm() {
@@ -267,12 +294,14 @@ export default function Planes({ panel }: WidgetComponentProps) {
                 value={form.max_miss_distance_nm}
                 onChange={(e) => setForm({ ...form, max_miss_distance_nm: e.target.value })}
               />
-              <Input
-                label="ntfy topic"
-                value={form.ntfy_topic}
-                onChange={(e) => setForm({ ...form, ntfy_topic: e.target.value })}
-                placeholder="e.g. brian-planes-8f2k"
-              />
+              {activeProfile && (
+                <Input
+                  label={`ntfy topic for ${activeProfile.name}`}
+                  value={profileTopic}
+                  onChange={(e) => setProfileTopic(e.target.value)}
+                  placeholder="e.g. brian-home-planes-8f2k"
+                />
+              )}
               <Button onClick={handleSaveSettings} size="sm" className="w-full">
                 Save
               </Button>

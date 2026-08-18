@@ -73,7 +73,6 @@ def _init_db() -> None:
                 target_warning_minutes REAL NOT NULL DEFAULT 5.0,
                 max_miss_distance_nm REAL NOT NULL DEFAULT 0,
                 poll_interval_seconds INTEGER NOT NULL DEFAULT 60,
-                ntfy_topic TEXT,
                 ntfy_base_url TEXT NOT NULL DEFAULT 'https://ntfy.sh'
             );
 
@@ -82,6 +81,7 @@ def _init_db() -> None:
                 name TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 lat REAL,
                 lon REAL,
+                ntfy_topic TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -136,6 +136,27 @@ def _init_db() -> None:
 
             INSERT OR IGNORE INTO settings (id) VALUES (1);
         """)
+
+        profile_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(location_profiles)")
+        }
+        if "ntfy_topic" not in profile_columns:
+            conn.execute("ALTER TABLE location_profiles ADD COLUMN ntfy_topic TEXT")
+
+        settings_columns = {row["name"] for row in conn.execute("PRAGMA table_info(settings)")}
+        if "ntfy_topic" in settings_columns:
+            conn.execute(
+                """
+                UPDATE location_profiles
+                SET ntfy_topic = (
+                    SELECT ntfy_topic FROM settings WHERE id = 1
+                )
+                WHERE id = (
+                    SELECT active_location_profile_id FROM settings WHERE id = 1
+                ) AND ntfy_topic IS NULL
+                """
+            )
+            conn.execute("ALTER TABLE settings DROP COLUMN ntfy_topic")
         conn.commit()
 
 
@@ -157,7 +178,6 @@ def update_settings(update: dict) -> dict:
             "radius_nm",
             "target_warning_minutes",
             "max_miss_distance_nm",
-            "ntfy_topic",
             "ntfy_base_url",
         ):
             if update.get(key) is not None:
@@ -225,10 +245,12 @@ def add_location_profile(name: str) -> dict:
 def update_location_profile(profile_id: int, update: dict) -> dict | None:
     fields = []
     values = []
-    for key in ("name", "lat", "lon"):
-        if update.get(key) is not None:
+    for key in ("name", "lat", "lon", "ntfy_topic"):
+        if key in update and (key == "ntfy_topic" or update[key] is not None):
             fields.append(f"{key} = ?")
-            value = update[key].strip() if key == "name" else update[key]
+            value = update[key]
+            if isinstance(value, str) and key in ("name", "ntfy_topic"):
+                value = value.strip() or None
             values.append(value)
 
     location_changed_active = False
@@ -553,8 +575,11 @@ def _poll_once() -> None:
     settings = get_settings()
     active_profile_id = settings["active_location_profile_id"]
     profile = _get_location_profile(active_profile_id) if active_profile_id is not None else None
-    home_lat = profile["lat"] if profile else None
-    home_lon = profile["lon"] if profile else None
+    if profile is None:
+        logger.info("Plane tracker location profile not set, skipping poll")
+        return
+    home_lat = profile["lat"]
+    home_lon = profile["lon"]
     if home_lat is None or home_lon is None:
         logger.info("Plane tracker home location not set, skipping poll")
         return
@@ -656,10 +681,10 @@ def _poll_once() -> None:
                     logged and datetime.fromisoformat(logged["notified_at"]) > renotify_cutoff
                 )
 
-                if not already_notified_recently and settings["ntfy_topic"]:
+                if not already_notified_recently and profile["ntfy_topic"]:
                     _notify_ntfy(
                         settings["ntfy_base_url"],
-                        settings["ntfy_topic"],
+                        profile["ntfy_topic"],
                         ac,
                         match["label"],
                         eta_minutes,
