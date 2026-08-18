@@ -356,9 +356,7 @@ function WatchlistView() {
               Callsign prefix (e.g. KMAX, RCH for military airlift)
             </option>
             <option value="model">Aircraft model/type (e.g. B739, UH60)</option>
-            <option value="unresolved">
-              Unresolved / anonymous aircraft (no model or callsign data — often military)
-            </option>
+            <option value="unresolved">Anonymous or military aircraft with no model data</option>
           </select>
         </div>
         {matchType !== 'unresolved' && (

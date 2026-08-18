@@ -499,8 +499,13 @@ def _is_confirmed_inbound(
 def _match_watchlist(aircraft: dict, watchlist: list[dict]) -> dict | None:
     hex_code = (aircraft.get("hex") or "").upper()
     flight = (aircraft.get("flight") or "").strip().upper()
-    model = (aircraft.get("t") or "").upper()
-    is_unresolved = not model and not aircraft.get("desc")
+    registration = (aircraft.get("r") or "").strip().upper()
+    model = (aircraft.get("t") or "").strip().upper()
+    description = (aircraft.get("desc") or "").strip()
+    database_flags = aircraft.get("dbFlags")
+    is_known_military = isinstance(database_flags, int) and bool(database_flags & 1)
+    has_no_identity = not flight and not registration
+    is_unresolved = not model and not description and (has_no_identity or is_known_military)
     altitude = aircraft.get("alt_baro")
 
     for entry in watchlist:

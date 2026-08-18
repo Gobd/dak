@@ -154,6 +154,36 @@ class WatchlistFilterTests(unittest.TestCase):
         assert updated["label"] == "Low military"
         assert updated["max_altitude_ft"] == 5_000
 
+    def test_unresolved_filter_rejects_identified_civilian_with_missing_model(self):
+        entry = plane_service.add_watchlist_entry("Unidentified", "unresolved", "")
+
+        assert plane_service._match_watchlist({"hex": "abc123"}, [entry]) == entry
+        assert (
+            plane_service._match_watchlist({"hex": "abc123", "flight": "DAL1647"}, [entry]) is None
+        )
+        assert plane_service._match_watchlist({"hex": "abc123", "r": "N12345"}, [entry]) is None
+        assert plane_service._match_watchlist({"hex": "abc123", "t": "A321"}, [entry]) is None
+        assert (
+            plane_service._match_watchlist({"hex": "abc123", "desc": "Airbus A321"}, [entry])
+            is None
+        )
+
+    def test_unresolved_filter_accepts_known_military_with_limited_data(self):
+        entry = plane_service.add_watchlist_entry("Unidentified military", "unresolved", "")
+
+        assert (
+            plane_service._match_watchlist(
+                {"hex": "abc123", "flight": "RCH123", "dbFlags": 1}, [entry]
+            )
+            == entry
+        )
+        assert (
+            plane_service._match_watchlist(
+                {"hex": "abc123", "flight": "RCH123", "t": "C17", "dbFlags": 1}, [entry]
+            )
+            is None
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
