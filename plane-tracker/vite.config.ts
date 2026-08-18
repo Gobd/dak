@@ -8,6 +8,6 @@ export default createViteConfig({
     short_name: 'Planes',
     description: 'Nearby aircraft geofence alerts',
     orientation: 'portrait',
-    includeAssets: ['icon.svg'],
+    includeAssets: ['icon.svg', 'apple-touch-icon.png'],
   },
 });
