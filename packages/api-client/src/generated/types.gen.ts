@@ -817,6 +817,10 @@ export type LocationProfile = {
      */
     lon: number | null;
     /**
+     * Ntfy Topic
+     */
+    ntfy_topic: string | null;
+    /**
      * Is Active
      */
     is_active: boolean;
@@ -856,6 +860,10 @@ export type LocationProfileUpdate = {
      * Lon
      */
     lon?: number | null;
+    /**
+     * Ntfy Topic
+     */
+    ntfy_topic?: string | null;
 };
 
 /**
@@ -1059,10 +1067,6 @@ export type PlaneSettings = {
      */
     poll_interval_seconds: number;
     /**
-     * Ntfy Topic
-     */
-    ntfy_topic: string | null;
-    /**
      * Ntfy Base Url
      */
     ntfy_base_url: string;
@@ -1093,10 +1097,6 @@ export type PlaneSettingsUpdate = {
      * Poll Interval Seconds
      */
     poll_interval_seconds?: number | null;
-    /**
-     * Ntfy Topic
-     */
-    ntfy_topic?: string | null;
     /**
      * Ntfy Base Url
      */

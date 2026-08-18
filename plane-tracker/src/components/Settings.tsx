@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Save, RotateCcw } from 'lucide-react';
-import { getSettingsPlanesSettingsGet, updateSettingsPlanesSettingsPut } from '@dak/api-client';
+import {
+  getSettingsPlanesSettingsGet,
+  updateSettingsPlanesSettingsPut,
+  listLocationProfilesPlanesLocationProfilesGet,
+  updateLocationProfilePlanesLocationProfilesProfileIdPut,
+  type LocationProfile,
+} from '@dak/api-client';
 import { useSettingsStore } from '../stores/settings-store';
 import { Input, Button, Spinner } from '@dak/ui';
 
@@ -55,12 +61,21 @@ function GeofenceSection({
     },
   });
 
+  const { data: locationProfiles = [] } = useQuery({
+    queryKey: ['planes-location-profiles', relayUrl],
+    queryFn: async () => {
+      const { data } = await listLocationProfilesPlanesLocationProfilesGet({ baseUrl: relayUrl });
+      return (data ?? []) as LocationProfile[];
+    },
+  });
+  const activeProfile = locationProfiles.find((profile) => profile.is_active);
+  const [profileTopic, setProfileTopic] = useState('');
+
   const [form, setForm] = useState<{
     radius_nm: string;
     target_warning_minutes: string;
     max_miss_distance_nm: string;
     poll_interval_seconds: string;
-    ntfy_topic: string;
     ntfy_base_url: string;
   } | null>(null);
 
@@ -71,17 +86,20 @@ function GeofenceSection({
         target_warning_minutes: data.target_warning_minutes.toString(),
         max_miss_distance_nm: data.max_miss_distance_nm.toString(),
         poll_interval_seconds: data.poll_interval_seconds.toString(),
-        ntfy_topic: data.ntfy_topic ?? '',
         ntfy_base_url: data.ntfy_base_url,
       });
     }
   }, [data]);
 
+  useEffect(() => {
+    setProfileTopic(activeProfile?.ntfy_topic ?? '');
+  }, [activeProfile]);
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form) return;
       const targetRelayUrl = relayInput.trim().replace(/\/$/, '');
-      await updateSettingsPlanesSettingsPut({
+      const globalSettingsUpdate = updateSettingsPlanesSettingsPut({
         baseUrl: targetRelayUrl,
         throwOnError: true,
         body: {
@@ -91,16 +109,25 @@ function GeofenceSection({
             : null,
           max_miss_distance_nm: Math.max(0, parseFloat(form.max_miss_distance_nm) || 0),
           poll_interval_seconds: Math.max(60, parseInt(form.poll_interval_seconds, 10) || 60),
-          ntfy_topic: form.ntfy_topic || null,
           ntfy_base_url: form.ntfy_base_url || 'https://ntfy.sh',
         },
       });
+      const profileUpdate = activeProfile
+        ? updateLocationProfilePlanesLocationProfilesProfileIdPut({
+            baseUrl: targetRelayUrl,
+            throwOnError: true,
+            path: { profile_id: activeProfile.id },
+            body: { ntfy_topic: profileTopic || null },
+          })
+        : Promise.resolve();
+      await Promise.all([globalSettingsUpdate, profileUpdate]);
       return targetRelayUrl;
     },
     onSuccess: (savedRelayUrl) => {
       if (!savedRelayUrl) return;
       onRelaySaved(savedRelayUrl);
       queryClient.invalidateQueries({ queryKey: ['planes-settings', savedRelayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', savedRelayUrl] });
     },
   });
 
@@ -157,12 +184,16 @@ function GeofenceSection({
 
       <div className="pt-3 border-t border-border space-y-3">
         <h3 className="text-sm font-medium text-text-secondary">ntfy notifications</h3>
-        <Input
-          label="ntfy topic"
-          value={form.ntfy_topic}
-          onChange={(e) => setForm({ ...form, ntfy_topic: e.target.value })}
-          placeholder="e.g. brian-planes-8f2k"
-        />
+        {activeProfile ? (
+          <Input
+            label={`ntfy topic for ${activeProfile.name}`}
+            value={profileTopic}
+            onChange={(e) => setProfileTopic(e.target.value)}
+            placeholder="e.g. brian-home-planes-8f2k"
+          />
+        ) : (
+          <p className="text-xs text-warning">Select a location profile to configure its topic.</p>
+        )}
         <Input
           label="ntfy base URL"
           value={form.ntfy_base_url}
