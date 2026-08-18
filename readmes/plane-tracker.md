@@ -7,7 +7,7 @@ phone view.
 ## Features
 
 - Live nearby aircraft (callsign, model, altitude, speed, distance, bearing) from adsb.fi
-- Named location profiles with one active tracking location at a time
+- Named location profiles with one active tracking location and ntfy topic at a time
 - Geofence by radius (nm), with optional altitude ceilings per watch-list filter
 - Watch list: alert on a specific aircraft (ICAO hex), a callsign prefix (e.g. military
   airlift callsigns), or an aircraft model/type code
@@ -26,5 +26,5 @@ pnpm dev      # Start dev server on port 5182
 
 Requires home-relay running with the `/planes/*` endpoints (set a relay URL in Settings
 if not pointing at the default kiosk relay). Create or select a location profile in the
-main toolbar, use the location button to update it, then add watch-list entries. Geofence,
-notification, and watch-list settings are shared across profiles.
+main toolbar, use the location button to update it, then add watch-list entries. Each profile
+has its own ntfy topic; geofence, ntfy server, and watch-list settings are shared.

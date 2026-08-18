@@ -1,3 +1,4 @@
+import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
@@ -33,19 +34,32 @@ class WatchlistFilterTests(unittest.TestCase):
         assert "max_altitude_ft" not in settings_columns
         assert "home_lat" not in settings_columns
         assert "home_lon" not in settings_columns
+        assert "ntfy_topic" not in settings_columns
         assert "active_location_profile_id" in settings_columns
         assert "max_altitude_ft" in watchlist_columns
+
+        with closing(plane_service._get_db()) as conn:
+            profile_columns = {
+                row["name"] for row in conn.execute("PRAGMA table_info(location_profiles)")
+            }
+        assert "ntfy_topic" in profile_columns
 
     def test_location_profiles_have_one_active_location(self):
         home = plane_service.add_location_profile("Home")
         assert home["is_active"] is True
         assert home["lat"] is None
 
-        home = plane_service.update_location_profile(home["id"], {"lat": 40.5847, "lon": -111.8271})
+        home = plane_service.update_location_profile(
+            home["id"], {"lat": 40.5847, "lon": -111.8271, "ntfy_topic": "home-planes"}
+        )
         assert home is not None
         assert home["lat"] == 40.5847
+        assert home["ntfy_topic"] == "home-planes"
 
         cabin = plane_service.add_location_profile("Cabin")
+        cabin = plane_service.update_location_profile(cabin["id"], {"ntfy_topic": "cabin-planes"})
+        assert cabin is not None
+        assert cabin["ntfy_topic"] == "cabin-planes"
         profiles = plane_service.list_location_profiles()
         assert [profile["name"] for profile in profiles if profile["is_active"]] == ["Cabin"]
 
@@ -55,6 +69,40 @@ class WatchlistFilterTests(unittest.TestCase):
         inactive_cabin = plane_service._get_location_profile(cabin["id"])
         assert inactive_cabin is not None
         assert inactive_cabin["is_active"] is False
+
+    def test_global_topic_migrates_to_active_profile(self):
+        plane_service.DB_PATH.unlink()
+        with sqlite3.connect(plane_service.DB_PATH) as conn:
+            conn.executescript("""
+                CREATE TABLE settings (
+                    id INTEGER PRIMARY KEY,
+                    active_location_profile_id INTEGER,
+                    radius_nm REAL NOT NULL DEFAULT 40,
+                    target_warning_minutes REAL NOT NULL DEFAULT 5,
+                    max_miss_distance_nm REAL NOT NULL DEFAULT 0,
+                    poll_interval_seconds INTEGER NOT NULL DEFAULT 60,
+                    ntfy_topic TEXT,
+                    ntfy_base_url TEXT NOT NULL DEFAULT 'https://ntfy.sh'
+                );
+                CREATE TABLE location_profiles (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    lat REAL,
+                    lon REAL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                INSERT INTO settings (id, active_location_profile_id, ntfy_topic)
+                VALUES (1, 1, 'old-global-topic');
+                INSERT INTO location_profiles (id, name) VALUES (1, 'Home');
+            """)
+
+        plane_service._init_db()
+
+        settings = plane_service.get_settings()
+        profile = plane_service._get_location_profile(1)
+        assert "ntfy_topic" not in settings
+        assert profile is not None
+        assert profile["ntfy_topic"] == "old-global-topic"
 
     def test_aircraft_provider_falls_back_to_adsb_fi(self):
         fallback_response = Mock()
