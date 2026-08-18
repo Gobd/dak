@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Save, RotateCcw } from 'lucide-react';
+import { Copy, LocateFixed, RefreshCw, RotateCcw, Save } from 'lucide-react';
 import {
   getSettingsPlanesSettingsGet,
   updateSettingsPlanesSettingsPut,
@@ -9,9 +9,44 @@ import {
   type LocationProfile,
 } from '@dak/api-client';
 import { useSettingsStore } from '../stores/settings-store';
-import { Input, Button, Spinner } from '@dak/ui';
+import { Button, ConfirmModal, Input, Spinner, useToastStore } from '@dak/ui';
 
 const DEFAULT_RELAY_URL = 'https://kiosk-relay.bkemper.me';
+
+function openStreetMapEmbedUrl(lat: number, lon: number): string {
+  const latitudeSpan = 0.008;
+  const longitudeSpan = 0.012;
+  const params = new URLSearchParams({
+    bbox: `${lon - longitudeSpan},${lat - latitudeSpan},${lon + longitudeSpan},${lat + latitudeSpan}`,
+    layer: 'mapnik',
+    marker: `${lat},${lon}`,
+  });
+  return `https://www.openstreetmap.org/export/embed.html?${params}`;
+}
+
+function randomTopicSuffix(length = 6): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const largestUnbiasedByte = Math.floor(256 / alphabet.length) * alphabet.length;
+  let suffix = '';
+
+  while (suffix.length < length) {
+    const bytes = crypto.getRandomValues(new Uint8Array(length - suffix.length));
+    for (const byte of bytes) {
+      if (byte < largestUnbiasedByte) suffix += alphabet[byte % alphabet.length];
+    }
+  }
+
+  return suffix;
+}
+
+function generateTopic(profileName: string): string {
+  const slug = profileName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `${slug || 'location'}-planes-${randomTopicSuffix()}`;
+}
 
 function RelayUrlSection({
   inputValue,
@@ -51,6 +86,8 @@ function GeofenceSection({
 }) {
   const relayUrl = useSettingsStore((s) => s.relayUrl);
   const queryClient = useQueryClient();
+  const showToast = useToastStore((s) => s.showToast);
+  const [confirmLocationUpdate, setConfirmLocationUpdate] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['planes-settings', relayUrl],
@@ -70,6 +107,8 @@ function GeofenceSection({
   });
   const activeProfile = locationProfiles.find((profile) => profile.is_active);
   const [profileTopic, setProfileTopic] = useState('');
+  const [profileLat, setProfileLat] = useState('');
+  const [profileLon, setProfileLon] = useState('');
 
   const [form, setForm] = useState<{
     radius_nm: string;
@@ -93,7 +132,26 @@ function GeofenceSection({
 
   useEffect(() => {
     setProfileTopic(activeProfile?.ntfy_topic ?? '');
+    setProfileLat(activeProfile?.lat?.toString() ?? '');
+    setProfileLon(activeProfile?.lon?.toString() ?? '');
   }, [activeProfile]);
+
+  const parsedLat = profileLat.trim() === '' ? null : Number(profileLat);
+  const parsedLon = profileLon.trim() === '' ? null : Number(profileLon);
+  const latitudeError =
+    parsedLat !== null && (!Number.isFinite(parsedLat) || parsedLat < -90 || parsedLat > 90)
+      ? 'Enter a latitude from -90 to 90'
+      : undefined;
+  const longitudeError =
+    parsedLon !== null && (!Number.isFinite(parsedLon) || parsedLon < -180 || parsedLon > 180)
+      ? 'Enter a longitude from -180 to 180'
+      : undefined;
+  const incompleteLocation = (parsedLat === null) !== (parsedLon === null);
+  const locationIsValid = !latitudeError && !longitudeError && !incompleteLocation;
+  const mapLocation =
+    locationIsValid && parsedLat !== null && parsedLon !== null
+      ? { lat: parsedLat, lon: parsedLon }
+      : null;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -117,7 +175,11 @@ function GeofenceSection({
             baseUrl: targetRelayUrl,
             throwOnError: true,
             path: { profile_id: activeProfile.id },
-            body: { ntfy_topic: profileTopic || null },
+            body: {
+              lat: parsedLat,
+              lon: parsedLon,
+              ntfy_topic: profileTopic || null,
+            },
           })
         : Promise.resolve();
       await Promise.all([globalSettingsUpdate, profileUpdate]);
@@ -130,6 +192,66 @@ function GeofenceSection({
       queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', savedRelayUrl] });
     },
   });
+
+  const updateCurrentLocation = useMutation({
+    mutationFn: async () => {
+      if (!activeProfile) throw new Error('Select a location profile first');
+      if (!navigator.geolocation) throw new Error('Location is not available on this device');
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+        });
+      });
+
+      await updateLocationProfilePlanesLocationProfilesProfileIdPut({
+        baseUrl: relayUrl,
+        throwOnError: true,
+        path: { profile_id: activeProfile.id },
+        body: {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        },
+      });
+
+      return position.coords.accuracy;
+    },
+    onSuccess: (accuracyMeters) => {
+      queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
+      showToast(
+        `${activeProfile?.name ?? 'Profile'} location saved (accuracy ±${Math.round(accuracyMeters)}m)`,
+        'success',
+      );
+    },
+    onError: (error) => {
+      const message =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : 'Could not save your current location';
+      showToast(message, 'error');
+    },
+  });
+
+  const requestCurrentLocation = () => {
+    if (!activeProfile) return;
+    if (activeProfile.lat != null && activeProfile.lon != null) {
+      setConfirmLocationUpdate(true);
+      return;
+    }
+    updateCurrentLocation.mutate();
+  };
+
+  const copyProfileTopic = async () => {
+    if (!profileTopic) return;
+    try {
+      await navigator.clipboard.writeText(profileTopic);
+      showToast('ntfy topic copied', 'success');
+    } catch {
+      showToast('Could not copy the ntfy topic', 'error');
+    }
+  };
 
   if (isLoading || !form) {
     return <Spinner size="md" />;
@@ -151,12 +273,93 @@ function GeofenceSection({
         </div>
         {activeProfile ? (
           <>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Latitude"
+                type="number"
+                min={-90}
+                max={90}
+                step="any"
+                value={profileLat}
+                onChange={(event) => setProfileLat(event.target.value)}
+                error={latitudeError ?? (incompleteLocation ? 'Enter both coordinates' : undefined)}
+                placeholder="39.7392"
+              />
+              <Input
+                label="Longitude"
+                type="number"
+                min={-180}
+                max={180}
+                step="any"
+                value={profileLon}
+                onChange={(event) => setProfileLon(event.target.value)}
+                error={longitudeError ?? (incompleteLocation ? 'Enter both coordinates' : undefined)}
+                placeholder="-104.9903"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={requestCurrentLocation}
+              disabled={updateCurrentLocation.isPending}
+              className="gap-2"
+            >
+              {updateCurrentLocation.isPending ? (
+                <Spinner size="sm" />
+              ) : (
+                <LocateFixed className="w-4 h-4" />
+              )}
+              Use current location
+            </Button>
+            {mapLocation && (
+              <div className="overflow-hidden rounded-lg border border-border bg-surface-sunken">
+                <iframe
+                  title={`${activeProfile.name} location map`}
+                  src={openStreetMapEmbedUrl(mapLocation.lat, mapLocation.lon)}
+                  className="h-52 w-full"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
+                <a
+                  href={`https://www.openstreetmap.org/?mlat=${mapLocation.lat}&mlon=${mapLocation.lon}#map=15/${mapLocation.lat}/${mapLocation.lon}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block px-3 py-2 text-xs font-medium text-accent hover:underline"
+                >
+                  View larger map
+                </a>
+              </div>
+            )}
             <Input
               label={`${activeProfile.name} ntfy topic`}
               value={profileTopic}
               onChange={(e) => setProfileTopic(e.target.value)}
-              placeholder="e.g. brian-home-planes-8f2k"
+              placeholder="e.g. home-planes-9Yf313"
             />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setProfileTopic(generateTopic(activeProfile.name))}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Generate
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={copyProfileTopic}
+                disabled={!profileTopic}
+                className="gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copy
+              </Button>
+            </div>
             <p className="text-xs text-text-muted">
               This topic and the saved coordinates belong only to {activeProfile.name}.
             </p>
@@ -229,7 +432,7 @@ function GeofenceSection({
 
       <Button
         onClick={() => save.mutate()}
-        disabled={save.isPending || !relayInput.trim()}
+        disabled={save.isPending || !relayInput.trim() || !locationIsValid}
         className="w-full gap-2"
       >
         {save.isPending ? (
@@ -250,6 +453,17 @@ function GeofenceSection({
           Settings could not be saved. Check that the relay is reachable and allows this site.
         </p>
       )}
+
+      <ConfirmModal
+        open={confirmLocationUpdate}
+        onClose={() => setConfirmLocationUpdate(false)}
+        onConfirm={() => updateCurrentLocation.mutate()}
+        title={`Replace ${activeProfile?.name ?? 'profile'} location?`}
+        message={`This replaces the saved coordinates for ${activeProfile?.name ?? 'this profile'} with this device's current location. The previous location cannot be restored automatically.`}
+        confirmText="Replace location"
+        cancelText="Keep saved location"
+        variant="primary"
+      />
     </div>
   );
 }

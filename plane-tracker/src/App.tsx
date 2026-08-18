@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plane,
@@ -14,7 +14,6 @@ import {
   X,
   Eye,
   EyeOff,
-  LocateFixed,
 } from 'lucide-react';
 import {
   livePlanesLiveGet,
@@ -24,7 +23,7 @@ import {
   deleteWatchlistEntryPlanesWatchlistEntryIdDelete,
   listLocationProfilesPlanesLocationProfilesGet,
   addLocationProfilePlanesLocationProfilesPost,
-  updateLocationProfilePlanesLocationProfilesProfileIdPut,
+  deleteLocationProfilePlanesLocationProfilesProfileIdDelete,
   activateLocationProfilePlanesLocationProfilesProfileIdActivePut,
   type PlaneSighting,
   type WatchlistEntry,
@@ -44,6 +43,16 @@ import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
 type View = 'live' | 'watchlist' | 'settings';
+
+function setProfileUrl(profileId: number | null): void {
+  const url = new URL(window.location.href);
+  if (profileId === null) {
+    url.searchParams.delete('profile');
+  } else {
+    url.searchParams.set('profile', profileId.toString());
+  }
+  window.history.replaceState({}, '', url);
+}
 
 function adsbGlobeUrl(hex: string): string {
   return `https://globe.adsb.fi/?icao=${hex.toLowerCase()}`;
@@ -449,9 +458,10 @@ export default function App() {
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
   const [showNewProfile, setShowNewProfile] = useState(false);
-  const [confirmLocationUpdate, setConfirmLocationUpdate] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<LocationProfile | null>(null);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileTopic, setNewProfileTopic] = useState('');
+  const initialProfileHandled = useRef(false);
 
   const { data: locationProfiles = [] } = useQuery({
     queryKey: ['planes-location-profiles', relayUrl],
@@ -468,7 +478,7 @@ export default function App() {
       newProfile?: { name: string; ntfyTopic: string };
     }) => {
       if (selection.newProfile) {
-        await addLocationProfilePlanesLocationProfilesPost({
+        const { data } = await addLocationProfilePlanesLocationProfilesPost({
           baseUrl: relayUrl,
           throwOnError: true,
           body: {
@@ -476,7 +486,7 @@ export default function App() {
             ntfy_topic: selection.newProfile.ntfyTopic || null,
           },
         });
-        return;
+        return data?.id;
       }
       if (selection.profileId == null) return;
       await activateLocationProfilePlanesLocationProfilesProfileIdActivePut({
@@ -484,8 +494,10 @@ export default function App() {
         throwOnError: true,
         path: { profile_id: selection.profileId },
       });
+      return selection.profileId;
     },
-    onSuccess: (_, selection) => {
+    onSuccess: (profileId, selection) => {
+      if (profileId != null) setProfileUrl(profileId);
       queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
       queryClient.invalidateQueries({ queryKey: ['planes-settings', relayUrl] });
       queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
@@ -501,6 +513,19 @@ export default function App() {
     },
     onError: () => showToast('Could not select that location profile', 'error'),
   });
+
+  useEffect(() => {
+    if (initialProfileHandled.current || locationProfiles.length === 0) return;
+    initialProfileHandled.current = true;
+
+    const requestedProfileId = Number(new URLSearchParams(window.location.search).get('profile'));
+    const requestedProfile = locationProfiles.find(
+      (profile) => profile.id === requestedProfileId,
+    );
+    if (requestedProfile && !requestedProfile.is_active) {
+      selectLocationProfile.mutate({ profileId: requestedProfile.id });
+    }
+  }, [locationProfiles, selectLocationProfile]);
 
   const handleProfileSelection = (value: string) => {
     if (value === 'new') {
@@ -519,59 +544,23 @@ export default function App() {
     });
   };
 
-  const updateCurrentLocation = useMutation({
-    mutationFn: async () => {
-      if (!activeLocationProfile) {
-        throw new Error('Create or select a location profile first');
-      }
-      if (!navigator.geolocation) {
-        throw new Error('Location is not available on this device');
-      }
-
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-        });
-      });
-
-      await updateLocationProfilePlanesLocationProfilesProfileIdPut({
+  const deleteLocationProfile = useMutation({
+    mutationFn: async (profile: LocationProfile) => {
+      await deleteLocationProfilePlanesLocationProfilesProfileIdDelete({
         baseUrl: relayUrl,
         throwOnError: true,
-        path: { profile_id: activeLocationProfile.id },
-        body: {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        },
+        path: { profile_id: profile.id },
       });
-
-      return position.coords.accuracy;
     },
-    onSuccess: (accuracyMeters) => {
+    onSuccess: (_, profile) => {
+      setProfileUrl(null);
       queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
+      queryClient.invalidateQueries({ queryKey: ['planes-settings', relayUrl] });
       queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
-      showToast(
-        `${activeLocationProfile?.name ?? 'Profile'} location saved (accuracy ±${Math.round(accuracyMeters)}m)`,
-        'success',
-      );
+      showToast(`${profile.name} deleted`, 'success');
     },
-    onError: (error) => {
-      const message =
-        typeof error === 'object' && error !== null && 'message' in error
-          ? String(error.message)
-          : 'Could not save your current location';
-      showToast(message, 'error');
-    },
+    onError: () => showToast('Could not delete that location profile', 'error'),
   });
-
-  const requestCurrentLocation = () => {
-    if (!activeLocationProfile) return;
-    if (activeLocationProfile.lat != null && activeLocationProfile.lon != null) {
-      setConfirmLocationUpdate(true);
-      return;
-    }
-    updateCurrentLocation.mutate();
-  };
 
   return (
     <div className="min-h-dvh flex flex-col bg-surface">
@@ -601,15 +590,15 @@ export default function App() {
           <Button
             variant="secondary"
             size="icon"
-            onClick={requestCurrentLocation}
-            disabled={updateCurrentLocation.isPending || !activeLocationProfile}
-            aria-label="Use my current location"
-            title="Use my current location"
+            onClick={() => activeLocationProfile && setProfileToDelete(activeLocationProfile)}
+            disabled={deleteLocationProfile.isPending || !activeLocationProfile}
+            aria-label="Delete location profile"
+            title="Delete location profile"
           >
-            {updateCurrentLocation.isPending ? (
+            {deleteLocationProfile.isPending ? (
               <Spinner size="sm" />
             ) : (
-              <LocateFixed className="w-5 h-5" />
+              <Trash2 className="w-5 h-5 text-danger" />
             )}
           </Button>
           <Button
@@ -692,13 +681,13 @@ export default function App() {
       </Modal>
 
       <ConfirmModal
-        open={confirmLocationUpdate}
-        onClose={() => setConfirmLocationUpdate(false)}
-        onConfirm={() => updateCurrentLocation.mutate()}
-        title={`Replace ${activeLocationProfile?.name ?? 'profile'} location?`}
-        message={`This replaces the saved coordinates for ${activeLocationProfile?.name ?? 'this profile'} with this device's current location. The previous location cannot be restored automatically.`}
-        confirmText="Replace location"
-        cancelText="Keep saved location"
+        open={profileToDelete !== null}
+        onClose={() => setProfileToDelete(null)}
+        onConfirm={() => profileToDelete && deleteLocationProfile.mutate(profileToDelete)}
+        title={`Delete ${profileToDelete?.name ?? 'profile'}?`}
+        message="This permanently deletes the profile's saved location and notification topic. Tracking rules and watch-list filters remain shared."
+        confirmText="Delete profile"
+        cancelText="Keep profile"
       />
 
       {view === 'live' && <LiveView />}
