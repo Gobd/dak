@@ -45,7 +45,7 @@ class WatchlistFilterTests(unittest.TestCase):
         assert "ntfy_topic" in profile_columns
 
     def test_location_profiles_have_one_active_location(self):
-        home = plane_service.add_location_profile("Home")
+        home = plane_service.list_location_profiles()[0]
         assert home["is_active"] is True
         assert home["lat"] is None
 
@@ -86,7 +86,7 @@ class WatchlistFilterTests(unittest.TestCase):
                 );
                 CREATE TABLE location_profiles (
                     id INTEGER PRIMARY KEY,
-                    name TEXT NOT NULL,
+                    name TEXT NOT NULL UNIQUE COLLATE NOCASE,
                     lat REAL,
                     lon REAL,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -53,7 +53,7 @@ async def add_location_profile(request: LocationProfileCreate):
     if not name:
         raise HTTPException(status_code=400, detail="Profile name must not be empty")
     try:
-        return plane_service.add_location_profile(name)
+        return plane_service.add_location_profile(name, request.ntfy_topic)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

@@ -91,6 +91,7 @@ class LocationProfileCreate(BaseModel):
     """Create a named location profile and make it active."""
 
     name: str
+    ntfy_topic: str | None = None
 
 
 class LocationProfileUpdate(BaseModel):
