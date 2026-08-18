@@ -159,12 +159,9 @@ class WatchlistFilterTests(unittest.TestCase):
 
         assert plane_service._match_watchlist({"hex": "abc123"}, [entry]) == entry
         assert (
-            plane_service._match_watchlist({"hex": "abc123", "flight": "DAL1647"}, [entry])
-            is None
+            plane_service._match_watchlist({"hex": "abc123", "flight": "DAL1647"}, [entry]) is None
         )
-        assert (
-            plane_service._match_watchlist({"hex": "abc123", "r": "N12345"}, [entry]) is None
-        )
+        assert plane_service._match_watchlist({"hex": "abc123", "r": "N12345"}, [entry]) is None
         assert plane_service._match_watchlist({"hex": "abc123", "t": "A321"}, [entry]) is None
         assert (
             plane_service._match_watchlist({"hex": "abc123", "desc": "Airbus A321"}, [entry])
