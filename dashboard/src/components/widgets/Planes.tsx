@@ -288,7 +288,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
                 onChange={(e) => setForm({ ...form, target_warning_minutes: e.target.value })}
               />
               <Input
-                label="Max miss distance (nm, 0 = off)"
+                label="Max DCA (nm, 0 = off)"
                 type="number"
                 min={0}
                 value={form.max_miss_distance_nm}

@@ -137,73 +137,94 @@ function GeofenceSection({
 
   return (
     <div className="space-y-4">
-      <Input
-        label="Search radius (nm)"
-        type="number"
-        value={form.radius_nm}
-        onChange={(e) => setForm({ ...form, radius_nm: e.target.value })}
-      />
-      <p className="text-xs text-text-muted -mt-2">
-        How far out to look for aircraft. This does NOT control when you're alerted — see warning
-        time below.
-      </p>
-
-      <Input
-        label="Warning time (minutes)"
-        type="number"
-        value={form.target_warning_minutes}
-        onChange={(e) => setForm({ ...form, target_warning_minutes: e.target.value })}
-      />
-      <p className="text-xs text-text-muted -mt-2">
-        Alerts fire when an aircraft is projected to reach you within this many minutes, based on
-        its current speed and heading — not just raw distance. A fast jet heading straight at you
-        triggers earlier than a slow one at the same distance.
-      </p>
-
-      <Input
-        label="Max miss distance (nm, 0 = off)"
-        type="number"
-        min={0}
-        value={form.max_miss_distance_nm}
-        onChange={(e) => setForm({ ...form, max_miss_distance_nm: e.target.value })}
-      />
-      <p className="text-xs text-text-muted -mt-2">
-        Some fast planes closing on you may still pass a few miles by, never actually near you. Each
-        aircraft shows a predicted closest-approach distance (CPA) — once you've seen a few real
-        alerts, set a cutoff here to ignore ones that will pass wider than this. 0 disables this
-        filter (current default — alerts fire on warning time alone).
-      </p>
-
-      <Input
-        label="Poll interval (seconds, min 60)"
-        type="number"
-        min={60}
-        value={form.poll_interval_seconds}
-        onChange={(e) => setForm({ ...form, poll_interval_seconds: e.target.value })}
-      />
-
-      <div className="pt-3 border-t border-border space-y-3">
-        <h3 className="text-sm font-medium text-text-secondary">ntfy notifications</h3>
+      <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-text">Active profile</h3>
+            <p className="text-xs text-text-muted">
+              {activeProfile?.name ?? 'No profile selected'}
+            </p>
+          </div>
+          <span className="rounded-full bg-accent/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent">
+            Profile-specific
+          </span>
+        </div>
         {activeProfile ? (
-          <Input
-            label={`ntfy topic for ${activeProfile.name}`}
-            value={profileTopic}
-            onChange={(e) => setProfileTopic(e.target.value)}
-            placeholder="e.g. brian-home-planes-8f2k"
-          />
+          <>
+            <Input
+              label={`${activeProfile.name} ntfy topic`}
+              value={profileTopic}
+              onChange={(e) => setProfileTopic(e.target.value)}
+              placeholder="e.g. brian-home-planes-8f2k"
+            />
+            <p className="text-xs text-text-muted">
+              This topic and the saved coordinates belong only to {activeProfile.name}.
+            </p>
+          </>
         ) : (
           <p className="text-xs text-warning">Select a location profile to configure its topic.</p>
         )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface-raised p-4 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-text">Tracking &amp; notification service</h3>
+            <p className="text-xs text-text-muted">Used by every location profile</p>
+          </div>
+          <span className="rounded-full bg-surface-sunken px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+            Shared
+          </span>
+        </div>
+
         <Input
-          label="ntfy base URL"
+          label="Search radius (nm)"
+          type="number"
+          value={form.radius_nm}
+          onChange={(e) => setForm({ ...form, radius_nm: e.target.value })}
+        />
+        <p className="text-xs text-text-muted -mt-2">
+          How far out to look for aircraft. This does NOT control when you're alerted — see warning
+          time below.
+        </p>
+
+        <Input
+          label="Warning time (minutes)"
+          type="number"
+          value={form.target_warning_minutes}
+          onChange={(e) => setForm({ ...form, target_warning_minutes: e.target.value })}
+        />
+        <p className="text-xs text-text-muted -mt-2">
+          Alerts fire when an aircraft is projected to reach you within this many minutes, based on
+          its current speed and heading — not just raw distance.
+        </p>
+
+        <Input
+          label="Max DCA (nm, 0 = off)"
+          type="number"
+          min={0}
+          value={form.max_miss_distance_nm}
+          onChange={(e) => setForm({ ...form, max_miss_distance_nm: e.target.value })}
+        />
+        <p className="text-xs text-text-muted -mt-2">
+          Ignore aircraft whose distance at closest approach (DCA) is wider than this. 0 disables
+          the filter.
+        </p>
+
+        <Input
+          label="Poll interval (seconds, min 60)"
+          type="number"
+          min={60}
+          value={form.poll_interval_seconds}
+          onChange={(e) => setForm({ ...form, poll_interval_seconds: e.target.value })}
+        />
+
+        <Input
+          label="Shared ntfy base URL"
           value={form.ntfy_base_url}
           onChange={(e) => setForm({ ...form, ntfy_base_url: e.target.value })}
           placeholder="https://ntfy.sh"
         />
-        <p className="text-xs text-text-muted">
-          Subscribe to this topic in the ntfy app to get pushes when a watch-listed aircraft enters
-          your geofence.
-        </p>
       </div>
 
       <Button
@@ -244,7 +265,7 @@ export default function Settings() {
         <RelayUrlSection inputValue={relayInput} setInputValue={setRelayInput} />
       </section>
       <section>
-        <h2 className="text-sm font-semibold text-text-secondary mb-3">Geofence &amp; alerts</h2>
+        <h2 className="text-sm font-semibold text-text-secondary mb-3">Tracker settings</h2>
         <GeofenceSection relayInput={relayInput} onRelaySaved={setRelayUrl} />
       </section>
     </div>

@@ -31,7 +31,15 @@ import {
   type LocationProfile,
 } from '@dak/api-client';
 import { useDarkMode } from '@dak/hooks';
-import { Spinner, Button, Input, ToastContainer, useToastStore } from '@dak/ui';
+import {
+  Spinner,
+  Button,
+  Input,
+  Modal,
+  ConfirmModal,
+  ToastContainer,
+  useToastStore,
+} from '@dak/ui';
 import { useSettingsStore } from './stores/settings-store';
 import Settings from './components/Settings';
 
@@ -72,7 +80,7 @@ function AircraftCard({ ac, isStale = false }: { ac: PlaneSighting; isStale?: bo
             )}
             {!isStale && ac.miss_distance_nm != null && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-surface-sunken text-text-secondary font-medium">
-                CPA {ac.miss_distance_nm.toFixed(1)}nm
+                DCA {ac.miss_distance_nm.toFixed(1)}nm
               </span>
             )}
           </div>
@@ -440,6 +448,10 @@ export default function App() {
   const relayUrl = useSettingsStore((s) => s.relayUrl);
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
+  const [showNewProfile, setShowNewProfile] = useState(false);
+  const [confirmLocationUpdate, setConfirmLocationUpdate] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [newProfileTopic, setNewProfileTopic] = useState('');
 
   const { data: locationProfiles = [] } = useQuery({
     queryKey: ['planes-location-profiles', relayUrl],
@@ -451,12 +463,18 @@ export default function App() {
   const activeLocationProfile = locationProfiles.find((profile) => profile.is_active);
 
   const selectLocationProfile = useMutation({
-    mutationFn: async (selection: { profileId?: number; newName?: string }) => {
-      if (selection.newName) {
+    mutationFn: async (selection: {
+      profileId?: number;
+      newProfile?: { name: string; ntfyTopic: string };
+    }) => {
+      if (selection.newProfile) {
         await addLocationProfilePlanesLocationProfilesPost({
           baseUrl: relayUrl,
           throwOnError: true,
-          body: { name: selection.newName },
+          body: {
+            name: selection.newProfile.name,
+            ntfy_topic: selection.newProfile.ntfyTopic || null,
+          },
         });
         return;
       }
@@ -467,22 +485,38 @@ export default function App() {
         path: { profile_id: selection.profileId },
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, selection) => {
       queryClient.invalidateQueries({ queryKey: ['planes-location-profiles', relayUrl] });
       queryClient.invalidateQueries({ queryKey: ['planes-settings', relayUrl] });
       queryClient.invalidateQueries({ queryKey: ['planes-live', relayUrl] });
+      if (selection.newProfile) {
+        setShowNewProfile(false);
+        setNewProfileName('');
+        setNewProfileTopic('');
+        showToast(
+          `${selection.newProfile.name} created — tap the location button to set its coordinates`,
+          'success',
+        );
+      }
     },
     onError: () => showToast('Could not select that location profile', 'error'),
   });
 
   const handleProfileSelection = (value: string) => {
     if (value === 'new') {
-      const name = window.prompt('Name this location profile');
-      if (name?.trim()) selectLocationProfile.mutate({ newName: name.trim() });
+      setShowNewProfile(true);
       return;
     }
     const profileId = Number(value);
     if (Number.isFinite(profileId)) selectLocationProfile.mutate({ profileId });
+  };
+
+  const createLocationProfile = () => {
+    const name = newProfileName.trim();
+    if (!name) return;
+    selectLocationProfile.mutate({
+      newProfile: { name, ntfyTopic: newProfileTopic.trim() },
+    });
   };
 
   const updateCurrentLocation = useMutation({
@@ -530,6 +564,15 @@ export default function App() {
     },
   });
 
+  const requestCurrentLocation = () => {
+    if (!activeLocationProfile) return;
+    if (activeLocationProfile.lat != null && activeLocationProfile.lon != null) {
+      setConfirmLocationUpdate(true);
+      return;
+    }
+    updateCurrentLocation.mutate();
+  };
+
   return (
     <div className="min-h-dvh flex flex-col bg-surface">
       <ToastContainer />
@@ -558,7 +601,7 @@ export default function App() {
           <Button
             variant="secondary"
             size="icon"
-            onClick={() => updateCurrentLocation.mutate()}
+            onClick={requestCurrentLocation}
             disabled={updateCurrentLocation.isPending || !activeLocationProfile}
             aria-label="Use my current location"
             title="Use my current location"
@@ -603,6 +646,60 @@ export default function App() {
           </Button>
         </nav>
       </header>
+
+      <Modal
+        open={showNewProfile}
+        onClose={() => !selectLocationProfile.isPending && setShowNewProfile(false)}
+        title="New location profile"
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setShowNewProfile(false)}
+              disabled={selectLocationProfile.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={createLocationProfile}
+              disabled={!newProfileName.trim() || selectLocationProfile.isPending}
+              loading={selectLocationProfile.isPending}
+            >
+              Create profile
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Profile name"
+            value={newProfileName}
+            onChange={(event) => setNewProfileName(event.target.value)}
+            placeholder="Home, Cabin, Office…"
+          />
+          <Input
+            label="ntfy topic for this profile (optional)"
+            value={newProfileTopic}
+            onChange={(event) => setNewProfileTopic(event.target.value)}
+            placeholder="e.g. brian-home-planes-8f2k"
+          />
+          <p className="text-xs text-text-muted">
+            The profile owns its location and notification topic. Tracking rules and watch-list
+            filters remain shared. After creating it, tap the location button in the toolbar to set
+            its coordinates.
+          </p>
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        open={confirmLocationUpdate}
+        onClose={() => setConfirmLocationUpdate(false)}
+        onConfirm={() => updateCurrentLocation.mutate()}
+        title={`Replace ${activeLocationProfile?.name ?? 'profile'} location?`}
+        message={`This replaces the saved coordinates for ${activeLocationProfile?.name ?? 'this profile'} with this device's current location. The previous location cannot be restored automatically.`}
+        confirmText="Replace location"
+        cancelText="Keep saved location"
+      />
 
       {view === 'live' && <LiveView />}
       {view === 'watchlist' && <WatchlistView />}

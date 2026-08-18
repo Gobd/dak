@@ -840,6 +840,10 @@ export type LocationProfileCreate = {
      * Name
      */
     name: string;
+    /**
+     * Ntfy Topic
+     */
+    ntfy_topic?: string | null;
 };
 
 /**

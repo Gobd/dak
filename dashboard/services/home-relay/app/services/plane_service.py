@@ -135,6 +135,13 @@ def _init_db() -> None:
                 ON sighting_history (hex, polled_at);
 
             INSERT OR IGNORE INTO settings (id) VALUES (1);
+            INSERT OR IGNORE INTO location_profiles (name) VALUES ('Home');
+            UPDATE settings
+            SET active_location_profile_id = COALESCE(
+                active_location_profile_id,
+                (SELECT id FROM location_profiles WHERE name = 'Home' COLLATE NOCASE)
+            )
+            WHERE id = 1;
         """)
 
         profile_columns = {
@@ -219,11 +226,12 @@ def _get_location_profile(profile_id: int) -> dict | None:
         return {**dict(row), "is_active": profile_id == active_id} if row else None
 
 
-def add_location_profile(name: str) -> dict:
+def add_location_profile(name: str, ntfy_topic: str | None = None) -> dict:
     with closing(_get_db()) as conn:
         try:
             cursor = conn.execute(
-                "INSERT INTO location_profiles (name) VALUES (?)", (name.strip(),)
+                "INSERT INTO location_profiles (name, ntfy_topic) VALUES (?, ?)",
+                (name.strip(), ntfy_topic.strip() if ntfy_topic else None),
             )
         except sqlite3.IntegrityError as exc:
             raise ValueError("A location profile with that name already exists") from exc
@@ -530,9 +538,9 @@ def _notify_ntfy(
     distance_str = f"{distance:.1f} nm" if isinstance(distance, (int, float)) else "unknown range"
     alt_str = f"{alt} ft" if isinstance(alt, (int, float)) else "unknown alt"
     eta_str = f"ETA {eta_minutes:.1f} min" if eta_minutes is not None else None
-    cpa_str = f"CPA {miss_distance_nm:.1f} nm" if miss_distance_nm is not None else None
+    dca_str = f"DCA {miss_distance_nm:.1f} nm" if miss_distance_nm is not None else None
 
-    detail_parts = [distance_str, alt_str, eta_str, cpa_str]
+    detail_parts = [distance_str, alt_str, eta_str, dca_str]
     message = f"{flight} ({model}) - " + ", ".join(p for p in detail_parts if p)
     title = f"Plane alert: {label}"
 
