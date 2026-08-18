@@ -53,12 +53,10 @@ class PlaneSighting(BaseModel):
 class PlaneSettings(BaseModel):
     """Current plane-tracker settings."""
 
-    home_lat: float | None
-    home_lon: float | None
+    active_location_profile_id: int | None
     radius_nm: float
     target_warning_minutes: float
     max_miss_distance_nm: float
-    max_altitude_ft: int | None
     poll_interval_seconds: int
     ntfy_topic: str | None
     ntfy_base_url: str
@@ -71,16 +69,37 @@ class PlaneSettingsUpdate(BaseModel):
     keep their current stored value.
     """
 
-    home_lat: float | None = None
-    home_lon: float | None = None
     radius_nm: float | None = None
     target_warning_minutes: float | None = None
     max_miss_distance_nm: float | None = None
-    max_altitude_ft: int | None = None
-    clear_max_altitude: bool = False
     poll_interval_seconds: int | None = None
     ntfy_topic: str | None = None
     ntfy_base_url: str | None = None
+
+
+class LocationProfile(BaseModel):
+    """A named location available to the plane tracker."""
+
+    id: int
+    name: str
+    lat: float | None
+    lon: float | None
+    is_active: bool
+    created_at: str
+
+
+class LocationProfileCreate(BaseModel):
+    """Create a named location profile and make it active."""
+
+    name: str
+
+
+class LocationProfileUpdate(BaseModel):
+    """Update a location profile's name or coordinates."""
+
+    name: str | None = None
+    lat: float | None = None
+    lon: float | None = None
 
 
 class PlanesLiveResponse(BaseModel):

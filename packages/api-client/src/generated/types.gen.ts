@@ -795,6 +795,70 @@ export type LinkedAccountInfo = {
 };
 
 /**
+ * LocationProfile
+ *
+ * A named location available to the plane tracker.
+ */
+export type LocationProfile = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Lat
+     */
+    lat: number | null;
+    /**
+     * Lon
+     */
+    lon: number | null;
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * LocationProfileCreate
+ *
+ * Create a named location profile and make it active.
+ */
+export type LocationProfileCreate = {
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
+ * LocationProfileUpdate
+ *
+ * Update a location profile's name or coordinates.
+ */
+export type LocationProfileUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Lat
+     */
+    lat?: number | null;
+    /**
+     * Lon
+     */
+    lon?: number | null;
+};
+
+/**
  * MacLookupErrorResponse
  *
  * MAC lookup error response.
@@ -975,13 +1039,9 @@ export type PingResponse = {
  */
 export type PlaneSettings = {
     /**
-     * Home Lat
+     * Active Location Profile Id
      */
-    home_lat: number | null;
-    /**
-     * Home Lon
-     */
-    home_lon: number | null;
+    active_location_profile_id: number | null;
     /**
      * Radius Nm
      */
@@ -994,10 +1054,6 @@ export type PlaneSettings = {
      * Max Miss Distance Nm
      */
     max_miss_distance_nm: number;
-    /**
-     * Max Altitude Ft
-     */
-    max_altitude_ft: number | null;
     /**
      * Poll Interval Seconds
      */
@@ -1022,14 +1078,6 @@ export type PlaneSettings = {
  */
 export type PlaneSettingsUpdate = {
     /**
-     * Home Lat
-     */
-    home_lat?: number | null;
-    /**
-     * Home Lon
-     */
-    home_lon?: number | null;
-    /**
      * Radius Nm
      */
     radius_nm?: number | null;
@@ -1041,14 +1089,6 @@ export type PlaneSettingsUpdate = {
      * Max Miss Distance Nm
      */
     max_miss_distance_nm?: number | null;
-    /**
-     * Max Altitude Ft
-     */
-    max_altitude_ft?: number | null;
-    /**
-     * Clear Max Altitude
-     */
-    clear_max_altitude?: boolean;
     /**
      * Poll Interval Seconds
      */
@@ -4061,6 +4101,139 @@ export type UpdateSettingsPlanesSettingsPutResponses = {
 };
 
 export type UpdateSettingsPlanesSettingsPutResponse = UpdateSettingsPlanesSettingsPutResponses[keyof UpdateSettingsPlanesSettingsPutResponses];
+
+export type ListLocationProfilesPlanesLocationProfilesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/planes/location-profiles';
+};
+
+export type ListLocationProfilesPlanesLocationProfilesGetResponses = {
+    /**
+     * Response List Location Profiles Planes Location Profiles Get
+     *
+     * Successful Response
+     */
+    200: Array<LocationProfile>;
+};
+
+export type ListLocationProfilesPlanesLocationProfilesGetResponse = ListLocationProfilesPlanesLocationProfilesGetResponses[keyof ListLocationProfilesPlanesLocationProfilesGetResponses];
+
+export type AddLocationProfilePlanesLocationProfilesPostData = {
+    body: LocationProfileCreate;
+    path?: never;
+    query?: never;
+    url: '/planes/location-profiles';
+};
+
+export type AddLocationProfilePlanesLocationProfilesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddLocationProfilePlanesLocationProfilesPostError = AddLocationProfilePlanesLocationProfilesPostErrors[keyof AddLocationProfilePlanesLocationProfilesPostErrors];
+
+export type AddLocationProfilePlanesLocationProfilesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: LocationProfile;
+};
+
+export type AddLocationProfilePlanesLocationProfilesPostResponse = AddLocationProfilePlanesLocationProfilesPostResponses[keyof AddLocationProfilePlanesLocationProfilesPostResponses];
+
+export type DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Profile Id
+         */
+        profile_id: number;
+    };
+    query?: never;
+    url: '/planes/location-profiles/{profile_id}';
+};
+
+export type DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteError = DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteErrors[keyof DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteErrors];
+
+export type DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: AppModelsPlanesGenericSuccess;
+};
+
+export type DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteResponse = DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteResponses[keyof DeleteLocationProfilePlanesLocationProfilesProfileIdDeleteResponses];
+
+export type UpdateLocationProfilePlanesLocationProfilesProfileIdPutData = {
+    body: LocationProfileUpdate;
+    path: {
+        /**
+         * Profile Id
+         */
+        profile_id: number;
+    };
+    query?: never;
+    url: '/planes/location-profiles/{profile_id}';
+};
+
+export type UpdateLocationProfilePlanesLocationProfilesProfileIdPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateLocationProfilePlanesLocationProfilesProfileIdPutError = UpdateLocationProfilePlanesLocationProfilesProfileIdPutErrors[keyof UpdateLocationProfilePlanesLocationProfilesProfileIdPutErrors];
+
+export type UpdateLocationProfilePlanesLocationProfilesProfileIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    200: LocationProfile;
+};
+
+export type UpdateLocationProfilePlanesLocationProfilesProfileIdPutResponse = UpdateLocationProfilePlanesLocationProfilesProfileIdPutResponses[keyof UpdateLocationProfilePlanesLocationProfilesProfileIdPutResponses];
+
+export type ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutData = {
+    body?: never;
+    path: {
+        /**
+         * Profile Id
+         */
+        profile_id: number;
+    };
+    query?: never;
+    url: '/planes/location-profiles/{profile_id}/active';
+};
+
+export type ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutError = ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutErrors[keyof ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutErrors];
+
+export type ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutResponses = {
+    /**
+     * Successful Response
+     */
+    200: LocationProfile;
+};
+
+export type ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutResponse = ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutResponses[keyof ActivateLocationProfilePlanesLocationProfilesProfileIdActivePutResponses];
 
 export type ListWatchlistPlanesWatchlistGetData = {
     body?: never;

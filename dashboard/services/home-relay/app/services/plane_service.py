@@ -28,9 +28,12 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path.home() / ".config" / "home-relay" / "planes_v2.db"
+DB_PATH = Path.home() / ".config" / "home-relay" / "planes_v3.db"
 
-ADSB_FI_BASE_URL = "https://opendata.adsb.fi/api/v2"
+ADSB_PROVIDERS = (
+    ("ADSB.lol", "https://api.adsb.lol/v2"),
+    ("ADSB.fi", "https://opendata.adsb.fi/api/v2"),
+)
 DEFAULT_RADIUS_NM = 40.0
 DEFAULT_TARGET_WARNING_MINUTES = 5.0
 DEFAULT_POLL_INTERVAL_SECONDS = 60
@@ -65,15 +68,21 @@ def _init_db() -> None:
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS settings (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
-                home_lat REAL,
-                home_lon REAL,
+                active_location_profile_id INTEGER,
                 radius_nm REAL NOT NULL DEFAULT 40.0,
                 target_warning_minutes REAL NOT NULL DEFAULT 5.0,
                 max_miss_distance_nm REAL NOT NULL DEFAULT 0,
-                max_altitude_ft INTEGER,
                 poll_interval_seconds INTEGER NOT NULL DEFAULT 60,
                 ntfy_topic TEXT,
                 ntfy_base_url TEXT NOT NULL DEFAULT 'https://ntfy.sh'
+            );
+
+            CREATE TABLE IF NOT EXISTS location_profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                lat REAL,
+                lon REAL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS watchlist (
@@ -127,9 +136,6 @@ def _init_db() -> None:
 
             INSERT OR IGNORE INTO settings (id) VALUES (1);
         """)
-        watchlist_columns = {row["name"] for row in conn.execute("PRAGMA table_info(watchlist)")}
-        if "max_altitude_ft" not in watchlist_columns:
-            conn.execute("ALTER TABLE watchlist ADD COLUMN max_altitude_ft INTEGER")
         conn.commit()
 
 
@@ -143,13 +149,11 @@ def get_settings() -> dict:
 
 
 def update_settings(update: dict) -> dict:
-    """Patch settings; only keys present (and not None, except clear_max_altitude) are applied."""
+    """Patch settings; only keys present and not None are applied."""
     with closing(_get_db()) as conn:
         fields = []
         values = []
         for key in (
-            "home_lat",
-            "home_lon",
             "radius_nm",
             "target_warning_minutes",
             "max_miss_distance_nm",
@@ -164,18 +168,142 @@ def update_settings(update: dict) -> dict:
             fields.append("poll_interval_seconds = ?")
             values.append(max(update["poll_interval_seconds"], MIN_POLL_INTERVAL_SECONDS))
 
-        if update.get("clear_max_altitude"):
-            fields.append("max_altitude_ft = NULL")
-        elif update.get("max_altitude_ft") is not None:
-            fields.append("max_altitude_ft = ?")
-            values.append(update["max_altitude_ft"])
-
         if fields:
             conn.execute(f"UPDATE settings SET {', '.join(fields)} WHERE id = 1", values)
             conn.commit()
 
         row = conn.execute("SELECT * FROM settings WHERE id = 1").fetchone()
         return dict(row)
+
+
+# === Location profiles ===
+
+
+def list_location_profiles() -> list[dict]:
+    with closing(_get_db()) as conn:
+        active_id = conn.execute(
+            "SELECT active_location_profile_id FROM settings WHERE id = 1"
+        ).fetchone()["active_location_profile_id"]
+        rows = conn.execute(
+            "SELECT * FROM location_profiles ORDER BY name COLLATE NOCASE"
+        ).fetchall()
+        return [{**dict(row), "is_active": row["id"] == active_id} for row in rows]
+
+
+def _get_location_profile(profile_id: int) -> dict | None:
+    with closing(_get_db()) as conn:
+        active_id = conn.execute(
+            "SELECT active_location_profile_id FROM settings WHERE id = 1"
+        ).fetchone()["active_location_profile_id"]
+        row = conn.execute("SELECT * FROM location_profiles WHERE id = ?", (profile_id,)).fetchone()
+        return {**dict(row), "is_active": profile_id == active_id} if row else None
+
+
+def add_location_profile(name: str) -> dict:
+    with closing(_get_db()) as conn:
+        try:
+            cursor = conn.execute(
+                "INSERT INTO location_profiles (name) VALUES (?)", (name.strip(),)
+            )
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("A location profile with that name already exists") from exc
+        profile_id = cursor.lastrowid
+        if profile_id is None:
+            raise RuntimeError("SQLite did not return a location profile ID")
+        conn.execute(
+            "UPDATE settings SET active_location_profile_id = ? WHERE id = 1", (profile_id,)
+        )
+        _clear_location_state(conn)
+        conn.commit()
+    _reset_poll_status()
+    profile = _get_location_profile(profile_id)
+    if profile is None:
+        raise RuntimeError("New location profile could not be loaded")
+    return profile
+
+
+def update_location_profile(profile_id: int, update: dict) -> dict | None:
+    fields = []
+    values = []
+    for key in ("name", "lat", "lon"):
+        if update.get(key) is not None:
+            fields.append(f"{key} = ?")
+            value = update[key].strip() if key == "name" else update[key]
+            values.append(value)
+
+    location_changed_active = False
+    with closing(_get_db()) as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM location_profiles WHERE id = ?", (profile_id,)
+        ).fetchone()
+        if not exists:
+            return None
+        if fields:
+            values.append(profile_id)
+            try:
+                conn.execute(
+                    f"UPDATE location_profiles SET {', '.join(fields)} WHERE id = ?", values
+                )
+            except sqlite3.IntegrityError as exc:
+                raise ValueError("A location profile with that name already exists") from exc
+            active_id = conn.execute(
+                "SELECT active_location_profile_id FROM settings WHERE id = 1"
+            ).fetchone()["active_location_profile_id"]
+            if profile_id == active_id and ("lat" in update or "lon" in update):
+                _clear_location_state(conn)
+                location_changed_active = True
+            conn.commit()
+    if location_changed_active:
+        _reset_poll_status()
+    return _get_location_profile(profile_id)
+
+
+def activate_location_profile(profile_id: int) -> dict | None:
+    with closing(_get_db()) as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM location_profiles WHERE id = ?", (profile_id,)
+        ).fetchone()
+        if not exists:
+            return None
+        conn.execute(
+            "UPDATE settings SET active_location_profile_id = ? WHERE id = 1", (profile_id,)
+        )
+        _clear_location_state(conn)
+        conn.commit()
+    _reset_poll_status()
+    return _get_location_profile(profile_id)
+
+
+def delete_location_profile(profile_id: int) -> dict:
+    with closing(_get_db()) as conn:
+        active_id = conn.execute(
+            "SELECT active_location_profile_id FROM settings WHERE id = 1"
+        ).fetchone()["active_location_profile_id"]
+        conn.execute(
+            "UPDATE settings SET active_location_profile_id = NULL "
+            "WHERE id = 1 AND active_location_profile_id = ?",
+            (profile_id,),
+        )
+        deleted = conn.execute("DELETE FROM location_profiles WHERE id = ?", (profile_id,))
+        if deleted.rowcount > 0 and profile_id == active_id:
+            _clear_location_state(conn)
+        conn.commit()
+        if deleted.rowcount > 0 and profile_id == active_id:
+            _reset_poll_status()
+        return {"success": deleted.rowcount > 0}
+
+
+def _clear_location_state(conn: sqlite3.Connection) -> None:
+    """Discard calculations tied to the previously active coordinates."""
+    conn.execute("DELETE FROM sightings_cache")
+    conn.execute("DELETE FROM sighting_history")
+    conn.execute("DELETE FROM notified_log")
+
+
+def _reset_poll_status() -> None:
+    global _last_polled_at, _last_poll_error
+    _last_polled_at = None
+    _last_poll_error = None
 
 
 # === Watch list ===
@@ -397,12 +525,36 @@ def _notify_ntfy(
         logger.exception("Failed to send ntfy notification for %s", flight)
 
 
+def _fetch_aircraft(home_lat: float, home_lon: float, radius_nm: float) -> tuple[list[dict], str]:
+    """Fetch nearby aircraft, trying each community provider in order."""
+    errors = []
+    for provider_name, base_url in ADSB_PROVIDERS:
+        try:
+            response = httpx.get(
+                f"{base_url}/lat/{home_lat}/lon/{home_lon}/dist/{radius_nm}",
+                timeout=15,
+            )
+            response.raise_for_status()
+            data = response.json()
+            aircraft = data.get("ac", data.get("aircraft"))
+            if not isinstance(aircraft, list):
+                raise ValueError("response did not contain an aircraft list")
+            return aircraft, provider_name
+        except (httpx.HTTPError, ValueError) as exc:
+            errors.append(f"{provider_name}: {exc}")
+            logger.warning("%s poll failed: %s", provider_name, exc)
+
+    raise RuntimeError("All aircraft providers failed — " + "; ".join(errors))
+
+
 def _poll_once() -> None:
     global _last_polled_at, _last_poll_error
 
     settings = get_settings()
-    home_lat = settings["home_lat"]
-    home_lon = settings["home_lon"]
+    active_profile_id = settings["active_location_profile_id"]
+    profile = _get_location_profile(active_profile_id) if active_profile_id is not None else None
+    home_lat = profile["lat"] if profile else None
+    home_lon = profile["lon"] if profile else None
     if home_lat is None or home_lon is None:
         logger.info("Plane tracker home location not set, skipping poll")
         return
@@ -410,25 +562,19 @@ def _poll_once() -> None:
     radius_nm = settings["radius_nm"]
     target_warning_minutes = settings["target_warning_minutes"]
     max_miss_distance_nm = settings["max_miss_distance_nm"]
-    max_altitude_ft = settings["max_altitude_ft"]
     watchlist = list_watchlist()
 
     try:
-        resp = httpx.get(
-            f"{ADSB_FI_BASE_URL}/lat/{home_lat}/lon/{home_lon}/dist/{radius_nm}",
-            timeout=15,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-    except httpx.HTTPError as exc:
+        aircraft_list, provider_name = _fetch_aircraft(home_lat, home_lon, radius_nm)
+    except RuntimeError as exc:
         _last_poll_error = str(exc)
-        logger.warning("adsb.fi poll failed: %s", exc)
+        logger.warning("Aircraft poll failed: %s", exc)
         return
 
     _last_poll_error = None
     _last_polled_at = datetime.now().isoformat()
+    logger.info("Aircraft poll succeeded via %s", provider_name)
 
-    aircraft_list = data.get("aircraft", [])
     now = datetime.now()
     renotify_cutoff = now - timedelta(minutes=RENOTIFY_AFTER_MINUTES)
 
@@ -440,6 +586,8 @@ def _poll_once() -> None:
             hex_code = ac.get("hex")
             if not hex_code:
                 continue
+            if not isinstance(ac.get("alt_baro"), (int, float)):
+                ac["alt_baro"] = None
             seen_hexes.add(hex_code.upper())
 
             distance_nm = ac.get("dst")
@@ -451,10 +599,6 @@ def _poll_once() -> None:
                 distance_nm, bearing_deg, ac.get("track"), closing_speed_kt
             )
             in_geofence = eta_minutes is not None and eta_minutes <= target_warning_minutes
-            if in_geofence and max_altitude_ft is not None:
-                alt = ac.get("alt_baro")
-                if isinstance(alt, (int, float)) and alt > max_altitude_ft:
-                    in_geofence = False
             if in_geofence and max_miss_distance_nm > 0:
                 in_geofence = (
                     miss_distance_nm is not None and miss_distance_nm <= max_miss_distance_nm

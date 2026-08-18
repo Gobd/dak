@@ -30,12 +30,9 @@ export default function Planes({ panel }: WidgetComponentProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showNearby, setShowNearby] = useState(false);
   const [form, setForm] = useState<{
-    home_lat: string;
-    home_lon: string;
     radius_nm: string;
     target_warning_minutes: string;
     max_miss_distance_nm: string;
-    max_altitude_ft: string;
     ntfy_topic: string;
     ntfy_base_url: string;
   } | null>(null);
@@ -59,12 +56,9 @@ export default function Planes({ panel }: WidgetComponentProps) {
       const { data } = await getSettingsPlanesSettingsGet({ baseUrl: getRelayUrl() });
       if (data && !form) {
         setForm({
-          home_lat: data.home_lat?.toString() ?? '',
-          home_lon: data.home_lon?.toString() ?? '',
           radius_nm: data.radius_nm.toString(),
           target_warning_minutes: data.target_warning_minutes.toString(),
           max_miss_distance_nm: data.max_miss_distance_nm.toString(),
-          max_altitude_ft: data.max_altitude_ft?.toString() ?? '',
           ntfy_topic: data.ntfy_topic ?? '',
           ntfy_base_url: data.ntfy_base_url,
         });
@@ -89,15 +83,11 @@ export default function Planes({ panel }: WidgetComponentProps) {
       baseUrl: getRelayUrl(),
       throwOnError: true,
       body: {
-        home_lat: form.home_lat ? parseFloat(form.home_lat) : null,
-        home_lon: form.home_lon ? parseFloat(form.home_lon) : null,
         radius_nm: form.radius_nm ? parseFloat(form.radius_nm) : null,
         target_warning_minutes: form.target_warning_minutes
           ? parseFloat(form.target_warning_minutes)
           : null,
         max_miss_distance_nm: Math.max(0, parseFloat(form.max_miss_distance_nm) || 0),
-        max_altitude_ft: form.max_altitude_ft ? parseInt(form.max_altitude_ft, 10) : null,
-        clear_max_altitude: !form.max_altitude_ft,
         ntfy_topic: form.ntfy_topic || null,
         ntfy_base_url: form.ntfy_base_url || 'https://ntfy.sh',
       },
@@ -169,6 +159,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
   const matches = aircraft.filter((a) => a.matched_watchlist_id != null);
   const nearby = aircraft.filter((a) => a.matched_watchlist_id == null);
   const visibleAircraft = showNearby ? aircraft : matches;
+  const isStale = Boolean(live?.last_poll_error);
 
   return (
     <div className="w-full h-full flex flex-col gap-1 p-3 bg-surface text-text">
@@ -219,6 +210,12 @@ export default function Planes({ panel }: WidgetComponentProps) {
 
       {error && !live && <p className="text-danger text-xs">{error.message}</p>}
 
+      {isStale && (
+        <p className="rounded bg-warning/10 px-1.5 py-1 text-[10px] text-warning">
+          Provider offline — showing an older snapshot
+        </p>
+      )}
+
       <div className="flex-1 overflow-auto space-y-1 min-h-0">
         {visibleAircraft.length === 0 && !isLoading && (
           <p className="text-text-muted text-[10px] py-2 text-center">No filter matches</p>
@@ -232,7 +229,7 @@ export default function Planes({ panel }: WidgetComponentProps) {
           >
             <span className="truncate">{ac.flight || ac.registration || ac.hex}</span>
             <span className="text-text-muted shrink-0">
-              {ac.eta_minutes != null ? (
+              {!isStale && ac.eta_minutes != null ? (
                 <>
                   <span className="text-warning font-medium">{ac.eta_minutes.toFixed(1)}m</span>
                   {ac.miss_distance_nm != null && ` (${ac.miss_distance_nm.toFixed(1)}nm)`}
@@ -251,20 +248,6 @@ export default function Planes({ panel }: WidgetComponentProps) {
           {form && (
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-text-secondary">Geofence</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  label="Home lat"
-                  type="number"
-                  value={form.home_lat}
-                  onChange={(e) => setForm({ ...form, home_lat: e.target.value })}
-                />
-                <Input
-                  label="Home lon"
-                  type="number"
-                  value={form.home_lon}
-                  onChange={(e) => setForm({ ...form, home_lon: e.target.value })}
-                />
-              </div>
               <Input
                 label="Search radius (nm)"
                 type="number"
@@ -283,12 +266,6 @@ export default function Planes({ panel }: WidgetComponentProps) {
                 min={0}
                 value={form.max_miss_distance_nm}
                 onChange={(e) => setForm({ ...form, max_miss_distance_nm: e.target.value })}
-              />
-              <Input
-                label="Global altitude ceiling (ft, blank = off)"
-                type="number"
-                value={form.max_altitude_ft}
-                onChange={(e) => setForm({ ...form, max_altitude_ft: e.target.value })}
               />
               <Input
                 label="ntfy topic"
