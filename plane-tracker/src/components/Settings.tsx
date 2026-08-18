@@ -293,7 +293,9 @@ function GeofenceSection({
                 step="any"
                 value={profileLon}
                 onChange={(event) => setProfileLon(event.target.value)}
-                error={longitudeError ?? (incompleteLocation ? 'Enter both coordinates' : undefined)}
+                error={
+                  longitudeError ?? (incompleteLocation ? 'Enter both coordinates' : undefined)
+                }
                 placeholder="-104.9903"
               />
             </div>

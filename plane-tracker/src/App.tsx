@@ -519,9 +519,7 @@ export default function App() {
     initialProfileHandled.current = true;
 
     const requestedProfileId = Number(new URLSearchParams(window.location.search).get('profile'));
-    const requestedProfile = locationProfiles.find(
-      (profile) => profile.id === requestedProfileId,
-    );
+    const requestedProfile = locationProfiles.find((profile) => profile.id === requestedProfileId);
     if (requestedProfile && !requestedProfile.is_active) {
       selectLocationProfile.mutate({ profileId: requestedProfile.id });
     }
