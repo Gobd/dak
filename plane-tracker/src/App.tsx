@@ -357,7 +357,7 @@ function WatchlistView() {
             </option>
             <option value="model">Aircraft model/type (e.g. B739, UH60)</option>
             <option value="unresolved">
-              Unresolved / anonymous aircraft (no model or callsign data — often military)
+              Anonymous or military aircraft with no model data
             </option>
           </select>
         </div>
