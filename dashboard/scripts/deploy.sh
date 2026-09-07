@@ -259,23 +259,25 @@ rm -f "$HACS_ARCHIVE"
 echo "HACS installed (finish setup in Home Assistant after it restarts)"
 
 # =============================================================================
-# NODE-RED SETUP
+# APPDAEMON SETUP
 # =============================================================================
-echo "=== Setting up Node-RED ==="
-sudo npm install --global node-red
+echo "=== Setting up AppDaemon ==="
+mkdir -p ~/appdaemon
+~/.local/bin/uv venv ~/appdaemon/.venv --python 3.13 --clear
+~/.local/bin/uv pip install --python ~/appdaemon/.venv appdaemon
 
-sed "s|__USER__|$USER|g" ~/dashboard/services/node-red/node-red.service \
-  | sudo tee /etc/systemd/system/node-red.service > /dev/null
+sed "s|__USER__|$USER|g" ~/dashboard/services/appdaemon/appdaemon.service \
+  | sudo tee /etc/systemd/system/appdaemon.service > /dev/null
 
 sudo systemctl daemon-reload
-sudo systemctl enable node-red
+sudo systemctl enable appdaemon
 if [[ -z "$NO_RESTART" ]]; then
   # Restart HA again so a newly installed HACS is loaded immediately.
   sudo systemctl restart --no-block home-assistant
-  sudo systemctl restart --no-block node-red
-  echo "Node-RED service installed and restarted"
+  sudo systemctl restart --no-block appdaemon
+  echo "AppDaemon service installed and restarted"
 else
-  echo "Node-RED service installed"
+  echo "AppDaemon service installed"
 fi
 
 # =============================================================================
@@ -314,7 +316,7 @@ echo "  - Voice control (enable in Settings)"
 echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
 echo "  - Home Assistant (http://$(hostname):8123)"
 echo "  - HACS (finish setup in Home Assistant)"
-echo "  - Node-RED (http://$(hostname):1880)"
+echo "  - AppDaemon (Python automations over MQTT)"
 
 if [[ -z "$NO_RESTART" ]]; then
   echo "Rebooting in 5 seconds..."

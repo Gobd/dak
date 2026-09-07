@@ -1,0 +1,17 @@
+inovelli_controls:
+  module: inovelli_controls
+  class: InovelliControls
+  controls:
+    - name: Kitchen Sink Light
+      switch_topic: zigbee2mqtt/Kitchen Sink Switch
+      target_topic: zigbee2mqtt/KitchenSinkLightGroup
+      up_color_temp_k: 5400
+      down_color_temp_k: 2200
+      down_brightness_percent: 20
+    - name: Kitchen Lights
+      switch_topic: zigbee2mqtt/KitchenSwitch
+      target_topic: zigbee2mqtt/KitchenLights
+      up_color_temp_k: 5400
+      down_color_temp_k: 2200
+      down_brightness_percent: 20
+

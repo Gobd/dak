@@ -1,15 +1,16 @@
 [Unit]
-Description=Node-RED
+Description=AppDaemon home automation
 After=network-online.target mosquitto.service zigbee2mqtt.service
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=__USER__
-WorkingDirectory=/home/__USER__/dashboard/services/node-red
-ExecStart=/usr/bin/node-red --userDir /home/__USER__/dashboard/services/node-red
+WorkingDirectory=/home/__USER__/dashboard/services/appdaemon
+ExecStart=/home/__USER__/appdaemon/.venv/bin/appdaemon -c /home/__USER__/dashboard/services/appdaemon
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
+

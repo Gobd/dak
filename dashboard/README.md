@@ -16,11 +16,13 @@ A kiosk dashboard for Raspberry Pi with drag-and-drop layouts, widgets, and smar
 
 The Pi reboots into kiosk mode with the dashboard running.
 
-The deploy also installs Home Assistant Core, HACS, and Node-RED. After the
+The deploy also installs Home Assistant Core, HACS, and AppDaemon. After the
 first reboot, open Home Assistant at `http://kiosk.home.arpa:8123`, then go to
 **Settings → Devices & services → Add integration → HACS** to finish the HACS
-setup. Node-RED is available at `http://kiosk.home.arpa:1880` and includes the
-source-controlled Inovelli/Zigbee2MQTT flow under `services/node-red`.
+setup. The source-controlled Python automations live under
+`services/appdaemon`; the Inovelli controls talk directly to Zigbee2MQTT while
+Home Assistant observes the resulting device state normally. AppDaemon's admin
+UI is available on the local network at `http://kiosk.home.arpa:5050`.
 
 ### Edit Layouts
 
@@ -41,7 +43,7 @@ All scripts are in `scripts/`. Run from your Mac unless noted.
 | ------------------------------------------- | ----------------------------------------------- |
 | `deploy.sh <user@host>`                     | Sync files and run setup (restarts cage)        |
 | `deploy.sh <user@host> --reboot`            | Sync and setup with reboot (for kernel updates) |
-| `sync-node-red.sh <user@host>`              | Test and sync only Node-RED, then restart it    |
+| `sync-appdaemon.sh <user@host>`             | Test and sync AppDaemon, then restart it        |
 | `install-keyboard.sh [version] [user@host]` | Install Chrome virtual keyboard extension       |
 | `debug-mode.sh`                             | Switch to debug mode (run via SSH on kiosk)     |
 | `kiosk-mode.sh`                             | Restore kiosk mode (run via SSH on kiosk)       |

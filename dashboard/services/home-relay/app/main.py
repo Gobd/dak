@@ -163,12 +163,12 @@ async def root():
 </head>
 <body>
 <h1>kiosk.home.arpa</h1>
-<a href="https://dak.bkemper.me">dak.bkemper.me</a>
-<a href="https://home-relay.bkemper.me">home-relay.bkemper.me</a>
-<a href="https://ha.bkemper.me">ha.bkemper.me</a>
-<a href="https://nr.bkemper.me">nr.bkemper.me</a>
-<a href="https://zigbee2mqtt.bkemper.me">zigbee2mqtt.bkemper.me</a>
-<a href="http://boo.home.arpa">boo.home.arpa</a>
+<a href="https://dak.bkemper.me">DAK Dashboard</a>
+<a href="https://home-relay.bkemper.me">Home Relay</a>
+<a href="https://ha.bkemper.me">Home Assistant</a>
+<a href="http://kiosk.home.arpa:5050">AppDaemon Admin</a>
+<a href="https://zigbee2mqtt.bkemper.me">Zigbee2MQTT</a>
+<a href="http://boo.home.arpa">Boo</a>
 </body>
 </html>
 """
