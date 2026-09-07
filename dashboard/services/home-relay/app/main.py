@@ -166,6 +166,7 @@ async def root():
 <a href="https://dak.bkemper.me">dak.bkemper.me</a>
 <a href="https://home-relay.bkemper.me">home-relay.bkemper.me</a>
 <a href="https://ha.bkemper.me">ha.bkemper.me</a>
+<a href="https://nr.bkemper.me">nr.bkemper.me</a>
 <a href="https://zigbee2mqtt.bkemper.me">zigbee2mqtt.bkemper.me</a>
 <a href="http://boo.home.arpa">boo.home.arpa</a>
 </body>

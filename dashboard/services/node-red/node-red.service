@@ -1,0 +1,15 @@
+[Unit]
+Description=Node-RED
+After=network-online.target mosquitto.service zigbee2mqtt.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=/home/__USER__/dashboard/services/node-red
+ExecStart=/usr/bin/node-red --userDir /home/__USER__/dashboard/services/node-red
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

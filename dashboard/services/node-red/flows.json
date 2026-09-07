@@ -1,0 +1,115 @@
+[
+  {
+    "id": "inovelli-blue-tab",
+    "type": "tab",
+    "label": "Inovelli Blue light control",
+    "disabled": false,
+    "info": "Shared Zigbee2MQTT control for Inovelli Blue double taps and LED-bar state/level reconciliation."
+  },
+  {
+    "id": "z2m-local-broker",
+    "type": "mqtt-broker",
+    "name": "Local Zigbee2MQTT",
+    "broker": "${MQTT_HOST}",
+    "port": "${MQTT_PORT}",
+    "clientid": "dak-node-red",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {}
+  },
+  {
+    "id": "switch-state-and-actions",
+    "type": "mqtt in",
+    "z": "inovelli-blue-tab",
+    "name": "Zigbee2MQTT reports/actions",
+    "topic": "${Z2M_BASE_TOPIC}/#",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "z2m-local-broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 170,
+    "y": 100,
+    "wires": [
+      [
+        "build-double-tap-scene",
+        "reconcile-led-bar"
+      ]
+    ]
+  },
+  {
+    "id": "build-double-tap-scene",
+    "type": "function",
+    "z": "inovelli-blue-tab",
+    "name": "Build double-tap preset",
+    "func": "return global.get('inovelliControl').buildDoubleTap(msg);",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 450,
+    "y": 80,
+    "wires": [
+      [
+        "publish-z2m"
+      ]
+    ]
+  },
+  {
+    "id": "reconcile-led-bar",
+    "type": "function",
+    "z": "inovelli-blue-tab",
+    "name": "Keep LED bar state in sync",
+    "func": "return global.get('inovelliControl').reconcileLedBar(msg);",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 180,
+    "wires": [
+      [
+        "publish-z2m"
+      ]
+    ]
+  },
+  {
+    "id": "publish-z2m",
+    "type": "mqtt out",
+    "z": "inovelli-blue-tab",
+    "name": "Publish Zigbee2MQTT command",
+    "topic": "",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "z2m-local-broker",
+    "x": 760,
+    "y": 140,
+    "wires": []
+  }
+]
