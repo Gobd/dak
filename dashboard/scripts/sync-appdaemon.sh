@@ -38,10 +38,18 @@ set -e
 NO_RESTART="$1"
 SOURCE_DIR=~/dashboard/services/appdaemon
 
-if [ ! -x ~/appdaemon/.venv/bin/appdaemon ]; then
-  echo "ERROR: AppDaemon is not installed; run dashboard/scripts/deploy.sh first"
+if [ ! -x ~/.local/bin/uv ]; then
+  echo "ERROR: uv is not installed; run dashboard/scripts/deploy.sh first"
   exit 1
 fi
+
+mkdir -p ~/appdaemon
+UV_PROJECT_ENVIRONMENT="/home/$USER/appdaemon/.venv" \
+  ~/.local/bin/uv sync \
+    --project "$SOURCE_DIR" \
+    --locked \
+    --no-dev \
+    --python 3.13
 
 ~/appdaemon/.venv/bin/python -m unittest discover "$SOURCE_DIR/tests"
 sed "s|__USER__|$USER|g" "$SOURCE_DIR/appdaemon.service" \

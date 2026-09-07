@@ -5,6 +5,10 @@ talks directly to Zigbee2MQTT through Mosquitto; Home Assistant is not in this
 control path, but it still observes all resulting device reports through its
 MQTT integration.
 
+The AppDaemon runtime and all transitive dependencies are reproducibly managed
+by this directory's `pyproject.toml` and `uv.lock`. Deploy and sync use
+`uv sync --locked` with the isolated `~/appdaemon/.venv` environment.
+
 The AppDaemon admin UI is available on the local network at
 `http://kiosk.home.arpa:5050`. It shows loaded apps, plugin status, callbacks,
 threads, namespaces, and logs.

@@ -263,8 +263,12 @@ echo "HACS installed (finish setup in Home Assistant after it restarts)"
 # =============================================================================
 echo "=== Setting up AppDaemon ==="
 mkdir -p ~/appdaemon
-~/.local/bin/uv venv ~/appdaemon/.venv --python 3.13 --clear
-~/.local/bin/uv pip install --python ~/appdaemon/.venv appdaemon
+UV_PROJECT_ENVIRONMENT="/home/$USER/appdaemon/.venv" \
+  ~/.local/bin/uv sync \
+    --project ~/dashboard/services/appdaemon \
+    --locked \
+    --no-dev \
+    --python 3.13
 
 sed "s|__USER__|$USER|g" ~/dashboard/services/appdaemon/appdaemon.service \
   | sudo tee /etc/systemd/system/appdaemon.service > /dev/null
