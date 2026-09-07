@@ -41,6 +41,14 @@ class InovelliControllerTests(unittest.TestCase):
         assert commands[1].topic == f"{KITCHEN['switch_topic']}/set"
         assert commands[1].payload == {"state": "ON", "brightness": 51}
 
+    def test_double_tap_led_command_is_not_duplicated_while_acknowledgment_is_pending(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(KITCHEN["switch_topic"], {"action": "down_double"})
+        controller.handle(KITCHEN["switch_topic"], {"state": "ON", "brightness": 245})
+
+        assert controller.handle(KITCHEN["target_topic"], {"state": "ON", "brightness": 51}) == []
+        assert controller.handle(KITCHEN["target_topic"], {"state": "ON", "brightness": 51}) == []
+
     def test_group_report_updates_only_different_switch_fields(self):
         controller = InovelliController([KITCHEN])
         controller.handle(KITCHEN["switch_topic"], {"state": "ON", "brightness": 51})
@@ -61,6 +69,23 @@ class InovelliControllerTests(unittest.TestCase):
             f"{second['switch_topic']}/set",
         ]
         assert [command.payload for command in commands] == [{"state": "OFF"}] * 2
+
+    def test_group_reconciliation_does_not_interrupt_active_hold(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(
+            KITCHEN["switch_topic"],
+            {"action": "up_held", "state": "ON", "brightness": 51},
+        )
+
+        assert controller.handle(KITCHEN["target_topic"], {"state": "ON", "brightness": 100}) == []
+
+        controller.handle(
+            KITCHEN["switch_topic"],
+            {"action": "up_release", "state": "ON", "brightness": 100},
+        )
+        assert controller.handle(KITCHEN["target_topic"], {"state": "ON", "brightness": 120})[
+            0
+        ].payload == {"brightness": 120}
 
     def test_unrelated_and_invalid_events_are_ignored(self):
         controller = InovelliController([KITCHEN])

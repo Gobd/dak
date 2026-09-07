@@ -64,6 +64,8 @@ class InovelliController:
             self._by_target.setdefault(item.target_topic, []).append(item)
         self._switch_states: dict[str, str] = {}
         self._switch_brightness: dict[str, int] = {}
+        self._pending_brightness: dict[str, int] = {}
+        self._held_switches: set[str] = set()
 
     @property
     def topics(self) -> set[str]:
@@ -90,6 +92,8 @@ class InovelliController:
             brightness = round(percent * 254 / 100)
 
         kelvin = max(1000, min(10000, kelvin))
+        self._switch_states[topic] = "ON"
+        self._pending_brightness[topic] = brightness
         return [
             Command(
                 topic=f"{control.target_topic}/set",
@@ -107,11 +111,22 @@ class InovelliController:
 
     def _reconcile_led_bar(self, topic: str, payload: dict[str, Any]) -> list[Command]:
         if topic in self._by_switch:
+            action = payload.get("action")
+            if action in {"up_held", "down_held"}:
+                self._held_switches.add(topic)
+                self._pending_brightness.pop(topic, None)
+            elif action in {"up_release", "down_release"}:
+                self._held_switches.discard(topic)
+
             if payload.get("state") in {"ON", "OFF"}:
                 self._switch_states[topic] = payload["state"]
             brightness = _zigbee_brightness(payload.get("brightness"))
             if brightness is not None:
-                self._switch_brightness[topic] = brightness
+                pending = self._pending_brightness.get(topic)
+                if pending is None or brightness == pending:
+                    self._switch_brightness[topic] = brightness
+                if brightness == pending:
+                    self._pending_brightness.pop(topic, None)
             return []
 
         controls = self._by_target.get(topic, [])
@@ -124,11 +139,20 @@ class InovelliController:
 
         commands: list[Command] = []
         for control in controls:
+            if control.switch_topic in self._held_switches:
+                continue
+
             command: dict[str, Any] = {}
             if has_state and self._switch_states.get(control.switch_topic) != state:
                 command["state"] = state
-            if has_brightness and self._switch_brightness.get(control.switch_topic) != brightness:
+            brightness_matches = (
+                self._switch_brightness.get(control.switch_topic) == brightness
+                or self._pending_brightness.get(control.switch_topic) == brightness
+            )
+            if has_brightness and not brightness_matches:
                 command["brightness"] = brightness
             if command:
                 commands.append(Command(f"{control.switch_topic}/set", command))
+                if "brightness" in command:
+                    self._pending_brightness[control.switch_topic] = command["brightness"]
         return commands

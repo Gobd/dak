@@ -22,9 +22,11 @@ class InovelliControls(mqtt.Mqtt):
         if topic not in self.controller.topics:
             return
 
-        for command in self.controller.handle(topic, data.get("payload")):
+        payload = data.get("payload")
+        for command in self.controller.handle(topic, payload):
+            encoded_payload = json.dumps(command.payload, separators=(",", ":"))
             self.mqtt_publish(
                 command.topic,
-                json.dumps(command.payload, separators=(",", ":")),
+                encoded_payload,
                 namespace="mqtt",
             )

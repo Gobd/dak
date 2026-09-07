@@ -14,4 +14,3 @@ inovelli_controls:
       up_color_temp_k: 5400
       down_color_temp_k: 2200
       down_brightness_percent: 20
-
