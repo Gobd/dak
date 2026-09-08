@@ -1,0 +1,18 @@
+appdaemon:
+  latitude: 39.7392
+  longitude: -104.9903
+  elevation: 1609
+  time_zone: America/Denver
+  plugins:
+    MQTT:
+      type: mqtt
+      namespace: mqtt
+      client_host: 127.0.0.1
+      client_port: 1883
+      client_id: dak-appdaemon
+
+http:
+  url: http://0.0.0.0:5050
+
+admin:
+  title: DAK AppDaemon
