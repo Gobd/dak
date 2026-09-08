@@ -18,7 +18,11 @@ The shared implementation provides:
 
 - double tap up: 100% brightness and the configured color temperature;
 - double tap down: configured brightness and color temperature;
+- hold down while off: the configured hold brightness and color temperature;
 - event-driven synchronization of group state and brightness to each switch.
+
+The hold-down preset is configured per control in `apps/apps.yaml` with
+`down_held_brightness_percent` and `down_held_color_temp_k`.
 
 The switch should be in Smart Bulb Mode and directly bound to its Zigbee group
 for normal single-tap and hold behavior. LED color and intensity remain owned

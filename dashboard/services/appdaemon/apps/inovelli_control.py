@@ -22,6 +22,8 @@ class Control:
     up_color_temp_k: float = 4000
     down_color_temp_k: float = 2200
     down_brightness_percent: float = 20
+    down_held_color_temp_k: float = 3000
+    down_held_brightness_percent: float = 50
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> Control:
@@ -63,8 +65,10 @@ class InovelliController:
         for item in self.controls:
             self._by_target.setdefault(item.target_topic, []).append(item)
         self._switch_states: dict[str, str] = {}
+        self._target_states: dict[str, str] = {}
         self._switch_brightness: dict[str, int] = {}
         self._pending_brightness: dict[str, int] = {}
+        self._pending_presets: dict[str, int] = {}
         self._held_switches: set[str] = set()
 
     @property
@@ -75,7 +79,46 @@ class InovelliController:
         payload = _object_payload(raw_payload)
         commands = self._double_tap(topic, payload)
         commands.extend(self._reconcile_led_bar(topic, payload))
+        commands.extend(self._down_hold_when_off(topic, payload))
         return commands
+
+    def _down_hold_when_off(self, topic: str, payload: dict[str, Any]) -> list[Command]:
+        control = self._by_switch.get(topic)
+        if control is None or payload.get("action") != "down_held":
+            return []
+
+        # A state included with the action is the freshest indication. If the
+        # action has no state, use the group's last report, then the directly
+        # bound switch's last report.
+        state = payload.get("state")
+        if state not in {"ON", "OFF"}:
+            state = self._target_states.get(control.target_topic)
+        if state is None:
+            state = self._switch_states.get(topic)
+        if state != "OFF":
+            return []
+
+        kelvin = max(1000, min(10000, control.down_held_color_temp_k))
+        percent = max(1, min(100, control.down_held_brightness_percent))
+        brightness = round(percent * 254 / 100)
+        self._target_states[control.target_topic] = "ON"
+        self._switch_states[topic] = "ON"
+        self._pending_brightness[topic] = brightness
+        self._pending_presets[topic] = brightness
+        return [
+            Command(
+                topic=f"{control.target_topic}/set",
+                payload={
+                    "state": "ON",
+                    "brightness": brightness,
+                    "color_temp": round(1_000_000 / kelvin),
+                },
+            ),
+            Command(
+                topic=f"{control.switch_topic}/set",
+                payload={"state": "ON", "brightness": brightness},
+            ),
+        ]
 
     def _double_tap(self, topic: str, payload: dict[str, Any]) -> list[Command]:
         control = self._by_switch.get(topic)
@@ -93,7 +136,9 @@ class InovelliController:
 
         kelvin = max(1000, min(10000, kelvin))
         self._switch_states[topic] = "ON"
+        self._target_states[control.target_topic] = "ON"
         self._pending_brightness[topic] = brightness
+        self._pending_presets[topic] = brightness
         return [
             Command(
                 topic=f"{control.target_topic}/set",
@@ -112,6 +157,16 @@ class InovelliController:
     def _reconcile_led_bar(self, topic: str, payload: dict[str, Any]) -> list[Command]:
         if topic in self._by_switch:
             action = payload.get("action")
+            if action in {
+                "up_single",
+                "down_single",
+                "up_held",
+                "down_held",
+                "up_release",
+                "down_release",
+            }:
+                self._pending_presets.pop(topic, None)
+                self._pending_brightness.pop(topic, None)
             if action in {"up_held", "down_held"}:
                 self._held_switches.add(topic)
                 self._pending_brightness.pop(topic, None)
@@ -137,10 +192,23 @@ class InovelliController:
         if not controls or (not has_state and not has_brightness):
             return []
 
+        if has_state:
+            self._target_states[topic] = state
+
         commands: list[Command] = []
         for control in controls:
             if control.switch_topic in self._held_switches:
                 continue
+
+            pending_preset = self._pending_presets.get(control.switch_topic)
+            if pending_preset is not None:
+                # Z2M can publish intermediate group levels while the preset
+                # command is settling. Echoing those levels to the directly
+                # bound switch creates a feedback loop and can interrupt a
+                # subsequent paddle hold.
+                if state != "ON" or brightness != pending_preset:
+                    continue
+                self._pending_presets.pop(control.switch_topic, None)
 
             command: dict[str, Any] = {}
             if has_state and self._switch_states.get(control.switch_topic) != state:

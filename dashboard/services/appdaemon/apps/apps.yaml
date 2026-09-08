@@ -8,9 +8,13 @@ inovelli_controls:
       up_color_temp_k: 5400
       down_color_temp_k: 2200
       down_brightness_percent: 20
+      down_held_color_temp_k: 3000
+      down_held_brightness_percent: 50
     - name: Kitchen Lights
       switch_topic: zigbee2mqtt/KitchenSwitch
       target_topic: zigbee2mqtt/KitchenLights
       up_color_temp_k: 5400
       down_color_temp_k: 2200
       down_brightness_percent: 20
+      down_held_color_temp_k: 3000
+      down_held_brightness_percent: 50
