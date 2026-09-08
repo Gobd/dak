@@ -45,6 +45,41 @@ class InovelliControllerTests(unittest.TestCase):
         assert commands[1].topic == f"{KITCHEN['switch_topic']}/set"
         assert commands[1].payload == {"state": "ON", "brightness": 51}
 
+    def test_double_tap_up_waits_for_off_group_preset_before_turning_on(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(KITCHEN["target_topic"], {"state": "OFF"})
+
+        commands = controller.handle(
+            KITCHEN["switch_topic"], {"action": "up_double"}
+        )
+        assert [command.topic for command in commands] == [
+            f"{KITCHEN['target_topic']}/set"
+        ]
+        assert commands[0].payload == {"brightness": 254, "color_temp": 250}
+
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "OFF", "brightness": 254, "color_temp": 250},
+        )[0].payload == {"state": "ON"}
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "ON", "brightness": 254, "color_temp": 250},
+        )[0].payload == {"state": "ON", "brightness": 254}
+
+    def test_double_tap_down_waits_for_off_group_preset_before_turning_on(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(KITCHEN["target_topic"], {"state": "OFF"})
+
+        commands = controller.handle(
+            KITCHEN["switch_topic"], {"action": "down_double"}
+        )
+        assert commands[0].payload == {"brightness": 51, "color_temp": 455}
+
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "OFF", "brightness": 51, "color_temp": 455},
+        )[0].payload == {"state": "ON"}
+
     def test_double_tap_led_command_is_not_duplicated_while_acknowledgment_is_pending(self):
         controller = InovelliController([KITCHEN])
         controller.handle(KITCHEN["switch_topic"], {"action": "down_double"})
@@ -75,16 +110,52 @@ class InovelliControllerTests(unittest.TestCase):
             KITCHEN["switch_topic"], {"action": "down_held"}
         )
 
-        assert [command.topic for command in commands] == [
-            f"{KITCHEN['target_topic']}/set",
-            f"{KITCHEN['switch_topic']}/set",
-        ]
+        assert [command.topic for command in commands] == [f"{KITCHEN['target_topic']}/set"]
         assert commands[0].payload == {
-            "state": "ON",
             "brightness": 127,
             "color_temp": 333,
         }
-        assert commands[1].payload == {"state": "ON", "brightness": 127}
+
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "OFF", "brightness": 127, "color_temp": 333},
+        )[0].payload == {"state": "ON"}
+
+        commands = controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "ON", "brightness": 127, "color_temp": 333},
+        )
+        assert [command.topic for command in commands] == [
+            f"{KITCHEN['switch_topic']}/set"
+        ]
+        assert commands[0].payload == {"state": "ON", "brightness": 127}
+
+    def test_down_hold_waits_for_both_attributes_when_reports_are_split(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(KITCHEN["target_topic"], {"state": "OFF"})
+        controller.handle(KITCHEN["switch_topic"], {"action": "down_held"})
+
+        assert controller.handle(
+            KITCHEN["target_topic"], {"state": "OFF", "brightness": 127}
+        ) == []
+        assert controller.handle(
+            KITCHEN["target_topic"], {"color_temp": 333}
+        )[0].payload == {"state": "ON"}
+
+    def test_down_hold_does_not_update_led_until_group_reports_on(self):
+        controller = InovelliController([KITCHEN])
+        controller.handle(KITCHEN["target_topic"], {"state": "OFF"})
+        controller.handle(KITCHEN["switch_topic"], {"action": "down_held"})
+
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "ON", "brightness": 200, "color_temp": 333},
+        ) == []
+
+        assert controller.handle(
+            KITCHEN["target_topic"],
+            {"state": "ON", "brightness": 127, "color_temp": 333},
+        )[0].payload == {"state": "ON", "brightness": 127}
 
     def test_down_hold_does_not_override_an_already_on_light(self):
         controller = InovelliController([KITCHEN])
@@ -105,7 +176,6 @@ class InovelliControllerTests(unittest.TestCase):
         )
 
         assert commands[0].payload == {
-            "state": "ON",
             "brightness": 127,
             "color_temp": 333,
         }
@@ -121,7 +191,6 @@ class InovelliControllerTests(unittest.TestCase):
         )
 
         assert commands[0].payload == {
-            "state": "ON",
             "brightness": 127,
             "color_temp": 333,
         }

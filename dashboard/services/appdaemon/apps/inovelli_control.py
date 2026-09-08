@@ -32,6 +32,13 @@ class Control:
         return cls(**value)
 
 
+@dataclass(frozen=True)
+class PendingPreset:
+    brightness: int
+    color_temp: int
+    waiting_for_on: bool = False
+
+
 def _object_payload(value: Any) -> dict[str, Any]:
     if isinstance(value, bytes):
         value = value.decode(errors="replace")
@@ -53,6 +60,16 @@ def _zigbee_brightness(value: Any) -> int | None:
     return max(1, min(254, round(number)))
 
 
+def _zigbee_color_temp(value: Any) -> int | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number) or number <= 0:
+        return None
+    return round(number)
+
+
 class InovelliController:
     """Translate switch actions and reconcile switch LEDs with group reports."""
 
@@ -66,9 +83,12 @@ class InovelliController:
             self._by_target.setdefault(item.target_topic, []).append(item)
         self._switch_states: dict[str, str] = {}
         self._target_states: dict[str, str] = {}
+        self._target_brightness: dict[str, int] = {}
+        self._target_color_temp: dict[str, int] = {}
         self._switch_brightness: dict[str, int] = {}
         self._pending_brightness: dict[str, int] = {}
         self._pending_presets: dict[str, int] = {}
+        self._pending_attribute_presets: dict[str, PendingPreset] = {}
         self._held_switches: set[str] = set()
 
     @property
@@ -101,24 +121,8 @@ class InovelliController:
         kelvin = max(1000, min(10000, control.down_held_color_temp_k))
         percent = max(1, min(100, control.down_held_brightness_percent))
         brightness = round(percent * 254 / 100)
-        self._target_states[control.target_topic] = "ON"
-        self._switch_states[topic] = "ON"
-        self._pending_brightness[topic] = brightness
-        self._pending_presets[topic] = brightness
-        return [
-            Command(
-                topic=f"{control.target_topic}/set",
-                payload={
-                    "state": "ON",
-                    "brightness": brightness,
-                    "color_temp": round(1_000_000 / kelvin),
-                },
-            ),
-            Command(
-                topic=f"{control.switch_topic}/set",
-                payload={"state": "ON", "brightness": brightness},
-            ),
-        ]
+        color_temp = round(1_000_000 / kelvin)
+        return self._start_attribute_then_on(control, brightness, color_temp)
 
     def _double_tap(self, topic: str, payload: dict[str, Any]) -> list[Command]:
         control = self._by_switch.get(topic)
@@ -135,6 +139,16 @@ class InovelliController:
             brightness = round(percent * 254 / 100)
 
         kelvin = max(1000, min(10000, kelvin))
+        color_temp = round(1_000_000 / kelvin)
+        state = payload.get("state")
+        if state not in {"ON", "OFF"}:
+            state = self._target_states.get(control.target_topic)
+        if state is None:
+            state = self._switch_states.get(topic)
+        if state == "OFF":
+            return self._start_attribute_then_on(control, brightness, color_temp)
+
+        self._pending_attribute_presets.pop(topic, None)
         self._switch_states[topic] = "ON"
         self._target_states[control.target_topic] = "ON"
         self._pending_brightness[topic] = brightness
@@ -145,7 +159,7 @@ class InovelliController:
                 payload={
                     "state": "ON",
                     "brightness": brightness,
-                    "color_temp": round(1_000_000 / kelvin),
+                    "color_temp": color_temp,
                 },
             ),
             Command(
@@ -157,6 +171,8 @@ class InovelliController:
     def _reconcile_led_bar(self, topic: str, payload: dict[str, Any]) -> list[Command]:
         if topic in self._by_switch:
             action = payload.get("action")
+            if action in {"up_single", "down_single", "up_held", "down_held"}:
+                self._pending_attribute_presets.pop(topic, None)
             if action in {
                 "up_single",
                 "down_single",
@@ -188,15 +204,36 @@ class InovelliController:
         state = payload.get("state")
         has_state = state in {"ON", "OFF"}
         brightness = _zigbee_brightness(payload.get("brightness"))
+        color_temp = _zigbee_color_temp(payload.get("color_temp"))
         has_brightness = brightness is not None and state != "OFF"
-        if not controls or (not has_state and not has_brightness):
+        has_color_temp = color_temp is not None
+        if not controls or (not has_state and not has_brightness and not has_color_temp):
+            if has_brightness:
+                self._target_brightness[topic] = brightness
+            if has_color_temp:
+                self._target_color_temp[topic] = color_temp
             return []
 
         if has_state:
             self._target_states[topic] = state
+        if brightness is not None:
+            self._target_brightness[topic] = brightness
+        if has_color_temp:
+            self._target_color_temp[topic] = color_temp
 
         commands: list[Command] = []
         for control in controls:
+            pending_preset = self._pending_attribute_presets.get(control.switch_topic)
+            if pending_preset is not None:
+                commands.extend(
+                    self._advance_attribute_preset(
+                        control,
+                        pending_preset,
+                        state if has_state else None,
+                    )
+                )
+                continue
+
             if control.switch_topic in self._held_switches:
                 continue
 
@@ -224,3 +261,78 @@ class InovelliController:
                 if "brightness" in command:
                     self._pending_brightness[control.switch_topic] = command["brightness"]
         return commands
+
+    def _start_attribute_then_on(
+        self,
+        control: Control,
+        brightness: int,
+        color_temp: int,
+    ) -> list[Command]:
+        self._pending_attribute_presets[control.switch_topic] = PendingPreset(
+            brightness,
+            color_temp,
+        )
+        # Require fresh reports for both attributes. A cached match from before
+        # the action is not confirmation that this preset reached the group.
+        self._target_brightness.pop(control.target_topic, None)
+        self._target_color_temp.pop(control.target_topic, None)
+        return [
+            Command(
+                topic=f"{control.target_topic}/set",
+                payload={"brightness": brightness, "color_temp": color_temp},
+            )
+        ]
+
+    def _advance_attribute_preset(
+        self,
+        control: Control,
+        pending: PendingPreset,
+        state: str | None,
+    ) -> list[Command]:
+        target = control.target_topic
+        attributes_match = (
+            self._target_brightness.get(target) == pending.brightness
+            and self._target_color_temp.get(target) == pending.color_temp
+        )
+
+        if pending.waiting_for_on:
+            if state != "ON":
+                return []
+            self._pending_attribute_presets.pop(control.switch_topic, None)
+            self._switch_states[control.switch_topic] = "ON"
+            self._pending_brightness[control.switch_topic] = pending.brightness
+            self._pending_presets[control.switch_topic] = pending.brightness
+            return [
+                Command(
+                    topic=f"{control.switch_topic}/set",
+                    payload={
+                        "state": "ON",
+                        "brightness": pending.brightness,
+                    },
+                )
+            ]
+
+        if not attributes_match:
+            return []
+
+        if state == "ON":
+            self._pending_attribute_presets.pop(control.switch_topic, None)
+            self._switch_states[control.switch_topic] = "ON"
+            self._pending_brightness[control.switch_topic] = pending.brightness
+            self._pending_presets[control.switch_topic] = pending.brightness
+            return [
+                Command(
+                    topic=f"{control.switch_topic}/set",
+                    payload={
+                        "state": "ON",
+                        "brightness": pending.brightness,
+                    },
+                )
+            ]
+
+        self._pending_attribute_presets[control.switch_topic] = PendingPreset(
+            pending.brightness,
+            pending.color_temp,
+            waiting_for_on=True,
+        )
+        return [Command(topic=f"{target}/set", payload={"state": "ON"})]

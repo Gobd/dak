@@ -18,8 +18,13 @@ The shared implementation provides:
 
 - double tap up: 100% brightness and the configured color temperature;
 - double tap down: configured brightness and color temperature;
-- hold down while off: the configured hold brightness and color temperature;
+- hold down while off: publish the configured brightness and color temperature,
+  wait for both values to be reported by the group, then turn the group on;
 - event-driven synchronization of group state and brightness to each switch.
+
+The double-tap presets use that same report-confirmed sequence when the group is
+known to be off. If the group is already on (or its state is not yet known), the
+preset is sent as one combined ON payload.
 
 The hold-down preset is configured per control in `apps/apps.yaml` with
 `down_held_brightness_percent` and `down_held_color_temp_k`.
