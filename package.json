@@ -17,9 +17,9 @@
     "build:pages": "./scripts/build-pages.sh"
   },
   "devDependencies": {
-    "knip": "^6.16.0",
-    "oxfmt": "^0.61.0",
-    "oxlint": "^1.76.0",
+    "knip": "^6.34.0",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
     "shellcheck": "^4.1.0"
   },
   "volta": {

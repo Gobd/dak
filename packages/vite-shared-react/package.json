@@ -25,9 +25,9 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "magic-string": "^0.30.21",
-    "oxc-parser": "^0.134.0",
-    "oxc-walker": "^1.0.0",
+    "magic-string": "^1.2.3",
+    "oxc-parser": "^0.148.0",
+    "oxc-walker": "^1.1.1",
     "vite": "catalog:"
   }
 }
