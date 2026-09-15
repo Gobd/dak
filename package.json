@@ -19,7 +19,7 @@
   "devDependencies": {
     "knip": "^6.34.0",
     "oxfmt": "^0.66.0",
-    "oxlint": "^1.81.0",
+    "oxlint": "^1.82.0",
     "shellcheck": "^4.1.0"
   },
   "volta": {
