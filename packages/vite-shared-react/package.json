@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "magic-string": "^1.2.3",
-    "oxc-parser": "^0.148.0",
+    "oxc-parser": "^0.149.0",
     "oxc-walker": "^1.1.1",
     "vite": "catalog:"
   }
