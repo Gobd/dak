@@ -43,9 +43,7 @@ interface RecipeStore {
     isSearching?: boolean,
   ) => Promise<void>;
   getAllRecipesForExport: () => Promise<Recipe[]>;
-  addRecipe: (
-    recipe: RecipeInput,
-  ) => Promise<Recipe>;
+  addRecipe: (recipe: RecipeInput) => Promise<Recipe>;
   updateRecipe: (id: string, updates: RecipeUpdate) => Promise<void>;
   deleteRecipe: (id: string) => Promise<void>;
   getRecipeById: (id: string) => Promise<Recipe | null>;
@@ -432,7 +430,9 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       // Optimistic update
       const { recipes } = get();
       const updatedRecipes = recipes.map((recipe) =>
-        recipe.id === id ? { ...recipe, ...updates, ingredient_lines: recipe.ingredient_lines } : recipe,
+        recipe.id === id
+          ? { ...recipe, ...updates, ingredient_lines: recipe.ingredient_lines }
+          : recipe,
       );
       set({ recipes: updatedRecipes });
 
@@ -564,7 +564,9 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
 
       const ingredient = await findOrCreateIngredient(name, user.id);
       const ingredients = get().ingredients.filter((item) => item.id !== ingredient.id);
-      set({ ingredients: [...ingredients, ingredient].sort((a, b) => a.name.localeCompare(b.name)) });
+      set({
+        ingredients: [...ingredients, ingredient].sort((a, b) => a.name.localeCompare(b.name)),
+      });
       return ingredient;
     } catch (error) {
       console.error('Failed to create ingredient:', error);
@@ -643,9 +645,12 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
         set({
           ingredients: get().ingredients.map((item) =>
             item.id === ingredientId
-              ? { ...item, nutrition: [...nutritionRows, mapped].sort((a, b) =>
-                  a.unit.localeCompare(b.unit),
-                ) }
+              ? {
+                  ...item,
+                  nutrition: [...nutritionRows, mapped].sort((a, b) =>
+                    a.unit.localeCompare(b.unit),
+                  ),
+                }
               : item,
           ),
         });

@@ -25,7 +25,9 @@ export function RecipeIngredientsEditor({
   const [activeLineIndex, setActiveLineIndex] = useState<number | null>(null);
 
   const updateLine = (index: number, updates: Partial<RecipeIngredientLineDraft>) => {
-    onChange(lines.map((line, lineIndex) => (lineIndex === index ? { ...line, ...updates } : line)));
+    onChange(
+      lines.map((line, lineIndex) => (lineIndex === index ? { ...line, ...updates } : line)),
+    );
   };
 
   const getIngredient = (line: RecipeIngredientLineDraft) =>
@@ -39,7 +41,9 @@ export function RecipeIngredientsEditor({
       (ingredient) => ingredient.name.toLowerCase() === name.trim().toLowerCase(),
     );
     const profile = existing ? findNutritionProfile(existing, line.unit) : null;
-    const changedExistingIngredient = Boolean(line.ingredient_id && line.ingredient_id !== existing?.id);
+    const changedExistingIngredient = Boolean(
+      line.ingredient_id && line.ingredient_id !== existing?.id,
+    );
 
     updateLine(index, {
       ingredient_name: name,
@@ -166,9 +170,7 @@ export function RecipeIngredientsEditor({
               </div>
 
               <div className="w-24">
-                <label className="block text-xs font-medium text-text-secondary mb-1">
-                  Amount
-                </label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Amount</label>
                 <Input
                   type="number"
                   min="0"
@@ -183,9 +185,7 @@ export function RecipeIngredientsEditor({
                 <label className="block text-xs font-medium text-text-secondary mb-1">Unit</label>
                 <select
                   value={line.unit}
-                  onChange={(event) =>
-                    handleUnitChange(index, event.target.value as NutritionUnit)
-                  }
+                  onChange={(event) => handleUnitChange(index, event.target.value as NutritionUnit)}
                   className="w-full px-2 py-2 rounded text-sm border border-border bg-surface-sunken text-text outline-none focus:border-accent"
                 >
                   {NUTRITION_UNITS.map((unit) => (
@@ -210,8 +210,8 @@ export function RecipeIngredientsEditor({
             {needsNutrition ? (
               <div className="mt-3 rounded-md bg-warning/10 border border-warning/20 p-3">
                 <p className="text-xs text-warning mb-2">
-                  Nutrition is not saved for this ingredient per {line.unit}. Add it here or
-                  choose a unit with nutrition data.
+                  Nutrition is not saved for this ingredient per {line.unit}. Add it here or choose
+                  a unit with nutrition data.
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   <Input
@@ -243,7 +243,9 @@ export function RecipeIngredientsEditor({
                     size="sm"
                     label={`Fiber g / ${line.unit}`}
                     value={line.nutrition ? line.nutrition.fiber_g : ''}
-                    onChange={(event) => handleNutritionChange(index, 'fiber_g', event.target.value)}
+                    onChange={(event) =>
+                      handleNutritionChange(index, 'fiber_g', event.target.value)
+                    }
                   />
                 </div>
               </div>

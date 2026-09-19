@@ -61,10 +61,10 @@ function IngredientCard({ ingredient }: { ingredient: Ingredient }) {
     const savedRow = ingredient.nutrition.find((item) => item.id === row.id);
     return Boolean(
       savedRow &&
-        savedRow.unit === row.unit &&
-        Number(savedRow.calories) === Number(row.calories) &&
-        Number(savedRow.protein_g) === Number(row.protein_g) &&
-        Number(savedRow.fiber_g) === Number(row.fiber_g),
+      savedRow.unit === row.unit &&
+      Number(savedRow.calories) === Number(row.calories) &&
+      Number(savedRow.protein_g) === Number(row.protein_g) &&
+      Number(savedRow.fiber_g) === Number(row.fiber_g),
     );
   };
 
@@ -102,7 +102,11 @@ function IngredientCard({ ingredient }: { ingredient: Ingredient }) {
     <Card className="p-5">
       <div className="flex items-end gap-2 mb-5">
         <div className="flex-1">
-          <Input label="Ingredient" value={name} onChange={(event) => setName(event.target.value)} />
+          <Input
+            label="Ingredient"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
         </div>
         {!nameIsSaved && (
           <Button variant="secondary" onClick={saveName} disabled={savingName || !name.trim()}>
@@ -258,8 +262,8 @@ export function IngredientsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-text">Global Ingredients</h1>
         <p className="text-sm text-text-secondary mt-1">
-          These are your reusable ingredients. Most edits can also be made directly while editing
-          a recipe.
+          These are your reusable ingredients. Most edits can also be made directly while editing a
+          recipe.
         </p>
       </div>
 
@@ -298,8 +302,9 @@ export function IngredientsPage() {
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredIngredients.length)}{' '}
-            of {filteredIngredients.length} ingredients
+            Showing {(page - 1) * pageSize + 1}–
+            {Math.min(page * pageSize, filteredIngredients.length)} of {filteredIngredients.length}{' '}
+            ingredients
           </p>
           {visibleIngredients.map((ingredient) => (
             <IngredientCard key={ingredient.id} ingredient={ingredient} />

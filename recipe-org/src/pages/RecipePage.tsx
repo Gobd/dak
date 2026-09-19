@@ -156,15 +156,7 @@ export function RecipePage() {
       loadDeweyCategories();
       clearError();
     }
-  }, [
-    id,
-    loadTags,
-    loadIngredients,
-    loadDeweyCategories,
-    clearError,
-    loadRecipe,
-    loadNavigation,
-  ]);
+  }, [id, loadTags, loadIngredients, loadDeweyCategories, clearError, loadRecipe, loadNavigation]);
 
   const getDeweyHierarchyTags = (deweyCode: string): string[] => {
     if (!deweyCode) return [];

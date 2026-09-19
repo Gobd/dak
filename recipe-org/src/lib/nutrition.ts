@@ -93,13 +93,14 @@ export function formatQuantity(value: number): string {
   const absolute = Math.abs(value);
   const whole = Math.floor(absolute);
   const fraction = absolute - whole;
-  const closest = COMMON_FRACTIONS.reduce<{ numerator: number; denominator: number; distance: number } | null>(
-    (best, candidate) => {
-      const distance = Math.abs(fraction - candidate.numerator / candidate.denominator);
-      return !best || distance < best.distance ? { ...candidate, distance } : best;
-    },
-    null,
-  );
+  const closest = COMMON_FRACTIONS.reduce<{
+    numerator: number;
+    denominator: number;
+    distance: number;
+  } | null>((best, candidate) => {
+    const distance = Math.abs(fraction - candidate.numerator / candidate.denominator);
+    return !best || distance < best.distance ? { ...candidate, distance } : best;
+  }, null);
 
   if (closest && closest.distance < 0.012) {
     const sign = value < 0 ? '-' : '';

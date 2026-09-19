@@ -64,7 +64,9 @@ export function NutritionSummary({ lines }: NutritionSummaryProps) {
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-text-secondary mb-2">Ingredient amount per serving</h3>
+        <h3 className="text-sm font-medium text-text-secondary mb-2">
+          Ingredient amount per serving
+        </h3>
         <div className="divide-y divide-border border border-border rounded-md">
           {lines.map((line) => {
             const nutrition = calculateIngredientNutrition(line);
@@ -76,7 +78,9 @@ export function NutritionSummary({ lines }: NutritionSummaryProps) {
                 <span className="text-text">{line.ingredient?.name || 'Unknown ingredient'}</span>
                 <span className="text-text-secondary whitespace-nowrap">
                   {formatQuantity(line.amount / safeServings)} {line.unit}
-                  {!nutrition.profile && <span className="text-warning ml-2">nutrition missing</span>}
+                  {!nutrition.profile && (
+                    <span className="text-warning ml-2">nutrition missing</span>
+                  )}
                 </span>
               </div>
             );
