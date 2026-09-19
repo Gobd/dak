@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Card, Input, Modal, Toggle } from '@dak/ui';
 import { RecipeEditor } from '../components/RecipeEditor';
 import { TagInput } from '../components/TagInput';
+import { RecipeIngredientsEditor } from '../components/RecipeIngredientsEditor';
 import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
 import { scrapeRecipe, formatRecipeAsMarkdown } from '../lib/recipe-scraper';
 import { useRecipeStore } from '../stores/recipe-store';
-import type { Recipe } from '../types';
+import type { RecipeInput, RecipeIngredientLineDraft } from '../types';
 
 export function AddRecipePage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function AddRecipePage() {
   const [recipePage, setRecipePage] = useState('');
   const [recipeUrl, setRecipeUrl] = useState('');
   const [recipeContent, setRecipeContent] = useState('');
+  const [ingredientLines, setIngredientLines] = useState<RecipeIngredientLineDraft[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [deweyDecimal, setDeweyDecimal] = useState('');
   const [shouldNavigateToRecipe, setShouldNavigateToRecipe] = useState(true);
@@ -24,11 +26,19 @@ export function AddRecipePage() {
 
   const recipeContentRef = useRef(recipeContent);
 
-  const { tags: availableTags, deweyCategories, loadDeweyCategories, addRecipe } = useRecipeStore();
+  const {
+    tags: availableTags,
+    deweyCategories,
+    ingredients,
+    loadDeweyCategories,
+    loadIngredients,
+    addRecipe,
+  } = useRecipeStore();
 
   useEffect(() => {
     loadDeweyCategories();
-  }, [loadDeweyCategories]);
+    loadIngredients();
+  }, [loadDeweyCategories, loadIngredients]);
 
   const getDeweyHierarchyTags = (deweyCode: string): string[] => {
     if (!deweyCode) return [];
@@ -128,15 +138,16 @@ export function AddRecipePage() {
 
     if (!recipeName.trim()) return;
 
-    const currentContent = recipeContentRef.current;
+    const currentContent = recipeContentRef.current || recipeContent;
 
-    const newRecipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+    const newRecipe: RecipeInput = {
       dewey_decimal: deweyDecimal || undefined,
       name: recipeName.trim(),
       page: recipePage.trim() || undefined,
       url: recipeUrl.trim() || undefined,
       recipe: currentContent.trim() || undefined,
       tags: tags,
+      ingredient_lines: ingredientLines,
     };
 
     try {
@@ -148,6 +159,8 @@ export function AddRecipePage() {
         setRecipePage('');
         setRecipeUrl('');
         setRecipeContent('');
+        recipeContentRef.current = '';
+        setIngredientLines([]);
         setTags([]);
         setDeweyDecimal('');
       }
@@ -223,6 +236,17 @@ export function AddRecipePage() {
               </div>
             </div>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Structured Ingredients & Nutrition
+            </label>
+            <RecipeIngredientsEditor
+              lines={ingredientLines}
+              ingredients={ingredients}
+              onChange={setIngredientLines}
+            />
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Tags</label>

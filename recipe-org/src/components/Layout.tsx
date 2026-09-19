@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Plus, Tags, FolderTree, LogOut, Sun, Moon } from 'lucide-react';
+import { Search, Plus, Tags, FolderTree, LogOut, Sun, Moon, Wheat } from 'lucide-react';
 import { Button } from '@dak/ui';
 import { useAuthStore } from '../stores/auth-store';
 import { useThemeStore } from '../stores/theme-store';
@@ -17,6 +17,7 @@ export function Layout({ children }: LayoutProps) {
     { path: '/', label: 'Search', icon: Search },
     { path: '/add', label: 'Add', icon: Plus },
     { path: '/tags', label: 'Tags', icon: Tags },
+    { path: '/ingredients', label: 'Ingredients', icon: Wheat },
     { path: '/dewey-admin', label: 'Dewey', icon: FolderTree },
   ];
 

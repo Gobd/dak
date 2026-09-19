@@ -11,6 +11,7 @@ import { AddRecipePage } from './pages/AddRecipePage';
 import { RecipePage } from './pages/RecipePage';
 import { TagsPage } from './pages/TagsPage';
 import { DeweyAdminPage } from './pages/DeweyAdminPage';
+import { IngredientsPage } from './pages/IngredientsPage';
 import { useEffect } from 'react';
 
 function AuthenticatedApp({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export default function App() {
                     <Route path="/add" element={<AddRecipePage />} />
                     <Route path="/recipe/:id" element={<RecipePage />} />
                     <Route path="/tags" element={<TagsPage />} />
+                    <Route path="/ingredients" element={<IngredientsPage />} />
                     <Route path="/dewey-admin" element={<DeweyAdminPage />} />
                   </Routes>
                 </Layout>
