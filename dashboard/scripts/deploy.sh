@@ -27,6 +27,7 @@ echo "=== Syncing to $REMOTE ==="
 rsync -avz --delete \
   --exclude='.*' \
   --exclude='node_modules' \
+  --exclude='*_cred.json' \
   --exclude='__pycache__' \
   --include='scripts/***' \
   --include='services/***' \
@@ -240,6 +241,50 @@ else
 fi
 
 # =============================================================================
+# HACS SETUP
+# =============================================================================
+echo "=== Installing HACS ==="
+HACS_DIR=~/homeassistant/custom_components/hacs
+HACS_ARCHIVE=/tmp/hacs.zip
+curl --fail --location --retry 3 \
+  --output "$HACS_ARCHIVE" \
+  https://github.com/hacs/integration/releases/latest/download/hacs.zip
+unzip -tq "$HACS_ARCHIVE" > /dev/null
+# HACS stores its configuration in HA's .storage directory, so replacing only
+# the integration code is safe and avoids stale files after an upgrade.
+rm -rf "$HACS_DIR"
+mkdir -p "$HACS_DIR"
+unzip -oq "$HACS_ARCHIVE" -d "$HACS_DIR"
+rm -f "$HACS_ARCHIVE"
+echo "HACS installed (finish setup in Home Assistant after it restarts)"
+
+# =============================================================================
+# APPDAEMON SETUP
+# =============================================================================
+echo "=== Setting up AppDaemon ==="
+mkdir -p ~/appdaemon
+UV_PROJECT_ENVIRONMENT="/home/$USER/appdaemon/.venv" \
+  ~/.local/bin/uv sync \
+    --project ~/dashboard/services/appdaemon \
+    --locked \
+    --no-dev \
+    --python 3.13
+
+sed "s|__USER__|$USER|g" ~/dashboard/services/appdaemon/appdaemon.service \
+  | sudo tee /etc/systemd/system/appdaemon.service > /dev/null
+
+sudo systemctl daemon-reload
+sudo systemctl enable appdaemon
+if [[ -z "$NO_RESTART" ]]; then
+  # Restart HA again so a newly installed HACS is loaded immediately.
+  sudo systemctl restart --no-block home-assistant
+  sudo systemctl restart --no-block appdaemon
+  echo "AppDaemon service installed and restarted"
+else
+  echo "AppDaemon service installed"
+fi
+
+# =============================================================================
 # VOICE CONTROL SETUP
 # =============================================================================
 echo "=== Setting up voice control ==="
@@ -273,6 +318,9 @@ echo "Services installed:"
 echo "  - Home relay (Kasa, WoL, brightness)"
 echo "  - Voice control (enable in Settings)"
 echo "  - Zigbee2MQTT (starts when USB dongle plugged in)"
+echo "  - Home Assistant (http://$(hostname):8123)"
+echo "  - HACS (finish setup in Home Assistant)"
+echo "  - AppDaemon (Python automations over MQTT)"
 
 if [[ -z "$NO_RESTART" ]]; then
   echo "Rebooting in 5 seconds..."

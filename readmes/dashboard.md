@@ -106,6 +106,15 @@ Connects to `home-relay` (Python/FastAPI) which handles Kasa device control, Zig
 
 Home Assistant Core runs alongside Zigbee2MQTT on the kiosk device (`home-assistant.service`, installed via `dashboard/scripts/deploy.sh`, config at `~/homeassistant/configuration.yaml`, web UI on port 8123). It shares the same local Mosquitto MQTT broker as Zigbee2MQTT, so any device paired in Zigbee2MQTT's UI is auto-discovered in Home Assistant with no extra setup - Zigbee2MQTT owns pairing/radio, Home Assistant owns automations/dashboards.
 
+The deploy also installs HACS and standalone AppDaemon (Home Assistant Core
+does not include the Supervisor add-on system). After deployment, add the HACS
+integration from **Settings → Devices & services → Add integration → HACS**.
+AppDaemon runs the source-controlled Python automations in
+`dashboard/services/appdaemon`. The Inovelli app uses MQTT to talk directly to
+Zigbee2MQTT; Home Assistant observes the resulting state but is not in its
+control path. Its admin UI is available locally at
+`http://kiosk.home.arpa:5050`.
+
 ## Development
 
 ```bash
