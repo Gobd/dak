@@ -111,13 +111,22 @@ function MarkdownPlugin({ content }: { content: string }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
+    let currentContent = '';
+    editor.getEditorState().read(() => {
+      currentContent = $convertToMarkdownString(CUSTOM_TRANSFORMERS);
+    });
+
+    // Parent state also changes after normal typing. If the editor already
+    // contains that same markdown, this is an internal update and should not
+    // rebuild the document or move the cursor. A different value is an
+    // external update, such as importing a recipe while editing.
+    if (currentContent === content) return;
+
     editor.update(() => {
       $convertFromMarkdownString(content, CUSTOM_TRANSFORMERS);
       $getRoot().selectEnd();
     });
-    // intentionally run once on mount only
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor]);
+  }, [editor, content]);
 
   return null;
 }

@@ -19,13 +19,46 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, ConfirmModal, Input, Modal, Spinner } from '@dak/ui';
 import { DeweyAutoSelector } from '../components/DeweyAutoSelector';
 import { RecipeEditor } from '../components/RecipeEditor';
+import { RecipeIngredientsEditor } from '../components/RecipeIngredientsEditor';
+import { NutritionSummary } from '../components/NutritionSummary';
 import { TagInput } from '../components/TagInput';
 import { StarRating } from '../components/StarRating';
 import { markdownToHtml } from '@dak/markdown-editor';
 import { scrapeRecipe, formatRecipeAsMarkdown } from '../lib/recipe-scraper';
 import { formatDeweyDecimal } from '../lib/utils';
 import { useRecipeStore } from '../stores/recipe-store';
-import type { Recipe } from '../types';
+import type {
+  Recipe,
+  RecipeIngredientLine,
+  RecipeIngredientLineDraft,
+  RecipeUpdate,
+} from '../types';
+
+function recipeLinesToDraft(lines: RecipeIngredientLine[] = []): RecipeIngredientLineDraft[] {
+  return lines.map((line) => ({
+    id: line.id,
+    ingredient_id: line.ingredient_id,
+    ingredient_name: line.ingredient?.name || '',
+    amount: line.amount,
+    unit: line.unit,
+    sort_order: line.sort_order,
+  }));
+}
+
+function recipeLineSignature(lines: RecipeIngredientLine[] | RecipeIngredientLineDraft[] = []) {
+  return lines
+    .map((line) =>
+      [
+        line.id || '',
+        line.ingredient_id || '',
+        'ingredient_name' in line ? line.ingredient_name : line.ingredient?.name || '',
+        line.amount,
+        line.unit,
+        line.sort_order,
+      ].join('|'),
+    )
+    .join('||');
+}
 
 export function RecipePage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +75,8 @@ export function RecipePage() {
     updateRecipe,
     deleteRecipe,
     loadTags,
+    ingredients,
+    loadIngredients,
     loadDeweyCategories,
     uploadFile,
     deleteFile,
@@ -55,6 +90,7 @@ export function RecipePage() {
   const [recipePage, setRecipePage] = useState('');
   const [recipeUrl, setRecipeUrl] = useState('');
   const [recipeContent, setRecipeContent] = useState('');
+  const [ingredientLines, setIngredientLines] = useState<RecipeIngredientLineDraft[]>([]);
   const [recipeNotes, setRecipeNotes] = useState('');
   const recipeContentRef = useRef(recipeContent);
   const recipeNotesRef = useRef(recipeNotes);
@@ -85,10 +121,13 @@ export function RecipePage() {
         setRecipePage(recipeData.page || '');
         setRecipeUrl(recipeData.url || '');
         setRecipeContent(recipeData.recipe || '');
+        recipeContentRef.current = recipeData.recipe || '';
         setRecipeNotes(recipeData.notes || '');
+        recipeNotesRef.current = recipeData.notes || '';
         setRecipeRating(recipeData.rating);
         setTags(recipeData.tags);
         setDeweyDecimal(recipeData.dewey_decimal || '');
+        setIngredientLines(recipeLinesToDraft(recipeData.ingredient_lines));
       }
     } catch (err) {
       console.error('Failed to load recipe:', err);
@@ -113,10 +152,11 @@ export function RecipePage() {
       loadRecipe();
       loadNavigation();
       loadTags();
+      loadIngredients();
       loadDeweyCategories();
       clearError();
     }
-  }, [id, loadTags, loadDeweyCategories, clearError, loadRecipe, loadNavigation]);
+  }, [id, loadTags, loadIngredients, loadDeweyCategories, clearError, loadRecipe, loadNavigation]);
 
   const getDeweyHierarchyTags = (deweyCode: string): string[] => {
     if (!deweyCode) return [];
@@ -163,21 +203,24 @@ export function RecipePage() {
   const handleSave = async () => {
     if (!id || !recipe) return;
 
-    const currentContent = recipeContentRef.current;
-    const currentNotes = recipeNotesRef.current;
+    const currentContent = recipeContentRef.current || recipeContent;
+    const currentNotes = recipeNotesRef.current || recipeNotes;
 
     const hasNameChanges = recipeName !== recipe.name;
     const hasPageChanges = recipePage !== (recipe.page || '');
     const hasUrlChanges = recipeUrl !== (recipe.url || '');
     const hasRecipeChanges = currentContent !== (recipe.recipe || '');
     const hasNotesChanges = currentNotes !== (recipe.notes || '');
+    const hasIngredientChanges =
+      recipeLineSignature(ingredientLines) !== recipeLineSignature(recipe.ingredient_lines);
 
     if (
       !hasNameChanges &&
       !hasPageChanges &&
       !hasUrlChanges &&
       !hasRecipeChanges &&
-      !hasNotesChanges
+      !hasNotesChanges &&
+      !hasIngredientChanges
     ) {
       setIsEditing(false);
       return;
@@ -185,13 +228,14 @@ export function RecipePage() {
 
     try {
       setSaving(true);
-      const updates: Partial<Recipe> = {};
+      const updates: RecipeUpdate = {};
 
       if (hasNameChanges) updates.name = recipeName;
       if (hasPageChanges) updates.page = recipePage;
       if (hasUrlChanges) updates.url = recipeUrl;
       if (hasRecipeChanges) updates.recipe = currentContent;
       if (hasNotesChanges) updates.notes = currentNotes;
+      if (hasIngredientChanges) updates.ingredient_lines = ingredientLines;
 
       await updateRecipe(id, updates);
       await loadRecipe();
@@ -366,7 +410,10 @@ export function RecipePage() {
       setRecipePage(recipe.page || '');
       setRecipeUrl(recipe.url || '');
       setRecipeContent(recipe.recipe || '');
+      recipeContentRef.current = recipe.recipe || '';
       setRecipeNotes(recipe.notes || '');
+      recipeNotesRef.current = recipe.notes || '';
+      setIngredientLines(recipeLinesToDraft(recipe.ingredient_lines));
     }
     setIsEditing(false);
   };
@@ -392,11 +439,11 @@ export function RecipePage() {
   const handleImportRecipe = () => {
     if (scrapePreview) {
       // Append to existing recipe or replace
-      if (recipeContent.trim()) {
-        setRecipeContent(recipeContent + '\n\n---\n\n' + scrapePreview);
-      } else {
-        setRecipeContent(scrapePreview);
-      }
+      const importedContent = recipeContent.trim()
+        ? recipeContent + '\n\n---\n\n' + scrapePreview
+        : scrapePreview;
+      setRecipeContent(importedContent);
+      recipeContentRef.current = importedContent;
 
       // Auto-fill name from scraped recipe title
       if (scrapePreviewTitle) {
@@ -488,7 +535,8 @@ export function RecipePage() {
     recipePage !== (recipe.page || '') ||
     recipeUrl !== (recipe.url || '') ||
     recipeContent !== (recipe.recipe || '') ||
-    recipeNotes !== (recipe.notes || '');
+    recipeNotes !== (recipe.notes || '') ||
+    recipeLineSignature(ingredientLines) !== recipeLineSignature(recipe.ingredient_lines);
 
   // Reader View (default)
   if (!isEditing) {
@@ -622,6 +670,10 @@ export function RecipePage() {
           </div>
         )}
 
+        {recipe.ingredient_lines && recipe.ingredient_lines.length > 0 && (
+          <NutritionSummary lines={recipe.ingredient_lines} />
+        )}
+
         <ConfirmModal
           open={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
@@ -746,6 +798,17 @@ export function RecipePage() {
                 placeholder="Paste or fetch recipe content (ingredients, instructions)..."
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Structured Ingredients & Nutrition
+            </label>
+            <RecipeIngredientsEditor
+              lines={ingredientLines}
+              ingredients={ingredients}
+              onChange={setIngredientLines}
+            />
           </div>
 
           <div>

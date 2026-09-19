@@ -1,14 +1,28 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import type { DeweyCategory, Recipe, RecipeFile } from '../types';
+import type {
+  DeweyCategory,
+  Ingredient,
+  IngredientNutrition,
+  NutritionUnit,
+  Recipe,
+  RecipeFile,
+  RecipeInput,
+  RecipeIngredientLine,
+  RecipeIngredientLineDraft,
+  RecipeUpdate,
+} from '../types';
 
 interface RecipeStore {
   // State
   recipes: Recipe[];
   tags: string[];
   deweyCategories: DeweyCategory[];
+  ingredients: Ingredient[];
   loading: boolean;
   searching: boolean;
+  ingredientsLoading: boolean;
+  ingredientsLoaded: boolean;
   error: string | null;
   deweyCategoriesLoaded: boolean;
   deweyCategoriesLoading: boolean;
@@ -29,17 +43,36 @@ interface RecipeStore {
     isSearching?: boolean,
   ) => Promise<void>;
   getAllRecipesForExport: () => Promise<Recipe[]>;
-  addRecipe: (
-    recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
-  ) => Promise<Recipe>;
-  updateRecipe: (id: string, updates: Partial<Recipe>) => Promise<void>;
+  addRecipe: (recipe: RecipeInput) => Promise<Recipe>;
+  updateRecipe: (id: string, updates: RecipeUpdate) => Promise<void>;
   deleteRecipe: (id: string) => Promise<void>;
   getRecipeById: (id: string) => Promise<Recipe | null>;
   getNextRecipe: (currentId: string) => Promise<Recipe | null>;
   getPreviousRecipe: (currentId: string) => Promise<Recipe | null>;
 
+  // Ingredient and nutrition operations
+  loadIngredients: (searchTerm?: string) => Promise<void>;
+  createIngredient: (name: string) => Promise<Ingredient>;
+  updateIngredient: (id: string, name: string) => Promise<Ingredient>;
+  saveIngredientNutrition: (
+    ingredientId: string,
+    nutrition: {
+      id?: string;
+      unit: NutritionUnit;
+      calories: number;
+      protein_g: number;
+      fiber_g: number;
+    },
+  ) => Promise<IngredientNutrition>;
+  deleteIngredientNutrition: (nutritionId: string) => Promise<void>;
+  saveRecipeIngredientLines: (
+    recipeId: string,
+    lines: RecipeIngredientLineDraft[],
+  ) => Promise<RecipeIngredientLine[]>;
+
   // Tag operations
   loadTags: () => Promise<void>;
+  deleteTag: (tagName: string) => Promise<void>;
   removeTagFromRecipe: (recipeId: string, tagToRemove: string) => Promise<void>;
 
   // Rating operations
@@ -98,18 +131,113 @@ async function getOrCreateTags(tagNames: string[], userId: string): Promise<stri
   return tagIds;
 }
 
-async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
-  const { data: recipe, error } = await supabase
-    .from('recipes')
-    .select(`
-      *,
-      recipe_tag_map(tag_id, recipe_tags(name)),
-      recipe_files(id, filename, file_path, created_at)
-    `)
-    .eq('id', recipeId)
+function mapIngredientNutrition(data: Record<string, unknown>): IngredientNutrition {
+  return {
+    ...(data as unknown as IngredientNutrition),
+    unit: data.unit as NutritionUnit,
+    calories: Number(data.calories || 0),
+    protein_g: Number(data.protein_g || 0),
+    fiber_g: Number(data.fiber_g || 0),
+  };
+}
+
+function mapIngredient(data: Record<string, unknown>): Ingredient {
+  const nutrition = Array.isArray(data.recipe_ingredient_nutrition)
+    ? data.recipe_ingredient_nutrition.map((item) =>
+        mapIngredientNutrition(item as Record<string, unknown>),
+      )
+    : [];
+
+  return {
+    ...(data as unknown as Ingredient),
+    nutrition,
+  };
+}
+
+function mapRecipeIngredientLine(data: Record<string, unknown>): RecipeIngredientLine {
+  const rawIngredient = data.recipe_ingredients;
+
+  return {
+    ...(data as unknown as RecipeIngredientLine),
+    amount: Number(data.amount || 0),
+    unit: data.unit as NutritionUnit,
+    sort_order: Number(data.sort_order || 0),
+    ingredient:
+      rawIngredient && typeof rawIngredient === 'object'
+        ? mapIngredient(rawIngredient as Record<string, unknown>)
+        : undefined,
+  };
+}
+
+async function fetchIngredientById(ingredientId: string): Promise<Ingredient | null> {
+  const { data, error } = await supabase
+    .from('recipe_ingredients')
+    .select('*, recipe_ingredient_nutrition(*)')
+    .eq('id', ingredientId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapIngredient(data as Record<string, unknown>) : null;
+}
+
+async function findOrCreateIngredient(name: string, userId: string): Promise<Ingredient> {
+  const trimmedName = name.trim();
+  if (!trimmedName) throw new Error('Ingredient name is required');
+
+  const { data: existing, error: lookupError } = await supabase
+    .from('recipe_ingredients')
+    .select('*, recipe_ingredient_nutrition(*)')
+    .eq('user_id', userId)
+    .ilike('name', trimmedName)
+    .maybeSingle();
+
+  if (lookupError) throw lookupError;
+  if (existing) return mapIngredient(existing as Record<string, unknown>);
+
+  const { data: created, error: createError } = await supabase
+    .from('recipe_ingredients')
+    .insert({ user_id: userId, name: trimmedName })
+    .select('*, recipe_ingredient_nutrition(*)')
     .single();
 
-  if (error || !recipe) return null;
+  if (!createError && created) return mapIngredient(created as Record<string, unknown>);
+
+  // A case-only duplicate can race the lookup. Re-read it after a unique
+  // constraint error so saving a recipe remains friendly and idempotent.
+  const { data: raced } = await supabase
+    .from('recipe_ingredients')
+    .select('*, recipe_ingredient_nutrition(*)')
+    .eq('user_id', userId)
+    .ilike('name', trimmedName)
+    .maybeSingle();
+
+  if (raced) return mapIngredient(raced as Record<string, unknown>);
+  throw createError || new Error('Failed to create ingredient');
+}
+
+async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
+  const [{ data: recipe, error }, { data: ingredientLines, error: ingredientLinesError }] =
+    await Promise.all([
+      supabase
+        .from('recipes')
+        .select(`
+          *,
+          recipe_tag_map(tag_id, recipe_tags(name)),
+          recipe_files(id, filename, file_path, created_at)
+        `)
+        .eq('id', recipeId)
+        .single(),
+      supabase
+        .from('recipe_ingredient_lines')
+        .select('*, recipe_ingredients(*, recipe_ingredient_nutrition(*))')
+        .eq('recipe_id', recipeId)
+        .order('sort_order', { ascending: true }),
+    ]);
+
+  if (error || ingredientLinesError || !recipe) {
+    if (ingredientLinesError) throw ingredientLinesError;
+    return null;
+  }
 
   return {
     ...recipe,
@@ -117,6 +245,9 @@ async function fetchRecipeWithTags(recipeId: string): Promise<Recipe | null> {
       recipe.recipe_tag_map?.map((rt: { recipe_tags: { name: string } }) => rt.recipe_tags.name) ||
       [],
     files: recipe.recipe_files || [],
+    ingredient_lines: (ingredientLines || []).map((line) =>
+      mapRecipeIngredientLine(line as Record<string, unknown>),
+    ),
   };
 }
 
@@ -124,8 +255,11 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   recipes: [],
   tags: [],
   deweyCategories: [],
+  ingredients: [],
   loading: false,
   searching: false,
+  ingredientsLoading: false,
+  ingredientsLoaded: false,
   error: null,
   deweyCategoriesLoaded: false,
   deweyCategoriesLoading: false,
@@ -233,7 +367,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { tags, ...recipeData } = recipe;
+      const { tags, ingredient_lines, ...recipeData } = recipe;
 
       // Insert recipe
       const { data: newRecipe, error: recipeError } = await supabase
@@ -252,6 +386,10 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
           tag_id: tagId,
         }));
         await supabase.from('recipe_tag_map').insert(recipeTags);
+      }
+
+      if (ingredient_lines !== undefined) {
+        await get().saveRecipeIngredientLines(newRecipe.id, ingredient_lines);
       }
 
       const fullRecipe = await fetchRecipeWithTags(newRecipe.id);
@@ -287,12 +425,14 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { tags, ...recipeUpdates } = updates;
+      const { tags, ingredient_lines, ...recipeUpdates } = updates;
 
       // Optimistic update
       const { recipes } = get();
       const updatedRecipes = recipes.map((recipe) =>
-        recipe.id === id ? { ...recipe, ...updates } : recipe,
+        recipe.id === id
+          ? { ...recipe, ...updates, ingredient_lines: recipe.ingredient_lines }
+          : recipe,
       );
       set({ recipes: updatedRecipes });
 
@@ -318,6 +458,10 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
         }
 
         get().loadTags();
+      }
+
+      if (ingredient_lines !== undefined) {
+        await get().saveRecipeIngredientLines(id, ingredient_lines);
       }
     } catch (error) {
       console.error('Failed to update recipe:', error);
@@ -382,6 +526,239 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     }
   },
 
+  loadIngredients: async (searchTerm = '') => {
+    set({ ingredientsLoading: true, error: null });
+    try {
+      let query = supabase
+        .from('recipe_ingredients')
+        .select('*, recipe_ingredient_nutrition(*)')
+        .order('name', { ascending: true });
+
+      if (searchTerm.trim()) {
+        query = query.ilike('name', `%${searchTerm.trim()}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      set({
+        ingredients: (data || []).map((ingredient) =>
+          mapIngredient(ingredient as Record<string, unknown>),
+        ),
+        ingredientsLoading: false,
+        ingredientsLoaded: true,
+      });
+    } catch (error) {
+      console.error('Failed to load ingredients:', error);
+      set({ error: 'Failed to load ingredients', ingredientsLoading: false });
+      throw error;
+    }
+  },
+
+  createIngredient: async (name) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const ingredient = await findOrCreateIngredient(name, user.id);
+      const ingredients = get().ingredients.filter((item) => item.id !== ingredient.id);
+      set({
+        ingredients: [...ingredients, ingredient].sort((a, b) => a.name.localeCompare(b.name)),
+      });
+      return ingredient;
+    } catch (error) {
+      console.error('Failed to create ingredient:', error);
+      set({ error: 'Failed to create ingredient' });
+      throw error;
+    }
+  },
+
+  updateIngredient: async (id, name) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) throw new Error('Ingredient name is required');
+
+    try {
+      const { data, error } = await supabase
+        .from('recipe_ingredients')
+        .update({ name: trimmedName })
+        .eq('id', id)
+        .select('*, recipe_ingredient_nutrition(*)')
+        .single();
+
+      if (error || !data) throw error || new Error('Failed to update ingredient');
+
+      const ingredient = mapIngredient(data as Record<string, unknown>);
+      set({
+        ingredients: get()
+          .ingredients.map((item) => (item.id === id ? ingredient : item))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      });
+      return ingredient;
+    } catch (error) {
+      console.error('Failed to update ingredient:', error);
+      set({ error: 'Failed to update ingredient' });
+      throw error;
+    }
+  },
+
+  saveIngredientNutrition: async (ingredientId, nutrition) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const payload = {
+        user_id: user.id,
+        ingredient_id: ingredientId,
+        unit: nutrition.unit,
+        calories: nutrition.calories,
+        protein_g: nutrition.protein_g,
+        fiber_g: nutrition.fiber_g,
+      };
+
+      const result = nutrition.id
+        ? await supabase
+            .from('recipe_ingredient_nutrition')
+            .update(payload)
+            .eq('id', nutrition.id)
+            .select()
+            .single()
+        : await supabase
+            .from('recipe_ingredient_nutrition')
+            .upsert(payload, { onConflict: 'ingredient_id,unit' })
+            .select()
+            .single();
+
+      if (result.error || !result.data) {
+        throw result.error || new Error('Failed to save nutrition');
+      }
+
+      const mapped = mapIngredientNutrition(result.data as Record<string, unknown>);
+      const existingIngredient = get().ingredients.find((item) => item.id === ingredientId);
+      if (existingIngredient) {
+        const nutritionRows = existingIngredient.nutrition.filter(
+          (item) => item.id !== mapped.id && item.unit !== mapped.unit,
+        );
+        set({
+          ingredients: get().ingredients.map((item) =>
+            item.id === ingredientId
+              ? {
+                  ...item,
+                  nutrition: [...nutritionRows, mapped].sort((a, b) =>
+                    a.unit.localeCompare(b.unit),
+                  ),
+                }
+              : item,
+          ),
+        });
+      }
+
+      return mapped;
+    } catch (error) {
+      console.error('Failed to save ingredient nutrition:', error);
+      set({ error: 'Failed to save ingredient nutrition' });
+      throw error;
+    }
+  },
+
+  deleteIngredientNutrition: async (nutritionId) => {
+    try {
+      const { error } = await supabase
+        .from('recipe_ingredient_nutrition')
+        .delete()
+        .eq('id', nutritionId);
+      if (error) throw error;
+
+      set({
+        ingredients: get().ingredients.map((ingredient) => ({
+          ...ingredient,
+          nutrition: ingredient.nutrition.filter((item) => item.id !== nutritionId),
+        })),
+      });
+    } catch (error) {
+      console.error('Failed to delete ingredient nutrition:', error);
+      set({ error: 'Failed to delete ingredient nutrition' });
+      throw error;
+    }
+  },
+
+  saveRecipeIngredientLines: async (recipeId, lines) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const persistedLines: Array<{
+        user_id: string;
+        recipe_id: string;
+        ingredient_id: string;
+        amount: number;
+        unit: NutritionUnit;
+        sort_order: number;
+      }> = [];
+
+      for (const line of lines) {
+        const name = line.ingredient_name.trim();
+        if (!name || !Number.isFinite(line.amount) || line.amount <= 0) continue;
+
+        const ingredient = line.ingredient_id
+          ? await fetchIngredientById(line.ingredient_id)
+          : await findOrCreateIngredient(name, user.id);
+
+        if (!ingredient) {
+          throw new Error(`Ingredient not found: ${name}`);
+        }
+
+        if (!get().ingredients.some((item) => item.id === ingredient.id)) {
+          set({ ingredients: [...get().ingredients, ingredient] });
+        }
+
+        if (line.nutrition) {
+          await get().saveIngredientNutrition(ingredient.id, {
+            unit: line.unit,
+            calories: line.nutrition.calories,
+            protein_g: line.nutrition.protein_g,
+            fiber_g: line.nutrition.fiber_g,
+          });
+        }
+
+        persistedLines.push({
+          user_id: user.id,
+          recipe_id: recipeId,
+          ingredient_id: ingredient.id,
+          amount: line.amount,
+          unit: line.unit,
+          sort_order: line.sort_order,
+        });
+      }
+
+      const { error: deleteError } = await supabase
+        .from('recipe_ingredient_lines')
+        .delete()
+        .eq('recipe_id', recipeId);
+      if (deleteError) throw deleteError;
+
+      if (persistedLines.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('recipe_ingredient_lines')
+        .insert(persistedLines)
+        .select('*, recipe_ingredients(*, recipe_ingredient_nutrition(*))')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+
+      return (data || []).map((line) => mapRecipeIngredientLine(line as Record<string, unknown>));
+    } catch (error) {
+      console.error('Failed to save recipe ingredients:', error);
+      set({ error: 'Failed to save recipe ingredients' });
+      throw error;
+    }
+  },
+
   loadTags: async () => {
     try {
       const { data } = await supabase.from('recipe_tags').select('name').order('name');
@@ -389,6 +766,18 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to load tags:', error);
       set({ error: 'Failed to load tags' });
+    }
+  },
+
+  deleteTag: async (tagName) => {
+    try {
+      const { error } = await supabase.from('recipe_tags').delete().eq('name', tagName);
+      if (error) throw error;
+      await get().loadTags();
+    } catch (error) {
+      console.error('Failed to delete tag:', error);
+      set({ error: 'Failed to delete tag' });
+      throw error;
     }
   },
 
