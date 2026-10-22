@@ -1,0 +1,20 @@
+[
+  {
+    "id": "pi",
+    "label": "Pi",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "--self-contained", "pi", "--print", "--no-session"]
+  },
+  {
+    "id": "claude",
+    "label": "Claude",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "--self-contained", "claude", "--print"]
+  },
+  {
+    "id": "codex",
+    "label": "Codex",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "--self-contained", "codex", "exec"]
+  }
+]

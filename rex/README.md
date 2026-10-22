@@ -105,6 +105,8 @@ Flags before `pi` belong to `lambdap`. Flags after `pi` belong to Pi. The same p
 
 Tap **Start an agent** to select a preset, browse or search for a working directory, and start a session. The folder picker and launches stay within `REX_PROJECT_ROOT`, which defaults to the parent of DAK (your Developer directory). Search covers up to five levels and 100 matches, skipping dependency, build, and hidden folders. For interactive menus and trust prompts, use the terminal key buttons: arrows, Enter, Esc, and Tab. In Agent terminal mode, spoken messages are literal text. In Manager mode, spoken yes/no or numbers can select the choices it just read. Preset changes take effect when you restart the Mac manager. Choose a new session/workspace or a new terminal in an existing one. The same option is available by voice. New cmux workspaces include their initial terminal; additional terminals use the named workspace. Rex creates a session or a new tab within an existing session. The manager can see and inspect agents started manually too.
 
+Manager replies appear newest first, with the latest reply brought into view automatically. Settings shows the connected manager’s project search root. To configure it, set `REX_PROJECT_ROOT=~/Developer` in `rex/.env.local` and restart the manager (`pnpm --filter rex service restart` for an installed service). The root is enforced on the Mac for browsing and launches. Manager searches query the ranked zoxide history used by `zi` first, restricted to this root. If zoxide is unavailable or has no match, repository scanning stops at repository boundaries and prefers exact project names, so source folders inside another repository do not crowd out the project you meant. The folder browser still allows navigating inside a project.
+
 ## Manager agent
 
 `REX_MANAGER_COMMAND_JSON` defines the noninteractive agent command. The manager appends the request, recent conversation, and terminal screen snapshots as one final prompt argument.
@@ -112,6 +114,63 @@ Tap **Start an agent** to select a preset, browse or search for a working direct
 The example uses `lambdap --self-contained --no-mcp pi --print ...`. Self-contained mode avoids attaching print requests to a persistent tmux session. The sample disables tools, MCP, extensions, skills, and repository context discovery for a manager that decides structured actions. The Node bridge executes validated terminal launch, input, and key actions; the model receives no unrestricted shell tool. Agent work runs in the selected harness.
 
 Without this setting, sessions, launch presets, and terminal control still work; manager chat reports that it is unconfigured. Model access uses your existing harness configuration.
+
+## Scheduled prompts
+
+A scheduled task is a saved prompt, a noninteractive harness profile, a working directory, and a schedule. It runs directly on your Mac independently of Rex/cmux terminal sessions. Each run starts a fresh harness process, receives the prompt as one literal argument, and saves its output or error. You can also ask an existing agent to keep polling a PR, but that depends on that agent staying alive; saved schedules are owned by the Mac manager.
+
+Set up task commands separately from interactive launch presets:
+
+```sh
+cp rex/task-harnesses.example.json rex/task-harnesses.local.json
+```
+
+Edit the local file to choose your commands, default project paths, model flags, and MCP configuration. The example supplies Pi print mode, Claude print mode, and Codex exec mode through `lambdap --self-contained`. Keep wrapper flags before the harness and harness flags after it. For example, this additional profile enables selecting a particular MCP configuration in the app:
+
+```json
+{
+  "id": "claude-github",
+  "label": "Claude with GitHub MCP",
+  "cwd": "/Users/briankemper/Developer/dak",
+  "command": [
+    "lambdap",
+    "--self-contained",
+    "claude",
+    "--print",
+    "--mcp-config",
+    "/absolute/path/to/github-mcp.json"
+  ]
+}
+```
+
+Commands must work without an interactive terminal and print their result before exiting. Use an absolute path for MCP config files if tasks run in different projects. The prompt is appended after the configured argv, so a wrapper script is also supported. Task profiles inherit their harness’s authentication, context files, tool permissions, and extensions; the manager’s restricted Pi command does not control these. The scheduler does not bypass approval prompts. Configure the permissions needed for your intended unattended work in the chosen harness. Restart the foreground manager or `pnpm --filter rex service restart` after changing profiles.
+
+In the app, open **Scheduled tasks** to create, edit, pause, resume, delete, or **Run now**, and inspect recent results. The harness picker shows each configured command. Or ask the manager:
+
+- “Every thirty minutes, use Claude with GitHub MCP in ssa-api to check PR 12 and report what needs attention.”
+- “Use Pi in dak tomorrow at nine to run the tests and summarize the result.”
+- “Every weekday at nine, check that PR with Claude in mainhost.”
+- “List my scheduled tasks.” / “Pause the PR check.” / “Run the PR check now.”
+
+Voice requests must identify the prompt, task harness, project, and schedule. The manager asks when those are missing or ambiguous. It uses the Mac’s timezone unless you specify another. Project lookup and directory restrictions match ordinary agent launches. Greywall and no-MCP voice overrides use the same validated wrapper options; other command variations are separate profiles.
+
+Schedules support one-time dates, intervals in minutes, daily times, and selected weekdays in an IANA timezone. These are structured schedules rather than Unix crontab expressions. Daily and weekly schedules follow local daylight saving time: nonexistent times are skipped and automatic runs do not repeat during a clock rollback. Intervals start from saving/resuming the task and from each automatic run. Manual **Run now** leaves the schedule unchanged. Editing a task preserves whether it was paused.
+
+The Mac manager must be running, and the laptop must be awake. A missed one-time task runs once when the manager returns; recurring occurrences more than a minute late are skipped rather than replayed. Only one scheduled run executes at a time, with a 15-minute limit and a 1 MiB process-output limit. Tasks waiting behind another run can miss an occurrence under the same rule. Failed runs are recorded without automatic retries. Interrupted runs are marked failed on restart. Pausing prevents future runs and does not stop one already running.
+
+Task definitions and the latest 100 runs are saved atomically in `rex/scheduled-tasks.local.json` with private file permissions. These files and `task-harnesses.local.json` are ignored by Git. `REX_TASKS_FILE` and `REX_TASK_HARNESSES_FILE` can override the paths (relative paths resolve from `rex`). Keep one Mac manager process using a given task store. Results survive manager restarts and service updates from this checkout. The service update command does not pull Git changes.
+
+The connected PWA polls for results and reads completed runs when **Read manager replies aloud** is enabled or a voice call is active. Results wait while you are speaking or answering a choice; the app remembers which it has announced on that device. Full output remains in **Recent runs**. Results are saved while the phone app is closed, but speech requires the app to be open and visible; this does not add locked-screen/background push notifications.
+
+### Android push with ntfy
+
+Each task can optionally set an **ntfy topic**. Subscribe to that topic using the [Android ntfy app](https://ntfy.sh/), and use the same server on both the phone and Mac. A finished or failed run sends its result to the topic even when the Agent Voice PWA is closed. Set the topic in the task editor, or say “Notify my topic `my-chosen-topic` when this task finishes.” Blank topics disable push. Different tasks can share a topic or use separate topics.
+
+The Mac defaults to `https://ntfy.sh`; for your own server, set `REX_NTFY_URL=https://ntfy.example.com` in `rex/.env.local`. Set `REX_NTFY_TOKEN` there if the server/topic requires authentication, then restart the manager. Tokens stay on the Mac. On the public server, an unprotected topic name is accessible to anyone who knows it; use a protected topic or your private server for Jira/project details.
+
+Notifications preserve paragraphs and include up to 3,500 UTF-8 bytes of output/error, within ntfy’s documented 4,096-byte message limit. Two-paragraph summaries normally fit. Ask for the desired summary length in the task prompt. Longer results are visibly truncated with an ellipsis and remain in full (up to the 24,000-character run-history limit) in **Recent runs**. Android may show a shortened notification preview; open ntfy to read the message. No task output is sent to ntfy unless that task has a topic.
+
+Run history shows whether ntfy accepted the publish request or it failed. A push failure does not change a successful harness result into a failed run. Push publishing has a ten-second timeout and is not automatically retried, including after an interrupted notification. “Sent” means accepted by the server, not confirmed phone delivery. The phone still needs access to the configured ntfy server, and its Android notification/background settings must permit ntfy notifications.
 
 ## Build and checks
 

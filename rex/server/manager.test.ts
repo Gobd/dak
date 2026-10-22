@@ -19,6 +19,7 @@ async function fixture(t, extra = {}) {
   const server = createManager({
     distDir: join(directory, 'dist'),
     projectRoot: directory,
+    zoxide: async () => '',
     allowedOrigins: ['https://dak.bkemper.me'],
     presets: [
       {
@@ -62,7 +63,7 @@ async function fixture(t, extra = {}) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
     });
-  return { get, post, calls, origin };
+  return { get, post, calls, origin, directory };
 }
 
 test('private API works without a token; hosted PWA preflight allows only configured origins', async (t) => {
@@ -282,4 +283,159 @@ test('native activity includes manually started terminals without using screen h
   const activity = await (await get('activity')).json();
   assert.equal(activity.terminals[0].label, 'Manual agent / Pi');
   assert.equal(activity.terminals[0].records[0].state, 'blocked');
+});
+
+test('project search prefers exact zi history matches and filters stale or out-of-root paths', async (t) => {
+  let round = 0;
+  const queries = [];
+  const fixtureResult = await fixture(t, {
+    zoxide: async (args) => {
+      queries.push(args);
+      const root = args[args.indexOf('--base-dir') + 1];
+      return [root + '/ssa-api', root + '/ssa-api-bare', root + '/missing', '/'].join('\n');
+    },
+    agent: async (prompt) => {
+      if (++round === 1)
+        return JSON.stringify({ reply: '', action: { type: 'search_folders', query: 'ssa api' } });
+      const context = JSON.parse(prompt.split('\n\n')[1]);
+      const found = context.toolResults[0];
+      assert.equal(found.source, 'zoxide');
+      assert.equal(found.exactMatch, true);
+      assert.equal(found.directories.length, 1);
+      assert.equal(found.directories[0].name, 'ssa-api');
+      return JSON.stringify({ reply: 'Found your project.' });
+    },
+  });
+  await mkdir(join(fixtureResult.directory, 'ssa-api'));
+  await mkdir(join(fixtureResult.directory, 'ssa-api-bare'));
+  const response = await fixtureResult.post('chat', { message: 'Find ssa-api', history: [] });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).text, 'Found your project.');
+  assert.deepEqual(queries[0].slice(-3), ['--', 'ssa', 'api']);
+});
+
+test('repository fallback avoids similarly named source folders inside another project', async (t) => {
+  let round = 0;
+  const result = await fixture(t, {
+    agent: async (prompt) => {
+      if (++round === 1)
+        return JSON.stringify({ reply: '', action: { type: 'search_folders', query: 'ssa-api' } });
+      const context = JSON.parse(prompt.split('\n\n')[1]);
+      const found = context.toolResults[0];
+      assert.equal(found.source, 'repositories');
+      assert.equal(found.directories.length, 1);
+      assert.match(found.directories[0].path, /collection\/ssa-api$/);
+      return JSON.stringify({ reply: 'Found the repository.' });
+    },
+  });
+  await mkdir(join(result.directory, 'collection/ssa-api/.git'), { recursive: true });
+  await mkdir(join(result.directory, 'collection/search-ui/.git'), { recursive: true });
+  await mkdir(join(result.directory, 'collection/search-ui/nginx/ssa-api'), { recursive: true });
+  const response = await result.post('chat', { message: 'Find ssa-api', history: [] });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).text, 'Found the repository.');
+});
+
+test('cmux dialog refusal is an actionable conflict while explicit menu keys are allowed', async (t) => {
+  const calls = [];
+  const session = 'session:11111111-1111-4111-8111-111111111111',
+    block = 'block:22222222-2222-4222-8222-222222222222';
+  const result = await fixture(t, {
+    cmux: async (args) => {
+      calls.push(args);
+      if (args.includes('list-panels'))
+        return { surfaces: [{ id: block.slice(6), type: 'terminal', title: 'Pi' }] };
+      if (args[0] === 'send')
+        throw Object.assign(new Error('Input rejected'), {
+          stderr: 'is waiting on a question or dialog, so nothing was sent',
+        });
+      return '';
+    },
+  });
+  const denied = await result.post('send?provider=cmux', { session, block, message: 'hello' });
+  assert.equal(denied.status, 409);
+  assert.match((await denied.json()).error, /read its options/);
+  const selected = await result.post('key?provider=cmux', { session, block, key: 'enter' });
+  assert.equal(selected.status, 200);
+  assert.ok(calls.at(-1).includes('--force'));
+  assert.ok(!calls.find((args) => args[0] === 'send').includes('--force'));
+});
+
+test('scheduled task API validates harnesses and project boundaries, and records literal prompt results', async (t) => {
+  let execution;
+  const f = await fixture(t, { tasksFile: undefined });
+  const server = createManager({
+    projectRoot: f.directory,
+    tasksFile: join(f.directory, 'scheduled-tasks.json'),
+    taskHarnesses: [
+      {
+        id: 'claude-github',
+        label: 'Claude with GitHub MCP',
+        cwd: f.directory,
+        command: [
+          'lambdap',
+          '--self-contained',
+          'claude',
+          '--print',
+          '--mcp-config',
+          'github.json',
+        ],
+      },
+    ],
+    taskRunner: async (command, cwd, prompt) => {
+      execution = { command, cwd, prompt };
+      return 'PR is ready for review.';
+    },
+    rex: async () => '',
+    cmux: async () => '',
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(
+    () =>
+      new Promise((resolve) => {
+        server.closeAllConnections();
+        server.close(resolve);
+      }),
+  );
+  const url = 'http://127.0.0.1:' + server.address().port + '/rex/api/';
+  const post = (route, value) =>
+    fetch(url + route, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+  const task = {
+    label: 'PR check',
+    prompt: 'Check PR 12.',
+    harness: 'claude-github',
+    cwd: f.directory,
+    schedule: { kind: 'interval', minutes: 30 },
+    wrapperFlags: ['--greywall'],
+  };
+  assert.equal((await post('tasks/save', { task: { ...task, harness: 'unknown' } })).status, 400);
+  assert.equal((await post('tasks/save', { task: { ...task, cwd: '/' } })).status, 400);
+  const response = await post('tasks/save', { task });
+  assert.equal(response.status, 200);
+  const saved = await response.json();
+  assert.equal((await post('tasks/run', { id: saved.id })).status, 202);
+  for (let i = 0; i < 100; i++) {
+    const listing = await (await fetch(url + 'tasks')).json();
+    if (listing.runs[0]?.status === 'succeeded') break;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  assert.deepEqual(execution.command, [
+    'lambdap',
+    '--self-contained',
+    '--greywall',
+    'claude',
+    '--print',
+    '--mcp-config',
+    'github.json',
+  ]);
+  assert.equal(execution.prompt, task.prompt);
+  const listing = await (await fetch(url + 'tasks')).json();
+  assert.equal(listing.runs[0].output, 'PR is ready for review.');
+  assert.equal(listing.harnesses[0].label, 'Claude with GitHub MCP');
+  assert.equal((await post('tasks/change', { id: saved.id, operation: 'unknown' })).status, 400);
+  assert.equal((await post('tasks/change', { id: saved.id, operation: 'pause' })).status, 200);
 });

@@ -27,7 +27,28 @@ export interface TerminalBackend {
   activity(session: string, block: string): Promise<StatusRecord[]>;
   launch(options: Launch): Promise<Created>;
   send(session: string, block: string, message: string): Promise<void>;
-  key(session: string, block: string, key: string): Promise<void>;
+  key(
+    session: string,
+    block: string,
+    key: string,
+    options?: { answerPrompt?: boolean },
+  ): Promise<void>;
+}
+export class TerminalInputError extends Error {
+  status = 409;
+}
+async function cmuxInput(run: Cli, args: string[]): Promise<void> {
+  try {
+    await run(args);
+  } catch (error) {
+    const stderr = (error as { stderr?: string }).stderr || '';
+    if (/question or dialog|draft|nothing was sent/.test(stderr)) {
+      throw new TerminalInputError(
+        'That terminal has an open question, dialog, or draft. Ask the manager to read its options, then answer yes/no or a number. Your message was not sent.',
+      );
+    }
+    throw error;
+  }
 }
 export function cli(binary: string, prefix: string[] = []): Cli {
   return async (args, json = false) => {
@@ -216,10 +237,15 @@ export function cmuxBackend(
       };
     },
     send: async (session, block, message) => {
-      await run(['send', ...target(session, block), '--paste', '--', message]);
+      await cmuxInput(run, ['send', ...target(session, block), '--paste', '--', message]);
     },
-    key: async (session, block, key) => {
-      await run(['send-key', ...target(session, block), key]);
+    key: async (session, block, key, options) => {
+      await cmuxInput(run, [
+        'send-key',
+        ...target(session, block),
+        ...(options?.answerPrompt ? ['--force'] : []),
+        key,
+      ]);
     },
   };
 }

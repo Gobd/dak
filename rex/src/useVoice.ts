@@ -119,6 +119,7 @@ export function useVoice(
     let finalText = '';
     let failed = false;
     recognition.onresult = (event) => {
+      if (recognitionRef.current !== recognition) return;
       const results = Array.from(event.results);
       finalText = results
         .filter((result) => result.isFinal)
@@ -130,8 +131,11 @@ export function useVoice(
           .map((result) => result[0].transcript)
           .join(' '),
       );
+      // A final result is ready: ask the browser to finish rather than wait for silence indefinitely.
+      if (finalText.trim()) recognition.stop();
     };
     recognition.onerror = (event) => {
+      if (recognitionRef.current !== recognition) return;
       failed = true;
       if (event.error === 'aborted' || (handsFree && event.error === 'no-speech')) return;
       const errors: Record<string, string> = {
@@ -143,10 +147,13 @@ export function useVoice(
       setError(errors[event.error] || `Speech recognition failed: ${event.error}`);
     };
     recognition.onend = () => {
+      if (recognitionRef.current !== recognition) return;
       recognitionRef.current = null;
       setListening(false);
       setInterim('');
       if (!failed && finalText.trim()) callbackRef.current(finalText.trim());
+      else if (!failed && !handsFree)
+        setError('No completed speech was recognized. Try speaking again, or type your message.');
     };
     recognitionRef.current = recognition;
     try {

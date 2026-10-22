@@ -28,3 +28,8 @@ docs
 
 # Private Rex launch commands and project paths
 rex/launchers.local.json
+
+# Private Agent Voice task commands and saved prompts/results
+rex/task-harnesses.local.json
+rex/scheduled-tasks.local.json
+rex/scheduled-tasks.local.json.writing

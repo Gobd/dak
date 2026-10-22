@@ -15,6 +15,8 @@ import {
 import { api, managerOrigin, type Block, type Message, type Preset, type Session } from './api';
 import { useVoice } from './useVoice';
 import FolderPicker from './FolderPicker';
+import Tasks from './Tasks';
+import type { TaskRun } from '../shared/tasks';
 import {
   providers,
   activityEvent,
@@ -52,6 +54,9 @@ export default function App() {
   );
   const [connected, setConnected] = useState(false);
   const [managerEnabled, setManagerEnabled] = useState(false);
+  const [projectsRoot, setProjectsRoot] = useState('');
+  const repliesRef = useRef<HTMLElement>(null);
+  const latestReply = history.filter((message) => message.role === 'assistant').at(-1)?.text;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -66,6 +71,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(true);
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [showLaunch, setShowLaunch] = useState(false);
+  const [showTasks, setShowTasks] = useState(false);
+  const [announcedRuns, setAnnouncedRuns] = useLocalStorage<string[]>('rex-task-announcements', []);
   const [presetId, setPresetId] = useState('');
   const [launchCwd, setLaunchCwd] = useState('');
   const [showFolders, setShowFolders] = useState(false);
@@ -98,11 +105,12 @@ export default function App() {
     try {
       managerOrigin(settings.managerUrl);
       const [status, launchers] = await Promise.all([
-        request<{ managerEnabled: boolean }>('status'),
+        request<{ managerEnabled: boolean; projectsRoot?: string }>('status'),
         request<{ presets: Preset[] }>('presets'),
       ]);
       await refreshSessions();
       setManagerEnabled(status.managerEnabled);
+      setProjectsRoot(status.projectsRoot || '');
       setPresets(launchers.presets);
       setPresetId(launchers.presets[0]?.id || '');
       setLaunchCwd(launchers.presets[0]?.cwd || '');
@@ -199,6 +207,13 @@ export default function App() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    if (mode === 'manager' && connected && !showSettings && latestReply) {
+      repliesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      repliesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [latestReply, mode, connected, showSettings]);
 
   async function sendMessage(message: string) {
     if (!message.trim() || busyRef.current || !connected) return;
@@ -385,6 +400,30 @@ export default function App() {
     connected && (inCall || settings.monitor) ? 5000 : null,
   );
 
+  function announceTaskRuns(runs: TaskRun[]) {
+    if (
+      busyRef.current ||
+      monitorBusy.current ||
+      voice.speaking ||
+      voice.interim ||
+      awaitingChoice ||
+      document.hidden ||
+      showSettings ||
+      (!settings.autoplay && !inCall)
+    )
+      return;
+    const run = runs.find((item) => item.status !== 'running' && !announcedRuns.includes(item.id));
+    if (!run) return;
+    const text =
+      run.label +
+      (run.status === 'succeeded' ? ' finished. ' : ' failed. ') +
+      (run.error || run.output).slice(-1200);
+    setAnnouncedRuns((previous) => [...previous, run.id].slice(-2000));
+    setHistory((previous) => [...previous, { role: 'assistant', text } as Message].slice(-30));
+    voice.pauseListening();
+    voice.speak(text);
+  }
+
   async function sendKey(key: string) {
     if (busyRef.current || !blockId) return;
     busyRef.current = true;
@@ -521,6 +560,11 @@ export default function App() {
             On this Mac, leave blank for the dev proxy or use http://localhost:5184. For Android
             over WireGuard, use your private HTTPS address.
           </p>
+          {projectsRoot && (
+            <p className="break-all text-sm text-text-secondary">
+              Project search root: {projectsRoot}
+            </p>
+          )}
           <div className="flex flex-col gap-4">
             <Toggle
               label="Announce agent status while the app is open"
@@ -607,7 +651,24 @@ export default function App() {
               <Plus size={18} className="mr-2" />
               Start an agent
             </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy || voice.listening}
+              onClick={() => {
+                setInCall(false);
+                setShowTasks(!showTasks);
+              }}
+            >
+              {showTasks ? 'Hide tasks' : 'Scheduled tasks'}
+            </Button>
           </section>
+          <Tasks
+            key={settings.managerUrl}
+            request={request}
+            visible={showTasks}
+            onRuns={announceTaskRuns}
+          />
           <label className="block">
             <span className="mb-2 block text-sm text-text-secondary">
               {mode === 'manager'
@@ -773,7 +834,11 @@ export default function App() {
               </div>
             </section>
           ) : (
-            <section className="flex flex-1 flex-col gap-4" aria-label="Manager replies">
+            <section
+              ref={repliesRef}
+              className="flex max-h-[48dvh] flex-1 scroll-mt-4 flex-col gap-4 overflow-y-auto"
+              aria-label="Manager replies"
+            >
               {!managerEnabled && (
                 <p className="rounded-xl bg-surface-sunken p-4 text-text-secondary">
                   Manager chat isn’t configured yet. You can use Agent terminal to talk to an
@@ -787,6 +852,7 @@ export default function App() {
               )}
               {history
                 .filter((message) => message.role === 'assistant')
+                .reverse()
                 .map((message, index) => (
                   <article
                     key={`${index}-${message.text.slice(0, 32)}`}

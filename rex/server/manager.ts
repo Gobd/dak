@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createServer as createHttpsServer, type ServerOptions } from 'node:https';
 import { readFile, readdir, realpath, stat } from 'node:fs/promises';
-import { dirname, extname, isAbsolute, resolve, sep } from 'node:path';
+import { basename, dirname, extname, isAbsolute, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
@@ -12,7 +12,11 @@ import {
   type Context,
   type Agent,
 } from './conversation.ts';
+import { validateTopic, type TaskNotifier } from './ntfy.ts';
+import { createTaskScheduler, executeTask, TaskError } from './tasks.ts';
+import type { TaskInput, TaskHarness } from '../shared/tasks.ts';
 import { cmuxProgramStatus } from './program-status.ts';
+import { TerminalInputError } from './terminals.ts';
 import {
   cli,
   rexBackend,
@@ -32,7 +36,13 @@ interface ManagerOptions {
   presets?: Preset[];
   rexBin?: string;
   cmuxBin?: string;
+  zoxideBin?: string;
+  zoxide?: Cli;
   managerCommand?: string[];
+  taskHarnesses?: TaskHarness[];
+  tasksFile?: string;
+  taskRunner?: typeof executeTask;
+  taskNotifier?: TaskNotifier;
   managerCwd?: string;
   projectRoot?: string;
   distDir?: string;
@@ -134,8 +144,14 @@ export function createManager(options: ManagerOptions) {
     presets = [],
     rexBin = 'rex',
     cmuxBin = 'cmux',
+    zoxideBin = 'zoxide',
+    zoxide: injectedZoxide,
     cmux: injectedCmux,
     managerCommand,
+    taskHarnesses = [],
+    tasksFile,
+    taskRunner = executeTask,
+    taskNotifier,
     managerCwd = root,
     projectRoot = resolve(root, '../..'),
     distDir = resolve(root, 'dist'),
@@ -146,11 +162,13 @@ export function createManager(options: ManagerOptions) {
     agent: injectedAgent,
   } = options;
   validatePresets(presets);
+  validatePresets(taskHarnesses);
   const cmuxStatus = injectedCmux ? undefined : cmuxProgramStatus(cmuxBin);
   const backends = {
     rex: rexBackend(injectedRex || cli(rexBin, ['--autostart=false'])),
     cmux: cmuxBackend(injectedCmux || cli(cmuxBin), cmuxStatus?.read),
   };
+  const zoxide = injectedZoxide || cli(zoxideBin);
   const providerContext = new AsyncLocalStorage<Provider>();
   const provider = () => providerContext.getStore() || 'rex';
   const backend = () => backends[provider()];
@@ -196,6 +214,7 @@ export function createManager(options: ManagerOptions) {
 
   async function listDirectories(url: URL) {
     const { base, directory } = await projectDirectory(url.searchParams.get('path') || projectRoot);
+    const projectsOnly = url.searchParams.get('projects') === 'true';
     const search = (url.searchParams.get('search') || '')
       .trim()
       .toLowerCase()
@@ -217,6 +236,13 @@ export function createManager(options: ManagerOptions) {
       const current = queue.shift()!;
       visited++;
       const entries = await readdir(current.path, { withFileTypes: true }).catch(() => []);
+      if (
+        projectsOnly &&
+        current.path !== directory &&
+        (entries.some((entry) => entry.name === '.git') ||
+          ['HEAD', 'objects', 'refs'].every((name) => entries.some((entry) => entry.name === name)))
+      )
+        continue;
       for (const entry of entries) {
         if (!entry.isDirectory() || entry.name.startsWith('.') || ignored.has(entry.name)) continue;
         const fullPath = resolve(current.path, entry.name);
@@ -256,12 +282,157 @@ export function createManager(options: ManagerOptions) {
     return target;
   }
 
+  const scheduler = tasksFile
+    ? createTaskScheduler({
+        file: tasksFile,
+        notify: taskNotifier,
+        validate: async (input: TaskInput) => {
+          if (!input || typeof input !== 'object') throw new TaskError('Provide the task details.');
+          const harness = taskHarnesses.find((item) => item.id === input.harness);
+          if (!harness) throw new TaskError('Choose a configured task harness.');
+          const { directory } = await projectDirectory(input.cwd || harness.cwd);
+          let notifyTopic: string | undefined;
+          try {
+            notifyTopic = validateTopic(input.notifyTopic);
+          } catch (error) {
+            throw new TaskError((error as Error).message);
+          }
+          let wrapperFlags: string[] | undefined;
+          try {
+            launchCommand(harness.command, input.wrapperFlags);
+            wrapperFlags = input.wrapperFlags;
+          } catch (error) {
+            throw new TaskError((error as Error).message);
+          }
+          return {
+            label: text(input.label, 'task name', 100),
+            prompt: text(input.prompt, 'task prompt'),
+            harness: harness.id,
+            cwd: directory,
+            schedule: input.schedule,
+            ...(notifyTopic ? { notifyTopic } : {}),
+            ...(wrapperFlags === undefined ? {} : { wrapperFlags }),
+          };
+        },
+        run: async (task, signal) => {
+          const harness = taskHarnesses.find((item) => item.id === task.harness);
+          if (!harness) throw new TaskError('This task’s harness is no longer configured.');
+          const { directory } = await projectDirectory(task.cwd);
+          return taskRunner(
+            launchCommand(harness.command, task.wrapperFlags),
+            directory,
+            task.prompt,
+            signal,
+          );
+        },
+      })
+    : undefined;
+  function tasks() {
+    if (!scheduler) throw new TaskError('Scheduled tasks are not configured on this manager.', 503);
+    return scheduler;
+  }
+  async function taskAction(action: Action) {
+    if (action.type === 'list_tasks') {
+      const listing = await tasks().listing();
+      return {
+        tasks: listing.tasks,
+        runs: listing.runs.slice(0, 10).map((run) => ({ ...run, output: run.output.slice(-2000) })),
+      };
+    }
+    if (action.type === 'schedule_task' || action.type === 'update_task') {
+      if (action.type === 'update_task' && !action.taskId)
+        throw new TaskError('Choose a task to edit.');
+      const task = await tasks().upsert(
+        action.task!,
+        action.type === 'update_task' ? action.taskId : undefined,
+      );
+      return {
+        text:
+          'Saved ' +
+          task.label +
+          '. ' +
+          (task.nextRun
+            ? 'Next run: ' +
+              new Date(task.nextRun).toLocaleString('en-US', {
+                timeZone:
+                  task.schedule.kind === 'daily' || task.schedule.kind === 'weekly'
+                    ? task.schedule.timezone
+                    : undefined,
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZoneName: 'short',
+              }) +
+              '.'
+            : 'It is paused.'),
+      };
+    }
+    const id = text(action.taskId, 'task ID', 64);
+    if (action.type === 'run_task') {
+      const run = await tasks().run(id);
+      return {
+        text: 'Started ' + run.label + '. I will have its result when the harness finishes.',
+      };
+    }
+    const operation = (
+      { pause_task: 'pause', resume_task: 'resume', delete_task: 'delete' } as const
+    )[action.type as 'pause_task' | 'resume_task' | 'delete_task'];
+    if (!operation) throw new TaskError('Unknown task operation.');
+    await tasks().change(id, operation);
+    return {
+      text:
+        ({ pause: 'Paused', resume: 'Resumed', delete: 'Deleted' } as const)[operation] +
+        ' the task.',
+    };
+  }
   const operations = {
     runAgent,
+    taskAction,
     searchFolders: async (query: string) => {
+      const search = text(query, 'folder search', 100);
+      const base = await realpath(projectRoot);
+      const normalized = search.toLowerCase().replace(/[\s_.-]+/g, '');
+      const preferExact = (directories: { name: string; path: string }[]) => {
+        const exact = directories.filter(
+          (item) => item.name.toLowerCase().replace(/[\s_.-]+/g, '') === normalized,
+        );
+        return { directories: exact.length ? exact : directories, exactMatch: !!exact.length };
+      };
+      // zi uses zoxide interactively. Query the same ranked database without a terminal picker.
+      try {
+        const output: string = await zoxide([
+          'query',
+          '--list',
+          '--base-dir',
+          base,
+          '--',
+          ...search.split(/\s+/),
+        ]);
+        const directories: { name: string; path: string }[] = [];
+        const seen = new Set<string>();
+        for (const candidate of output.trim().split('\n').filter(Boolean).slice(0, 100)) {
+          try {
+            const { directory } = await projectDirectory(candidate);
+            if (!seen.has(directory)) {
+              seen.add(directory);
+              directories.push({ name: basename(directory), path: directory });
+            }
+          } catch {
+            /* Ignore stale entries and paths outside the configured root. */
+          }
+        }
+        if (directories.length)
+          return { root: base, source: 'zoxide', truncated: false, ...preferExact(directories) };
+      } catch {
+        /* zoxide is optional; unvisited projects are found by repository scanning. */
+      }
       const url = new URL('http://localhost');
-      url.searchParams.set('search', text(query, 'folder search', 100));
-      return listDirectories(url);
+      url.searchParams.set('search', search);
+      url.searchParams.set('projects', 'true');
+      const listing = await listDirectories(url);
+      return { ...listing, source: 'repositories', ...preferExact(listing.directories) };
     },
     readScreen: async (session: string, block: string) => {
       identifier(session, 'session');
@@ -348,7 +519,8 @@ export function createManager(options: ManagerOptions) {
       sending.add(provider() + ':' + block);
       try {
         await checkTerminal(session, block);
-        for (const key of action.keys!) await backend().key(session, block, key);
+        for (const key of action.keys!)
+          await backend().key(session, block, key, { answerPrompt: true });
       } finally {
         sending.delete(provider() + ':' + block);
       }
@@ -382,7 +554,15 @@ export function createManager(options: ManagerOptions) {
         connected: true,
         version: status.version,
         provider: provider(),
+        projectsRoot: await realpath(projectRoot),
         managerEnabled: !!managerCommand || !!injectedAgent,
+      });
+    }
+    if (request.method === 'GET' && route === 'tasks') {
+      return reply(response, 200, {
+        ...(await tasks().listing()),
+        harnesses: taskHarnesses,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
     }
     if (request.method === 'GET' && route === 'sessions') {
@@ -436,6 +616,19 @@ export function createManager(options: ManagerOptions) {
     const input = await body(request);
     if (!input || typeof input !== 'object' || Array.isArray(input))
       throw new HttpError(400, 'Expected an object.');
+    if (route === 'tasks/save')
+      return reply(response, 200, await tasks().upsert(input.task, input.id));
+    if (route === 'tasks/change') {
+      if (!['pause', 'resume', 'delete'].includes(input.operation))
+        throw new TaskError('Unknown task operation.');
+      return reply(
+        response,
+        200,
+        await tasks().change(text(input.id, 'task ID', 64), input.operation),
+      );
+    }
+    if (route === 'tasks/run')
+      return reply(response, 202, await tasks().run(text(input.id, 'task ID', 64)));
     if (route === 'launch') {
       return reply(response, 200, await operations.launch({ ...input, type: 'launch' }));
     }
@@ -449,7 +642,7 @@ export function createManager(options: ManagerOptions) {
       sending.add(provider() + ':' + block);
       try {
         await checkTerminal(session, block);
-        await backend().key(session, block, input.key);
+        await backend().key(session, block, input.key, { answerPrompt: true });
         return reply(response, 200, { sent: true });
       } finally {
         sending.delete(provider() + ':' + block);
@@ -547,6 +740,10 @@ export function createManager(options: ManagerOptions) {
             sessions,
             snapshot,
             presets,
+            taskHarnesses,
+            scheduledTasks: scheduler ? (await scheduler.listing()).tasks : [],
+            currentTime: new Date().toISOString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             projectsRoot: projectRoot,
             session: chosen,
             block: input.block ? identifier(input.block, 'block') : null,
@@ -608,9 +805,16 @@ export function createManager(options: ManagerOptions) {
       } else await staticFile(request, response, path);
     } catch (error) {
       if (response.destroyed || response.writableEnded) return;
-      const status = error instanceof HttpError ? error.status : 502;
+      const status =
+        error instanceof HttpError ||
+        error instanceof TerminalInputError ||
+        error instanceof TaskError
+          ? error.status
+          : 502;
       const message =
-        error instanceof HttpError
+        error instanceof HttpError ||
+        error instanceof TerminalInputError ||
+        error instanceof TaskError
           ? error.message
           : 'Could not reach the selected terminal app or manager agent. Check the Mac’s manager logs.';
       if (!(error instanceof HttpError)) console.error((error as Error).message);
@@ -618,6 +822,14 @@ export function createManager(options: ManagerOptions) {
     }
   };
   const server = tls ? createHttpsServer(tls, handler) : createServer(handler);
-  server.on('close', () => cmuxStatus?.close());
+  server.on('listening', () => {
+    void scheduler
+      ?.start()
+      .catch((error) => console.error('Task scheduler could not start:', error.message));
+  });
+  server.on('close', () => {
+    cmuxStatus?.close();
+    scheduler?.close();
+  });
   return server;
 }

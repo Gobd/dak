@@ -232,3 +232,90 @@ test('automatic status observations can offer menu choices but cannot execute mu
   await manager(context('yes'));
   assert.equal(pressed, 1);
 });
+
+test('a truncated search with one match is usable and never claims more than five matches', async () => {
+  let calls = 0;
+  const manager = createConversationManager({
+    runAgent: async (prompt) => {
+      calls++;
+      if (calls === 1)
+        return JSON.stringify({ reply: '', action: { type: 'search_folders', query: 'ssa-api' } });
+      assert.match(prompt, /ssa-api/);
+      return JSON.stringify({ reply: 'Found ssa-api.' });
+    },
+    searchFolders: async () => ({
+      directories: [{ name: 'ssa-api', path: '/projects/ssa-api' }],
+      truncated: true,
+    }),
+  });
+  const result = await manager(context('Find ssa-api'));
+  assert.equal(result.text, 'Found ssa-api.');
+  assert.equal(calls, 2);
+});
+
+test('voice scheduling searches a project and executes a validated task action with the selected harness', async () => {
+  let calls = 0;
+  const actions = [];
+  const task = {
+    label: 'Check PR',
+    prompt: 'Check PR 12 and report status.',
+    harness: 'claude-github',
+    cwd: '/projects/mainhost',
+    schedule: { kind: 'interval', minutes: 30 },
+  };
+  const manager = createConversationManager({
+    runAgent: async (prompt) => {
+      assert.match(prompt, /taskHarnesses/);
+      calls++;
+      return JSON.stringify({
+        reply: '',
+        action:
+          calls === 1
+            ? { type: 'search_folders', query: 'mainhost' }
+            : { type: 'schedule_task', task },
+      });
+    },
+    searchFolders: async () => ({
+      directories: [{ name: 'mainhost', path: '/projects/mainhost' }],
+    }),
+    taskAction: async (action) => {
+      actions.push(action);
+      return { text: 'Saved Check PR.' };
+    },
+  });
+  const result = await manager({
+    ...context('Every thirty minutes use Claude with GitHub MCP to check PR 12 in mainhost.'),
+    taskHarnesses: [
+      {
+        id: 'claude-github',
+        label: 'Claude with GitHub MCP',
+        command: ['claude', '--print'],
+        cwd: '/projects',
+      },
+    ],
+  });
+  assert.equal(result.text, 'Saved Check PR.');
+  assert.deepEqual(actions, [{ type: 'schedule_task', task }]);
+});
+test('voice task choices support numbered answers but observations cannot run scheduled tasks', async () => {
+  const actions = [];
+  let choices = true;
+  const action = { type: 'run_task', taskId: 'task-one' };
+  const manager = createConversationManager({
+    runAgent: async () =>
+      JSON.stringify(
+        choices
+          ? { reply: 'Which task?', choices: [{ label: 'Check PR', action }] }
+          : { reply: '', action },
+      ),
+    taskAction: async (action) => {
+      actions.push(action);
+      return { text: 'Started Check PR.' };
+    },
+  });
+  await manager(context('Run the PR check'));
+  assert.equal((await manager(context('one'))).text, 'Started Check PR.');
+  choices = false;
+  await manager({ ...context('Announce status'), observation: true });
+  assert.equal(actions.length, 1);
+});

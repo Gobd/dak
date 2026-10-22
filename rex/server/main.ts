@@ -1,7 +1,9 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { createNtfyNotifier } from './ntfy.ts';
 import { createManager, validatePresets } from './manager.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -9,6 +11,13 @@ const bundledRex = '/Applications/Rex Beta.app/Contents/Helpers/Rex Server.rex/C
 const presetsPath = resolve(root, process.env.REX_PRESETS_FILE || 'launchers.local.json');
 const presets = existsSync(presetsPath)
   ? validatePresets(JSON.parse(await readFile(presetsPath, 'utf8')))
+  : [];
+const taskHarnessesPath = resolve(
+  root,
+  process.env.REX_TASK_HARNESSES_FILE || 'task-harnesses.local.json',
+);
+const taskHarnesses = existsSync(taskHarnessesPath)
+  ? validatePresets(JSON.parse(await readFile(taskHarnessesPath, 'utf8')))
   : [];
 const commandJson = process.env.REX_MANAGER_COMMAND_JSON;
 const managerCommand = commandJson ? JSON.parse(commandJson) : undefined;
@@ -28,9 +37,15 @@ const server = createManager({
   presets,
   rexBin: process.env.REX_BIN || (existsSync(bundledRex) ? bundledRex : 'rex'),
   cmuxBin: process.env.CMUX_BIN || 'cmux',
+  zoxideBin: process.env.REX_ZOXIDE_BIN || 'zoxide',
   managerCommand,
+  taskHarnesses,
+  taskNotifier: createNtfyNotifier(process.env.REX_NTFY_URL, process.env.REX_NTFY_TOKEN),
+  tasksFile: resolve(root, process.env.REX_TASKS_FILE || 'scheduled-tasks.local.json'),
   managerCwd: process.env.REX_MANAGER_CWD || root,
-  projectRoot: process.env.REX_PROJECT_ROOT || resolve(root, '../..'),
+  projectRoot: process.env.REX_PROJECT_ROOT?.startsWith('~/')
+    ? resolve(homedir(), process.env.REX_PROJECT_ROOT.slice(2))
+    : process.env.REX_PROJECT_ROOT || resolve(root, '../..'),
   allowedOrigins: (
     process.env.REX_ALLOWED_ORIGINS || 'https://dak.bkemper.me,http://localhost:5183'
   )
