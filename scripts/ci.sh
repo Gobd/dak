@@ -6,8 +6,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "==> Testing Rex manager..."
-pnpm test:rex
+echo "==> Testing workspaces..."
+pnpm test
 
 echo "==> Linting (oxlint --fix)..."
 pnpm lint

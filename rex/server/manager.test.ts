@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { createManager, validatePresets } from './manager.mjs';
+import { createManager, validatePresets } from './manager.ts';
 import { onRequest as middleware } from '../../functions/_middleware.js';
 import { onRequest as pagesApi } from '../../functions/rex/api/[[path]].js';
 
@@ -222,4 +222,64 @@ test('terminal menu keys are separate from text and limited to known keys', asyn
   assert.deepEqual(calls.at(-1), ['send-key', '-s', session, '-b', block, 'down']);
   assert.equal((await post('key', { session, block, key: 'enter' })).status, 200);
   assert.equal((await post('key', { session, block, key: 'arbitrary' })).status, 400);
+});
+
+test('provider selection routes operations independently and rejects unknown providers', async (t) => {
+  const cmuxCalls = [];
+  const { get, post, calls } = await fixture(t, {
+    cmux: async (args) => {
+      cmuxCalls.push(args);
+      if (args.includes('tree'))
+        return {
+          windows: [
+            {
+              workspaces: [
+                { id: '11111111-1111-4111-8111-111111111111', title: 'Existing manual workspace' },
+              ],
+            },
+          ],
+        };
+      if (args.includes('list-panels')) return { surfaces: [] };
+      return {
+        workspace_id: '11111111-1111-4111-8111-111111111111',
+        surface_id: '22222222-2222-4222-8222-222222222222',
+      };
+    },
+  });
+  const [rex, cmux] = await Promise.all([get('sessions'), get('sessions?provider=cmux')]);
+  assert.equal((await rex.json()).sessions[0].session_id, session);
+  assert.equal((await cmux.json()).sessions[0].label, 'Existing manual workspace');
+  const cmuxSession = 'session:11111111-1111-4111-8111-111111111111';
+  assert.equal(
+    (
+      await post('launch?provider=cmux', {
+        preset: 'pi',
+        session: cmuxSession,
+        wrapperFlags: ['--no-mcp'],
+      })
+    ).status,
+    200,
+  );
+  assert.ok(cmuxCalls.some((args) => args.includes('new-surface')));
+  assert.equal(calls.filter((args) => args[0] === 'new').length, 0);
+  assert.equal((await get('sessions?provider=unknown')).status, 400);
+  assert.equal((await post('launch', { preset: 'pi', wrapperFlags: ['--force'] })).status, 400);
+});
+
+test('native activity includes manually started terminals without using screen heuristics', async (t) => {
+  const { get } = await fixture(t, {
+    rex: async (args) => {
+      if (args[0] === 'ls') return { sessions: [{ session_id: session, label: 'Manual agent' }] };
+      if (args[0] === 'block' && args[1] === 'ls')
+        return {
+          blocks: [{ block_id: block, label: 'Pi', creator_name: 'com.superlogical.terminal' }],
+        };
+      if (args.includes('program_status'))
+        return { records: [{ state: 'blocked', kind: 'question', msg: 'Continue?' }] };
+      throw new Error('No capture is needed to read native status');
+    },
+  });
+  const activity = await (await get('activity')).json();
+  assert.equal(activity.terminals[0].label, 'Manual agent / Pi');
+  assert.equal(activity.terminals[0].records[0].state, 'blocked');
 });

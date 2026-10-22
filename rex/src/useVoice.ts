@@ -22,7 +22,11 @@ type VoiceWindow = Window & {
   webkitSpeechRecognition?: new () => Recognition;
 };
 
-export function useVoice(onTranscript: (text: string) => void, voiceURI: string) {
+export function useVoice(
+  onTranscript: (text: string) => void,
+  voiceURI: string,
+  handsFree = false,
+) {
   const callbackRef = useRef(onTranscript);
   callbackRef.current = onTranscript;
   const recognitionRef = useRef<Recognition | null>(null);
@@ -45,6 +49,18 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
     return () => window.speechSynthesis.removeEventListener('voiceschanged', update);
   }, [synthesisSupported]);
 
+  const pauseListening = useCallback(() => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+    recognition.onend = null;
+    recognition.onerror = null;
+    recognition.onresult = null;
+    recognitionRef.current = null;
+    recognition.abort();
+    setListening(false);
+    setInterim('');
+  }, []);
+
   const stopSpeaking = useCallback(() => {
     if (synthesisSupported) window.speechSynthesis.cancel();
     utteranceRef.current = null;
@@ -54,6 +70,7 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
   const speak = useCallback(
     (text: string) => {
       if (!synthesisSupported) return;
+      pauseListening();
       stopSpeaking();
       const utterance = new SpeechSynthesisUtterance(text);
       const selected = window.speechSynthesis
@@ -76,7 +93,7 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
       setSpeaking(true);
       window.speechSynthesis.speak(utterance);
     },
-    [synthesisSupported, stopSpeaking, voiceURI],
+    [synthesisSupported, stopSpeaking, voiceURI, pauseListening],
   );
 
   const toggleListening = useCallback(() => {
@@ -116,7 +133,7 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
     };
     recognition.onerror = (event) => {
       failed = true;
-      if (event.error === 'aborted') return;
+      if (event.error === 'aborted' || (handsFree && event.error === 'no-speech')) return;
       const errors: Record<string, string> = {
         'not-allowed': 'Microphone permission was denied. Allow it in Chrome’s site settings.',
         'audio-capture': 'No microphone is available.',
@@ -139,11 +156,11 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
       recognitionRef.current = null;
       setError('Could not start the microphone. Try again.');
     }
-  }, [RecognitionClass, stopSpeaking]);
+  }, [RecognitionClass, stopSpeaking, handsFree]);
 
   useEffect(() => {
     const cancel = () => {
-      recognitionRef.current?.abort();
+      pauseListening();
       stopSpeaking();
     };
     const onVisibility = () => {
@@ -160,9 +177,10 @@ export function useVoice(onTranscript: (text: string) => void, voiceURI: string)
       }
       if (synthesisSupported) window.speechSynthesis.cancel();
     };
-  }, [stopSpeaking, synthesisSupported]);
+  }, [stopSpeaking, synthesisSupported, pauseListening]);
 
   return {
+    pauseListening,
     listening,
     speaking,
     interim,

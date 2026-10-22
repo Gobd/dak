@@ -1,13 +1,5 @@
-export interface Session {
-  session_id: string;
-  label: string;
-}
-
-export interface Block {
-  block_id: string;
-  label: string;
-  creator_name: string;
-}
+import type { Provider } from '../shared/terminal';
+export type { Session, Block } from '../shared/terminal';
 
 export interface Preset {
   id: string;
@@ -36,9 +28,16 @@ export function managerOrigin(value: string): string {
   return url.origin;
 }
 
-export async function api<T>(route: string, body?: unknown, managerUrl = ''): Promise<T> {
+export async function api<T>(
+  route: string,
+  body?: unknown,
+  managerUrl = '',
+  provider: Provider = 'rex',
+): Promise<T> {
   const origin = managerOrigin(managerUrl);
-  const response = await fetch(`${origin || window.location.origin}/rex/api/${route}`, {
+  const url = new URL(`${origin || window.location.origin}/rex/api/${route}`);
+  url.searchParams.set('provider', provider);
+  const response = await fetch(url, {
     method: body === undefined ? 'GET' : 'POST',
     headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),

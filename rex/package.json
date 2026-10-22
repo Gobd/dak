@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail --names app,manager \"vite\" \"node --watch --env-file-if-exists=.env.local server/main.mjs\"",
-    "dev:manager": "node --watch --env-file-if-exists=.env.local server/main.mjs",
-    "start": "node --env-file-if-exists=.env.local server/main.mjs",
+    "dev": "concurrently --kill-others-on-fail --names app,manager \"vite\" \"node --watch --env-file-if-exists=.env.local server/main.ts\"",
+    "dev:manager": "node --watch --env-file-if-exists=.env.local server/main.ts",
+    "start": "node --env-file-if-exists=.env.local server/main.ts",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "node --test server/*.test.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.server.json",
+    "test": "node --test server/*.test.ts",
     "preview": "vite preview",
-    "dev:app": "vite"
+    "dev:app": "vite",
+    "service": "node --env-file-if-exists=.env.local server/service.ts"
   },
   "dependencies": {
     "@dak/hooks": "workspace:*",

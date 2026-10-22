@@ -5,8 +5,8 @@ const shared = createViteConfig({
   base: '/rex/',
   port: 5183,
   pwa: {
-    name: 'Rex Voice',
-    short_name: 'Rex',
+    name: 'Agent Voice',
+    short_name: 'Agents',
     description: 'Talk to your agents over your private network',
     orientation: 'portrait',
     includeAssets: ['icon.svg', 'apple-touch-icon.png'],
