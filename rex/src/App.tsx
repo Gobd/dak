@@ -129,6 +129,19 @@ export default function App() {
   const [mode, setMode] = useLocalStorage<'manager' | 'terminal'>('rex-voice-target', 'manager');
   const historyTarget = settings.managerUrl + '/' + sessionId + '/' + blockId;
   const agentHistory = agentSnapshot?.target === historyTarget ? agentSnapshot.history : undefined;
+  const [activityNow, setActivityNow] = useState(Date.now);
+  const working = agentHistory?.activity?.state === 'working';
+  useInterval(() => setActivityNow(Date.now()), working ? 1000 : null);
+  const startedAt = Date.parse(agentHistory?.activity?.startedAt || '');
+  const elapsed = Math.max(0, Math.floor((Math.max(activityNow, Date.now()) - startedAt) / 1000));
+  const agentStatus = working
+    ? `Working${Number.isFinite(startedAt) ? ` · ${elapsed}s` : ''}`
+    : (
+        { blocked: 'Waiting for you', idle: 'Ready', done: 'Finished', error: 'Error' } as Record<
+          string,
+          string
+        >
+      )[agentHistory?.activity?.state || ''];
   const currentAttention = agentAttention?.target === historyTarget ? agentAttention : undefined;
   const [screen, setScreen] = useState('');
   const [drafts, setDrafts] = useLocalStorage<Record<string, string>>('rex-message-drafts', {});
@@ -1558,7 +1571,11 @@ export default function App() {
               </div>
             </form>
             <div className="rex-composer-status">
-              <p className="text-xs text-text-secondary" role="status">
+              <p
+                className="text-xs text-text-secondary"
+                role="status"
+                aria-label="Conversation status"
+              >
                 {inCall
                   ? voiceGate.active
                     ? busy
@@ -1574,6 +1591,9 @@ export default function App() {
                         : mode === 'terminal'
                           ? `Direct to ${selectedTerminal?.app || 'terminal'} · ${historyLoading ? 'Loading' : historyLive ? 'Live' : 'Reconnecting…'}`
                           : 'Type a message or tap the microphone'}
+                {mode === 'terminal' && agentStatus && (
+                  <span aria-live="off"> · {agentStatus}</span>
+                )}
               </p>
               {hasNewMessages && mode === 'terminal' && (
                 <button

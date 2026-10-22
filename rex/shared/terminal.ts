@@ -41,6 +41,7 @@ export interface TerminalHistory {
   app?: string;
   conversationId?: string;
   truncated?: boolean;
+  activity?: { state: string; startedAt?: string };
 }
 export interface StatusRecord {
   id?: string;

@@ -3,7 +3,12 @@ import { watchFile, unwatchFile } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { ChatMessage, ConversationLink, TerminalHistory } from '../shared/terminal.ts';
+import {
+  activityEvent,
+  type ChatMessage,
+  type ConversationLink,
+  type TerminalHistory,
+} from '../shared/terminal.ts';
 import type { TerminalBackend } from './terminals.ts';
 
 const uuid = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
@@ -145,6 +150,38 @@ async function conversationPath(
   return findTranscript(root.path, link.id, root.depth);
 }
 
+function conversationActivity(data: string, kind: string): TerminalHistory['activity'] {
+  if (kind !== 'codex') return;
+  let activity: TerminalHistory['activity'];
+  let turn: string | undefined;
+  for (const line of data.split('\n')) {
+    let row;
+    try {
+      row = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (row.type !== 'event_msg') continue;
+    const event = row.payload;
+    if (event?.type === 'task_started') {
+      turn = event.turn_id;
+      const timestamp =
+        typeof event.started_at === 'number' ? event.started_at * 1000 : Date.parse(row.timestamp);
+      const date = new Date(timestamp);
+      activity = {
+        state: 'working',
+        ...(Number.isFinite(date.getTime()) ? { startedAt: date.toISOString() } : {}),
+      };
+    } else if (
+      ['task_complete', 'turn_aborted'].includes(event?.type) &&
+      (!turn || !event.turn_id || turn === event.turn_id)
+    ) {
+      activity = { state: event.type === 'task_complete' ? 'done' : 'idle' };
+    }
+  }
+  return activity;
+}
+
 export async function readConversation(
   link: ConversationLink,
   home = homedir(),
@@ -160,13 +197,15 @@ export async function readConversation(
     let data = buffer.subarray(0, bytesRead).toString('utf8');
     if (start) data = data.slice(data.indexOf('\n') + 1);
     const messages = parseConversation(data, link.kind);
-    if (!messages.length) return;
+    const activity = conversationActivity(data, link.kind);
+    if (!messages.length && !activity) return;
     return {
       source: 'conversation',
       app: link.kind,
       conversationId: link.id,
       messages: messages.slice(-maxMessages),
       truncated: start > 0 || messages.length > maxMessages,
+      ...(activity ? { activity } : {}),
     };
   } finally {
     await file.close();
@@ -179,9 +218,19 @@ export async function terminalHistory(
   block: string,
 ): Promise<TerminalHistory> {
   const details = await backend.describe(session, block).catch(() => undefined);
+  const native =
+    details?.agent === false
+      ? undefined
+      : activityEvent(await backend.activity(session, block).catch(() => []));
   if (details?.conversation) {
     const history = await readConversation(details.conversation).catch(() => undefined);
-    if (history) return history;
+    if (history) {
+      // A native approval wait or error takes precedence over an unfinished turn.
+      if (native && (['blocked', 'error'].includes(native.state) || !history.activity)) {
+        history.activity = { state: native.state };
+      }
+      return history;
+    }
   }
   const output = await backend.scrollback(session, block);
   return {
@@ -190,6 +239,7 @@ export async function terminalHistory(
     app: details?.app,
     output: output.slice(-160000),
     truncated: output.length > 160000,
+    ...(native ? { activity: { state: native.state } } : {}),
   };
 }
 

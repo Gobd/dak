@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { parseConversation, readConversation, streamHistory } from './history.ts';
+import { parseConversation, readConversation, streamHistory, terminalHistory } from './history.ts';
 import { rexBackend } from './terminals.ts';
 
 const id = '11111111-1111-4111-8111-111111111111';
@@ -169,6 +169,52 @@ test('conversation lookup uses the exact checkpoint and ignores unsupported or i
   );
   assert.equal(await readConversation({ kind: 'codex', id: '../../other' }, home), undefined);
   assert.equal(await readConversation({ kind: 'unknown', id }, home), undefined);
+});
+
+test('Codex activity retains the actual task start and stops on matching completion or interruption', async (t) => {
+  const home = await mkdtemp(join(tmpdir(), 'rex-activity-'));
+  const previous = process.env.CODEX_HOME;
+  process.env.CODEX_HOME = home;
+  t.after(() => {
+    if (previous === undefined) delete process.env.CODEX_HOME;
+    else process.env.CODEX_HOME = previous;
+  });
+  const directory = join(home, 'sessions');
+  await mkdir(directory);
+  const path = join(directory, `rollout-${id}.jsonl`);
+  const link = { kind: 'codex', id };
+  const start = {
+    type: 'event_msg',
+    timestamp: '2026-10-22T21:47:19.000Z',
+    payload: { type: 'task_started', turn_id: 'current', started_at: 1792705638 },
+  };
+  const complete = (turn_id: string, type = 'task_complete') => ({
+    type: 'event_msg',
+    payload: { type, turn_id },
+  });
+  await writeFile(path, jsonl(start));
+  const working = { state: 'working', startedAt: '2026-10-22T21:47:18.000Z' };
+  assert.deepEqual((await readConversation(link))?.activity, working);
+  assert.deepEqual((await readConversation(link))?.messages, []);
+  await appendFile(path, jsonl(complete('older')));
+  assert.deepEqual((await readConversation(link))?.activity, working);
+  const backend = rexBackend(async () => '');
+  backend.describe = async () => ({ agent: true, conversation: link });
+  backend.activity = async () => [{ state: 'blocked' }];
+  assert.deepEqual((await terminalHistory(backend, 'session:test', 'block:test')).activity, {
+    state: 'blocked',
+  });
+  backend.activity = async () => [{ state: 'working' }];
+  assert.deepEqual(
+    (await terminalHistory(backend, 'session:test', 'block:test')).activity,
+    working,
+  );
+  await appendFile(path, jsonl(complete('current')));
+  assert.deepEqual((await readConversation(link))?.activity, { state: 'done' });
+  await appendFile(path, jsonl(start, complete('current', 'turn_aborted')));
+  assert.deepEqual((await readConversation(link))?.activity, { state: 'idle' });
+  await appendFile(path, jsonl({ ...start, payload: { ...start.payload, started_at: 1e20 } }));
+  assert.deepEqual((await readConversation(link))?.activity, { state: 'working' });
 });
 
 test('history stream pushes saved messages promptly and sends no unchanged duplicate snapshot', async (t) => {
