@@ -6,7 +6,7 @@ An installable PWA for talking to agents running in Rex or cmux from Android. It
 
 - **Phone:** microphone, Chrome speech recognition, Android/browser text-to-speech, and saved settings.
 - **Cloudflare Pages:** the static PWA at `/rex/`.
-- **Mac:** a Node manager that calls the selected terminal app’s local CLI and optionally a manager agent through `lambdap`.
+- **Mac:** a Node manager that discovers Rex and cmux together through their local CLIs and optionally a manager agent through `lambdap`.
 - **WireGuard / OPNsense:** the private connection between the phone and your home servers.
 
 The Mac manager trusts your private LAN/VPN connection. It has no separate access key. Keep its listener or reverse proxy private; Cloudflare Functions do not proxy it or expose it publicly.
@@ -17,11 +17,19 @@ Speech recognition may use Google's online service. Choosing a voice marked “o
 
 Tap the microphone, speak, and pause or tap again to finish. **Automatic send is the default.** Only final recognition results are sent; interim results never submit requests.
 
-Enable **Review before sending** to edit the transcript first. Keyboard input is always available for corrections. Turn spoken manager replies on or off, select a voice, and stop playback at any time. A reply can also be played manually when Android blocks automatic playback.
+Enable **Review before sending** to edit the transcript first. Keyboard input is always available for corrections. Turn spoken replies on or off, select a voice and playback speed (default 1×), and stop playback at any time. A reply can also be played manually when Android blocks automatic playback.
 
-The private manager address, voice, send mode, playback preference, and successful-connection setting are stored in the phone browser's local storage. The app reconnects on the next launch. Clearing site data clears these settings. Conversation history is also stored on the phone, with a Clear conversation control. Select Rex or cmux in Settings; switching providers clears the conversation and selected terminal so input cannot cross between apps.
+The private manager address, voice, playback speed, send mode, and playback preference are saved in browser local storage. The app reconnects on the next launch. Clearing site data clears these settings. Manager conversation history is also stored on that device, with a Clear manager conversation control in Settings.
 
-**Manager** is an AI coordinator: it checks sessions, searches projects, starts configured harnesses, forwards prompts, and reads or answers terminal options. Ambiguous requests produce up to five numbered spoken choices; more than five matches prompts you to narrow the request. follow up with a number or yes/no. Choices belong to the phone conversation, expire after ten minutes, and menu selections are checked against the current terminal screen. **Agent terminal** sends a message to the selected terminal and displays its current screen, refreshed every three seconds. Screen capture is not the full transcript and does not identify a complete assistant response; terminal screens are not automatically spoken. Select a terminal running your agent before sending—Return submits input to whichever program is running.
+**Manager** coordinates across both terminal apps: it checks agents, searches projects, starts configured harnesses, forwards prompts, and helps answer terminal options. Selecting an **agent** sends normal messages directly to that exact terminal. Agents are grouped by workspace in the desktop sidebar; on phones the sidebar opens from the left. Plain shells are hidden unless **Show other terminals** is enabled. cmux process inspection rejects stale agent bindings on terminals that now run only a shell; unavailable process inspection falls back to native metadata.
+
+The central chat shows chronological messages from the exact saved Codex, Claude, or Pi conversation when cmux exposes a local checkpoint. Internal reasoning, tools, injected context, and Codex compaction summaries are excluded. Confirmed Codex chat messages are required before displaying modern transcript output. Recent history is bounded to 200 messages and 8 MiB of log data. Rex currently provides labeled terminal scrollback because it does not expose a reliable conversation checkpoint; remote agents also fall back to scrollback. No transcript is guessed from an unrelated log.
+
+Saved transcript changes arrive through a live server event stream, normally within a few hundred milliseconds after the harness writes them. This is message streaming, not token streaming. Terminal metadata and scrollback are checked periodically. Opening, reconnecting, and switching agents seed history quietly. Only new final/pausing replies are read automatically; progress updates remain visible and silent. Removed history does not replay an earlier answer.
+
+When the selected agent becomes blocked, the app checks native status every two seconds and uses the configured manager harness to briefly explain the decision and offer current options. The summary and buttons appear in **Waiting for your answer**. Say “approve,” “always approve,” “decline,” an option name, or a number, or tap an option. Persistent approval is offered only when present in the native prompt, with its scope stated. The bridge checks the current screen before sending the remembered menu keys, and direct-agent assistance is restricted to that exact terminal. Existing blockers on opening a tab are summarized silently. A changed or unavailable prompt requires reading current options again. No approval is sent automatically.
+
+The call button sits beside the compact expanding input and works for Manager or the selected agent. Switching targets ends the call. The adjacent terminal button expands the live screen and manual keys. Native microphone and playback restrictions still apply.
 
 ## Mac setup
 
@@ -38,7 +46,7 @@ cp rex/launchers.example.json rex/launchers.local.json
 pnpm --filter rex dev
 ```
 
-The server automatically locates Rex Beta's bundled executable on macOS. Set `REX_BIN` for a different installation. Open the terminal app you select before connecting; the manager does not restart Rex or cmux. cmux must have its socket API enabled. Set `CMUX_BIN` if its executable is not on PATH. `CMUX_SOCKET_PATH` and `CMUX_SOCKET_PASSWORD` are passed through to the cmux CLI.
+The server automatically locates Rex Beta's bundled executable on macOS. Set `REX_BIN` for a different installation. Open Rex and/or cmux before connecting; the manager does not restart Rex or cmux. cmux must have its socket API enabled. Set `CMUX_BIN` if its executable is not on PATH. `CMUX_SOCKET_PATH` and `CMUX_SOCKET_PASSWORD` are passed through to the cmux CLI.
 
 The manager defaults to loopback on port 5184. `pnpm --filter rex dev` starts both Vite (5183) and the manager (5184). For separate terminals, use `pnpm --filter rex dev:app` and `pnpm --filter rex dev:manager`. A 502 from `/rex/api/status` usually means the manager is not running.
 
@@ -54,7 +62,7 @@ Use an internal DNS name with a trusted certificate that resolves to the Mac or 
 
 In PWA Settings, enter the manager **origin**, such as `https://rex.bkemper.me`, with no path. That hostname is an example; configure its DNS and certificate before using it. The PWA calls `/rex/api/` at that origin.
 
-`REX_ALLOWED_ORIGINS` defaults to `https://dak.bkemper.me,http://localhost:5183`. For a Pages preview, add its exact origin to the comma-separated list. The manager handles CORS and private-network preflight requests for these origins. Chrome may ask for permission to access devices on your local network.
+`REX_ALLOWED_ORIGINS` defaults to `https://dak.bkemper.me,http://localhost:5183,http://127.0.0.1:5183`. For a Pages preview, add its exact origin to the comma-separated list. The manager handles CORS and private-network preflight requests for these origins. Chrome may ask for permission to access devices on your local network.
 
 ## WireGuard: only home traffic
 
@@ -105,7 +113,7 @@ Flags before `pi` belong to `lambdap`. Flags after `pi` belong to Pi. The same p
 
 Tap **Start an agent** to select a preset, browse or search for a working directory, and start a session. The folder picker and launches stay within `REX_PROJECT_ROOT`, which defaults to the parent of DAK (your Developer directory). Search covers up to five levels and 100 matches, skipping dependency, build, and hidden folders. For interactive menus and trust prompts, use the terminal key buttons: arrows, Enter, Esc, and Tab. In Agent terminal mode, spoken messages are literal text. In Manager mode, spoken yes/no or numbers can select the choices it just read. Preset changes take effect when you restart the Mac manager. Choose a new session/workspace or a new terminal in an existing one. The same option is available by voice. New cmux workspaces include their initial terminal; additional terminals use the named workspace. Rex creates a session or a new tab within an existing session. The manager can see and inspect agents started manually too.
 
-Manager replies appear newest first, with the latest reply brought into view automatically. Settings shows the connected manager’s project search root. To configure it, set `REX_PROJECT_ROOT=~/Developer` in `rex/.env.local` and restart the manager (`pnpm --filter rex service restart` for an installed service). The root is enforced on the Mac for browsing and launches. Manager searches query the ranked zoxide history used by `zi` first, restricted to this root. If zoxide is unavailable or has no match, repository scanning stops at repository boundaries and prefers exact project names, so source folders inside another repository do not crowd out the project you meant. The folder browser still allows navigating inside a project.
+Manager and agent chats run top to bottom; new messages follow automatically unless you are reading older messages. Settings shows the connected manager’s project search root. To configure it, set `REX_PROJECT_ROOT=~/Developer` in `rex/.env.local` and restart the manager (`pnpm --filter rex service restart` for an installed service). The root is enforced on the Mac for browsing and launches. Manager searches query the ranked zoxide history used by `zi` first, restricted to this root. If zoxide is unavailable or has no match, repository scanning stops at repository boundaries and prefers exact project names, so source folders inside another repository do not crowd out the project you meant. The folder browser still allows navigating inside a project.
 
 ## Manager agent
 
@@ -160,7 +168,7 @@ The Mac manager must be running, and the laptop must be awake. A missed one-time
 
 Task definitions and the latest 100 runs are saved atomically in `rex/scheduled-tasks.local.json` with private file permissions. These files and `task-harnesses.local.json` are ignored by Git. `REX_TASKS_FILE` and `REX_TASK_HARNESSES_FILE` can override the paths (relative paths resolve from `rex`). Keep one Mac manager process using a given task store. Results survive manager restarts and service updates from this checkout. The service update command does not pull Git changes.
 
-The connected PWA polls for results and reads completed runs when **Read manager replies aloud** is enabled or a voice call is active. Results wait while you are speaking or answering a choice; the app remembers which it has announced on that device. Full output remains in **Recent runs**. Results are saved while the phone app is closed, but speech requires the app to be open and visible; this does not add locked-screen/background push notifications.
+The connected PWA polls for results and reads completed runs when **Read replies aloud** is enabled or a voice call is active. Results wait while you are speaking or answering a choice; the app remembers which it has announced on that device. Full output remains in **Recent runs**. Results are saved while the phone app is closed, but speech requires the app to be open and visible; this does not add locked-screen/background push notifications.
 
 ### Android push with ntfy
 
@@ -232,7 +240,7 @@ pnpm --filter rex service update
 
 ## Voice calls and native status
 
-Select **Manager**, use automatic send, and tap **Start voice call** in Chrome on your Mac or Android phone. Say **“Hey Rex”** to open a conversation, or **“Hey Rex, what is Claude doing?”** to include the first request. Follow-up utterances go to the manager until you say **“Thanks Rex”** (or “Thank you Rex”) or the idle timeout expires. The default is **10 seconds**; set `REX_VOICE_IDLE_SECONDS` in `.env.local` and restart the service to change it. Time spent waiting for a manager reply or playing it aloud does not consume the idle window.
+Select **Manager** or an agent, use automatic send, and tap the **Start voice call** button beside the input in Chrome on your Mac or Android phone. Say **“Hey Rex”** to open a conversation, or **“Hey Rex, what is Claude doing?”** to include the first request. Follow-up utterances go to the selected conversation target until you say **“Thanks Rex”** (or “Thank you Rex”) or the idle timeout expires. The default is **10 seconds**; set `REX_VOICE_IDLE_SECONDS` in `.env.local` and restart the service to change it. Time spent waiting for a manager reply or playing it aloud does not consume the idle window.
 
 Chrome keeps listening and transcribing while the call is running. Final transcripts go to the Mac's Node backend, which checks the phrases and conversation state before allowing a manager request. Ambient transcripts are discarded without calling the manager or adding to conversation history. The browser restarts recognition if Chrome ends it. Closing the conversation gate keeps the microphone listening for the next “Hey Rex”; **End voice call** stops listening. Speech recognized during reply playback is discarded to prevent Rex from answering its own voice, so wait until playback finishes before speaking. Chrome speech recognition may use Google's servers; this is not fully local transcription. Keep the page open and visible, allow microphone access, and use HTTPS with LAN/VPN access to the Mac manager. Phone behavior still needs verification on your device.
 
@@ -248,6 +256,6 @@ An automatic notification may read choices, but never sends input or accepts a p
 
 ## Conversational voice control
 
-Manager is the default conversation target. Try “What sessions are running?”, “What is Claude doing?”, “Start Pi with Greywall and no MCPs in mainhost”, “Start another terminal in that workspace”, or “Read the current options.” The manager searches project names, uses your configured launchers, and asks numbered questions when more than one choice fits. Reply “two” or “yes” to choose. Voice-selected wrapper flags are limited to `--greywall` and `--no-mcp`; they go before the harness name. Omit them to preserve the configured preset defaults. It can also forward a prompt to an existing agent.
+**Manager** is the default conversation target. Try “What sessions are running?”, “What is Claude doing?”, “Start Pi with Greywall and no MCPs in mainhost”, “Start another terminal in that workspace”, or “Read the current options.” The manager searches project names, uses your configured launchers, and asks numbered questions when more than one choice fits. Reply “two” or “yes” to choose. Voice-selected wrapper flags are limited to `--greywall` and `--no-mcp`; they go before the harness name. Omit them to preserve the configured preset defaults. It can also forward a prompt to an existing agent.
 
-The bridge verifies menu screens before applying remembered choices, so an old “yes” cannot select an option on a changed prompt. Manager replies are concise for spoken playback. Screens are snapshots rather than complete chat transcripts; agent replies are read when you ask the manager, rather than automatically streamed as speech.
+The bridge verifies menu screens before applying remembered choices, so an old “yes” cannot select an option on a changed prompt. Manager replies are concise for spoken playback. Manager terminal inspection uses screen snapshots. Direct agent chats use saved transcript messages when available, and read new final replies automatically when playback is enabled.

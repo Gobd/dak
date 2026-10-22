@@ -135,6 +135,113 @@ test('spoken yes selects the visible trust option using keys, not typed text', a
   assert.deepEqual(sent, [['down', 'enter']]);
 });
 
+test('approval phrases select exact current menu options without invoking the model again', async () => {
+  for (const [phrase, expected] of [
+    ['approve', 'enter'],
+    ['always approve', 'down'],
+    ['decline', 'escape'],
+  ]) {
+    let modelCalls = 0;
+    const sent = [];
+    const manager = createConversationManager({
+      runAgent: async () => {
+        modelCalls++;
+        return JSON.stringify({
+          reply: 'Run the browser check?',
+          choices: [
+            {
+              label: 'Approve once',
+              action: { type: 'keys', session: 'session:one', block: 'block:one', keys: ['enter'] },
+            },
+            {
+              label: 'Always approve for this session',
+              action: {
+                type: 'keys',
+                session: 'session:one',
+                block: 'block:one',
+                keys: ['down', 'enter'],
+              },
+            },
+            {
+              label: 'Decline',
+              action: {
+                type: 'keys',
+                session: 'session:one',
+                block: 'block:one',
+                keys: ['escape'],
+              },
+            },
+          ],
+        });
+      },
+      readScreen: async () => 'No / Yes',
+      keys: async (action) => sent.push(action.keys),
+    });
+    await manager({
+      ...context('Read options'),
+      terminalOnly: true,
+      observation: true,
+      session: 'session:one',
+      block: 'block:one',
+    });
+    assert.equal(sent.length, 0);
+    await manager({
+      ...context(phrase + ' please'),
+      terminalOnly: true,
+      session: 'session:one',
+      block: 'block:one',
+    });
+    assert.equal(sent[0][0], expected);
+    assert.equal(modelCalls, 1);
+  }
+});
+
+test('direct attention cannot mutate another terminal or launch an agent', async () => {
+  for (const action of [
+    { type: 'keys', session: 'session:other', block: 'block:other', keys: ['enter'] },
+    { type: 'launch', preset: 'claude', cwd: '/projects' },
+  ]) {
+    const manager = createConversationManager({
+      runAgent: async () => JSON.stringify({ reply: '', action }),
+      keys: async () => assert.fail('Wrong terminal'),
+      launch: async () => assert.fail('Unexpected launch'),
+    });
+    const result = await manager({
+      ...context('approve'),
+      terminalOnly: true,
+      session: 'session:one',
+      block: 'block:one',
+    });
+    assert.match(result.text, /selected terminal/);
+  }
+});
+
+test('menu verification compares the same bounded screen used in manager context', async () => {
+  const screen = 'Earlier output'.repeat(1000) + '\nNo / Yes';
+  let pressed = false;
+  const manager = createConversationManager({
+    runAgent: async () =>
+      JSON.stringify({
+        reply: '',
+        choices: [
+          {
+            label: 'Approve once',
+            action: { type: 'keys', session: 'session:one', block: 'block:one', keys: ['enter'] },
+          },
+        ],
+      }),
+    readScreen: async () => screen,
+    keys: async () => {
+      pressed = true;
+    },
+  });
+  const initial = context('Read options');
+  initial.snapshot[0].terminals[0].screen = screen.slice(-6000);
+  await manager(initial);
+  await manager(context('approve'));
+  assert.equal(pressed, true);
+});
+
 test('a changed prompt is read again rather than applying a stale voice choice', async () => {
   let pressed = false;
   const manager = createConversationManager({

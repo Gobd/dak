@@ -82,6 +82,71 @@ test('private API works without a token; hosted PWA preflight allows only config
   );
 });
 
+test('configured numeric loopback origin can request options and submit a voice choice', async (t) => {
+  const { get } = await fixture(t, {
+    allowedOrigins: ['http://localhost:5183', 'http://127.0.0.1:5183'],
+  });
+  const origin = 'http://127.0.0.1:5183';
+  const preflight = await get('chat', { method: 'OPTIONS', headers: { Origin: origin } });
+  assert.equal(preflight.status, 204);
+  const response = await get('voice/end', {
+    method: 'POST',
+    headers: { Origin: origin, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ call: 'test-loopback' }),
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('access-control-allow-origin'), origin);
+  assert.equal(
+    (await get('chat', { method: 'OPTIONS', headers: { Origin: 'http://127.0.0.1:9999' } })).status,
+    403,
+  );
+});
+
+test('direct-agent help inspects the exact selected tab even beyond the first three', async (t) => {
+  const fourth = 'block:fourth-tab';
+  const { post } = await fixture(t, {
+    rex: async (args) => {
+      if (args[0] === 'ls') return { sessions: [{ session_id: session, label: 'Workspace' }] };
+      if (args[0] === 'block')
+        return {
+          blocks: [block, 'block:second-tab', 'block:third-tab', fourth].map((block_id) => ({
+            block_id,
+            creator_name: 'com.superlogical.terminal',
+          })),
+        };
+      if (args[0] === 'capture') {
+        assert.equal(args[args.indexOf('-b') + 1], fourth);
+        return 'Approval options for fourth tab';
+      }
+      return '';
+    },
+    agent: async (prompt) => {
+      const input = JSON.parse(prompt.slice(prompt.indexOf('\n\n') + 2));
+      assert.equal(input.terminalOnly, true);
+      assert.equal(input.selectedTerminal, fourth);
+      assert.deepEqual(
+        input.snapshot[0].terminals.map((t) => t.block_id),
+        [fourth],
+      );
+      return 'The selected tab needs approval.';
+    },
+  });
+  const response = await post('chat', {
+    message: 'Read the options',
+    history: [],
+    terminalOnly: true,
+    observation: true,
+    session,
+    block: fourth,
+  });
+  assert.equal(response.status, 200);
+  assert.match((await response.json()).text, /selected tab/);
+  assert.equal(
+    (await post('chat', { message: 'Approve', history: [], terminalOnly: true, session })).status,
+    400,
+  );
+});
+
 test('Node gates voice transcripts before manager calls, and closing a voice call leaves typed chat available', async (t) => {
   let agentCalls = 0;
   const { post, get, calls } = await fixture(t, {

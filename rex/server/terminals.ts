@@ -4,7 +4,7 @@ import { basename } from 'node:path';
 
 const execute = promisify(execFile);
 export type { Provider, Session, Block, StatusRecord } from '../shared/terminal.ts';
-import type { Session, Block, StatusRecord } from '../shared/terminal.ts';
+import type { Session, Block, StatusRecord, TerminalDetails } from '../shared/terminal.ts';
 // JSON CLI output is decoded at the adapter boundary.
 export type Cli = (args: string[], json?: boolean) => Promise<any>;
 export interface Launch {
@@ -12,6 +12,7 @@ export interface Launch {
   cwd: string;
   command: string[];
   session?: string;
+  provider?: 'rex' | 'cmux';
 }
 export interface Created {
   session_id: string;
@@ -20,11 +21,17 @@ export interface Created {
   cwd?: string;
 }
 export interface TerminalBackend {
-  status(): Promise<{ version?: string }>;
+  status(): Promise<{
+    version?: string;
+    connected?: boolean;
+    connections?: Record<string, boolean>;
+  }>;
   sessions(): Promise<Session[]>;
   blocks(session: string): Promise<Block[]>;
   capture(session: string, block: string): Promise<string>;
   activity(session: string, block: string): Promise<StatusRecord[]>;
+  describe(session: string, block: string): Promise<TerminalDetails>;
+  scrollback(session: string, block: string): Promise<string>;
   launch(options: Launch): Promise<Created>;
   send(session: string, block: string, message: string): Promise<void>;
   key(
@@ -97,6 +104,41 @@ export function rexBackend(run: Cli): TerminalBackend {
     activity: async (session, block) =>
       (await run(['block', 'call', '-s', session, '-b', block, 'program_status'], true)).records ||
       [],
+    describe: async (session, block) => {
+      const [status, process] = await Promise.allSettled([
+        run(['block', 'call', '-s', session, '-b', block, 'program_status'], true),
+        run(['block', 'call', '-s', session, '-b', block, 'process'], true),
+      ]);
+      const records: StatusRecord[] =
+        status.status === 'fulfilled' ? status.value.records || [] : [];
+      const agentRecord = records.find((record) => agentName(record.effective_app || record.app));
+      const foreground = process.status === 'fulfilled' ? process.value.foreground : undefined;
+      const app =
+        agentName(agentRecord?.effective_app || agentRecord?.app) ||
+        agentName(foreground?.script) ||
+        agentName(foreground?.name);
+      return {
+        agent: app ? true : foreground ? false : null,
+        app,
+        state: agentRecord?.state,
+      };
+    },
+    scrollback: async (session, block) =>
+      (
+        await run(
+          [
+            'block',
+            'call',
+            '-s',
+            session,
+            '-b',
+            block,
+            'format',
+            JSON.stringify({ format: 'text', trim: true, unwrap: true }),
+          ],
+          true,
+        )
+      ).content,
     launch: async ({ label, cwd, command, session }) => {
       const created = await run(
         session
@@ -131,6 +173,12 @@ export function rexBackend(run: Cli): TerminalBackend {
     },
   };
 }
+function agentName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return;
+  return /(?:^|[/\s._-])(codex|claude|pi|opencode|gemini|aider|goose)(?:$|[\s._-])/i
+    .exec(value)?.[1]
+    ?.toLowerCase();
+}
 export function shellQuote(value: string): string {
   return "'" + value.replaceAll("'", "'\"'\"'") + "'";
 }
@@ -151,6 +199,41 @@ export function cmuxBackend(
     '--surface',
     uuid(block, 'block'),
   ];
+  // Share one process snapshot across simultaneous inventory/history requests.
+  let processSnapshot: Promise<Map<string, { agent: boolean; app?: string }>> | undefined;
+  let processSnapshotAt = 0;
+  const liveProcesses = () => {
+    if (!processSnapshot || Date.now() - processSnapshotAt > 3000) {
+      processSnapshotAt = Date.now();
+      processSnapshot = json(['top', '--all', '--processes'])
+        .then((tree) => {
+          const surfaces = new Map<string, { agent: boolean; app?: string }>();
+          const visit = (node: any) => {
+            if (node.kind === 'surface' && Array.isArray(node.processes)) {
+              const names: string[] = [];
+              const collect = (process: any) => {
+                names.push(process.name || basename(process.path || ''));
+                for (const child of process.children || []) collect(child);
+              };
+              for (const process of node.processes) collect(process);
+              const app = names.map(agentName).find(Boolean);
+              const onlyShells =
+                names.length > 0 &&
+                names.every((name) => /^(?:login|zsh|bash|sh|fish|dash|ksh|tcsh|csh)$/.test(name));
+              if (app || onlyShells) surfaces.set(node.id.toLowerCase(), { agent: !!app, app });
+            }
+            for (const key of ['windows', 'workspaces', 'panes', 'surfaces']) {
+              for (const child of node[key] || []) visit(child);
+            }
+          };
+          visit(tree);
+          return surfaces;
+        })
+        // Older cmux builds and unknown/remote process trees retain native metadata.
+        .catch(() => new Map());
+    }
+    return processSnapshot;
+  };
   return {
     status: async () => {
       await json(['tree', '--all']);
@@ -176,11 +259,10 @@ export function cmuxBackend(
         }));
     },
     capture: (session, block) => run(['read-screen', ...target(session, block)]),
-    activity: async (session, block) => {
-      const records = await readStatus?.(uuid(session, 'session'), uuid(block, 'block'));
-      if (records !== undefined) return records;
-      // Native hooks remain a fallback when no OSC snapshot was retained.
-      const data = await json([
+    scrollback: (session, block) =>
+      run(['read-screen', ...target(session, block), '--lines', '2000']),
+    describe: async (session, block) => {
+      const state = await json([
         'rpc',
         'surface.input_state',
         JSON.stringify({
@@ -188,6 +270,46 @@ export function cmuxBackend(
           surface_id: uuid(block, 'block'),
         }),
       ]);
+      const live = (await liveProcesses()).get(uuid(block, 'block').toLowerCase());
+      const agent = live?.agent ?? (typeof state.agent === 'boolean' ? state.agent : null);
+      if (agent === false) return { agent };
+      const metadata = await json(['surface', 'resume', 'show', ...target(session, block)]).catch(
+        () => ({}),
+      );
+      const binding = metadata.resume_binding || metadata.restore_record;
+      const conversation =
+        binding?.checkpoint_id &&
+        (!live?.app || live.app === binding.kind) &&
+        binding.execution_location !== 'remote' &&
+        !binding.remote_surface_id &&
+        !binding.remote_pty_session_id
+          ? {
+              kind: binding.kind,
+              id: binding.checkpoint_id,
+              cwd: binding.cwd || binding.working_directory,
+            }
+          : undefined;
+      return {
+        agent,
+        app: live?.app || binding?.kind,
+        state: state.waiting_on_human ? 'blocked' : state.lifecycle,
+        conversation,
+      };
+    },
+    activity: async (session, block) => {
+      const records = await readStatus?.(uuid(session, 'session'), uuid(block, 'block'));
+      // Check native approval waits even when an older OSC snapshot was retained.
+      const data = await json([
+        'rpc',
+        'surface.input_state',
+        JSON.stringify({
+          workspace_id: uuid(session, 'session'),
+          surface_id: uuid(block, 'block'),
+        }),
+      ]).catch((error) => {
+        if (records !== undefined) return {};
+        throw error;
+      });
       const states: Record<string, string> = {
         running: 'working',
         idle: 'idle',
@@ -197,7 +319,15 @@ export function cmuxBackend(
         failed: 'error',
       };
       const state = data.waiting_on_human ? 'blocked' : states[data.lifecycle];
-      return state ? [{ state }] : [];
+      if (state === 'blocked') return [{ state }];
+      if (
+        state &&
+        data.waiting_on_human === false &&
+        records?.some((record) => record.state === 'blocked')
+      ) {
+        return [{ state }];
+      }
+      return records ?? (state ? [{ state }] : []);
     },
     launch: async ({ label, cwd, command, session }) => {
       const commandText = command.map(shellQuote).join(' ');

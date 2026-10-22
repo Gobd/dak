@@ -114,6 +114,155 @@ test('both adapters supply the same native status records', async () => {
   assert.deepEqual(await cmux.activity(session, block), records);
 });
 
+test('cmux native approval waits override an earlier working OSC snapshot', async () => {
+  const backend = cmuxBackend(
+    async () => ({ waiting_on_human: true, lifecycle: 'running' }),
+    async () => [{ state: 'working' }],
+  );
+  assert.deepEqual(await backend.activity(session, block), [{ state: 'blocked' }]);
+  const resumed = cmuxBackend(
+    async () => ({ waiting_on_human: false, lifecycle: 'running' }),
+    async () => [{ state: 'blocked' }],
+  );
+  assert.deepEqual(await resumed.activity(session, block), [{ state: 'working' }]);
+});
+
+test('Rex distinguishes agent processes from shells and reads scrollback with the documented formatter', async () => {
+  const calls: string[][] = [];
+  const backend = rexBackend(async (args) => {
+    calls.push(args);
+    if (args.includes('program_status')) return { records: [] };
+    if (args.includes('process')) return { foreground: { name: 'codex', pid: 42 } };
+    if (args.includes('format')) return { content: 'Earlier terminal output\nLatest output' };
+    return {};
+  });
+  assert.deepEqual(await backend.describe('session:one', 'block:one'), {
+    agent: true,
+    app: 'codex',
+    state: undefined,
+  });
+  assert.equal(
+    await backend.scrollback('session:one', 'block:one'),
+    'Earlier terminal output\nLatest output',
+  );
+  assert.deepEqual(JSON.parse(calls.at(-1)!.at(-1)!), { format: 'text', trim: true, unwrap: true });
+  const shell = rexBackend(async (args) =>
+    args.includes('process') ? { foreground: { name: 'zsh' } } : { records: [] },
+  );
+  assert.equal((await shell.describe('session:one', 'block:one')).agent, false);
+});
+
+test('cmux links local agent checkpoints, ignores stale shell bindings and avoids local lookup for remote agents', async () => {
+  let agent = true;
+  let remote = false;
+  const backend = cmuxBackend(async (args) =>
+    args.includes('surface.input_state')
+      ? { agent, lifecycle: 'idle' }
+      : {
+          resume_binding: {
+            kind: 'codex',
+            checkpoint_id: workspace,
+            cwd: '/project',
+            execution_location: remote ? 'remote' : 'local',
+          },
+        },
+  );
+  assert.deepEqual((await backend.describe(session, block)).conversation, {
+    kind: 'codex',
+    id: workspace,
+    cwd: '/project',
+  });
+  remote = true;
+  assert.equal((await backend.describe(session, block)).conversation, undefined);
+  agent = false;
+  assert.deepEqual(await backend.describe(session, block), { agent: false });
+});
+
+test('cmux rejects stale agent metadata on live shells and shares its process snapshot', async () => {
+  const other = '33333333-3333-4333-8333-333333333333';
+  let topCalls = 0;
+  const backend = cmuxBackend(async (args) => {
+    if (args.includes('top')) {
+      topCalls++;
+      return {
+        windows: [
+          {
+            workspaces: [
+              {
+                panes: [
+                  {
+                    surfaces: [
+                      {
+                        kind: 'surface',
+                        id: surface,
+                        processes: [{ name: 'login', children: [{ name: 'zsh', children: [] }] }],
+                      },
+                      {
+                        kind: 'surface',
+                        id: other,
+                        processes: [{ name: 'zsh', children: [{ name: 'codex', children: [] }] }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+    }
+    if (args.includes('surface.input_state')) return { agent: true, lifecycle: 'idle' };
+    return { resume_binding: { kind: 'codex', checkpoint_id: workspace } };
+  });
+  const [shell, agent] = await Promise.all([
+    backend.describe(session, block),
+    backend.describe(session, 'block:' + other),
+  ]);
+  assert.deepEqual(shell, { agent: false });
+  assert.equal(agent.agent, true);
+  assert.equal(agent.app, 'codex');
+  assert.equal(agent.conversation?.id, workspace);
+  assert.equal(topCalls, 1);
+});
+
+test('cmux preserves native agent metadata when process inspection is unavailable or remote', async () => {
+  for (const available of [false, true]) {
+    const backend = cmuxBackend(async (args) => {
+      if (args.includes('top')) {
+        if (!available) throw new Error('Older cmux');
+        return {
+          windows: [
+            {
+              workspaces: [
+                {
+                  panes: [
+                    {
+                      surfaces: [
+                        {
+                          kind: 'surface',
+                          id: surface,
+                          processes: [{ name: 'ssh', children: [] }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+      }
+      if (args.includes('surface.input_state')) return { agent: true };
+      return {
+        resume_binding: { kind: 'codex', checkpoint_id: workspace, execution_location: 'remote' },
+      };
+    });
+    const details = await backend.describe(session, block);
+    assert.equal(details.agent, true);
+    assert.equal(details.conversation, undefined);
+  }
+});
+
 function frame(records: { state: string }[], extra = {}) {
   return {
     type: 'event',

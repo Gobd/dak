@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createServer as createHttpsServer, type ServerOptions } from 'node:https';
@@ -18,14 +19,10 @@ import type { TaskInput, TaskHarness } from '../shared/tasks.ts';
 import { createVoiceGate } from './voice.ts';
 import { cmuxProgramStatus } from './program-status.ts';
 import { TerminalInputError } from './terminals.ts';
-import {
-  cli,
-  rexBackend,
-  cmuxBackend,
-  launchCommand,
-  type Cli,
-  type Provider,
-} from './terminals.ts';
+import { streamHistory, terminalHistory } from './history.ts';
+import { combinedBackend } from './combined.ts';
+import type { ProviderScope } from '../shared/terminal.ts';
+import { cli, rexBackend, cmuxBackend, launchCommand, type Cli } from './terminals.ts';
 
 interface Preset {
   id: string;
@@ -172,12 +169,13 @@ export function createManager(options: ManagerOptions) {
   validatePresets(presets);
   validatePresets(taskHarnesses);
   const cmuxStatus = injectedCmux ? undefined : cmuxProgramStatus(cmuxBin);
-  const backends = {
+  const singleBackends = {
     rex: rexBackend(injectedRex || cli(rexBin, ['--autostart=false'])),
     cmux: cmuxBackend(injectedCmux || cli(cmuxBin), cmuxStatus?.read),
   };
+  const backends = { ...singleBackends, all: combinedBackend(singleBackends) };
   const zoxide = injectedZoxide || cli(zoxideBin);
-  const providerContext = new AsyncLocalStorage<Provider>();
+  const providerContext = new AsyncLocalStorage<ProviderScope>();
   const provider = () => providerContext.getStore() || 'rex';
   const backend = () => backends[provider()];
   const runAgent: Agent =
@@ -485,7 +483,13 @@ export function createManager(options: ManagerOptions) {
         const label = text(action.label || preset.id, 'session label', 64);
         if (!/^[a-zA-Z0-9][a-zA-Z0-9 _-]*$/.test(label))
           throw new HttpError(400, 'Use letters, numbers, spaces or hyphens for the session name.');
-        const created = await backend().launch({ label, cwd, command, session });
+        const created = await backend().launch({
+          label,
+          cwd,
+          command,
+          session,
+          provider: action.provider,
+        });
         return { ...created, label, cwd };
       } finally {
         launching = false;
@@ -537,6 +541,7 @@ export function createManager(options: ManagerOptions) {
   const conversations = {
     rex: createConversationManager(operations),
     cmux: createConversationManager(operations),
+    all: createConversationManager(operations),
   };
 
   async function api(request: IncomingMessage, response: ServerResponse, route: string) {
@@ -561,7 +566,8 @@ export function createManager(options: ManagerOptions) {
     if (request.method === 'GET' && route === 'status') {
       const status = await backend().status();
       return reply(response, 200, {
-        connected: true,
+        connected: status.connected ?? true,
+        connections: status.connections,
         version: status.version,
         provider: provider(),
         projectsRoot: await realpath(projectRoot),
@@ -577,6 +583,33 @@ export function createManager(options: ManagerOptions) {
     }
     if (request.method === 'GET' && route === 'sessions') {
       return reply(response, 200, { sessions: await backend().sessions() });
+    }
+    if (request.method === 'GET' && route === 'terminals') {
+      const sessions = await backend().sessions();
+      return reply(response, 200, {
+        sessions: await Promise.all(
+          sessions.map(async (session) => ({
+            ...session,
+            terminals: await Promise.all(
+              (await getBlocks(session.session_id))
+                .filter((block) => block.creator_name === 'com.superlogical.terminal')
+                .map(async (block) => ({
+                  ...block,
+                  ...(await backend()
+                    .describe(session.session_id, block.block_id)
+                    .catch(() => ({ agent: null }))),
+                })),
+            ),
+          })),
+        ),
+      });
+    }
+    if (request.method === 'GET' && (route === 'history' || route === 'history/events')) {
+      const session = identifier(url.searchParams.get('session'), 'session');
+      const block = identifier(url.searchParams.get('block'), 'block');
+      await checkTerminal(session, block);
+      if (route === 'history/events') return streamHistory(response, backend(), session, block);
+      return reply(response, 200, await terminalHistory(backend(), session, block));
     }
     if (request.method === 'GET' && route === 'presets') return reply(response, 200, { presets });
     if (request.method === 'GET' && route === 'directories')
@@ -604,7 +637,24 @@ export function createManager(options: ManagerOptions) {
               (!selectedBlock || item.block_id === selectedBlock),
           )
           .slice(0, 8)) {
-          const records = await backend().activity(session.session_id, block.block_id);
+          const details = await backend()
+            .describe(session.session_id, block.block_id)
+            .catch(() => undefined);
+          let records =
+            details?.agent === false
+              ? []
+              : await backend().activity(session.session_id, block.block_id);
+          if (records.some((record) => record.state === 'blocked')) {
+            const screen = await backend()
+              .capture(session.session_id, block.block_id)
+              .catch(() => undefined);
+            if (screen) {
+              const promptId = createHash('sha256').update(screen.slice(-6000)).digest('hex');
+              records = records.map((record) =>
+                record.state === 'blocked' ? { ...record, id: promptId } : record,
+              );
+            }
+          }
           terminals.push({
             session: session.session_id,
             block: block.block_id,
@@ -722,6 +772,11 @@ export function createManager(options: ManagerOptions) {
         const sessions = await backend().sessions();
         const snapshot: Context['snapshot'] = [];
         const chosen = input.session ? identifier(input.session, 'session') : null;
+        const chosenBlock = input.block ? identifier(input.block, 'block') : null;
+        if (input.terminalOnly === true) {
+          if (!chosen || !chosenBlock) throw new HttpError(400, 'Choose a terminal to answer.');
+          await checkTerminal(chosen, chosenBlock);
+        }
         if (chosen && !sessions.some((session) => session.session_id === chosen))
           throw new HttpError(404, 'The selected session is no longer available.');
         for (const session of chosen
@@ -730,7 +785,11 @@ export function createManager(options: ManagerOptions) {
           const blocks = await getBlocks(session.session_id);
           const terminals: Context['snapshot'][number]['terminals'] = [];
           for (const block of blocks
-            .filter((item) => item.creator_name === 'com.superlogical.terminal')
+            .filter(
+              (item) =>
+                item.creator_name === 'com.superlogical.terminal' &&
+                (input.terminalOnly !== true || item.block_id === chosenBlock),
+            )
             .slice(0, 3)) {
             try {
               const screen = await backend().capture(session.session_id, block.block_id);
@@ -759,6 +818,7 @@ export function createManager(options: ManagerOptions) {
           {
             provider: provider(),
             observation: input.observation === true,
+            terminalOnly: input.terminalOnly === true,
             message,
             history: input.history,
             conversation: input.conversation,
@@ -771,7 +831,7 @@ export function createManager(options: ManagerOptions) {
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             projectsRoot: projectRoot,
             session: chosen,
-            block: input.block ? identifier(input.block, 'block') : null,
+            block: chosenBlock,
           },
           controller.signal,
         );
@@ -823,7 +883,7 @@ export function createManager(options: ManagerOptions) {
       const path = decodeURIComponent(url.pathname);
       if (path.startsWith(apiRoot)) {
         const selected = url.searchParams.get('provider') || 'rex';
-        if (selected !== 'rex' && selected !== 'cmux')
+        if (selected !== 'rex' && selected !== 'cmux' && selected !== 'all')
           throw new HttpError(400, 'Choose Rex or cmux.');
         await providerContext.run(selected, () =>
           api(request, response, path.slice(apiRoot.length)),

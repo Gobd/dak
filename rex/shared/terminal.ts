@@ -3,14 +3,44 @@ export const providers = {
   cmux: { label: 'cmux', sessionLabel: 'Workspace' },
 } as const;
 export type Provider = keyof typeof providers;
+export type ProviderScope = Provider | 'all';
 export interface Session {
   session_id: string;
   label: string;
+  provider?: Provider;
 }
 export interface Block {
   block_id: string;
   label: string;
   creator_name: string;
+}
+export interface ConversationLink {
+  kind: string;
+  id: string;
+  cwd?: string;
+}
+export interface TerminalDetails {
+  agent: boolean | null;
+  app?: string;
+  state?: string;
+  conversation?: ConversationLink;
+}
+export interface AgentTerminal extends Block, TerminalDetails {}
+export interface TerminalSession extends Session {
+  terminals: AgentTerminal[];
+}
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  phase?: string;
+}
+export interface TerminalHistory {
+  source: 'conversation' | 'scrollback';
+  messages: ChatMessage[];
+  output?: string;
+  app?: string;
+  conversationId?: string;
+  truncated?: boolean;
 }
 export interface StatusRecord {
   id?: string;
@@ -18,6 +48,8 @@ export interface StatusRecord {
   kind?: string;
   msg?: string;
   updated_at?: string;
+  app?: string;
+  effective_app?: string;
 }
 export interface ActivityTerminal {
   session: string;
