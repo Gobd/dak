@@ -82,6 +82,42 @@ test('private API works without a token; hosted PWA preflight allows only config
   );
 });
 
+test('Node gates voice transcripts before manager calls, and closing a voice call leaves typed chat available', async (t) => {
+  let agentCalls = 0;
+  const { post, get, calls } = await fixture(t, {
+    agent: async () => {
+      agentCalls++;
+      return 'Ready.';
+    },
+  });
+  const call = 'voice-test';
+  const transcript = async (value) =>
+    (await post('voice/transcript', { call, transcript: value })).json();
+  assert.equal((await transcript('Talking to somebody else')).active, false);
+  assert.equal(agentCalls, 0);
+  assert.equal(calls.length, 0);
+  assert.equal((await transcript('Hey Rex, check the tests')).message, 'check the tests');
+  assert.equal((await (await get('voice/state?call=other-call')).json()).active, false);
+  assert.equal(
+    (await post('chat', { voiceCall: call, message: 'check the tests', history: [] })).status,
+    200,
+  );
+  assert.equal(agentCalls, 1);
+  assert.equal((await transcript('Thanks Rex')).active, false);
+  assert.equal(
+    (await post('chat', { voiceCall: call, message: 'ambient speech', history: [] })).status,
+    409,
+  );
+  assert.equal(agentCalls, 1);
+  assert.equal((await post('chat', { message: 'typed request', history: [] })).status, 200);
+  assert.equal(agentCalls, 2);
+  assert.equal(
+    (await post('voice/transcript', { call: '../bad', transcript: 'Hey Rex' })).status,
+    400,
+  );
+  assert.equal((await post('voice/playback', { call, speaking: 'yes' })).status, 400);
+});
+
 test('launch preserves wrapper flags before the harness and harness flags after it', async (t) => {
   const { post, calls } = await fixture(t);
   assert.equal((await post('launch', { preset: 'pi', label: 'voice-test' })).status, 200);

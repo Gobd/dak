@@ -34,6 +34,7 @@ const key = process.env.REX_TLS_KEY;
 if (!!cert !== !!key) throw new Error('Set both REX_TLS_CERT and REX_TLS_KEY.');
 const tls = cert ? { cert: await readFile(cert), key: await readFile(key!) } : undefined;
 const server = createManager({
+  voiceIdleSeconds: Number(process.env.REX_VOICE_IDLE_SECONDS || 10),
   presets,
   rexBin: process.env.REX_BIN || (existsSync(bundledRex) ? bundledRex : 'rex'),
   cmuxBin: process.env.CMUX_BIN || 'cmux',

@@ -15,6 +15,7 @@ import {
 import { validateTopic, type TaskNotifier } from './ntfy.ts';
 import { createTaskScheduler, executeTask, TaskError } from './tasks.ts';
 import type { TaskInput, TaskHarness } from '../shared/tasks.ts';
+import { createVoiceGate } from './voice.ts';
 import { cmuxProgramStatus } from './program-status.ts';
 import { TerminalInputError } from './terminals.ts';
 import {
@@ -33,6 +34,7 @@ interface Preset {
   command: string[];
 }
 interface ManagerOptions {
+  voiceIdleSeconds?: number;
   presets?: Preset[];
   rexBin?: string;
   cmuxBin?: string;
@@ -140,6 +142,12 @@ function reply(response: ServerResponse, status: number, value: unknown) {
 }
 
 export function createManager(options: ManagerOptions) {
+  const voiceGate = createVoiceGate(options.voiceIdleSeconds);
+  function voiceCall(value: unknown) {
+    const id = text(value, 'voice call', 64);
+    if (!/^[a-zA-Z0-9-]+$/.test(id)) throw new HttpError(400, 'Invalid voice call.');
+    return provider() + ':' + id;
+  }
   const {
     presets = [],
     rexBin = 'rex',
@@ -548,6 +556,8 @@ export function createManager(options: ManagerOptions) {
       return response.end();
     }
     const url = new URL(request.url!, 'http://localhost');
+    if (request.method === 'GET' && route === 'voice/state')
+      return reply(response, 200, voiceGate.state(voiceCall(url.searchParams.get('call'))));
     if (request.method === 'GET' && route === 'status') {
       const status = await backend().status();
       return reply(response, 200, {
@@ -616,6 +626,17 @@ export function createManager(options: ManagerOptions) {
     const input = await body(request);
     if (!input || typeof input !== 'object' || Array.isArray(input))
       throw new HttpError(400, 'Expected an object.');
+    if (route === 'voice/transcript')
+      return reply(
+        response,
+        200,
+        voiceGate.consume(voiceCall(input.call), text(input.transcript, 'transcript')),
+      );
+    if (route === 'voice/end') return reply(response, 200, voiceGate.end(voiceCall(input.call)));
+    if (route === 'voice/playback') {
+      if (typeof input.speaking !== 'boolean') throw new HttpError(400, 'Invalid playback state.');
+      return reply(response, 200, voiceGate.playback(voiceCall(input.call), input.speaking));
+    }
     if (route === 'tasks/save')
       return reply(response, 200, await tasks().upsert(input.task, input.id));
     if (route === 'tasks/change') {
@@ -687,6 +708,10 @@ export function createManager(options: ManagerOptions) {
         throw new HttpError(400, 'Invalid conversation history.');
       }
       if (chatting) throw new HttpError(409, 'The manager is answering another request.');
+      const releaseVoice =
+        input.voiceCall === undefined ? undefined : voiceGate.hold(voiceCall(input.voiceCall));
+      if (input.voiceCall !== undefined && !releaseVoice)
+        throw new HttpError(409, 'Say Hey Rex to start a conversation.');
       chatting = true;
       const controller = new AbortController();
       const onClose = () => {
@@ -752,6 +777,7 @@ export function createManager(options: ManagerOptions) {
         );
         return reply(response, 200, result);
       } finally {
+        releaseVoice?.();
         response.off('close', onClose);
         chatting = false;
       }

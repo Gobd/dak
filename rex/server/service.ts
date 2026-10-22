@@ -16,6 +16,34 @@ const logsDir = resolve(homedir(), 'Library/Logs/DAK/Agent Voice');
 const stdoutPath = resolve(logsDir, 'manager.log');
 const stderrPath = resolve(logsDir, 'errors.log');
 
+export function serviceConfigPaths(directory: string, env: NodeJS.ProcessEnv = process.env) {
+  return {
+    Env: resolve(directory, '.env.local'),
+    Launchers: resolve(directory, env.REX_PRESETS_FILE || 'launchers.local.json'),
+    'Task harnesses': resolve(
+      directory,
+      env.REX_TASK_HARNESSES_FILE || 'task-harnesses.local.json',
+    ),
+    'Scheduled tasks': resolve(directory, env.REX_TASKS_FILE || 'scheduled-tasks.local.json'),
+  };
+}
+
+function showConfig() {
+  console.log(`Config directory: ${root}`);
+  for (const [name, path] of Object.entries(serviceConfigPaths(root))) {
+    console.log(`${name}: ${path}${existsSync(path) ? '' : ' (missing)'}`);
+  }
+}
+
+async function openFiles(files: string[]) {
+  try {
+    await execute('code', files);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    await execute('/usr/bin/open', ['-t', ...files]);
+  }
+}
+
 function xml(value: string) {
   return value
     .replaceAll('&', '&amp;')
@@ -100,6 +128,8 @@ export async function manageService(command: string, args: string[] = []) {
       console.log(
         `Installed: ${existsSync(plistPath) ? 'yes' : 'no'}\nLoaded: ${info ? 'yes' : 'no'}\nPlist: ${plistPath}\nLogs: ${logsDir}`,
       );
+      showConfig();
+      console.log('Open configuration: pnpm --filter rex service config --open');
       if (info)
         console.log(
           info
@@ -121,6 +151,21 @@ export async function manageService(command: string, args: string[] = []) {
       } catch {
         console.log('Manager health: unreachable at ' + url);
       }
+    },
+    config: async () => {
+      showConfig();
+      if (args.includes('--open')) {
+        const paths = serviceConfigPaths(root);
+        const files = [paths.Env, paths.Launchers, paths['Task harnesses']].filter(existsSync);
+        if (!files.length)
+          throw new Error(
+            'No configuration files yet. Copy .env.example and launchers.example.json to the local paths shown above.',
+          );
+        await openFiles(files);
+      }
+      console.log(
+        'Apply env, launcher, or task harness changes: pnpm --filter rex service restart',
+      );
     },
     uninstall: async () => {
       if (await loaded()) await execute('/bin/launchctl', ['bootout', target]);
@@ -153,12 +198,7 @@ export async function manageService(command: string, args: string[] = []) {
         throw new Error('No logs yet. Install or start the service first.');
       const files = [stdoutPath, stderrPath].filter(existsSync);
       if (args.includes('--open')) {
-        try {
-          await execute('code', files);
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-          await execute('/usr/bin/open', ['-t', ...files]);
-        }
+        await openFiles(files);
       } else if (args.includes('--follow')) {
         await new Promise<void>((done, reject) => {
           const child = spawn('/usr/bin/tail', ['-n', '100', '-F', ...files], { stdio: 'inherit' });
@@ -176,7 +216,7 @@ export async function manageService(command: string, args: string[] = []) {
   const action = commands[command];
   if (!action) {
     console.log(
-      'Usage: pnpm --filter rex service <install|status|start|stop|restart|uninstall|update|logs>\nLogs: add --follow or --open.',
+      'Usage: pnpm --filter rex service <install|status|config|start|stop|restart|uninstall|update|logs>\nConfig: add --open to edit existing env, launcher, and task harness files.\nLogs: add --follow or --open.',
     );
     if (command && command !== 'help') throw new Error('Unknown service command: ' + command);
     return;

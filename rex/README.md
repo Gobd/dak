@@ -204,6 +204,8 @@ Keep that terminal open; Ctrl+C stops it. During development, `pnpm --filter rex
 ```sh
 pnpm --filter rex service install
 pnpm --filter rex service status
+pnpm --filter rex service config
+pnpm --filter rex service config --open
 pnpm --filter rex service logs
 pnpm --filter rex service logs --follow
 pnpm --filter rex service logs --open
@@ -215,7 +217,7 @@ pnpm --filter rex service uninstall
 
 This installs a per-user LaunchAgent at `~/Library/LaunchAgents/dev.dak.agent-voice.plist`. It starts at login and restarts after a crash, while the Mac is awake. It uses this checkout’s absolute path, the installed Node executable and PATH, and `rex/.env.local`. Secrets are not copied into the plist. Keep the checkout where it is or reinstall after moving it. Rex/cmux must still be open.
 
-`status` shows installation, launchctl state/PID, and API health. To check cmux health, use `VOICE_PROVIDER=cmux pnpm --filter rex service status`. Logs live in `~/Library/Logs/DAK/Agent Voice/`; `logs --open` opens them in VS Code when `code` is installed, otherwise the default text editor. `stop` unloads until the next login; `uninstall` removes the LaunchAgent and keeps your configuration and logs.
+`status` shows installation, launchctl state/PID, API health, and absolute configuration paths. `config` lists the checkout's `.env.local`, launcher presets, task harnesses, and scheduled task store, marking missing files and respecting `REX_PRESETS_FILE`, `REX_TASK_HARNESSES_FILE`, and `REX_TASKS_FILE` overrides. `config --open` opens existing env, launcher, and task harness files in VS Code when `code` is installed, otherwise the default text editor. Restart the service after editing these files. To check cmux health, use `VOICE_PROVIDER=cmux pnpm --filter rex service status`. Logs live in `~/Library/Logs/DAK/Agent Voice/`; `logs --open` uses the same editor behavior. `stop` unloads until the next login; `uninstall` removes the LaunchAgent and keeps your configuration and logs.
 
 A LaunchAgent runs outside a cmux terminal. If cmux’s socket mode permits only descendant processes, background access will be denied. Configure a socket access mode that permits the manager in cmux Settings; password mode with `CMUX_SOCKET_PASSWORD` in `.env.local` is supported. The CLI does not change cmux settings for you.
 
@@ -230,9 +232,13 @@ pnpm --filter rex service update
 
 ## Voice calls and native status
 
-Select **Manager**, use automatic send, and tap **Start voice call**. It listens between replies, pauses the microphone during voice playback, and reads manager replies aloud. End the call to stop hands-free listening. Keyboard corrections and manual microphone turns remain available; review mode is intended for manual turns.
+Select **Manager**, use automatic send, and tap **Start voice call** in Chrome on your Mac or Android phone. Say **“Hey Rex”** to open a conversation, or **“Hey Rex, what is Claude doing?”** to include the first request. Follow-up utterances go to the manager until you say **“Thanks Rex”** (or “Thank you Rex”) or the idle timeout expires. The default is **10 seconds**; set `REX_VOICE_IDLE_SECONDS` in `.env.local` and restart the service to change it. Time spent waiting for a manager reply or playing it aloud does not consume the idle window.
 
-While a voice call is active, the app checks native status every five seconds across up to twelve sessions/workspaces and eight terminals per session. Enable **Announce agent status while the app is open** for announcements outside a call. Blocked, done, error, and transitions from working to idle trigger concise manager announcements. It pauses further announcements while you answer numbered choices, so a second notification cannot replace the question you are answering. Repeated states and progress updates do not keep speaking.
+Chrome keeps listening and transcribing while the call is running. Final transcripts go to the Mac's Node backend, which checks the phrases and conversation state before allowing a manager request. Ambient transcripts are discarded without calling the manager or adding to conversation history. The browser restarts recognition if Chrome ends it. Closing the conversation gate keeps the microphone listening for the next “Hey Rex”; **End voice call** stops listening. Speech recognized during reply playback is discarded to prevent Rex from answering its own voice, so wait until playback finishes before speaking. Chrome speech recognition may use Google's servers; this is not fully local transcription. Keep the page open and visible, allow microphone access, and use HTTPS with LAN/VPN access to the Mac manager. Phone behavior still needs verification on your device.
+
+Keyboard corrections and manual microphone turns remain available without a wake phrase; review mode is intended for manual turns. Voice state is separate for each call and terminal provider and returns to idle when the backend restarts.
+
+While a voice conversation is active after “Hey Rex”, the app checks native status every five seconds across up to twelve sessions/workspaces and eight terminals per session. Enable **Announce agent status while the app is open** for announcements outside a call. Blocked, done, error, and transitions from working to idle trigger concise manager announcements. It pauses further announcements while you answer numbered choices, so a second notification cannot replace the question you are answering. Repeated states and progress updates do not keep speaking.
 
 Both adapters return the same normalized records. Rex reads `program_status` (OSC 7501) directly. cmux subscribes to `program_status.changed`, replays retained events, reassembles chunked snapshots, and clears stale data on restart or replay gaps. cmux intentionally omits free-form messages from those events; the manager reads the screen to explain the question. Its native agent lifecycle is a fallback when no OSC snapshot is retained. Unknown status remains unknown. No screen-inactivity heuristic declares an agent done.
 

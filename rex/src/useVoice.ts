@@ -31,6 +31,7 @@ export function useVoice(
   callbackRef.current = onTranscript;
   const recognitionRef = useRef<Recognition | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const playbackRef = useRef(false);
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [interim, setInterim] = useState('');
@@ -64,13 +65,14 @@ export function useVoice(
   const stopSpeaking = useCallback(() => {
     if (synthesisSupported) window.speechSynthesis.cancel();
     utteranceRef.current = null;
+    playbackRef.current = false;
     setSpeaking(false);
   }, [synthesisSupported]);
 
   const speak = useCallback(
     (text: string) => {
       if (!synthesisSupported) return;
-      pauseListening();
+      if (!handsFree) pauseListening();
       stopSpeaking();
       const utterance = new SpeechSynthesisUtterance(text);
       const selected = window.speechSynthesis
@@ -82,18 +84,25 @@ export function useVoice(
       } else {
         utterance.lang = navigator.language || 'en-US';
       }
-      utterance.onend = () => setSpeaking(false);
+      utterance.onend = () => {
+        if (utteranceRef.current !== utterance) return;
+        playbackRef.current = false;
+        setSpeaking(false);
+      };
       utterance.onerror = (event) => {
+        if (utteranceRef.current !== utterance) return;
+        playbackRef.current = false;
         setSpeaking(false);
         if (event.error !== 'canceled' && event.error !== 'interrupted') {
           setError('Voice playback was unavailable. Tap Read aloud to try again.');
         }
       };
       utteranceRef.current = utterance;
+      playbackRef.current = true;
       setSpeaking(true);
       window.speechSynthesis.speak(utterance);
     },
-    [synthesisSupported, stopSpeaking, voiceURI, pauseListening],
+    [synthesisSupported, stopSpeaking, voiceURI, pauseListening, handsFree],
   );
 
   const toggleListening = useCallback(() => {
@@ -109,18 +118,41 @@ export function useVoice(
       );
       return;
     }
-    stopSpeaking();
+    if (!handsFree) stopSpeaking();
     setError('');
     setInterim('');
     const recognition = new RecognitionClass();
     recognition.lang = navigator.language || 'en-US';
-    recognition.continuous = false;
+    recognition.continuous = handsFree;
     recognition.interimResults = true;
     let finalText = '';
     let failed = false;
+    let completed = 0;
+    let playbackOverlap = playbackRef.current;
     recognition.onresult = (event) => {
       if (recognitionRef.current !== recognition) return;
       const results = Array.from(event.results);
+      if (handsFree) {
+        playbackOverlap ||= playbackRef.current;
+        for (let index = completed; index < results.length; index++) {
+          if (!results[index].isFinal) break;
+          const transcript = results[index][0].transcript.trim();
+          completed = index + 1;
+          if (transcript && !playbackOverlap && !playbackRef.current)
+            callbackRef.current(transcript);
+          playbackOverlap = false;
+        }
+        setInterim(
+          playbackRef.current
+            ? ''
+            : results
+                .slice(completed)
+                .filter((result) => !result.isFinal)
+                .map((result) => result[0].transcript)
+                .join(' '),
+        );
+        return;
+      }
       finalText = results
         .filter((result) => result.isFinal)
         .map((result) => result[0].transcript)
@@ -151,7 +183,7 @@ export function useVoice(
       recognitionRef.current = null;
       setListening(false);
       setInterim('');
-      if (!failed && finalText.trim()) callbackRef.current(finalText.trim());
+      if (!handsFree && !failed && finalText.trim()) callbackRef.current(finalText.trim());
       else if (!failed && !handsFree)
         setError('No completed speech was recognized. Try speaking again, or type your message.');
     };
