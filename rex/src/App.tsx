@@ -17,6 +17,7 @@ import { useVoice } from './useVoice';
 import FolderPicker from './FolderPicker';
 import Tasks from './Tasks';
 import type { TaskRun } from '../shared/tasks';
+import type { VoiceDecision, VoiceState } from '../shared/voice';
 import {
   providers,
   activityEvent,
@@ -42,6 +43,18 @@ export default function App() {
   const provider = settings.provider || 'rex';
   const terminalApp = providers[provider];
   const [inCall, setInCall] = useState(false);
+  const inCallRef = useRef(inCall);
+  inCallRef.current = inCall;
+  const voiceCallId = useRef(crypto.randomUUID());
+  const [voiceGate, setVoiceGate] = useState<VoiceState>({
+    active: false,
+    expiresAt: null,
+    timeoutSeconds: 10,
+  });
+  const voiceQueue = useRef<string[]>([]);
+  const [queuedVoice, setQueuedVoice] = useState(0);
+  const transcriptChain = useRef(Promise.resolve());
+  const voiceRevision = useRef(0);
   const [awaitingChoice, setAwaitingChoice] = useState(false);
   const observed = useRef(new Map<string, ActivityEvent>());
   const monitorBusy = useRef(false);
@@ -215,7 +228,7 @@ export default function App() {
     }
   }, [latestReply, mode, connected, showSettings]);
 
-  async function sendMessage(message: string) {
+  async function sendMessage(message: string, voiceCall?: string) {
     if (!message.trim() || busyRef.current || !connected) return;
     busyRef.current = true;
     setBusy(true);
@@ -232,6 +245,7 @@ export default function App() {
           block?: string;
           choices?: unknown[];
         }>('chat', {
+          voiceCall,
           message: message.trim(),
           conversation: conversationId,
           block: blockId || undefined,
@@ -280,9 +294,39 @@ export default function App() {
     }
   }
 
+  function receiveVoiceTranscript(transcript: string) {
+    const call = voiceCallId.current;
+    transcriptChain.current = transcriptChain.current
+      .then(async () => {
+        if (!inCallRef.current || call !== voiceCallId.current) return;
+        voiceRevision.current++;
+        const decision = await request<VoiceDecision>('voice/transcript', { call, transcript });
+        if (!inCallRef.current || call !== voiceCallId.current) return;
+        setVoiceGate(decision);
+        if (!decision.active) {
+          voiceQueue.current = [];
+          setQueuedVoice(0);
+          setAwaitingChoice(false);
+          voice.stopSpeaking();
+        } else if (decision.message) {
+          voiceQueue.current.push(decision.message);
+          setQueuedVoice(voiceQueue.current.length);
+        }
+      })
+      .catch((cause) => {
+        if (!inCallRef.current || call !== voiceCallId.current) return;
+        setError(
+          cause instanceof Error ? cause.message : 'Could not check the voice conversation.',
+        );
+        setInCall(false);
+      });
+  }
+
   const voice = useVoice(
     (transcript) => {
-      if (settings.review) {
+      if (inCallRef.current) {
+        receiveVoiceTranscript(transcript);
+      } else if (settings.review) {
         setDraft(transcript);
         setShowKeyboard(true);
       } else void sendMessage(transcript);
@@ -292,7 +336,69 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!inCall || !readyForCall() || voice.listening || voice.speaking || document.hidden) return;
+    if (!inCall || !voiceGate.active || busy || !queuedVoice || voice.speaking) return;
+    const message = voiceQueue.current.shift();
+    setQueuedVoice(voiceQueue.current.length);
+    if (message) void sendMessage(message, voiceCallId.current);
+  }, [inCall, voiceGate.active, busy, queuedVoice, voice.speaking]);
+
+  useEffect(() => {
+    if (!inCall) return;
+    const call = voiceCallId.current;
+    let cancelled = false;
+    let polling = false;
+    const poll = async () => {
+      if (polling) return;
+      polling = true;
+      const revision = voiceRevision.current;
+      try {
+        const state = await request<VoiceState>(`voice/state?call=${call}`);
+        if (cancelled || revision !== voiceRevision.current) return;
+        setVoiceGate(state);
+        if (!state.active) {
+          voiceQueue.current = [];
+          setQueuedVoice(0);
+          setAwaitingChoice(false);
+        }
+      } catch (cause) {
+        if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : 'Voice connection lost.');
+          setInCall(false);
+        }
+      } finally {
+        polling = false;
+      }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      voiceQueue.current = [];
+      setQueuedVoice(0);
+      void request('voice/end', { call }).catch(() => {});
+    };
+  }, [inCall, request]);
+
+  useEffect(() => {
+    if (!inCall) return;
+    const call = voiceCallId.current;
+    const speaking = voice.speaking;
+    voiceRevision.current++;
+    transcriptChain.current = transcriptChain.current
+      .then(async () => {
+        if (!inCallRef.current || call !== voiceCallId.current) return;
+        const state = await request<VoiceState>('voice/playback', { call, speaking });
+        if (inCallRef.current && call === voiceCallId.current) setVoiceGate(state);
+      })
+      .catch((cause) => {
+        setError(cause instanceof Error ? cause.message : 'Could not update voice playback.');
+        setInCall(false);
+      });
+  }, [inCall, voice.speaking, request]);
+
+  useEffect(() => {
+    if (!inCall || !readyForCall() || voice.listening || document.hidden) return;
     const timer = window.setTimeout(() => voice.toggleListening(), 500);
     return () => window.clearTimeout(timer);
   }, [
@@ -307,14 +413,7 @@ export default function App() {
     voice.toggleListening,
   ]);
   function readyForCall() {
-    return (
-      connected &&
-      managerEnabled &&
-      !busy &&
-      !showSettings &&
-      mode === 'manager' &&
-      !settings.review
-    );
+    return connected && managerEnabled && !showSettings && mode === 'manager' && !settings.review;
   }
   useEffect(() => {
     const pauseCall = () => {
@@ -327,15 +426,15 @@ export default function App() {
     if (voice.error) setInCall(false);
   }, [voice.error]);
   useEffect(() => {
-    if (!inCall || busy || showSettings) voice.pauseListening();
-  }, [inCall, busy, showSettings, voice.pauseListening]);
+    if (!inCall || showSettings || mode !== 'manager') voice.pauseListening();
+  }, [inCall, showSettings, mode, voice.pauseListening]);
 
   async function monitorActivity() {
     if (
       !connected ||
       showSettings ||
       !managerEnabled ||
-      (!inCall && !settings.monitor) ||
+      (!(inCall && voiceGate.active) && !settings.monitor) ||
       busyRef.current ||
       monitorBusy.current ||
       voice.speaking ||
@@ -361,7 +460,7 @@ export default function App() {
         if (busyRef.current || voice.interim || document.hidden) break;
         busyRef.current = true;
         setBusy(true);
-        voice.pauseListening();
+        if (!inCall) voice.pauseListening();
         try {
           const response = await request<{ text: string; choices?: unknown[] }>('chat', {
             message: `${terminal.label} ${event!.message}. Announce this status. If blocked, read its current question and up to five choices.`,
@@ -420,7 +519,7 @@ export default function App() {
       (run.error || run.output).slice(-1200);
     setAnnouncedRuns((previous) => [...previous, run.id].slice(-2000));
     setHistory((previous) => [...previous, { role: 'assistant', text } as Message].slice(-30));
-    voice.pauseListening();
+    if (!inCall) voice.pauseListening();
     voice.speak(text);
   }
 
@@ -900,26 +999,39 @@ export default function App() {
       {connected && !showSettings && (
         <footer className="sticky bottom-0 mt-auto space-y-3 rounded-xl border border-border bg-surface-raised p-4">
           <p className="text-center text-sm text-text-secondary" role="status">
-            {busy
-              ? 'Working…'
-              : voice.listening
-                ? 'Listening… tap to finish'
-                : settings.review
-                  ? 'Speak, review, then send'
-                  : inCall
-                    ? 'Voice call active · waiting for you'
+            {inCall
+              ? voiceGate.active
+                ? busy
+                  ? 'Rex is working · conversation active'
+                  : 'Rex is ready · say “Thanks Rex” when finished'
+                : 'Listening for “Hey Rex”'
+              : busy
+                ? 'Working…'
+                : voice.listening
+                  ? 'Listening… tap to finish'
+                  : settings.review
+                    ? 'Speak, review, then send'
                     : 'Speak and send automatically'}
           </p>
           {mode === 'manager' && (
             <Button
               variant={inCall ? 'primary' : 'secondary'}
-              disabled={!managerEnabled || !voice.recognitionSupported || busy || settings.review}
+              disabled={
+                !inCall &&
+                (!managerEnabled || !voice.recognitionSupported || busy || settings.review)
+              }
               onClick={() => {
                 if (inCall) {
                   setInCall(false);
                   voice.pauseListening();
                   voice.stopSpeaking();
                 } else {
+                  voiceCallId.current = crypto.randomUUID();
+                  setVoiceGate({
+                    active: false,
+                    expiresAt: null,
+                    timeoutSeconds: voiceGate.timeoutSeconds,
+                  });
                   setInCall(true);
                   setError('');
                 }
@@ -930,14 +1042,16 @@ export default function App() {
           )}
           <p className="text-center text-xs text-text-muted">
             {terminalApp.label}
-            {inCall ? ' · announces agent status and listens between replies' : ''}
+            {inCall
+              ? ` · say “Hey Rex” to talk · returns to idle after ${voiceGate.timeoutSeconds}s · keeps listening`
+              : ''}
           </p>
           <div className="flex items-center justify-center gap-4">
             <Button
               variant="secondary"
               size="icon"
               aria-label="Type a message"
-              disabled={busy || voice.listening}
+              disabled={busy || (voice.listening && !inCall)}
               onClick={() => setShowKeyboard(!showKeyboard)}
             >
               <Keyboard size={23} />
@@ -986,7 +1100,7 @@ export default function App() {
                 autoFocus
                 className="min-w-0 flex-1 rounded-lg border border-border bg-surface-sunken p-3 text-text"
                 value={draft}
-                disabled={busy || voice.listening}
+                disabled={busy || (voice.listening && !inCall)}
                 placeholder="Type a message or correction…"
                 onChange={(event) => setDraft(event.target.value)}
               />
