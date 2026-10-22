@@ -1,0 +1,20 @@
+[
+  {
+    "id": "pi-greywall",
+    "label": "Pi · Greywall, no MCP",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "--no-mcp", "--greywall", "pi"]
+  },
+  {
+    "id": "claude",
+    "label": "Claude",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "claude"]
+  },
+  {
+    "id": "codex",
+    "label": "Codex",
+    "cwd": "/Users/briankemper/Developer/dak",
+    "command": ["lambdap", "codex"]
+  }
+]

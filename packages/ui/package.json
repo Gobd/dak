@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./tailwind.css": "./src/tailwind.css",
+    "./utilities.css": "./src/utilities.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

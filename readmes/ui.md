@@ -37,3 +37,17 @@ Pre-built Supabase auth forms:
 ```tsx
 import { Button, Modal, DatePicker } from '@dak/ui';
 ```
+
+## Tailwind class discovery
+
+Import the UI package's CSS entry after Tailwind and the shared theme:
+
+```css
+@import 'tailwindcss';
+@import '@dak/vite-shared-react/theme.css';
+@import '@dak/ui/tailwind.css';
+```
+
+The UI package declares its own source directory. Apps do not need relative paths into `packages/ui`.
+
+Use `@import '@dak/ui/utilities.css';` for shared utilities such as `scrollbar-hide`.

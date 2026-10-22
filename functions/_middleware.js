@@ -5,6 +5,7 @@ const SPA_APPS = new Set([
   'notes-app',
   'recipe-org',
   'reddit-gallery',
+  'rex',
   'tracker',
 ]);
 
@@ -14,6 +15,9 @@ export async function onRequest({ request, env, next }) {
 
   // Only intercept known SPA apps
   if (!SPA_APPS.has(app)) return next();
+
+  // Rex's private API lives on the Mac, not in Pages.
+  if (app === 'rex' && url.pathname.startsWith('/rex/api/')) return next();
 
   // Let static assets pass through
   if (url.pathname.match(/\.[a-z0-9]+$/i)) return next();

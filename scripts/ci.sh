@@ -6,6 +6,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+echo "==> Testing workspaces..."
+pnpm test
+
 echo "==> Linting (oxlint --fix)..."
 pnpm lint
 
@@ -47,7 +50,7 @@ pnpm typecheck
 
 echo ""
 echo "==> Building..."
-pnpm build
+pnpm build:pages
 
 echo ""
 echo "✓ All checks passed. Review changes and commit."

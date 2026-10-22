@@ -27,6 +27,7 @@ apps=(
   plane-tracker
   recipe-org
   reddit-gallery
+  rex
   tracker
 )
 

@@ -1,0 +1,2 @@
+/* Keep shared component class discovery inside the UI package. */
+@source "./**/*.tsx";

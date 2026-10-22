@@ -35,6 +35,9 @@
     },
     "packages/vite-shared-react": {
       "ignoreDependencies": ["react", "react-dom", "zustand"]
+    },
+    "rex": {
+      "entry": ["server/*.test.ts"]
     }
   }
 }

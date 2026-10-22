@@ -1,0 +1,33 @@
+{
+  "name": "rex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names app,manager \"vite\" \"node --watch --env-file-if-exists=.env.local server/main.ts\"",
+    "dev:manager": "node --watch --env-file-if-exists=.env.local server/main.ts",
+    "start": "node --env-file-if-exists=.env.local server/main.ts",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.server.json",
+    "test": "node --test server/*.test.ts",
+    "preview": "vite preview",
+    "dev:app": "vite",
+    "service": "node --env-file-if-exists=.env.local server/service.ts"
+  },
+  "dependencies": {
+    "@dak/hooks": "workspace:*",
+    "@dak/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dak/vite-shared-react": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "concurrently": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}
