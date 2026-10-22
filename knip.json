@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreBinaries": ["open", "uv"],
+  "ignoreBinaries": ["uv"],
   "rules": {
     "duplicates": "off",
     "types": "off"

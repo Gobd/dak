@@ -124,7 +124,7 @@ async function findTranscript(
   }
 }
 
-export async function conversationPath(
+async function conversationPath(
   link: ConversationLink,
   home = homedir(),
 ): Promise<string | undefined> {
