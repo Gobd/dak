@@ -1,5 +1,5 @@
-import type { Provider } from '../shared/terminal';
-export type { Session, Block } from '../shared/terminal';
+import type { ProviderScope } from '../shared/terminal';
+export type { Session, Block, TerminalSession, TerminalHistory } from '../shared/terminal';
 
 export interface Preset {
   id: string;
@@ -32,7 +32,7 @@ export async function api<T>(
   route: string,
   body?: unknown,
   managerUrl = '',
-  provider: Provider = 'rex',
+  provider: ProviderScope = 'all',
 ): Promise<T> {
   const origin = managerOrigin(managerUrl);
   const url = new URL(`${origin || window.location.origin}/rex/api/${route}`);

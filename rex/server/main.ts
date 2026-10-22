@@ -48,7 +48,8 @@ const server = createManager({
     ? resolve(homedir(), process.env.REX_PROJECT_ROOT.slice(2))
     : process.env.REX_PROJECT_ROOT || resolve(root, '../..'),
   allowedOrigins: (
-    process.env.REX_ALLOWED_ORIGINS || 'https://dak.bkemper.me,http://localhost:5183'
+    process.env.REX_ALLOWED_ORIGINS ||
+    'https://dak.bkemper.me,http://localhost:5183,http://127.0.0.1:5183'
   )
     .split(',')
     .map((origin) => origin.trim())

@@ -26,6 +26,7 @@ export function useVoice(
   onTranscript: (text: string) => void,
   voiceURI: string,
   handsFree = false,
+  rate = 1,
 ) {
   const callbackRef = useRef(onTranscript);
   callbackRef.current = onTranscript;
@@ -75,6 +76,7 @@ export function useVoice(
       if (!handsFree) pauseListening();
       stopSpeaking();
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = Math.max(0.5, Math.min(2, rate));
       const selected = window.speechSynthesis
         .getVoices()
         .find((voice) => voice.voiceURI === voiceURI);
@@ -102,7 +104,7 @@ export function useVoice(
       setSpeaking(true);
       window.speechSynthesis.speak(utterance);
     },
-    [synthesisSupported, stopSpeaking, voiceURI, pauseListening, handsFree],
+    [synthesisSupported, stopSpeaking, voiceURI, pauseListening, handsFree, rate],
   );
 
   const toggleListening = useCallback(() => {
