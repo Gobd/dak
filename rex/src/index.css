@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
+@import '@dak/ui/tailwind.css';
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-width: 320px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+
+.rex-shell {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+textarea,
+select,
+input {
+  font: inherit;
+}

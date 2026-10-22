@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+interface RecognitionResult {
+  isFinal: boolean;
+  0: { transcript: string };
+}
+
+interface Recognition {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: { results: ArrayLike<RecognitionResult> }) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+type VoiceWindow = Window & {
+  SpeechRecognition?: new () => Recognition;
+  webkitSpeechRecognition?: new () => Recognition;
+};
+
+export function useVoice(onTranscript: (text: string) => void, voiceURI: string) {
+  const callbackRef = useRef(onTranscript);
+  callbackRef.current = onTranscript;
+  const recognitionRef = useRef<Recognition | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [interim, setInterim] = useState('');
+  const [error, setError] = useState('');
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const voiceWindow = window as VoiceWindow;
+  const RecognitionClass = voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition;
+  const recognitionSupported = !!RecognitionClass && window.isSecureContext;
+  const synthesisSupported = 'speechSynthesis' in window;
+
+  useEffect(() => {
+    if (!synthesisSupported) return;
+    const update = () => setVoices(window.speechSynthesis.getVoices());
+    update();
+    window.speechSynthesis.addEventListener('voiceschanged', update);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', update);
+  }, [synthesisSupported]);
+
+  const stopSpeaking = useCallback(() => {
+    if (synthesisSupported) window.speechSynthesis.cancel();
+    utteranceRef.current = null;
+    setSpeaking(false);
+  }, [synthesisSupported]);
+
+  const speak = useCallback(
+    (text: string) => {
+      if (!synthesisSupported) return;
+      stopSpeaking();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const selected = window.speechSynthesis
+        .getVoices()
+        .find((voice) => voice.voiceURI === voiceURI);
+      if (selected) {
+        utterance.voice = selected;
+        utterance.lang = selected.lang;
+      } else {
+        utterance.lang = navigator.language || 'en-US';
+      }
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = (event) => {
+        setSpeaking(false);
+        if (event.error !== 'canceled' && event.error !== 'interrupted') {
+          setError('Voice playback was unavailable. Tap Read aloud to try again.');
+        }
+      };
+      utteranceRef.current = utterance;
+      setSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    },
+    [synthesisSupported, stopSpeaking, voiceURI],
+  );
+
+  const toggleListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+    if (!RecognitionClass || !window.isSecureContext) {
+      setError(
+        window.isSecureContext
+          ? 'Speech recognition is unavailable in this browser. You can still type.'
+          : 'Open the app over HTTPS to enable the microphone.',
+      );
+      return;
+    }
+    stopSpeaking();
+    setError('');
+    setInterim('');
+    const recognition = new RecognitionClass();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    let finalText = '';
+    let failed = false;
+    recognition.onresult = (event) => {
+      const results = Array.from(event.results);
+      finalText = results
+        .filter((result) => result.isFinal)
+        .map((result) => result[0].transcript)
+        .join(' ');
+      setInterim(
+        results
+          .filter((result) => !result.isFinal)
+          .map((result) => result[0].transcript)
+          .join(' '),
+      );
+    };
+    recognition.onerror = (event) => {
+      failed = true;
+      if (event.error === 'aborted') return;
+      const errors: Record<string, string> = {
+        'not-allowed': 'Microphone permission was denied. Allow it in Chrome’s site settings.',
+        'audio-capture': 'No microphone is available.',
+        network: 'Speech recognition could not connect. Try again or type your message.',
+        'no-speech': 'No speech was detected. Tap the microphone to try again.',
+      };
+      setError(errors[event.error] || `Speech recognition failed: ${event.error}`);
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setListening(false);
+      setInterim('');
+      if (!failed && finalText.trim()) callbackRef.current(finalText.trim());
+    };
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      recognitionRef.current = null;
+      setError('Could not start the microphone. Try again.');
+    }
+  }, [RecognitionClass, stopSpeaking]);
+
+  useEffect(() => {
+    const cancel = () => {
+      recognitionRef.current?.abort();
+      stopSpeaking();
+    };
+    const onVisibility = () => {
+      if (document.hidden) cancel();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      const recognition = recognitionRef.current;
+      if (recognition) {
+        recognition.onend = null;
+        recognition.onerror = null;
+        recognition.abort();
+      }
+      if (synthesisSupported) window.speechSynthesis.cancel();
+    };
+  }, [stopSpeaking, synthesisSupported]);
+
+  return {
+    listening,
+    speaking,
+    interim,
+    error,
+    voices,
+    recognitionSupported,
+    synthesisSupported,
+    toggleListening,
+    speak,
+    stopSpeaking,
+  };
+}

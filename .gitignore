@@ -25,3 +25,6 @@ packages/api-client/openapi.json
 elixir
 PHOENIX_ASH_PLAN.md
 docs
+
+# Private Rex launch commands and project paths
+rex/launchers.local.json
