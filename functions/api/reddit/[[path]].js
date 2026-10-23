@@ -47,7 +47,7 @@ export async function onRequest(context) {
   if (!response.ok) {
     const body = await response.text();
     return new Response(
-      JSON.stringify({ error: `Reddit returned ${response.status}`, details: body.slice(0, 250) }),
+      JSON.stringify({ error: `Reddit returned ${response.status}`, details: body }),
       {
         status: response.status,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
