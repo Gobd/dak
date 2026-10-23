@@ -46,10 +46,18 @@ export async function onRequest(context) {
   const response = await fetch(targetUrl, { headers });
 
   if (!response.ok) {
-    return new Response(JSON.stringify({ subreddits: [] }), {
-      status: response.status,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+    const body = await response.text();
+    return new Response(
+      JSON.stringify({
+        subreddits: [],
+        error: `Reddit returned ${response.status}`,
+        details: body,
+      }),
+      {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      },
+    );
   }
 
   const json = await response.json();
