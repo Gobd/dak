@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@dak/vite-shared-react": "workspace:*",
-    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-a11y": "^10.6.3",
     "@storybook/react": "^10.6.0",
     "@storybook/react-vite": "^10.6.0",
     "@tailwindcss/vite": "catalog:",
