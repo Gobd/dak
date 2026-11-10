@@ -130,7 +130,9 @@ export function eventsForDay(
     let lane = laneEnds.findIndex((lastEnd) => lastEnd <= event.start);
     if (lane < 0) lane = laneEnds.length;
     event.lane = lane;
-    laneEnds[lane] = event.end;
+    // Rendering gives sub-minute events a one-minute minimum width. Reserve that
+    // same visible span so the next event cannot overlap it in the same lane.
+    laneEnds[lane] = Math.min(1, Math.max(event.end, event.start + 1 / 1440));
   }
   return daily;
 }

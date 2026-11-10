@@ -1,8 +1,13 @@
 import type { ClockSettings } from './settings';
 import { MAX_EVENT_LANES, type ClockEvent } from './events.ts';
+import { labelBox, labelFits, type LabelBox } from './label-layout.ts';
 
 const TAU = Math.PI * 2;
 const angle = (fraction: number) => fraction * TAU - Math.PI / 2;
+const eventStep = (radius: number, names: boolean) =>
+  Math.max(4, names ? Math.min(26, radius * 0.065) : radius * 0.027);
+const eventGap = (radius: number, names: boolean) =>
+  names ? Math.max(8, Math.min(12, radius * 0.025)) + 4 : 4;
 
 function eventLabel(
   ctx: CanvasRenderingContext2D,
@@ -11,6 +16,7 @@ function eventLabel(
   y: number,
   rotation: number,
   fontSize: number,
+  occupied: LabelBox[],
 ) {
   const styles = getComputedStyle(ctx.canvas);
   ctx.save();
@@ -21,6 +27,12 @@ function eventLabel(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const label = title.length > 18 ? `${title.slice(0, 17)}…` : title;
+  const box = labelBox(x, y, Math.min(110, ctx.measureText(label).width), fontSize + 4, rotation);
+  if (!labelFits(box, occupied, ctx.canvas.clientWidth, ctx.canvas.clientHeight)) {
+    ctx.restore();
+    return;
+  }
+  occupied.push(box);
   ctx.strokeStyle = styles.getPropertyValue('--color-surface').trim();
   ctx.lineWidth = 3;
   ctx.strokeText(label, 0, 0, 110);
@@ -41,7 +53,9 @@ export function faceRadius(
   const lanes = Math.min(MAX_EVENT_LANES, Math.max(...events.map((event) => event.lane)) + 1);
   return Math.max(
     1,
-    radius - lanes * Math.max(4, radius * (settings.showEventNames ? 0.045 : 0.027)) - 4,
+    radius -
+      lanes * eventStep(radius, settings.showEventNames) -
+      eventGap(radius, settings.showEventNames),
   );
 }
 
@@ -56,21 +70,22 @@ export function drawEvents(
   if (settings.eventStyle === 'none') return;
   const outer = Math.max(1, Math.min(width, height) / 2 - 1);
   const radius = faceRadius(width, height, settings, events);
-  const step = Math.max(4, outer * (settings.showEventNames ? 0.045 : 0.027));
+  const step = eventStep(outer, settings.showEventNames);
+  const occupied: LabelBox[] = [];
   ctx.save();
-  ctx.lineCap = 'round';
+  ctx.lineCap = 'butt';
   for (const event of events) {
     if (event.lane >= MAX_EVENT_LANES) continue;
     const color = settings.eventColor ?? event.color ?? fallbackColor;
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
-    ctx.lineWidth = Math.max(2, step * 0.6);
+    ctx.lineWidth = settings.showEventNames ? 3 : Math.max(2, step * 0.6);
     // Full-day outlines are deliberately less dominant than timed-event bands.
     ctx.globalAlpha = event.allDay ? 0.55 : 1;
     if (settings.mode === 'circle') {
       const r =
         settings.eventPlacement === 'outside'
-          ? radius + 4 + step * (event.lane + 0.5)
+          ? radius + eventGap(outer, settings.showEventNames) + step * (event.lane + 0.5)
           : radius * 0.73 - step * (event.lane + 0.5);
       if (r <= 0) continue;
       const x = width / 2;
@@ -80,7 +95,7 @@ export function drawEvents(
         ctx.arc(
           x + Math.cos(angle(event.start)) * r,
           y + Math.sin(angle(event.start)) * r,
-          Math.max(2, step * 0.4),
+          settings.showEventNames ? 2.5 : Math.max(2, step * 0.4),
           0,
           TAU,
         );
@@ -98,13 +113,14 @@ export function drawEvents(
         ctx.lineTo(x + Math.cos(a) * (r + 3), y + Math.sin(a) * (r + 3));
         ctx.stroke();
       }
-      if (settings.showEventNames) {
+      const fontSize = Math.max(8, Math.min(12, outer * 0.025));
+      if (settings.showEventNames && step >= fontSize + 8) {
         const mid =
           settings.eventStyle === 'dot' && !event.allDay
             ? event.start
             : (event.start + event.end) / 2;
         const a = angle(mid);
-        const labelRadius = r - step * 0.85;
+        const labelRadius = r - step * 0.5;
         const rotation = a + Math.PI / 2 + (mid > 0.25 && mid < 0.75 ? Math.PI : 0);
         eventLabel(
           ctx,
@@ -112,7 +128,8 @@ export function drawEvents(
           x + Math.cos(a) * labelRadius,
           y + Math.sin(a) * labelRadius,
           rotation,
-          Math.max(9, Math.min(14, outer * 0.033)),
+          fontSize,
+          occupied,
         );
       }
     } else {
@@ -123,10 +140,16 @@ export function drawEvents(
         settings.eventPlacement === 'inside'
           ? 16 + trackStep * (event.lane + 0.5)
           : height - 52 - trackStep * (event.lane + 0.5);
-      ctx.lineWidth = Math.max(2, trackStep * 0.6);
+      ctx.lineWidth = settings.showEventNames ? 3 : Math.max(2, trackStep * 0.6);
       if (settings.eventStyle === 'dot' && !event.allDay) {
         ctx.beginPath();
-        ctx.arc(width * event.start, y, Math.max(2, trackStep * 0.4), 0, TAU);
+        ctx.arc(
+          width * event.start,
+          y,
+          settings.showEventNames ? 2.5 : Math.max(2, trackStep * 0.4),
+          0,
+          TAU,
+        );
         ctx.fill();
       } else {
         ctx.beginPath();
@@ -141,7 +164,7 @@ export function drawEvents(
         ctx.lineTo(x, y + 4);
         ctx.stroke();
       }
-      if (settings.showEventNames) {
+      if (settings.showEventNames && trackStep >= 23) {
         const mid =
           settings.eventStyle === 'dot' && !event.allDay
             ? event.start
@@ -150,9 +173,10 @@ export function drawEvents(
           ctx,
           event.title,
           Math.max(56, Math.min(width - 56, width * mid)),
-          y + (settings.eventPlacement === 'inside' ? 9 : -9),
+          y + (settings.eventPlacement === 'inside' ? 12 : -12),
           0,
           11,
+          occupied,
         );
       }
     }

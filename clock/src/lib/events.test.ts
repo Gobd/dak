@@ -75,6 +75,21 @@ test('calendar filtering, deduplication, invalid dates, and visible-lane bounds'
   assert.equal(faceRadius(720, 720, { ...DEFAULT_SETTINGS, eventStyle: 'none' }, overlapping), 359);
 });
 
+test('sub-minute event minimum widths reserve separate visible lanes', () => {
+  const daily = eventsForDay(
+    [
+      event('one', '2026-11-10T12:00:00-05:00', '2026-11-10T12:00:20-05:00'),
+      event('two', '2026-11-10T12:00:30-05:00', '2026-11-10T12:00:50-05:00'),
+    ],
+    day,
+    [],
+  );
+  assert.deepEqual(
+    daily.map((entry) => entry.lane),
+    [0, 1],
+  );
+});
+
 test('fall-back-hour events cannot create negative duration bands', () => {
   const events = eventsForDay(
     [event('dst', '2026-11-01T01:45:00-04:00', '2026-11-01T01:15:00-05:00')],

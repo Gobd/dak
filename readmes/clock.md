@@ -107,7 +107,7 @@ Publication runs on normal dashboard refresh (normally every five minutes), init
 - Overlaps stack in separate lanes. All-day events get their own full-day lanes. Up to five lanes draw; excess overlaps are reported when status is enabled. The optional agenda shows the first five events plus a remaining count.
 - Midnight-crossing events clip to today with continuation ticks; agenda arrows indicate continuation. Google all-day end dates are exclusive and are not shifted by UTC parsing.
 - Fall-back-hour events occupy their wall-time range (minimum one-minute band), with a DST note in the agenda. A wall-clock dial cannot distinguish both occurrences of the same hour.
-- Optional calendar-color legend; event names on marks and the daily agenda are separate toggles, both off by default. Labels on marks are abbreviated and may be crowded for dense schedules.
+- Optional calendar-color legend; event names on marks and the daily agenda are separate toggles, both off by default. Labels on marks are abbreviated, use dedicated clearance from their bars, and are suppressed when they collide or there is insufficient space. Marks remain visible; use the agenda for names in dense schedules.
 - Calendar checkboxes select a subset; **All shared calendars** bypasses the filter. Turning every calendar off produces `calendarFilter=1&calendars=[]`, not a fallback to all. Checkboxes list all shared calendars, including those without current events; IDs can also be entered directly.
 - Polling stops while hidden and refreshes on tab return. Connection/stale/expired/coverage status can be hidden.
 

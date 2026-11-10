@@ -2,7 +2,7 @@
 
 **12 full-resolution demos**, plus two overview sheets. Real screenshots of the built app in Chromium, using fictional calendars/events and a fixed demo date: **Sunday, June 21, 2026 at 15:10:20, America/New_York**. Coordinates are New York; no private Google events or production relay were accessed.
 
-The warm cream/charcoal palettes below are examples made with the app’s color settings—not fixed product colors. Every displayed option can be configured in the URL. `f=1` hides controls in all examples.
+The warm cream/charcoal palettes below are examples made with the app’s color settings—not fixed product colors. Optional names use separate clearance from the marks; crowded labels are omitted instead of overlapping, while the dot/band remains. The optional agenda supplies names for dense schedules. Every displayed option can be configured in the URL. `f=1` hides controls in all examples.
 
 ## Circular overview
 
