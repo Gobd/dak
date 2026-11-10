@@ -1,0 +1,33 @@
+{
+  "name": "clock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "preview": "vite preview",
+    "test": "TZ=America/New_York node --test src/lib/*.test.ts",
+    "screenshots": "node scripts/capture-demos.mjs"
+  },
+  "dependencies": {
+    "@dak/api-client": "workspace:*",
+    "@dak/hooks": "workspace:*",
+    "@dak/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@dak/vite-shared-react": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/suncalc": "^1.9.2",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+@import '@dak/vite-shared-react/fonts.css';
+@import '@dak/vite-shared-react/theme.css';
+@import '@dak/ui/tailwind.css';
+
+/* Override these semantic aliases to change the clock palette. */
+:root {
+  --clock-day: var(--color-warning-light);
+  --clock-night: var(--color-accent-dark);
+  --clock-day-text: var(--color-accent-dark);
+  --clock-night-text: var(--color-warning-light);
+  --clock-hand: var(--color-accent);
+  --clock-second: var(--color-danger);
+  --clock-ink-light: var(--color-surface);
+  --clock-ink-dark: var(--color-text);
+}
+
+.dark {
+  --clock-day: var(--color-warning);
+  --clock-night: var(--color-accent-light);
+  --clock-day-text: var(--color-surface);
+  --clock-night-text: var(--color-text);
+  --clock-ink-light: var(--color-text);
+  --clock-ink-dark: var(--color-surface);
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+}
+
+.clock-screen {
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.clock-display {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.circle .clock-display {
+  width: min(100vw, 100dvh);
+  height: min(100vw, 100dvh);
+}
+
+.clock-canvas,
+.clock-canvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.clock-time,
+.clock-date,
+.clock-solar,
+.clock-controls,
+.clock-message {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.clock-time {
+  top: 24%;
+  font-size: clamp(20px, 6vmin, 64px);
+  font-weight: 300;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.clock-date {
+  top: 33%;
+  width: 65%;
+  font-size: clamp(11px, 2.4vmin, 22px);
+  pointer-events: none;
+}
+
+.clock-solar {
+  top: 63%;
+  width: 60%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  pointer-events: none;
+}
+
+.clock-controls {
+  top: 72%;
+  display: flex;
+  gap: 6px;
+  opacity: 0.25;
+  transition: opacity 150ms;
+}
+
+.clock-controls:hover,
+.clock-controls:focus-within {
+  opacity: 1;
+}
+
+.clock-message {
+  top: 59%;
+  width: 60%;
+}
+
+.clock-agenda {
+  position: absolute;
+  top: 39%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-height: 20%;
+  overflow: hidden;
+  font-size: clamp(10px, 1.8vmin, 16px);
+  pointer-events: none;
+}
+
+.clock-agenda li {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.clock-event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.clock-calendar-legend {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58%;
+  max-height: 5%;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px 12px;
+  font-size: clamp(9px, 1.8vmin, 14px);
+  pointer-events: none;
+}
+
+.clock-calendar-status {
+  position: absolute;
+  top: 81%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  text-align: center;
+  font-size: clamp(9px, 1.6vmin, 12px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clock-controls {
+    transition: none;
+  }
+}

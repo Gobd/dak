@@ -18,6 +18,7 @@ cp packages/vite-shared-react/dist/* _site/_shared/
 # Copy app builds
 apps=(
   climate-display
+  clock
   dashboard
   family-chores
   health-tracker

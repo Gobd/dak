@@ -365,6 +365,96 @@ export type BudgetRequest = {
 };
 
 /**
+ * CalendarFeedCalendar
+ */
+export type CalendarFeedCalendar = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Color
+     */
+    color?: string | null;
+};
+
+/**
+ * CalendarFeedEvent
+ */
+export type CalendarFeedEvent = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Calendar Id
+     */
+    calendar_id: string;
+    /**
+     * Calendar Name
+     */
+    calendar_name: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Start
+     */
+    start: string;
+    /**
+     * End
+     */
+    end: string;
+    /**
+     * All Day
+     */
+    all_day: boolean;
+    /**
+     * Color
+     */
+    color?: string | null;
+};
+
+/**
+ * CalendarSnapshotResponse
+ */
+export type CalendarSnapshotResponse = {
+    /**
+     * Updated At
+     */
+    updated_at: string | null;
+    /**
+     * Expires At
+     */
+    expires_at: string | null;
+    /**
+     * Window Start
+     */
+    window_start: string | null;
+    /**
+     * Window End
+     */
+    window_end: string | null;
+    /**
+     * Stale
+     */
+    stale: boolean;
+    /**
+     * Events
+     */
+    events: Array<CalendarFeedEvent>;
+    /**
+     * Calendars
+     */
+    calendars: Array<CalendarFeedCalendar>;
+};
+
+/**
  * CommandResult
  *
  * Command execution result.
@@ -4341,3 +4431,85 @@ export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses = {
 };
 
 export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponse = UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses[keyof UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponses];
+
+export type GetCalendarSnapshotData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/calendar/snapshot';
+};
+
+export type GetCalendarSnapshotErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCalendarSnapshotError = GetCalendarSnapshotErrors[keyof GetCalendarSnapshotErrors];
+
+export type GetCalendarSnapshotResponses = {
+    /**
+     * Successful Response
+     */
+    200: CalendarSnapshotResponse;
+};
+
+export type GetCalendarSnapshotResponse = GetCalendarSnapshotResponses[keyof GetCalendarSnapshotResponses];
+
+export type PublishCalendarSnapshotData = {
+    /**
+     * CalendarSnapshotRequest
+     */
+    body: {
+        /**
+         * Window Start
+         */
+        window_start: string;
+        /**
+         * Window End
+         */
+        window_end: string;
+        /**
+         * Events
+         */
+        events: Array<CalendarFeedEvent>;
+        /**
+         * Calendars
+         */
+        calendars?: Array<CalendarFeedCalendar>;
+    };
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/calendar/snapshot';
+};
+
+export type PublishCalendarSnapshotErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PublishCalendarSnapshotError = PublishCalendarSnapshotErrors[keyof PublishCalendarSnapshotErrors];
+
+export type PublishCalendarSnapshotResponses = {
+    /**
+     * Successful Response
+     */
+    200: CalendarSnapshotResponse;
+};
+
+export type PublishCalendarSnapshotResponse = PublishCalendarSnapshotResponses[keyof PublishCalendarSnapshotResponses];

@@ -9,8 +9,9 @@ import {
   LogOut,
   RefreshCw,
 } from 'lucide-react';
-import { useInterval } from '@dak/hooks';
-import { useConfigStore } from '../../stores/config-store';
+import { useInterval, useLocalStorage } from '@dak/hooks';
+import { publishCalendarFeed } from '../../utils/calendar-feed';
+import { getRelayUrl, useConfigStore } from '../../stores/config-store';
 import { useRefreshInterval } from '../../hooks/useRefreshInterval';
 import { useGoogleAuth, fetchCalendarApi } from '../../hooks/useGoogleAuth';
 import {
@@ -200,6 +201,11 @@ function getDayNames(weekStartsOn: number): string[] {
 
 export default function Calendar({ panel }: WidgetComponentProps) {
   const calendarConfig = useConfigStore((s) => s.calendar);
+  // A write credential belongs only to this source browser, never synced dashboard config.
+  const [publishKey, setPublishKey] = useLocalStorage('calendar-feed-publish-key', '');
+  const [shareStatus, setShareStatus] = useState('');
+  const publishing = useRef<AbortController | null>(null);
+  const publishGeneration = useRef(0);
   const updateCalendar = useConfigStore((s) => s.updateCalendar);
 
   const hiddenCalendarIds = useMemo(() => calendarConfig?.hidden ?? [], [calendarConfig?.hidden]);
@@ -219,6 +225,17 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     signOut,
     isImplicitFlow,
   } = useGoogleAuth();
+
+  useEffect(() => {
+    publishGeneration.current++;
+    publishing.current?.abort();
+    publishing.current = null;
+    return () => {
+      publishGeneration.current++;
+      publishing.current?.abort();
+      publishing.current = null;
+    };
+  }, [accessToken, publishKey, hiddenCalendarIds]);
 
   const [gridStartDate, setGridStartDate] = useState(getMostRecentWeekStart(weekStartsOn));
 
@@ -298,6 +315,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
   // Load calendars and events from Google Calendar API (uses sync tokens for efficiency)
   const loadEvents = useCallback(async () => {
     if (!isSignedIn || !accessToken) return;
+    const generation = publishGeneration.current;
 
     // Only show loading spinner on initial load
     if (eventsRef.current.length === 0) {
@@ -467,12 +485,40 @@ export default function Calendar({ panel }: WidgetComponentProps) {
       }
 
       setEvents(updatedEvents);
+      if (publishKey && !publishing.current && generation === publishGeneration.current) {
+        const controller = new AbortController();
+        publishing.current = controller;
+        try {
+          await publishCalendarFeed(
+            accessToken,
+            fetchedCalendars.filter((cal) => !hiddenCalendarIds.includes(cal.id)),
+            calendarNames,
+            getRelayUrl(),
+            publishKey,
+            controller.signal,
+          );
+          if (!controller.signal.aborted) setShareStatus('Calendar shared with clocks.');
+        } catch (err) {
+          if (!controller.signal.aborted)
+            setShareStatus(err instanceof Error ? err.message : 'Calendar sharing failed.');
+        } finally {
+          if (publishing.current === controller) publishing.current = null;
+        }
+      }
     } catch (err) {
       console.error('Failed to load calendar data:', err);
     } finally {
       setLoading(false);
     }
-  }, [isSignedIn, accessToken, gridStartDate, weeksToShow, hiddenCalendarIds]);
+  }, [
+    isSignedIn,
+    accessToken,
+    gridStartDate,
+    weeksToShow,
+    hiddenCalendarIds,
+    publishKey,
+    calendarNames,
+  ]);
 
   // Load events when signed in or when grid date changes
   const loadEventsRef = useRef(loadEvents);
@@ -484,7 +530,7 @@ export default function Calendar({ panel }: WidgetComponentProps) {
     if (isSignedIn && accessToken) {
       loadEventsRef.current();
     }
-  }, [isSignedIn, accessToken, gridStartDate]);
+  }, [isSignedIn, accessToken, gridStartDate, hiddenCalendarIds, publishKey]);
 
   // Auto-refresh events
   useRefreshInterval(loadEvents, '5m', { immediate: false });
@@ -1077,6 +1123,30 @@ export default function Calendar({ panel }: WidgetComponentProps) {
             onChange={(checked) => updateCalendar({ showMonthPrefix: checked })}
             label="Show month on dates (e.g. Jun 1)"
           />
+
+          <div className="space-y-2 border-t border-border pt-3">
+            <Input
+              label="Clock calendar publishing key"
+              type="password"
+              autoComplete="off"
+              value={publishKey}
+              onChange={(event) => {
+                setPublishKey(event.target.value.trim());
+                setShareStatus('');
+              }}
+              placeholder="CALENDAR_PUBLISH_KEY from your relay"
+            />
+            <p className="text-xs text-text-muted">
+              Optional. Enter the relay's publishing key in this kiosk browser to share visible
+              calendars with clocks. Kept only in this browser, not synced config. Clear it to stop
+              publishing; the last snapshot expires after 24 hours.
+            </p>
+            {shareStatus && (
+              <p role="status" className="text-xs text-text-secondary">
+                {shareStatus}
+              </p>
+            )}
+          </div>
 
           {/* Calendars */}
           {calendars.length > 0 && (

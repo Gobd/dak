@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "(sleep 2 && open http://localhost:8080/?local) & pnpm -r --parallel dev",
     "lint": "oxlint --fix",
-    "lint:sh": "shellcheck scripts/*.sh dashboard/scripts/**/*.sh",
+    "lint:sh": "shellcheck scripts/*.sh dashboard/scripts/**/*.sh clock/scripts/*.sh",
     "format:check": "oxfmt --check",
     "format": "oxfmt --write",
     "knip": "knip",

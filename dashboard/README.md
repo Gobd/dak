@@ -79,21 +79,21 @@ These are installed to `~/scripts/` on the kiosk:
 
 ## Widgets
 
-| Widget       | Description                                    |
-| ------------ | ---------------------------------------------- |
-| `calendar`   | Google Calendar (OAuth, auto-refreshes tokens) |
-| `clock`      | Time and date display                          |
-| `weather`    | NWS weather forecast                           |
-| `climate`    | Indoor/outdoor temp & humidity (Zigbee)        |
-| `timer`      | Countdown timers (voice + touch UI)            |
-| `uv`         | UV index chart                                 |
-| `aqi`        | Air quality index                              |
-| `sun-moon`   | Sunrise/sunset, moon phase                     |
-| `drive-time` | Commute time overlay                           |
-| `kasa`       | Kasa smart plug toggles                        |
-| `wol`        | Wake on LAN                                    |
-| `brightness` | Auto-brightness settings                       |
-| `iframe`     | Any URL                                        |
+| Widget       | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
+| `calendar`   | Google Calendar (OAuth, auto-refreshes tokens); optional read-only feed for Clock |
+| `clock`      | Time and date display                                                             |
+| `weather`    | NWS weather forecast                                                              |
+| `climate`    | Indoor/outdoor temp & humidity (Zigbee)                                           |
+| `timer`      | Countdown timers (voice + touch UI)                                               |
+| `uv`         | UV index chart                                                                    |
+| `aqi`        | Air quality index                                                                 |
+| `sun-moon`   | Sunrise/sunset, moon phase                                                        |
+| `drive-time` | Commute time overlay                                                              |
+| `kasa`       | Kasa smart plug toggles                                                           |
+| `wol`        | Wake on LAN                                                                       |
+| `brightness` | Auto-brightness settings                                                          |
+| `iframe`     | Any URL                                                                           |
 
 Widget-specific settings in `args`. See `public/config/README.md` for details.
 
@@ -254,4 +254,10 @@ cat ~/.config/home-relay/dashboard.json | jq .
 
 ## Security
 
-Home-relay has **no authentication**. It's designed for trusted home networks only. Do not expose port 5111 to the internet.
+Most home-relay routes have **no authentication**. It's designed for trusted home networks only. Do not expose port 5111 to the internet. The optional `/calendar/snapshot` routes require separate read/publish bearer keys; these do not protect other routes.
+
+### Share Google Calendar with Clock
+
+The Calendar widget can publish visible calendars to a bounded home-relay RAM snapshot for no-input Clock displays. No additional Google sign-in is needed on the clock. In the source kiosk's Calendar settings, enter `CALENDAR_PUBLISH_KEY` under **Clock calendar publishing key**; it stays in that browser's localStorage, not synced config. Configure the separate `CALENDAR_READ_KEY` on the clock.
+
+The relay holds one replace-only snapshot (no DB/history), max 1,000 events / 1 MiB, stale after 15 minutes and expired after 24 hours, with minute-by-minute cleanup. The source calendar must keep running and signed in. See [Clock setup, URL options, and security](../readmes/clock.md#optional-google-calendar-feed) for environment setup and no-input kiosk configuration.

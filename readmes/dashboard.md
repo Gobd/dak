@@ -98,6 +98,10 @@ Dashboard displays reminder notifications from iframed apps (health-tracker, mai
 
 **For app developers:** See CLAUDE.md "Notification System" section for how to register notifications from your iframed app using `window.parent.notify()`.
 
+### Calendar feed for standalone Clock displays
+
+The Calendar widget can share its visible Google calendars with Clock through a bounded home-relay RAM snapshot. Configure a publishing key in the source browser's Calendar settings; the no-input Clock gets a separate read key and relay URL in its copied settings link. No event-history database is added. See [Clock setup and retention/security details](clock.md#optional-google-calendar-feed).
+
 ## Backend
 
 Connects to `home-relay` (Python/FastAPI) which handles Kasa device control, Zigbee2MQTT sensors, voice processing, config sync, Wake-on-LAN, display brightness, MQTT publishing, and notification management. All processing stays local on your network.
