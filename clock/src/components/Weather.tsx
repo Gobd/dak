@@ -7,6 +7,7 @@ import {
   CloudSnow,
   CloudSun,
   Droplets,
+  Info,
   Snowflake,
   Sun,
 } from 'lucide-react';
@@ -115,10 +116,11 @@ export default function Weather({
         href="https://open-meteo.com/"
         target="_blank"
         rel="noreferrer"
-        className="text-text-muted text-xs"
+        className="text-text-muted inline-flex p-1 rounded focus-visible:outline focus-visible:outline-accent"
         aria-label="Weather data by Open-Meteo"
+        title="Weather data by Open-Meteo · CC BY 4.0 · Temperatures rounded"
       >
-        Open-Meteo
+        <Info className="w-3.5 h-3.5" aria-hidden="true" />
       </a>
     </div>
   );
@@ -151,13 +153,15 @@ function WeatherDay({
       <span className="tabular-nums whitespace-nowrap">
         L {Math.round(forecast.low)}° / H {Math.round(forecast.high)}°{unit}
       </span>
-      <span
-        className="inline-flex items-center gap-1 tabular-nums"
-        title="Chance of rain or snow (any precipitation)"
-      >
-        <PrecipitationIcon className="w-4 h-4" aria-hidden="true" />
-        {forecast.precipitation}%
-      </span>
+      {forecast.precipitation > 0 && (
+        <span
+          className="inline-flex items-center gap-1 tabular-nums"
+          title="Chance of rain or snow (any precipitation)"
+        >
+          <PrecipitationIcon className="w-4 h-4" aria-hidden="true" />
+          Precip {forecast.precipitation}%
+        </span>
+      )}
       {error && <span className="text-xs text-text-muted">Update unavailable</span>}
     </div>
   );

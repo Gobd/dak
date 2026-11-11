@@ -19,6 +19,7 @@ let sequence = 0;
 const pending = new Map();
 const failures = [];
 let requests = 0;
+let snowScenario = false;
 function send(method, params = {}) {
   return new Promise((resolve, reject) => {
     const id = ++sequence;
@@ -55,10 +56,10 @@ socket.addEventListener('message', (event) => {
     const weatherFeed = {
       daily: {
         time: ['2026-06-21', '2026-06-22'],
-        weather_code: [2, 61],
-        temperature_2m_min: [65, 63],
-        temperature_2m_max: [82, 76],
-        precipitation_probability_max: [15, 70],
+        weather_code: snowScenario ? [0, 73] : [2, 61],
+        temperature_2m_min: snowScenario ? [15, 19] : [65, 63],
+        temperature_2m_max: snowScenario ? [29, 32] : [82, 76],
+        precipitation_probability_max: snowScenario ? [0, 80] : [15, 70],
       },
     };
     void send('Fetch.fulfillRequest', {
@@ -172,6 +173,18 @@ const variants = [
       seconds: '0',
     },
   ],
+  [
+    'rectangle-weather-snow',
+    {
+      mode: 'linear',
+      ...light,
+      showWeather: '1',
+      showTomorrowWeather: '1',
+      seconds: '0',
+      eventStyle: 'none',
+      showCalendarLegend: '0',
+    },
+  ],
   ['circle-bands-outside-dark', { mode: 'circle' }],
   [
     'circle-bands-inside-light',
@@ -258,6 +271,7 @@ try {
   await mkdir(directory, { recursive: true });
   const demos = [];
   for (const [name, overrides] of variants) {
+    snowScenario = name === 'rectangle-weather-snow';
     const options = { ...shared, ...overrides };
     const circle = options.mode === 'circle';
     await send('Emulation.setDeviceMetricsOverride', {
@@ -284,6 +298,26 @@ try {
       throw new Error(`Today weather missing: ${name}`);
     if (options.showTomorrowWeather === '1' && !result.text.includes('Tomorrow'))
       throw new Error(`Tomorrow weather missing: ${name}`);
+    if (snowScenario) {
+      const precipitation = await send('Runtime.evaluate', {
+        expression: `JSON.stringify(Array.from(document.querySelectorAll('.clock-weather')).map(day => ({ text: day.textContent, chances: day.querySelectorAll('[title="Chance of rain or snow (any precipitation)"]').length, snow: day.querySelectorAll('.lucide-snowflake').length })))`,
+      });
+      const [today, tomorrow] = JSON.parse(precipitation.result.value);
+      if (
+        today.chances !== 0 ||
+        today.text.includes('0%') ||
+        tomorrow.snow !== 1 ||
+        !tomorrow.text.includes('80%')
+      )
+        throw new Error('Zero precipitation or snow icon rendering failed');
+    }
+    if (options.showWeather === '1' || options.showTomorrowWeather === '1') {
+      const attribution = await send('Runtime.evaluate', {
+        expression: `document.querySelector('.clock-weather-group a[aria-label="Weather data by Open-Meteo"]')?.getAttribute('href')`,
+      });
+      if (attribution.result.value !== 'https://open-meteo.com/')
+        throw new Error('Adjacent weather attribution link missing');
+    }
     if (options.wipePast === '1') {
       const pixels = await send('Runtime.evaluate', {
         expression: `JSON.stringify((() => {
@@ -422,13 +456,29 @@ try {
       'secondColor',
       'barColor',
       'barTextColor',
-      'wipeColor',
     ])
       if (!/^#[0-9a-f]{6}$/i.test(themeUrl.searchParams.get(key)))
         throw new Error(`Preset color lost: ${name} ${key}`);
+    if (themeUrl.searchParams.get('wipeColor') !== '')
+      throw new Error(`Preset did not reset to default wipe: ${name}`);
     await send('Page.navigate', { url: themeUrl.toString() });
     await new Promise((resolve) => setTimeout(resolve, 650));
     const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    const contrast = await send('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const [face, hands] = document.querySelectorAll('.clock-canvas canvas');
+        return [Array.from(hands.getContext('2d').getImageData(10, 100, 1, 1).data),
+          Array.from(face.getContext('2d').getImageData(face.width - 10, 100, 1, 1).data)];
+      })())`,
+    });
+    const [wipePixel, nightPixel] = JSON.parse(contrast.result.value);
+    if (
+      wipePixel[3] !== 255 ||
+      nightPixel[3] !== 255 ||
+      nightPixel.slice(0, 3).reduce((sum, channel, index) => sum + channel - wipePixel[index], 0) <
+        60
+    )
+      throw new Error(`Preset wipe blends into night shading: ${name}`);
     const file = `rectangle-theme-${id}.png`;
     await writeFile(`${directory}/${file}`, Buffer.from(screenshot.data, 'base64'));
     demos.push({ file, options: Object.fromEntries(themeUrl.searchParams) });
@@ -482,6 +532,15 @@ try {
       });
       if (!labelState.result.value) throw new Error(`Incorrect seconds label for ${shape}`);
     }
+    await send('Runtime.evaluate', {
+      expression: `[...document.querySelectorAll('form button')].find(el => el.textContent.startsWith('Slate & Cream')).click()`,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const wipeOptIn = await send('Runtime.evaluate', {
+      expression: `[...document.querySelectorAll('form label')].find(el => el.textContent === 'Wipe elapsed time').querySelector('button').getAttribute('aria-checked')`,
+    });
+    if (wipeOptIn.result.value !== 'false')
+      throw new Error('Picking a preset enabled wiping without opt-in');
     const before = await measure();
     for (const label of [
       "Today's weather in info bar",

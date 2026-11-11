@@ -21,14 +21,13 @@ export const CLOCK_THEMES = [
   },
 ] as const;
 
-const fields: Record<PaletteKey, string> = {
+const fields: Record<Exclude<PaletteKey, 'wipeColor'>, string> = {
   dayColor: 'day',
   nightColor: 'night',
   handColor: 'hand',
   secondColor: 'second',
   barColor: 'bar',
   barTextColor: 'text',
-  wipeColor: 'wipe',
 };
 
 // Materialize theme tokens as editable hex values: URLs do not depend on preset IDs.
@@ -36,10 +35,15 @@ export function clockThemeColors(
   id: (typeof CLOCK_THEMES)[number]['id'],
   resolve: (token: string) => string,
 ): Pick<ClockSettings, PaletteKey> {
-  return Object.fromEntries(
-    Object.entries(fields).map(([field, token]) => [
-      field,
-      resolve(`--color-clock-${id}-${token}`),
-    ]),
-  ) as Pick<ClockSettings, PaletteKey>;
+  return {
+    ...Object.fromEntries(
+      Object.entries(fields).map(([field, token]) => [
+        field,
+        resolve(`--color-clock-${id}-${token}`),
+      ]),
+    ),
+    // Presets use the same near-black default as “Use theme wipe color”.
+    // Wiping remains opt-in: palette application never changes wipePast/opacity.
+    wipeColor: null,
+  } as Pick<ClockSettings, PaletteKey>;
 }

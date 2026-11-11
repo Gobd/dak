@@ -135,7 +135,7 @@ function drawFace(
       ctx.strokeStyle = ink;
       ctx.lineWidth = 1;
       line(ctx, x, height - 42, x, height - 34);
-      if (hour % (width < 600 ? 6 : 3) === 0) {
+      if (hour % (width < 600 ? 6 : 2) === 0) {
         ctx.fillStyle = ink;
         ctx.fillText(
           hourLabel(hour, settings.hourLabels),

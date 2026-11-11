@@ -284,7 +284,8 @@ export default function Settings({
               </div>
               <p className="text-xs text-text-muted">
                 Pick a starting palette, then tweak any color. Calendar colors are restored; layout
-                and weather choices stay as-is.
+                and weather choices stay as-is. Uses the default near-black wipe color without
+                turning wiping on.
               </p>
               <Toggle checked={draftDark} onChange={setDraftDark} label="Dark display theme" />
               <p className="text-xs text-text-muted">
@@ -392,7 +393,32 @@ export default function Settings({
                 <p className="mt-2">
                   Open-Meteo receives your coordinates; no key or relay is needed. Refreshes every
                   30 minutes. Shows condition, low/high and chance of any precipitation—not separate
-                  rain/snow probabilities. Forecast dates follow this device's timezone.
+                  rain/snow probabilities. “Precip” is the total chance; the forecast condition
+                  shows Rain or Snow separately. A snowflake marks snowy forecasts, a droplet marks
+                  other precipitation; the chance is hidden at 0%. Forecast dates follow this
+                  device's timezone.
+                </p>
+                <p className="mt-2">
+                  Weather data by{' '}
+                  <a
+                    href="https://open-meteo.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-accent underline"
+                  >
+                    Open-Meteo
+                  </a>
+                  , under{' '}
+                  <a
+                    href="https://creativecommons.org/licenses/by/4.0/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-accent underline"
+                  >
+                    CC BY 4.0
+                  </a>
+                  . Temperatures are rounded and shown as a daily summary. The small info link
+                  beside the forecast provides the required source credit.
                 </p>
               </details>
             </fieldset>
@@ -434,8 +460,9 @@ export default function Settings({
                     Use theme wipe color
                   </Button>
                   <p className="text-sm text-text-muted">
-                    Covers midnight through now, including past event marks and hour labels. Use
-                    100% for a solid blackout.
+                    Covers midnight through now, including past event marks and hour labels. The
+                    default is near-black to stand out from night shading. Use 100% for a solid
+                    blackout.
                   </p>
                 </div>
               )}
