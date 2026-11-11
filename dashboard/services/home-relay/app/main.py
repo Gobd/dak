@@ -4,9 +4,10 @@ Provides HTTP endpoints for Kasa smart devices, Wake-on-LAN, brightness control,
 climate sensors, and voice transcription.
 """
 
+import asyncio
 import logging
 import sys
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,7 @@ logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 from app.routers import (
     adguard,
     brightness,
+    calendar,
     config,
     health,
     kasa,
@@ -80,9 +82,16 @@ async def lifespan(_app: FastAPI):
 
     plane_service.init()
 
-    yield
+    # Calendar feed is bounded RAM only; prune even without active readers.
+    from app.services import calendar_service
 
-    # Cleanup on shutdown (if needed)
+    calendar_cleanup = asyncio.create_task(calendar_service.cleanup_loop())
+    try:
+        yield
+    finally:
+        calendar_cleanup.cancel()
+        with suppress(asyncio.CancelledError):
+            await calendar_cleanup
 
 
 app = FastAPI(
@@ -192,3 +201,4 @@ app.include_router(notifications.router)
 app.include_router(system_stats.router)
 app.include_router(money.router)
 app.include_router(planes.router)
+app.include_router(calendar.router)

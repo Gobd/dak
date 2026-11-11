@@ -50,6 +50,43 @@
   --color-feature-light: oklch(95% 0.05 300);
   --color-feature-dark: oklch(45% 0.18 300);
 
+  /* Clock starter palettes: stable across light/dark mode; editable via app pickers. */
+  --color-clock-midnight-day: oklch(85% 0.045 85);
+  --color-clock-midnight-night: oklch(27% 0.025 250);
+  --color-clock-midnight-hand: oklch(96% 0.02 85);
+  --color-clock-midnight-second: oklch(70% 0.1 35);
+  --color-clock-midnight-bar: oklch(15% 0.01 250);
+  --color-clock-midnight-text: oklch(96% 0.02 85);
+
+  --color-clock-paper-day: oklch(96% 0.025 85);
+  --color-clock-paper-night: oklch(38% 0.025 265);
+  --color-clock-paper-hand: oklch(55% 0.09 45);
+  --color-clock-paper-second: oklch(58% 0.075 340);
+  --color-clock-paper-bar: oklch(99% 0.005 85);
+  --color-clock-paper-text: oklch(24% 0.015 265);
+
+  --color-clock-sand-day: oklch(89% 0.07 80);
+  --color-clock-sand-night: oklch(45% 0.035 55);
+  --color-clock-sand-hand: oklch(55% 0.12 40);
+  --color-clock-sand-second: oklch(58% 0.075 155);
+  --color-clock-sand-bar: oklch(93% 0.035 80);
+  --color-clock-sand-text: oklch(30% 0.03 55);
+
+  --color-clock-dusk-day: oklch(80% 0.055 310);
+  --color-clock-dusk-night: oklch(32% 0.045 280);
+  --color-clock-dusk-hand: oklch(92% 0.035 80);
+  --color-clock-dusk-second: oklch(74% 0.095 20);
+  --color-clock-dusk-bar: oklch(25% 0.03 280);
+  --color-clock-dusk-text: oklch(94% 0.02 310);
+
+  /* Original Clock demo palette: blue-gray and tan. */
+  --color-clock-slate-cream-day: #dcd4bd;
+  --color-clock-slate-cream-night: #293544;
+  --color-clock-slate-cream-hand: #f4efe4;
+  --color-clock-slate-cream-second: #d88d77;
+  --color-clock-slate-cream-bar: #293544;
+  --color-clock-slate-cream-text: #f4efe4;
+
   /* Gold (achievements, highlights) */
   --color-gold: oklch(75% 0.15 85);
   --color-gold-hover: oklch(68% 0.17 85);

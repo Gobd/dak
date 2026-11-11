@@ -11,6 +11,7 @@
       "entry": ["scripts/*.{sh,ts,js}"]
     },
     "climate-display": {},
+    "clock": {},
     "dashboard": {
       "ignore": ["public/**"]
     },

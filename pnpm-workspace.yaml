@@ -1,5 +1,6 @@
 packages:
   - climate-display
+  - clock
   - dashboard
   - family-chores
   - functions

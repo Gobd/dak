@@ -1,0 +1,74 @@
+{
+  "updated_at": "2026-06-21T19:10:20Z",
+  "expires_at": "2026-06-22T19:10:20Z",
+  "window_start": "2026-06-20T19:10:20Z",
+  "window_end": "2026-06-23T19:10:20Z",
+  "stale": false,
+  "calendars": [
+    { "id": "family-demo", "name": "Family", "color": "#91ad98" },
+    { "id": "work-demo", "name": "Work", "color": "#b3a0cf" },
+    { "id": "plans-demo", "name": "Plans", "color": "#d598a6" }
+  ],
+  "events": [
+    {
+      "id": "solstice",
+      "calendar_id": "family-demo",
+      "calendar_name": "Family",
+      "title": "Summer solstice",
+      "start": "2026-06-21",
+      "end": "2026-06-22",
+      "all_day": true,
+      "color": "#91ad98"
+    },
+    {
+      "id": "walk",
+      "calendar_id": "family-demo",
+      "calendar_name": "Family",
+      "title": "Morning walk",
+      "start": "2026-06-21T07:00:00-04:00",
+      "end": "2026-06-21T08:00:00-04:00",
+      "all_day": false,
+      "color": "#91ad98"
+    },
+    {
+      "id": "project",
+      "calendar_id": "work-demo",
+      "calendar_name": "Work",
+      "title": "Project time",
+      "start": "2026-06-21T09:30:00-04:00",
+      "end": "2026-06-21T12:00:00-04:00",
+      "all_day": false,
+      "color": "#b3a0cf"
+    },
+    {
+      "id": "coffee",
+      "calendar_id": "plans-demo",
+      "calendar_name": "Plans",
+      "title": "Coffee with friends",
+      "start": "2026-06-21T10:30:00-04:00",
+      "end": "2026-06-21T11:30:00-04:00",
+      "all_day": false,
+      "color": "#d598a6"
+    },
+    {
+      "id": "dinner",
+      "calendar_id": "family-demo",
+      "calendar_name": "Family",
+      "title": "Dinner together",
+      "start": "2026-06-21T17:30:00-04:00",
+      "end": "2026-06-21T19:00:00-04:00",
+      "all_day": false,
+      "color": "#91ad98"
+    },
+    {
+      "id": "stars",
+      "calendar_id": "plans-demo",
+      "calendar_name": "Plans",
+      "title": "Stargazing",
+      "start": "2026-06-21T23:00:00-04:00",
+      "end": "2026-06-22T01:00:00-04:00",
+      "all_day": false,
+      "color": "#d598a6"
+    }
+  ]
+}
