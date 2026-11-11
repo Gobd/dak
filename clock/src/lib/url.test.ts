@@ -11,6 +11,18 @@ test('display URL round-trips every option, including blank coordinates and them
       ...DEFAULT_SETTINGS,
       mode: 'linear' as const,
       hourLabels: '12h' as const,
+      digitalTimeFormat: '12h' as const,
+      rectangleBar: 'bottom' as const,
+      barColor: '#000000',
+      barTextColor: '#ffffff',
+      wipePast: true,
+      wipeColor: '#000000',
+      wipeOpacity: 72,
+      showTimeMarker: false,
+      showSecondsMarker: false,
+      showWeather: true,
+      showTomorrowWeather: true,
+      weatherUnit: 'celsius' as const,
       latitude: 0,
       longitude: -180,
       seconds: false,
@@ -56,7 +68,9 @@ test('all calendars off remains off after URL copying', () => {
 test('invalid URL options are ignored; explicit blanks clear saved colors/location', () => {
   assert.deepEqual(
     settingsFromParams(
-      new URLSearchParams('mode=no&seconds=yes&date=bogus&lat=91&lng=0&dayColor=red'),
+      new URLSearchParams(
+        'mode=no&seconds=yes&date=bogus&lat=91&lng=0&dayColor=red&rectangleBar=no&wipeOpacity=101&wipeColor=red&showTomorrowWeather=yes&weatherUnit=kelvin',
+      ),
     ),
     {},
   );

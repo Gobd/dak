@@ -19,6 +19,7 @@ interface Palette {
   second: string;
   border: string;
   event: string;
+  wipe: string;
 }
 
 function palette(element: HTMLElement): Palette {
@@ -35,6 +36,7 @@ function palette(element: HTMLElement): Palette {
     second: color('--clock-second'),
     border: color('--color-border'),
     event: color('--color-feature'),
+    wipe: color('--clock-wipe'),
   };
 }
 
@@ -196,16 +198,25 @@ function drawHands(
   } else {
     const span = width;
     const x = span * fraction;
-    ctx.strokeStyle = colors.accent;
-    ctx.lineWidth = 4;
-    line(ctx, x, 0, x, height);
-    ctx.fillStyle = colors.accent;
-    ctx.beginPath();
-    ctx.moveTo(x, 14);
-    ctx.lineTo(x - 8, 0);
-    ctx.lineTo(x + 8, 0);
-    ctx.fill();
-    if (settings.seconds) {
+    if (settings.wipePast) {
+      ctx.save();
+      ctx.globalAlpha = settings.wipeOpacity / 100;
+      ctx.fillStyle = settings.wipeColor ?? colors.wipe;
+      ctx.fillRect(0, 0, x, height);
+      ctx.restore();
+    }
+    if (settings.showTimeMarker) {
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 4;
+      line(ctx, x, 0, x, height);
+      ctx.fillStyle = colors.accent;
+      ctx.beginPath();
+      ctx.moveTo(x, 14);
+      ctx.lineTo(x - 8, 0);
+      ctx.lineTo(x + 8, 0);
+      ctx.fill();
+    }
+    if (settings.seconds && settings.showSecondsMarker) {
       const y = height * 0.86;
       ctx.strokeStyle = colors.border;
       ctx.lineWidth = 1;
@@ -327,6 +338,11 @@ export default function ClockCanvas({
     };
   }, [
     settings.mode,
+    settings.wipePast,
+    settings.wipeColor,
+    settings.wipeOpacity,
+    settings.showTimeMarker,
+    settings.showSecondsMarker,
     settings.hourLabels,
     settings.seconds,
     settings.latitude,
@@ -348,7 +364,7 @@ export default function ClockCanvas({
       ref={host}
       className="clock-canvas"
       role="img"
-      aria-label={`${settings.mode === 'circle' ? 'Circular' : 'Linear'} 24-hour clock. Light sections show daylight; dark sections show night. Boundary marks show sunrise and sunset. The long hand or full-height marker shows the current time. The short hand or lower marker shows seconds.`}
+      aria-label={`${settings.mode === 'circle' ? 'Circular' : 'Linear'} 24-hour clock. Light sections show daylight; dark sections show night. Boundary marks show sunrise and sunset.${settings.mode === 'circle' || settings.showTimeMarker ? ' The long hand or full-height marker shows the current time.' : ''}${settings.mode === 'linear' && settings.wipePast ? ' Elapsed time is covered by a colored wipe.' : ''}${settings.seconds && (settings.mode === 'circle' || settings.showSecondsMarker) ? ' The short hand or lower marker shows seconds.' : ''}`}
     >
       <canvas ref={face} aria-hidden="true" />
       <canvas ref={hands} aria-hidden="true" />

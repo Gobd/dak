@@ -11,6 +11,7 @@ import {
 import { formatClockDate } from '../lib/date';
 import { themeColorHex } from '../lib/colors';
 import { displayUrl } from '../lib/url';
+import { CLOCK_THEMES, clockThemeColors } from '../lib/themes';
 import type { ClockCalendar } from '../lib/events';
 
 const COLOR_FIELDS = [
@@ -31,13 +32,31 @@ export default function Settings({
   settings: ClockSettings;
   dark: boolean;
   calendars: ClockCalendar[];
-  onSave: (settings: ClockSettings) => void;
+  onSave: (settings: ClockSettings, dark: boolean) => void;
   onClose: () => void;
 }) {
+  const [draftDark, setDraftDark] = useState(dark);
   const [latitude, setLatitude] = useState(settings.latitude?.toString() ?? '');
   const [longitude, setLongitude] = useState(settings.longitude?.toString() ?? '');
   const [mode, setMode] = useState(settings.mode);
   const [hourLabels, setHourLabels] = useState(settings.hourLabels);
+  const [digitalTimeFormat, setDigitalTimeFormat] = useState(settings.digitalTimeFormat);
+  const [rectangleBar, setRectangleBar] = useState(settings.rectangleBar);
+  const [barColor, setBarColor] = useState(settings.barColor);
+  const [barTextColor, setBarTextColor] = useState(settings.barTextColor);
+  const [barTheme] = useState(() => ({
+    background: themeColorHex('--color-surface-raised'),
+    text: themeColorHex('--color-text'),
+  }));
+  const [showWeather, setShowWeather] = useState(settings.showWeather);
+  const [showTomorrowWeather, setShowTomorrowWeather] = useState(settings.showTomorrowWeather);
+  const [weatherUnit, setWeatherUnit] = useState(settings.weatherUnit);
+  const [wipePast, setWipePast] = useState(settings.wipePast);
+  const [wipeColor, setWipeColor] = useState(settings.wipeColor);
+  const [wipeOpacity, setWipeOpacity] = useState(settings.wipeOpacity);
+  const [showTimeMarker, setShowTimeMarker] = useState(settings.showTimeMarker);
+  const [showSecondsMarker, setShowSecondsMarker] = useState(settings.showSecondsMarker);
+  const [themeWipe] = useState(() => themeColorHex('--clock-wipe'));
   const [seconds, setSeconds] = useState(settings.seconds);
   const [showTime, setShowTime] = useState(settings.showTime);
   const [showSolarTimes, setShowSolarTimes] = useState(settings.showSolarTimes);
@@ -108,6 +127,18 @@ export default function Settings({
       calendarPollSeconds: poll,
       mode,
       hourLabels,
+      digitalTimeFormat,
+      rectangleBar,
+      barColor,
+      barTextColor,
+      showWeather,
+      showTomorrowWeather,
+      weatherUnit,
+      wipePast,
+      wipeColor,
+      wipeOpacity,
+      showTimeMarker,
+      showSecondsMarker,
       seconds,
       showTime,
       showSolarTimes,
@@ -126,7 +157,7 @@ export default function Settings({
           event.preventDefault();
           const draft = draftSettings();
           if (!draft) return;
-          onSave(draft);
+          onSave(draft, draftDark);
           onClose();
         }}
       >
@@ -147,6 +178,183 @@ export default function Settings({
             ))}
           </div>
         </fieldset>
+        {mode === 'linear' && (
+          <fieldset className="space-y-3">
+            <legend className="text-sm text-text-secondary mb-2">
+              Rectangle layout &amp; elapsed time
+            </legend>
+            <fieldset className="space-y-2">
+              <legend className="text-sm text-text-secondary mb-2">Starter themes</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {CLOCK_THEMES.map((theme) => (
+                  <Button
+                    key={theme.id}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      const next = clockThemeColors(theme.id, themeColorHex);
+                      setColors({
+                        dayColor: next.dayColor,
+                        nightColor: next.nightColor,
+                        handColor: next.handColor,
+                        secondColor: next.secondColor,
+                        eventColor: null,
+                      });
+                      setBarColor(next.barColor);
+                      setBarTextColor(next.barTextColor);
+                      setWipeColor(next.wipeColor);
+                      setDraftDark(theme.dark);
+                    }}
+                  >
+                    <span className="flex flex-col items-start">
+                      <span>{theme.name}</span>
+                      <span className="text-xs font-normal">{theme.description}</span>
+                    </span>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-text-muted">
+                Apply a palette, then tweak any color below. Sets light/dark mode on save; calendar
+                colors are restored. Layout, weather and wipe opacity stay as-is.
+              </p>
+              <Toggle checked={draftDark} onChange={setDraftDark} label="Dark display theme" />
+            </fieldset>
+            <label className="block text-sm text-text-secondary">
+              Info bar (time, date, legend, solar times &amp; events)
+              <select
+                value={rectangleBar}
+                onChange={(event) =>
+                  setRectangleBar(event.target.value as ClockSettings['rectangleBar'])
+                }
+                className="mt-1 w-full rounded-lg border border-border bg-surface-raised p-2 text-text"
+              >
+                <option value="top">Top bar</option>
+                <option value="bottom">Bottom bar</option>
+                <option value="overlay">No bar — overlay on clock</option>
+              </select>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex items-center gap-2 text-sm text-text">
+                <input
+                  type="color"
+                  aria-label="Bar background color"
+                  value={barColor ?? barTheme.background}
+                  onChange={(event) => setBarColor(event.target.value)}
+                  className="w-10 h-10 cursor-pointer rounded border border-border bg-surface"
+                />
+                Bar background
+              </label>
+              <label className="flex items-center gap-2 text-sm text-text">
+                <input
+                  type="color"
+                  aria-label="Bar text color"
+                  value={barTextColor ?? barTheme.text}
+                  onChange={(event) => setBarTextColor(event.target.value)}
+                  className="w-10 h-10 cursor-pointer rounded border border-border bg-surface"
+                />
+                Bar text
+              </label>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setBarColor(null);
+                setBarTextColor(null);
+              }}
+            >
+              Reset bar to theme colors
+            </Button>
+            <div className="flex flex-col gap-3">
+              <Toggle
+                checked={showWeather}
+                onChange={setShowWeather}
+                label="Today's weather in info bar"
+              />
+              <Toggle
+                checked={showTomorrowWeather}
+                onChange={setShowTomorrowWeather}
+                label="Tomorrow's weather in info bar"
+              />
+            </div>
+            {(showWeather || showTomorrowWeather) && (
+              <label className="block text-sm text-text-secondary">
+                Weather temperature unit
+                <select
+                  value={weatherUnit}
+                  onChange={(event) =>
+                    setWeatherUnit(event.target.value as ClockSettings['weatherUnit'])
+                  }
+                  className="mt-1 w-full rounded-lg border border-border bg-surface-raised p-2 text-text"
+                >
+                  <option value="fahrenheit">Fahrenheit (°F)</option>
+                  <option value="celsius">Celsius (°C)</option>
+                </select>
+                <span className="block mt-1 text-xs text-text-muted">
+                  Requires a top/bottom bar and coordinates below. Sends coordinates to Open-Meteo
+                  (no key or relay needed); refreshes every 30 minutes. Shows each day's condition,
+                  low/high and chance of any precipitation, not separate rain/snow probabilities.
+                </span>
+              </label>
+            )}
+            <Toggle checked={wipePast} onChange={setWipePast} label="Wipe elapsed time" />
+            {wipePast && (
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm text-text">
+                  <input
+                    type="color"
+                    aria-label="Wipe color"
+                    value={wipeColor ?? themeWipe}
+                    onChange={(event) => setWipeColor(event.target.value)}
+                    className="w-10 h-10 cursor-pointer rounded border border-border bg-surface"
+                  />
+                  Wipe color
+                </label>
+                <label className="block text-sm text-text-secondary">
+                  Wipe opacity: {wipeOpacity}%
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={wipeOpacity}
+                    onChange={(event) => setWipeOpacity(Number(event.target.value))}
+                    className="mt-2 block w-full accent-accent"
+                  />
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setWipeColor(null)}
+                >
+                  Use theme wipe color
+                </Button>
+                <p className="text-sm text-text-muted">
+                  Covers midnight through now, including past event marks and hour labels. Use 100%
+                  for a solid blackout.
+                </p>
+              </div>
+            )}
+            <div className="flex flex-col gap-3">
+              <Toggle
+                checked={showTimeMarker}
+                onChange={setShowTimeMarker}
+                label="Current-time vertical marker"
+              />
+              <Toggle
+                checked={showSecondsMarker}
+                onChange={setShowSecondsMarker}
+                label="Seconds sweep / horizontal track"
+              />
+            </div>
+            <p className="text-sm text-text-muted">
+              Hide either marker for a cleaner wiped clock. Digital seconds still follow Show
+              seconds below. These options never change the circular clock.
+            </p>
+          </fieldset>
+        )}
         <label className="block text-sm text-text-secondary">
           Hour labels
           <select
@@ -158,8 +366,21 @@ export default function Settings({
             <option value="12h">Repeated 12-hour numbers (12, 1…11, twice)</option>
           </select>
           <span className="block mt-1 text-xs text-text-muted">
-            The dial still spans 24 hours. Only its labels change; digital time remains 24-hour.
+            The dial still spans 24 hours. Its labels and the digital time format are independent.
           </span>
+        </label>
+        <label className="block text-sm text-text-secondary">
+          Digital time format
+          <select
+            value={digitalTimeFormat}
+            onChange={(event) =>
+              setDigitalTimeFormat(event.target.value as ClockSettings['digitalTimeFormat'])
+            }
+            className="mt-1 w-full rounded-lg border border-border bg-surface-raised p-2 text-text"
+          >
+            <option value="24h">24-hour (15:10)</option>
+            <option value="12h">12-hour with AM/PM (3:10 PM)</option>
+          </select>
         </label>
         <div className="flex items-center justify-between gap-4">
           <span id="second-hand-label" className="text-text">
@@ -396,7 +617,7 @@ export default function Settings({
             onClick={async () => {
               const draft = draftSettings();
               if (!draft) return;
-              const url = displayUrl(window.location.href, draft, dark, kioskUrl);
+              const url = displayUrl(window.location.href, draft, draftDark, kioskUrl);
               setGeneratedUrl(url);
               await copy(url);
             }}

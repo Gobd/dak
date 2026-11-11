@@ -49,7 +49,17 @@ socket.addEventListener('message', (event) => {
     const auth = Object.entries(paused.request.headers).find(
       ([name]) => name.toLowerCase() === 'authorization',
     )?.[1];
-    const authorized = preflight || auth === 'Bearer fictional-demo-read-key';
+    const weather = paused.request.url.startsWith('https://api.open-meteo.com/');
+    const authorized = weather || preflight || auth === 'Bearer fictional-demo-read-key';
+    const weatherFeed = {
+      daily: {
+        time: ['2026-06-21', '2026-06-22'],
+        weather_code: [2, 61],
+        temperature_2m_min: [65, 63],
+        temperature_2m_max: [82, 76],
+        precipitation_probability_max: [15, 70],
+      },
+    };
     void send('Fetch.fulfillRequest', {
       requestId: paused.requestId,
       responseCode: preflight ? 204 : authorized ? 200 : 401,
@@ -62,13 +72,27 @@ socket.addEventListener('message', (event) => {
         { name: 'Cache-Control', value: 'no-store' },
       ],
       body: Buffer.from(
-        preflight ? '' : JSON.stringify(authorized ? feed : { detail: 'Invalid key' }),
+        preflight
+          ? ''
+          : JSON.stringify(authorized ? (weather ? weatherFeed : feed) : { detail: 'Invalid key' }),
       ).toString('base64'),
     }).catch((error) => failures.push(error.message));
   }
 });
 
 const shared = {
+  rectangleBar: 'top',
+  digitalTimeFormat: '24h',
+  barColor: '',
+  barTextColor: '',
+  wipePast: '0',
+  wipeColor: '',
+  wipeOpacity: '85',
+  showTimeMarker: '1',
+  showSecondsMarker: '1',
+  showWeather: '0',
+  showTomorrowWeather: '0',
+  weatherUnit: 'fahrenheit',
   seconds: '1',
   showTime: '1',
   showSolarTimes: '0',
@@ -103,6 +127,53 @@ const light = {
   secondColor: '#9b6f86',
 };
 const variants = [
+  [
+    'rectangle-wipe-top-weather',
+    {
+      mode: 'linear',
+      digitalTimeFormat: '12h',
+      barColor: '#000000',
+      barTextColor: '#f4efe4',
+      wipePast: '1',
+      wipeColor: '#000000',
+      wipeOpacity: '100',
+      showTimeMarker: '0',
+      showSecondsMarker: '0',
+      showWeather: '1',
+      showTomorrowWeather: '1',
+      showEventNames: '1',
+      eventPlacement: 'inside',
+      showSolarTimes: '1',
+    },
+  ],
+  [
+    'rectangle-wipe-bottom-weather',
+    {
+      mode: 'linear',
+      ...light,
+      rectangleBar: 'bottom',
+      barColor: '#f1e9d9',
+      barTextColor: '#293544',
+      wipePast: '1',
+      wipeColor: '#293544',
+      wipeOpacity: '65',
+      showTimeMarker: '0',
+      showSecondsMarker: '0',
+      showWeather: '1',
+      showTomorrowWeather: '1',
+      showEventList: '1',
+      showSolarTimes: '1',
+    },
+  ],
+  [
+    'rectangle-tomorrow-weather',
+    {
+      mode: 'linear',
+      ...light,
+      showTomorrowWeather: '1',
+      seconds: '0',
+    },
+  ],
   ['circle-bands-outside-dark', { mode: 'circle' }],
   [
     'circle-bands-inside-light',
@@ -170,7 +241,12 @@ try {
   await send('Page.enable');
   await send('Runtime.enable');
   await send('Emulation.setTimezoneOverride', { timezoneId: 'America/New_York' });
-  await send('Fetch.enable', { patterns: [{ urlPattern: 'http://127.0.0.1:5999/*' }] });
+  await send('Fetch.enable', {
+    patterns: [
+      { urlPattern: 'http://127.0.0.1:5999/*' },
+      { urlPattern: 'https://api.open-meteo.com/*' },
+    ],
+  });
   const stamp = new Date(feed.updated_at).getTime();
   await send('Page.addScriptToEvaluateOnNewDocument', {
     source: `{
@@ -206,11 +282,157 @@ try {
       throw new Error(`Calendar feed/legend missing for ${name}`);
     if (options.showEventList === '1' && !result.text.includes('Summer solstice'))
       throw new Error(`Agenda missing for ${name}`);
+    if (options.showWeather === '1' && !result.text.includes('Today'))
+      throw new Error(`Today weather missing: ${name}`);
+    if (options.showTomorrowWeather === '1' && !result.text.includes('Tomorrow'))
+      throw new Error(`Tomorrow weather missing: ${name}`);
+    if (options.wipePast === '1') {
+      const pixels = await send('Runtime.evaluate', {
+        expression: `JSON.stringify((() => {
+          const c = document.querySelectorAll('.clock-canvas canvas')[1];
+          const ctx = c.getContext('2d');
+          return [ctx.getImageData(10, 100, 1, 1).data[3], ctx.getImageData(c.width - 10, 100, 1, 1).data[3]];
+        })())`,
+      });
+      const [past, future] = JSON.parse(pixels.result.value);
+      if (Math.abs(past - (255 * Number(options.wipeOpacity)) / 100) > 1 || future !== 0)
+        throw new Error(`Wipe alpha/bounds failed: ${name}`);
+    }
     const screenshot = await send('Page.captureScreenshot', { format: 'png' });
     await writeFile(`${directory}/${name}.png`, Buffer.from(screenshot.data, 'base64'));
     demos.push({ file: `${name}.png`, options });
     console.log(`Saved ${name}.png`);
   }
+  // Exercise the real settings form: unsaved changes must be in Copy display URL.
+  const formUrl = new URL(preview);
+  formUrl.search = new URLSearchParams({ ...shared, ...variants[0][1], f: '0' }).toString();
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: 960,
+    height: 1100,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await send('Page.navigate', { url: formUrl.toString() });
+  await new Promise((resolve) => setTimeout(resolve, 650));
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('button[aria-label="Clock settings"]').click()`,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  await send('Runtime.evaluate', {
+    expression: `(() => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {} } });
+      const form = document.querySelector('form');
+      const change = (element, value, prototype) => {
+        Object.getOwnPropertyDescriptor(prototype, 'value').set.call(element, value);
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      change([...form.querySelectorAll('select')].find(el => el.value === 'top'), 'bottom', HTMLSelectElement.prototype);
+      change([...form.querySelectorAll('select')].find(el => el.value === 'fahrenheit'), 'celsius', HTMLSelectElement.prototype);
+      change(form.querySelector('input[type="range"]'), '42', HTMLInputElement.prototype);
+      change(form.querySelector('input[aria-label="Bar background color"]'), '#123456', HTMLInputElement.prototype);
+      change(form.querySelector('input[aria-label="Bar text color"]'), '#ffffff', HTMLInputElement.prototype);
+    })()`,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const settingsScreenshot = await send('Page.captureScreenshot', { format: 'png' });
+  await writeFile(
+    `${directory}/rectangle-settings.png`,
+    Buffer.from(settingsScreenshot.data, 'base64'),
+  );
+  await send('Runtime.evaluate', {
+    expression: `[...document.querySelectorAll('form button')].find(el => el.textContent === 'Copy display URL').click()`,
+    userGesture: true,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const copied = await send('Runtime.evaluate', {
+    expression: `document.querySelector('form textarea')?.value`,
+  });
+  const copiedUrl = new URL(copied.result.value);
+  const expected = {
+    ...shared,
+    ...variants[0][1],
+    rectangleBar: 'bottom',
+    weatherUnit: 'celsius',
+    wipeOpacity: '42',
+    barColor: '#123456',
+    barTextColor: '#ffffff',
+  };
+  for (const [key, value] of Object.entries(expected)) {
+    if (key !== 'theme' && copiedUrl.searchParams.get(key) !== value)
+      throw new Error(
+        `Copy URL lost unsaved setting ${key}: expected ${value}, got ${copiedUrl.searchParams.get(key)}`,
+      );
+  }
+  console.log(
+    'Actual Copy display URL button preserved all settings, including unsaved bar/unit/opacity changes.',
+  );
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('input[aria-label="Wipe color"]').scrollIntoView({block:'start'})`,
+  });
+  const wipeSettings = await send('Page.captureScreenshot', { format: 'png' });
+  await writeFile(
+    `${directory}/rectangle-wipe-settings.png`,
+    Buffer.from(wipeSettings.data, 'base64'),
+  );
+
+  // Apply real preset buttons, copy their materialized colors/theme, then capture the kiosk URL.
+  for (const [id, name, dark] of [
+    ['midnight', 'Midnight', true],
+    ['paper', 'Paper', false],
+    ['sand', 'Sand', false],
+    ['dusk', 'Dusk', true],
+  ]) {
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: 1280,
+      height: 720,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await send('Page.navigate', { url: formUrl.toString() });
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    await send('Runtime.evaluate', {
+      expression: `document.querySelector('button[aria-label="Clock settings"]').click()`,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await send('Runtime.evaluate', {
+      expression: `[...document.querySelectorAll('form button')].find(el => el.textContent.startsWith('${name}')).click()`,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await send('Runtime.evaluate', {
+      expression: `(() => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {} } });
+      [...document.querySelectorAll('form button')].find(el => el.textContent === 'Copy display URL').click();
+    })()`,
+      userGesture: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const state = await send('Runtime.evaluate', {
+      expression: `document.querySelector('form textarea').value`,
+    });
+    const themeUrl = new URL(state.result.value);
+    if (themeUrl.searchParams.get('theme') !== (dark ? 'dark' : 'light'))
+      throw new Error(`Preset theme mode lost: ${name}`);
+    for (const key of [
+      'dayColor',
+      'nightColor',
+      'handColor',
+      'secondColor',
+      'barColor',
+      'barTextColor',
+      'wipeColor',
+    ])
+      if (!/^#[0-9a-f]{6}$/i.test(themeUrl.searchParams.get(key)))
+        throw new Error(`Preset color lost: ${name} ${key}`);
+    await send('Page.navigate', { url: themeUrl.toString() });
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    const screenshot = await send('Page.captureScreenshot', { format: 'png' });
+    const file = `rectangle-theme-${id}.png`;
+    await writeFile(`${directory}/${file}`, Buffer.from(screenshot.data, 'base64'));
+    demos.push({ file, options: Object.fromEntries(themeUrl.searchParams) });
+    console.log(`Saved ${file}; real preset + Copy URL verified.`);
+  }
+
   // Explicit browser smoke check: deselecting every calendar must keep all marks/legend off.
   const empty = new URL(preview);
   empty.search = new URLSearchParams({

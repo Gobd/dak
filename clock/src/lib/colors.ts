@@ -21,6 +21,12 @@ export function clockColorStyles(settings: ClockSettings): CSSProperties {
           '--clock-night-text': contrastInk(settings.nightColor),
         }
       : {}),
+    ...(settings.mode === 'linear' && settings.barColor
+      ? { '--clock-bar-background': settings.barColor }
+      : {}),
+    ...(settings.mode === 'linear' && settings.barTextColor
+      ? { '--clock-bar-text': settings.barTextColor }
+      : {}),
     ...(settings.handColor ? { '--clock-hand': settings.handColor } : {}),
     ...(settings.secondColor ? { '--clock-second': settings.secondColor } : {}),
   } as CSSProperties;

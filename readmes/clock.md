@@ -5,7 +5,8 @@ A standalone canvas-based 24-hour clock at `/clock/`, designed to keep animation
 ## Display
 
 - **Circular:** fills the largest circle that fits the viewport, with hour labels and controls inside the rim. Midnight is at the top, noon at the bottom; the long hand rotates once per day and the shorter second hand once per minute. No header, footer, or legend. On square/circular displays the rim reaches the edges; rectangular screens have spare space on two sides.
-- **Linear / rectangle:** daylight/night shading fills the display edge-to-edge. Midnight is left, 24:00 right. The current-time marker runs the full height; optional seconds sweep across a thin lower track.
+- **Linear / rectangle:** daylight/night shading fills the clock area edge-to-edge. Midnight is left, 24:00 right. A compact **top bar** (default) or **bottom bar** holds digital time, date, solar times, calendar legend/status, controls, and the optional agenda/weather. Choose **No bar — overlay** for the original layout. The current-time vertical marker and seconds sweep/track can be hidden independently without hiding digital seconds.
+- **Rectangle elapsed-time wipe:** optionally cover midnight through now, including past labels and event marks. Choose a wipe color and opacity (0–100%); 100% gives a solid blackout. It never touches the info bar or circular clock.
 - Light sections show day, dark sections night. Boundaries mark sunrise/sunset; exact times are optional and hidden by default.
 - Optional digital time and date sit inside the clock. Small theme, fullscreen, and settings controls brighten on hover/focus; `f=1` removes them.
 - Polar day/night are handled without invalid solar labels.
@@ -14,17 +15,25 @@ A standalone canvas-based 24-hour clock at `/clock/`, designed to keep animation
 
 Open the gear to select shape, toggle seconds/digital time/solar times, choose a date format, customize colors, enter latitude/longitude, or enable calendar events. North/east are positive; south/west negative. Blank coordinates show a clock without daylight calculation; initial launch does not assume a location.
 
-Hour labels can be 24-hour (`00–23`) or repeated 12-hour (`12, 1…11`, twice). The clock still spans 24 hours; digital time remains 24-hour. URL option: `hourLabels=24h` or `hourLabels=12h`.
+Hour labels can be 24-hour (`00–23`) or repeated 12-hour (`12, 1…11`, twice). The clock still spans 24 hours. Digital time has its own independent **12-hour with AM/PM** or **24-hour** setting (24-hour by default). URL options: `hourLabels=24h|12h` and `digitalTimeFormat=24h|12h`. Solar and agenda event times remain 24-hour.
 
 Date formats: hidden (default), weekday only, month/day, weekday/date, full date with year, locale-specific numeric date, or ISO YYYY-MM-DD.
 
-Color pickers control day, night, the 24-hour hand/marker, second hand/marker, and optionally all event marks. Without an event-color override, events use each Google calendar’s color. Custom colors persist across themes; Reset to theme colors restores defaults. Hour labels automatically contrast with custom day/night colors. Semantic default aliases are in `clock/src/index.css`.
+Rectangle **starter themes**: **Midnight** (dark charcoal/cream), **Paper** (bright ivory/slate), **Sand** (warm in-between neutrals), and **Dusk** (muted plum/lavender). Each fills in editable clock/bar/wipe colors and its light/dark mode; layout, weather toggles and wipe opacity stay as-is. It restores individual calendar colors. Apply a preset, then tweak any picker. Save applies its display mode; Copy URL includes the draft mode/colors even without saving. Presets are materialized colors, not a new theme-name dependency in kiosk URLs.
+
+Color pickers control day, night, the 24-hour hand/marker, second hand/marker, and optionally all event marks. Rectangle bar background and text have independent color pickers and a reset-to-theme button; weather text also follows the bar text color. Without an event-color override, events use each Google calendar’s color. Custom colors persist across themes; Reset to theme colors restores defaults. Hour labels automatically contrast with custom day/night colors. Semantic default aliases are in `clock/src/index.css`.
 
 Settings persist in localStorage under `clock-settings`; theme uses `clock-dark-mode`. They are independent of dashboard settings. Event snapshots are **not** persisted to localStorage.
 
 **Times use the device/browser timezone.** Coordinates affect solar calculation, not timezone. Set the kiosk’s OS timezone appropriately. Solar boundaries refresh at midnight, on timezone-offset changes, and on tab return. The dial represents 24 wall-clock hours, including DST transitions: the hand follows skipped/repeated hours.
 
 SunCalc computes approximate sunrise/sunset locally, with no permission prompt or network lookup. Enable OS time synchronization (NTP), especially on a Pi Zero without a battery-backed clock. The app re-reads system time each rendered frame (or each minute without seconds), rather than accumulating timer ticks. It does not fetch network time itself.
+
+## Optional rectangle weather
+
+Enable **Today's weather** and/or **Tomorrow's weather** independently in rectangle settings, with Fahrenheit (default) or Celsius. The top/bottom bar shows each day's condition icon, low/high and maximum probability of any precipitation; a snow icon appears for snowy forecasts. The percentage is **not separate rain and snow probabilities**. Weather is off by default and is not shown in circular/overlay mode.
+
+Uses Open-Meteo directly (no home-relay weather endpoint, account or key needed). Enabling it sends the configured coordinates to Open-Meteo. Forecast dates follow the **device timezone**, just like the clock. Data refreshes every 30 minutes, at midnight, after coordinate/unit changes, and on tab return; requests stop while hidden and time out after 10 seconds. Failed refreshes retain the current day's last forecast with an update warning; location/date changes clear old data. Missing coordinates and network failures display a compact status. The weather attribution links to Open-Meteo.
 
 ## No-input kiosk and URL options
 
@@ -34,6 +43,14 @@ Valid URL values override saved settings. Missing/invalid values fall back to sa
 
 | Parameter                                                                                                                                | Values                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `digitalTimeFormat`                                                                                                                      | `24h` (default), `12h` with AM/PM; independent of dial labels                                                                 |
+| `barColor`, `barTextColor`                                                                                                               | Six-digit hex; blank for theme defaults; rectangle info bar only                                                              |
+| `rectangleBar`                                                                                                                           | `top` (default), `bottom`, `overlay` — rectangle only                                                                         |
+| `wipePast`, `showTimeMarker`, `showSecondsMarker`                                                                                        | `1` or `0` — rectangle only                                                                                                   |
+| `wipeColor`                                                                                                                              | Six-digit hex, blank for theme default; rectangle only                                                                        |
+| `wipeOpacity`                                                                                                                            | 0–100, default 85; rectangle only                                                                                             |
+| `showWeather`, `showTomorrowWeather`                                                                                                     | `1` or `0`, independent today/tomorrow toggles; top/bottom rectangle bar only                                                 |
+| `weatherUnit`                                                                                                                            | `fahrenheit` (default), `celsius`                                                                                             |
 | `mode`                                                                                                                                   | `circle`, `linear`                                                                                                            |
 | `seconds`, `showTime`, `showSolarTimes`, `showEventList`, `showCalendarStatus`, `showCalendarLegend`, `showEventNames`, `calendarFilter` | `1` or `0`                                                                                                                    |
 | `date`                                                                                                                                   | `none`, `weekday`, `monthDay`, `weekdayDate`, `full`, `numeric`, `iso`                                                        |

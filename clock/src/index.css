@@ -13,6 +13,7 @@
   --clock-second: var(--color-danger);
   --clock-ink-light: var(--color-surface);
   --clock-ink-dark: var(--color-text);
+  --clock-wipe: var(--clock-ink-dark);
 }
 
 .dark {
@@ -164,6 +165,112 @@ body {
   text-align: center;
   font-size: clamp(9px, 1.6vmin, 12px);
   pointer-events: none;
+}
+
+.clock-info {
+  display: contents;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) {
+  display: flex;
+  flex-direction: column;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) > .clock-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info {
+  order: -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 12px 20px;
+  flex-shrink: 0;
+  max-height: 40%;
+  overflow: auto;
+  background: var(--clock-bar-background, var(--color-surface-raised));
+  color: var(--clock-bar-text, var(--color-text));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.linear .clock-display.rectangle-bar-bottom .clock-info {
+  order: 1;
+  border-bottom: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info > * {
+  position: static;
+  transform: none;
+  width: auto;
+  max-height: none;
+  text-align: left;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-time {
+  font-size: clamp(22px, 3.5vmin, 36px);
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-date {
+  font-size: 14px;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-solar,
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-calendar-legend {
+  justify-content: flex-start;
+  font-size: 12px;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda {
+  flex-basis: 100%;
+  order: 2;
+  font-size: 12px;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda li {
+  max-width: 100%;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-controls {
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-calendar-status:empty {
+  display: none;
+}
+
+.clock-weather-group,
+.clock-weather {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12px;
+}
+
+.clock-weather-group {
+  gap: 8px 20px;
+}
+
+.clock-weather-group .text-text-secondary,
+.clock-weather-group .text-text-muted {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info:empty {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

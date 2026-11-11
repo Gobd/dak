@@ -4,6 +4,7 @@ import { useDarkMode, useInterval, useLocalStorage } from '@dak/hooks';
 import { Button } from '@dak/ui';
 import ClockCanvas from './components/ClockCanvas';
 import Settings from './components/Settings';
+import Weather from './components/Weather';
 import { DEFAULT_SETTINGS, normalizeSettings } from './lib/settings';
 import { formatClockDate } from './lib/date';
 import { clockColorStyles } from './lib/colors';
@@ -113,9 +114,9 @@ export default function App() {
         hour: '2-digit',
         minute: '2-digit',
         ...(settings.seconds ? ({ second: '2-digit' } as const) : {}),
-        hourCycle: 'h23',
+        hourCycle: settings.digitalTimeFormat === '12h' ? 'h12' : 'h23',
       }),
-    [settings.seconds],
+    [settings.seconds, settings.digitalTimeFormat],
   );
   // The linear view is shaded edge-to-edge; choose legible text for the band beneath the overlays.
   const centerIsDay = solar?.daylight.some((period) => period.start <= 0.5 && period.end > 0.5);
@@ -125,7 +126,7 @@ export default function App() {
   return (
     <main className={`clock-screen ${settings.mode}`} aria-label="Clock">
       <div
-        className="clock-display"
+        className={`clock-display ${settings.mode === 'linear' ? `rectangle-bar-${settings.rectangleBar}` : ''}`}
         style={{
           ...clockColorStyles(settings),
           ...(settings.mode === 'linear' && solar
@@ -134,125 +135,132 @@ export default function App() {
         }}
       >
         <ClockCanvas settings={settings} dark={dark} events={dailyEvents} />
-        {settings.showTime && (
-          <time dateTime={now.toISOString()} className="clock-time tabular-nums">
-            {timeFormat.format(now)}
-          </time>
-        )}
-        {settings.dateFormat !== 'none' && (
-          <div className="clock-date">{formatClockDate(now, settings.dateFormat)}</div>
-        )}
-        {settings.showSolarTimes && solar && (
-          <div className="clock-solar text-sm">
-            {solar.events.map((event) => (
-              <span key={event.time.getTime()} className="inline-flex items-center gap-1.5">
-                {event.kind === 'sunrise' ? (
-                  <Sunrise className="w-4 h-4" aria-label="Sunrise" />
-                ) : (
-                  <Sunset className="w-4 h-4" aria-label="Sunset" />
-                )}
-                {solarTime.format(event.time)}
-              </span>
-            ))}
-            {solar.state !== 'normal' && (
-              <span>{solar.state === 'polar-day' ? 'Daylight all day' : 'Night all day'}</span>
+        <div className="clock-info">
+          {settings.showTime && (
+            <time dateTime={now.toISOString()} className="clock-time tabular-nums">
+              {timeFormat.format(now)}
+            </time>
+          )}
+          {settings.dateFormat !== 'none' && (
+            <div className="clock-date">{formatClockDate(now, settings.dateFormat)}</div>
+          )}
+          {settings.showSolarTimes && solar && (
+            <div className="clock-solar text-sm">
+              {solar.events.map((event) => (
+                <span key={event.time.getTime()} className="inline-flex items-center gap-1.5">
+                  {event.kind === 'sunrise' ? (
+                    <Sunrise className="w-4 h-4" aria-label="Sunrise" />
+                  ) : (
+                    <Sunset className="w-4 h-4" aria-label="Sunset" />
+                  )}
+                  {solarTime.format(event.time)}
+                </span>
+              ))}
+              {solar.state !== 'normal' && (
+                <span>{solar.state === 'polar-day' ? 'Daylight all day' : 'Night all day'}</span>
+              )}
+            </div>
+          )}
+          {settings.mode === 'linear' &&
+            (settings.showWeather || settings.showTomorrowWeather) &&
+            settings.rectangleBar !== 'overlay' && (
+              <Weather settings={settings} now={now} visible={visible} />
             )}
-          </div>
-        )}
-        {settings.showEventList && settings.calendarRelay && (
-          <section className="clock-agenda" aria-label="Today's calendar events">
-            <ul>
-              {dailyEvents.slice(0, 5).map((event) => (
-                <li key={event.key} title={`${event.calendarName}: ${event.title}`}>
+          {settings.showEventList && settings.calendarRelay && (
+            <section className="clock-agenda" aria-label="Today's calendar events">
+              <ul>
+                {dailyEvents.slice(0, 5).map((event) => (
+                  <li key={event.key} title={`${event.calendarName}: ${event.title}`}>
+                    <span
+                      className="clock-event-dot"
+                      style={{
+                        background: settings.eventColor ?? event.color ?? 'var(--color-feature)',
+                      }}
+                    />
+                    <span className="truncate">{event.title}</span>
+                    <span className="tabular-nums text-xs whitespace-nowrap">
+                      {event.allDay
+                        ? 'All day'
+                        : `${event.continuesBefore ? '↤ ' : ''}${solarTime.format(event.startTime!)}–${solarTime.format(event.endTime!)}${event.continuesAfter ? ' ↦' : ''}${event.repeatedHour ? ' (DST)' : ''}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {dailyEvents.length > 5 && (
+                <p className="text-xs">+{dailyEvents.length - 5} more events</p>
+              )}
+              {!dailyEvents.length && covered && !expired && !calendarError && (
+                <p className="text-sm">No events today</p>
+              )}
+            </section>
+          )}
+          {settings.showCalendarLegend && legendCalendars.length > 0 && (
+            <div className="clock-calendar-legend" aria-label="Calendar color legend">
+              {legendCalendars.map((calendar) => (
+                <span key={calendar.id} className="inline-flex items-center gap-1.5 max-w-full">
                   <span
-                    className="clock-event-dot"
+                    className="clock-event-dot shrink-0"
                     style={{
-                      background: settings.eventColor ?? event.color ?? 'var(--color-feature)',
+                      background: settings.eventColor ?? calendar.color ?? 'var(--color-feature)',
                     }}
                   />
-                  <span className="truncate">{event.title}</span>
-                  <span className="tabular-nums text-xs whitespace-nowrap">
-                    {event.allDay
-                      ? 'All day'
-                      : `${event.continuesBefore ? '↤ ' : ''}${solarTime.format(event.startTime!)}–${solarTime.format(event.endTime!)}${event.continuesAfter ? ' ↦' : ''}${event.repeatedHour ? ' (DST)' : ''}`}
-                  </span>
-                </li>
+                  <span className="truncate">{calendar.name}</span>
+                </span>
               ))}
-            </ul>
-            {dailyEvents.length > 5 && (
-              <p className="text-xs">+{dailyEvents.length - 5} more events</p>
-            )}
-            {!dailyEvents.length && covered && !expired && !calendarError && (
-              <p className="text-sm">No events today</p>
-            )}
-          </section>
-        )}
-        {settings.showCalendarLegend && legendCalendars.length > 0 && (
-          <div className="clock-calendar-legend" aria-label="Calendar color legend">
-            {legendCalendars.map((calendar) => (
-              <span key={calendar.id} className="inline-flex items-center gap-1.5 max-w-full">
-                <span
-                  className="clock-event-dot shrink-0"
-                  style={{
-                    background: settings.eventColor ?? calendar.color ?? 'var(--color-feature)',
-                  }}
-                />
-                <span className="truncate">{calendar.name}</span>
-              </span>
-            ))}
-          </div>
-        )}
-        {settings.showCalendarStatus && settings.calendarRelay && (
-          <div className="clock-calendar-status text-xs" role="status">
-            {calendarStatus}
-            {overflowingEvents > 0 && settings.eventStyle !== 'none' && (
-              <span> · {overflowingEvents} overlapping events beyond the 5 visible lanes</span>
-            )}
-          </div>
-        )}
-        {!kiosk && (
-          <nav className="clock-controls" aria-label="Display controls">
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              onClick={() => setDark(!dark)}
-            >
-              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
-            {document.fullscreenEnabled && (
+            </div>
+          )}
+          {settings.showCalendarStatus && settings.calendarRelay && (
+            <div className="clock-calendar-status text-xs" role="status">
+              {calendarStatus}
+              {overflowingEvents > 0 && settings.eventStyle !== 'none' && (
+                <span> · {overflowingEvents} overlapping events beyond the 5 visible lanes</span>
+              )}
+            </div>
+          )}
+          {!kiosk && (
+            <nav className="clock-controls" aria-label="Display controls">
               <Button
                 variant="secondary"
                 size="icon"
-                aria-label="Toggle fullscreen"
-                onClick={async () => {
-                  try {
-                    if (document.fullscreenElement) await document.exitFullscreen();
-                    else await document.documentElement.requestFullscreen();
-                    setFullscreenError('');
-                  } catch {
-                    setFullscreenError('Use the browser’s fullscreen control.');
-                  }
-                }}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={() => setDark(!dark)}
               >
-                <Maximize className="w-4 h-4" />
+                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
-            )}
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label="Clock settings"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </Button>
-          </nav>
-        )}
-        {fullscreenError && (
-          <p role="status" className="clock-message text-sm">
-            {fullscreenError}
-          </p>
-        )}
+              {document.fullscreenEnabled && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  aria-label="Toggle fullscreen"
+                  onClick={async () => {
+                    try {
+                      if (document.fullscreenElement) await document.exitFullscreen();
+                      else await document.documentElement.requestFullscreen();
+                      setFullscreenError('');
+                    } catch {
+                      setFullscreenError('Use the browser’s fullscreen control.');
+                    }
+                  }}
+                >
+                  <Maximize className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label="Clock settings"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <SettingsIcon className="w-4 h-4" />
+              </Button>
+            </nav>
+          )}
+          {fullscreenError && (
+            <p role="status" className="clock-message text-sm">
+              {fullscreenError}
+            </p>
+          )}
+        </div>
         <span className="sr-only">
           {isDay
             ? 'Daylight'
@@ -266,14 +274,15 @@ export default function App() {
           settings={settings}
           dark={dark}
           calendars={availableCalendars}
-          onSave={(next) => {
+          onSave={(next, nextDark) => {
             saveSettings(next);
+            setDark(nextDark);
             setUrlSettings({});
             if (params.size)
               window.history.replaceState(
                 {},
                 '',
-                displayUrl(window.location.href, next, dark, kiosk),
+                displayUrl(window.location.href, next, nextDark, kiosk),
               );
           }}
           onClose={() => setSettingsOpen(false)}

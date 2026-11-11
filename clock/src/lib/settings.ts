@@ -11,6 +11,18 @@ export const DATE_FORMATS = {
 export interface ClockSettings {
   mode: 'circle' | 'linear';
   hourLabels: '24h' | '12h';
+  digitalTimeFormat: '24h' | '12h';
+  rectangleBar: 'top' | 'bottom' | 'overlay';
+  barColor: string | null;
+  barTextColor: string | null;
+  showWeather: boolean;
+  showTomorrowWeather: boolean;
+  weatherUnit: 'fahrenheit' | 'celsius';
+  wipePast: boolean;
+  wipeColor: string | null;
+  wipeOpacity: number;
+  showTimeMarker: boolean;
+  showSecondsMarker: boolean;
   seconds: boolean;
   showTime: boolean;
   showSolarTimes: boolean;
@@ -38,6 +50,18 @@ export interface ClockSettings {
 export const DEFAULT_SETTINGS: ClockSettings = {
   mode: 'circle',
   hourLabels: '24h',
+  digitalTimeFormat: '24h',
+  rectangleBar: 'top',
+  barColor: null,
+  barTextColor: null,
+  showWeather: false,
+  showTomorrowWeather: false,
+  weatherUnit: 'fahrenheit',
+  wipePast: false,
+  wipeColor: null,
+  wipeOpacity: 85,
+  showTimeMarker: true,
+  showSecondsMarker: true,
   seconds: true,
   showTime: true,
   showSolarTimes: false,
@@ -103,6 +127,26 @@ export function normalizeSettings(value: unknown): ClockSettings {
   return {
     mode: settings.mode === 'linear' ? 'linear' : 'circle',
     hourLabels: settings.hourLabels === '12h' ? '12h' : '24h',
+    digitalTimeFormat: settings.digitalTimeFormat === '12h' ? '12h' : '24h',
+    rectangleBar:
+      settings.rectangleBar === 'bottom' || settings.rectangleBar === 'overlay'
+        ? settings.rectangleBar
+        : 'top',
+    barColor: normalizeColor(settings.barColor),
+    barTextColor: normalizeColor(settings.barTextColor),
+    showWeather: typeof settings.showWeather === 'boolean' ? settings.showWeather : false,
+    showTomorrowWeather:
+      typeof settings.showTomorrowWeather === 'boolean' ? settings.showTomorrowWeather : false,
+    weatherUnit: settings.weatherUnit === 'celsius' ? 'celsius' : 'fahrenheit',
+    wipePast: typeof settings.wipePast === 'boolean' ? settings.wipePast : false,
+    wipeColor: normalizeColor(settings.wipeColor),
+    wipeOpacity:
+      typeof settings.wipeOpacity === 'number' && Number.isFinite(settings.wipeOpacity)
+        ? Math.max(0, Math.min(100, Math.round(settings.wipeOpacity)))
+        : 85,
+    showTimeMarker: typeof settings.showTimeMarker === 'boolean' ? settings.showTimeMarker : true,
+    showSecondsMarker:
+      typeof settings.showSecondsMarker === 'boolean' ? settings.showSecondsMarker : true,
     seconds: typeof settings.seconds === 'boolean' ? settings.seconds : true,
     showTime: typeof settings.showTime === 'boolean' ? settings.showTime : true,
     showSolarTimes: typeof settings.showSolarTimes === 'boolean' ? settings.showSolarTimes : false,

@@ -8,6 +8,11 @@ import {
 
 const BOOLEAN_PARAMS = [
   'seconds',
+  'wipePast',
+  'showWeather',
+  'showTomorrowWeather',
+  'showTimeMarker',
+  'showSecondsMarker',
   'showTime',
   'showSolarTimes',
   'showEventList',
@@ -16,12 +21,36 @@ const BOOLEAN_PARAMS = [
   'showCalendarLegend',
   'showEventNames',
 ] as const;
-const COLOR_PARAMS = ['dayColor', 'nightColor', 'handColor', 'secondColor', 'eventColor'] as const;
+const COLOR_PARAMS = [
+  'dayColor',
+  'nightColor',
+  'handColor',
+  'secondColor',
+  'eventColor',
+  'wipeColor',
+  'barColor',
+  'barTextColor',
+] as const;
 
 export function settingsFromParams(params: URLSearchParams): Partial<ClockSettings> {
   const settings: Partial<ClockSettings> = {};
   const mode = params.get('mode');
   if (mode === 'circle' || mode === 'linear') settings.mode = mode;
+  const unit = params.get('weatherUnit');
+  if (unit === 'fahrenheit' || unit === 'celsius') settings.weatherUnit = unit;
+  const bar = params.get('rectangleBar');
+  if (bar === 'top' || bar === 'bottom' || bar === 'overlay') settings.rectangleBar = bar;
+  const opacity = params.get('wipeOpacity');
+  if (
+    opacity?.trim() &&
+    Number.isFinite(Number(opacity)) &&
+    Number(opacity) >= 0 &&
+    Number(opacity) <= 100
+  )
+    settings.wipeOpacity = Math.round(Number(opacity));
+  const digitalTimeFormat = params.get('digitalTimeFormat');
+  if (digitalTimeFormat === '24h' || digitalTimeFormat === '12h')
+    settings.digitalTimeFormat = digitalTimeFormat;
   const hourLabels = params.get('hourLabels');
   if (hourLabels === '24h' || hourLabels === '12h') settings.hourLabels = hourLabels;
   for (const key of BOOLEAN_PARAMS) {
@@ -85,6 +114,10 @@ export function displayUrl(
   url.hash = '';
   url.searchParams.set('mode', settings.mode);
   url.searchParams.set('hourLabels', settings.hourLabels);
+  url.searchParams.set('digitalTimeFormat', settings.digitalTimeFormat);
+  url.searchParams.set('rectangleBar', settings.rectangleBar);
+  url.searchParams.set('weatherUnit', settings.weatherUnit);
+  url.searchParams.set('wipeOpacity', settings.wipeOpacity.toString());
   for (const key of BOOLEAN_PARAMS) url.searchParams.set(key, settings[key] ? '1' : '0');
   url.searchParams.set('date', settings.dateFormat);
   url.searchParams.set('lat', settings.latitude?.toString() ?? '');
