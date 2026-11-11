@@ -1,4 +1,4 @@
-"""Private calendar snapshots; separate read and publish bearer keys, no OAuth here."""
+"""Trusted-network calendar snapshots; publishing requires a bearer key, reading does not."""
 
 import hmac
 import os
@@ -67,11 +67,7 @@ async def publish_snapshot(
 @router.get(
     "/snapshot", response_model=CalendarSnapshotResponse, operation_id="getCalendarSnapshot"
 )
-async def get_snapshot(
-    response: Response,
-    authorization: Annotated[str | None, Header()] = None,
-):
-    """Read calendar events only; this key cannot publish or access Google credentials."""
-    authorize(authorization, "CALENDAR_READ_KEY")
+async def get_snapshot(response: Response):
+    """Read events without authentication. Deploy the relay only on a trusted network."""
     response.headers["Cache-Control"] = "no-store"
     return cache.read()

@@ -13,6 +13,12 @@ export const CLOCK_THEMES = [
   { id: 'paper', name: 'Paper', description: 'Bright ivory & slate', dark: false },
   { id: 'sand', name: 'Sand', description: 'Soft warm neutrals', dark: false },
   { id: 'dusk', name: 'Dusk', description: 'Muted plum & lavender', dark: true },
+  {
+    id: 'slate-cream',
+    name: 'Slate & Cream',
+    description: 'Original blue-gray & tan demos',
+    dark: true,
+  },
 ] as const;
 
 const fields: Record<PaletteKey, string> = {

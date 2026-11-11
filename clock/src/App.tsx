@@ -87,20 +87,19 @@ export default function App() {
   const stale =
     snapshot?.stale ||
     (snapshot?.updated_at && now.getTime() - new Date(snapshot.updated_at).getTime() > 15 * 60000);
-  const calendarStatus = !settings.calendarKey
-    ? 'Set a calendar read key in settings'
-    : calendarError ||
-      (expired
-        ? 'Calendar snapshot expired'
-        : !snapshot
-          ? 'Connecting calendar…'
-          : !snapshot.updated_at
-            ? 'Waiting for dashboard calendar sync'
-            : !covered
-              ? 'Calendar feed does not cover today'
-              : stale
-                ? 'Calendar snapshot is stale'
-                : '');
+  const calendarStatus =
+    calendarError ||
+    (expired
+      ? 'Calendar snapshot expired'
+      : !snapshot
+        ? 'Connecting calendar…'
+        : !snapshot.updated_at
+          ? 'Waiting for dashboard calendar sync'
+          : !covered
+            ? 'Calendar feed does not cover today'
+            : stale
+              ? 'Calendar snapshot is stale'
+              : '');
   const solar = useMemo(
     () =>
       settings.latitude !== null && settings.longitude !== null

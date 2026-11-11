@@ -23,7 +23,7 @@ test('launcher preserves URL as one literal argument without evaluating shell ch
     mkdirSync(config, { recursive: true });
     mkdirSync(bin);
     const url =
-      "https://example.com/clock/?f=1&calendarKey=quoted'value&shell=$HOME;echo&hash=%23abcdef";
+      "https://example.com/clock/?f=1&example=quoted'value&shell=$HOME;echo&hash=%23abcdef";
     writeFileSync(join(config, 'url'), `${url}\n`);
     writeFileSync(join(bin, 'chromium'), '#!/usr/bin/env bash\nexit 0\n', { mode: 0o755 });
     writeFileSync(

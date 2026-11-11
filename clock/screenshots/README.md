@@ -1,6 +1,6 @@
 # Clock demo gallery
 
-**19 full-resolution display demos**, two settings screenshots, plus two overview sheets. Real screenshots of the built app in Chromium, using fictional calendars/events and a fixed demo date: **Sunday, June 21, 2026 at 15:10:20, America/New_York**. Coordinates are New York; weather and calendar data are fictional. No private Google events, production relay, or live weather API were accessed.
+**20 full-resolution display demos**, four settings screenshots, plus two overview sheets. Real screenshots of the built app in Chromium, using fictional calendars/events and a fixed demo date: **Sunday, June 21, 2026 at 15:10:20, America/New_York**. Coordinates are New York; weather and calendar data are fictional. No private Google events, production relay, or live weather API were accessed.
 
 The warm cream/charcoal palettes below are examples made with the app’s color settings—not fixed product colors. Optional names use separate clearance from the marks; crowded labels are omitted instead of overlapping, while the dot/band remains. The optional agenda supplies names for dense schedules. Every displayed option can be configured in the URL. `f=1` hides controls in all examples.
 
@@ -54,6 +54,10 @@ Each preset below was applied with the actual settings button, copied to a kiosk
 
 ![Dusk starter theme](rectangle-theme-dusk.png)
 
+### Slate & Cream — original demo blue-gray & tan
+
+![Slate & Cream starter theme](rectangle-theme-slate-cream.png)
+
 ## New rectangle features
 
 ### Top bar with today/tomorrow weather and solid blackout
@@ -73,6 +77,10 @@ Each preset below was applied with the actual settings button, copied to a kiosk
 ![Rectangle starter themes, bar colors and weather controls](rectangle-settings.png)
 
 ![Wipe and digital format controls](rectangle-wipe-settings.png)
+
+![Location with browser geolocation button](rectangle-location-settings.png)
+
+![Keyless local calendar settings](rectangle-calendar-settings.png)
 
 ## Full-size examples
 
@@ -95,7 +103,7 @@ Each preset below was applied with the actual settings button, copied to a kiosk
 ## Demo data and reproducing
 
 - [`demo-feed.json`](demo-feed.json): fictional all-day holiday, morning walk, overlapping work/coffee, dinner, and overnight stargazing events.
-- [`demo-options.json`](demo-options.json): complete URL parameter values for every screenshot, including theme, colors, 12/24-hour labels, calendar filtering, names/list/legend, and placement. Its read key is explicitly fictional. These demo feed URLs are not live production links.
+- [`demo-options.json`](demo-options.json): complete URL parameter values for every screenshot, including theme, colors, 12/24-hour labels, calendar filtering, names/list/legend, and placement. Calendar reads use no key. These demo feed URLs are not live production links.
 - [`../scripts/capture-demos.mjs`](../scripts/capture-demos.mjs): reproducible capture plus browser smoke assertions. Intercepts the demo relay and Open-Meteo endpoints and fixes the browser timezone/date; no Google sign-in needed. Weather examples show fictional partly cloudy/rain forecasts and low/high/precipitation chance.
 
 Build the app, start preview, and start a dedicated headless Chromium with remote debugging:
@@ -111,4 +119,4 @@ pnpm --filter clock screenshots
 
 On macOS the browser binary may be `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`. Optional environment variables `CLOCK_CDP_URL` and `CLOCK_PREVIEW_URL` select alternate debug/preview endpoints. Use a throwaway browser profile and keep remote debugging bound to localhost.
 
-The capture checks calendar retrieval/legend, URL-driven theme, hidden controls, optional agenda, today/tomorrow weather, wipe pixel alpha/bounds, all-calendars-off behavior, and uncaught browser exceptions. It also opens the actual settings form, changes the bar/unit/opacity without saving, clicks **Copy display URL**, and verifies every setting in the generated link. Every preset is also clicked, copied, checked for seven explicit color values and its light/dark mode, and loaded for a dedicated screenshot. Weather toggle regression checks also verify stable dialog position/size and no horizontal overflow at desktop (960px) and phone (390px) widths. It does not test the Orange Pi's hardware renderer or a real Google account.
+The capture checks calendar retrieval/legend, URL-driven theme, hidden controls, optional agenda, today/tomorrow weather, wipe pixel alpha/bounds, all-calendars-off behavior, and uncaught browser exceptions. It also opens the actual settings form, changes the bar/unit/opacity without saving, clicks **Copy display URL**, and verifies every setting in the generated link. Every preset is also clicked, copied, checked for seven explicit color values and its light/dark mode, and loaded for a dedicated screenshot. Weather toggle regression checks also verify stable dialog position/size and no horizontal overflow at desktop (960px) and phone (390px) widths. Geolocation checks grant browser permission with mocked coordinates, verify draft fields and copied URLs, and exercise permission denial without losing existing coordinates. Calendar requests are checked to ensure no Authorization header is sent; obsolete read keys must be stripped from copied links. It does not test the Orange Pi's hardware renderer or a real Google account.

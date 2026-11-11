@@ -13,13 +13,13 @@ A standalone canvas-based 24-hour clock at `/clock/`, designed to keep animation
 
 ## Settings and time
 
-Open the gear to select shape, toggle seconds/digital time/solar times, choose a date format, customize colors, enter latitude/longitude, or enable calendar events. North/east are positive; south/west negative. Blank coordinates show a clock without daylight calculation; initial launch does not assume a location.
+Open the gear to configure **Clock shape**, **Starter themes**, **Info bar**, **Weather**, **Elapsed time & markers**, **Time & date**, **Clock colors**, **Location**, **Calendar events**, and **Kiosk link**. Rectangle-only sections disappear for the circle. The dialog keeps a stable responsive width as options expand; extra weather details and advanced calendar IDs/refresh options are tucked into expandable sections. Seconds labels match the selected shape, and help text explains that the wipe, vertical time marker, and seconds sweep are independent. North/east are positive; south/west negative. **Use current location** asks for browser geolocation permission only when clicked (HTTPS or localhost), then fills editable latitude/longitude fields. It does not save automatically; Save or Copy URL uses the new coordinates. Denial/unavailable/timeout errors leave manual entry available and preserve existing coordinates. Manual edits cancel a pending result; closing the dialog ignores it. Blank coordinates show a clock without daylight calculation; initial launch does not assume a location.
 
 Hour labels can be 24-hour (`00–23`) or repeated 12-hour (`12, 1…11`, twice). The clock still spans 24 hours. Digital time has its own independent **12-hour with AM/PM** or **24-hour** setting (24-hour by default). URL options: `hourLabels=24h|12h` and `digitalTimeFormat=24h|12h`. Solar and agenda event times remain 24-hour.
 
 Date formats: hidden (default), weekday only, month/day, weekday/date, full date with year, locale-specific numeric date, or ISO YYYY-MM-DD.
 
-Rectangle **starter themes**: **Midnight** (dark charcoal/cream), **Paper** (bright ivory/slate), **Sand** (warm in-between neutrals), and **Dusk** (muted plum/lavender). Each fills in editable clock/bar/wipe colors and its light/dark mode; layout, weather toggles and wipe opacity stay as-is. It restores individual calendar colors. Apply a preset, then tweak any picker. Save applies its display mode; Copy URL includes the draft mode/colors even without saving. Presets are materialized colors, not a new theme-name dependency in kiosk URLs.
+Rectangle **starter themes**: **Midnight** (dark charcoal/cream), **Paper** (bright ivory/slate), **Sand** (warm in-between neutrals), **Dusk** (muted plum/lavender), and **Slate & Cream** (the original demo's exact blue-gray/tan colors). Buttons preview each palette with its background/text colors and clock-color swatches, with consistently left-aligned names/descriptions. Each fills in editable clock/bar/wipe colors and its light/dark mode; layout, weather toggles and wipe opacity stay as-is. It restores individual calendar colors. Apply a preset, then tweak any picker. Save applies its display mode; Copy URL includes the draft mode/colors even without saving. Presets are materialized colors, not a new theme-name dependency in kiosk URLs.
 
 Color pickers control day, night, the 24-hour hand/marker, second hand/marker, and optionally all event marks. Rectangle bar background and text have independent color pickers and a reset-to-theme button; weather text also follows the bar text color. Without an event-color override, events use each Google calendar’s color. Custom colors persist across themes; Reset to theme colors restores defaults. Hour labels automatically contrast with custom day/night colors. Semantic default aliases are in `clock/src/index.css`.
 
@@ -27,7 +27,7 @@ Settings persist in localStorage under `clock-settings`; theme uses `clock-dark-
 
 **Times use the device/browser timezone.** Coordinates affect solar calculation, not timezone. Set the kiosk’s OS timezone appropriately. Solar boundaries refresh at midnight, on timezone-offset changes, and on tab return. The dial represents 24 wall-clock hours, including DST transitions: the hand follows skipped/repeated hours.
 
-SunCalc computes approximate sunrise/sunset locally, with no permission prompt or network lookup. Enable OS time synchronization (NTP), especially on a Pi Zero without a battery-backed clock. The app re-reads system time each rendered frame (or each minute without seconds), rather than accumulating timer ticks. It does not fetch network time itself.
+SunCalc computes approximate sunrise/sunset locally, with no permission prompt or network lookup. The optional **Use current location** button separately requests browser permission; optional weather sends the chosen coordinates to Open-Meteo. Enable OS time synchronization (NTP), especially on a Pi Zero without a battery-backed clock. The app re-reads system time each rendered frame (or each minute without seconds), rather than accumulating timer ticks. It does not fetch network time itself.
 
 ## Optional rectangle weather
 
@@ -57,7 +57,6 @@ Valid URL values override saved settings. Missing/invalid values fall back to sa
 | `lat`, `lng`                                                                                                                             | Both coordinates, or both blank to clear location                                                                             |
 | `dayColor`, `nightColor`, `handColor`, `secondColor`, `eventColor`                                                                       | Six-digit hex; encode `#` as `%23`; blank means default                                                                       |
 | `calendarRelay`                                                                                                                          | Relay base URL; blank disables calendars                                                                                      |
-| `calendarKey`                                                                                                                            | Read-only calendar key; blank clears it                                                                                       |
 | `calendars`                                                                                                                              | JSON array of included Google calendar IDs. Used when `calendarFilter=1`; `[]` then means none. `calendarFilter=0` means all. |
 | `eventStyle`                                                                                                                             | `band` (default), `dot`, `none`                                                                                               |
 | `eventPlacement`                                                                                                                         | `outside` (outside circle / below rectangle, default), `inside` (inside / above)                                              |
@@ -99,19 +98,18 @@ Google Calendar → dashboard browser → home-relay RAM snapshot → Clock
 ### One-time setup
 
 1. Deploy/restart the updated relay and deploy the updated dashboard/Clock builds.
-2. Generate two **different** random keys: run `openssl rand -hex 24` twice.
-3. Set `CALENDAR_PUBLISH_KEY` and `CALENDAR_READ_KEY` in the relay environment. For systemd, run `sudo systemctl edit home-relay`:
+2. Generate a publishing key: run `openssl rand -hex 24`.
+3. Set `CALENDAR_PUBLISH_KEY` in the relay environment. For systemd, run `sudo systemctl edit home-relay`:
 
    ```ini
    [Service]
-   Environment="CALENDAR_PUBLISH_KEY=YOUR_FIRST_RANDOM_KEY"
-   Environment="CALENDAR_READ_KEY=YOUR_SECOND_RANDOM_KEY"
+   Environment="CALENDAR_PUBLISH_KEY=YOUR_RANDOM_KEY"
    ```
 
    Then `sudo systemctl daemon-reload && sudo systemctl restart home-relay`.
 
 4. In the **source kiosk’s dashboard browser**, sign into Google as usual. In Calendar widget settings enter the publishing key under **Clock calendar publishing key**. It is stored only in that browser’s localStorage (`calendar-feed-publish-key`), never synced dashboard config. Blank disables publishing.
-5. On your laptop, open Clock settings and enter the relay base URL and **read** key. Choose marks, placement, optional agenda, colors, and theme. Copy the URL into the no-input kiosk startup command. All Clock options, including theme and calendar options, are in the link.
+5. On your laptop, open Clock settings and enter the **local relay base URL**. No read key is required. Choose marks, placement, optional agenda, colors, and theme. Copy the URL into the no-input kiosk startup command. All Clock options, including theme and calendar options, are in the link.
 
 The publisher freshly fetches a rolling three-day window (previous 24 hours plus next 48 hours), independently of the month/week displayed on the dashboard. It paginates Google results, expands recurring events, excludes cancelled events, and shares only visible calendars. It sends titles, start/end, IDs, calendar names/colors—**not descriptions, locations, or Google tokens**.
 
@@ -139,11 +137,11 @@ The source Calendar widget must remain mounted/running and signed in. If it clos
 | Endpoint                 | Credential                                   | Behavior                                    |
 | ------------------------ | -------------------------------------------- | ------------------------------------------- |
 | `PUT /calendar/snapshot` | `Authorization: Bearer CALENDAR_PUBLISH_KEY` | Replace bounded snapshot                    |
-| `GET /calendar/snapshot` | `Authorization: Bearer CALENDAR_READ_KEY`    | Read events and freshness/coverage metadata |
+| `GET /calendar/snapshot` | None — trusted-network read access           | Read events and freshness/coverage metadata |
 
-Unset keys disable their endpoint (503); invalid keys return 401. Responses use `Cache-Control: no-store`. Google credentials never reach relay/Clock.
+Publishing remains protected: an unset `CALENDAR_PUBLISH_KEY` disables PUT (503); an invalid/missing publishing key returns 401. GET requires no authentication and works even before a publisher is configured (an empty snapshot). Responses use `Cache-Control: no-store`. Google credentials never reach relay/Clock.
 
-**The copied URL contains a read-only key: treat it as private.** URLs may appear in browser history, startup files, or hosting logs. Clock suppresses referrers and sends the key to the relay in a header, not its request URL. Use HTTPS or a trusted network/VPN. Other home-relay routes remain trusted-network-only; calendar keys do not secure the rest of the service. Rotate the read key/restart to revoke links.
+**Keep home-relay on your LAN/VPN, not the public internet.** Anyone who can reach it can read shared calendar titles, times and calendar names/colors. This is intentional for home kiosks. The clock never needs the publishing key, and copied URLs contain no calendar credentials. Old `calendarKey` URL/localStorage fields are ignored and omitted when links are copied; `CALENDAR_READ_KEY` is no longer used and can be removed from the relay environment. Deploy/restart the updated backend before using the keyless clock client.
 
 ## Performance
 

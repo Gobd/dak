@@ -34,7 +34,7 @@ Optional third argument selects an existing kiosk user when `SUDO_USER` is unava
 - Keeps an active chrony/NTP service; otherwise installs/enables systemd-timesyncd.
 - Sets the requested timezone. Check `timedatectl status` and wait for a synchronized clock before judging sunrise/sunset or TLS failures.
 - Adds the kiosk user to existing `video`, `render`, and `input` groups.
-- Installs `~/.local/bin/clock-kiosk` and writes the URL as **data** to `~/.config/clock-kiosk/url` (0600). The script never sources/evaluates the URL, and does not print it because it may contain a read key.
+- Installs `~/.local/bin/clock-kiosk` and writes the URL as **data** to `~/.config/clock-kiosk/url` (0600). The script never sources/evaluates the URL, and does not print it to keep your local relay address and display configuration private.
 - Adds/replaces only a marked block in `~/.bash_profile`. Existing profile content is preserved. Launches on tty1 only, never during SSH sessions.
 - Configures tty1 autologin through a dedicated systemd getty drop-in and selects `multi-user.target`. A desktop login manager will no longer launch automatically after reboot.
 - Starts Cage plus sandboxed, non-root Chromium in kiosk/incognito/Wayland mode. Chromium cache limits are 16 MiB per configured cache; these flags are not a hard total memory/disk quota. Incognito avoids retaining browsing history; complete URL configuration makes localStorage unnecessary on this display.

@@ -34,7 +34,6 @@ test('display URL round-trips every option, including blank coordinates and them
       handColor: '#abcdef',
       secondColor: '#fedcba',
       calendarRelay: 'https://relay.example.com',
-      calendarKey: 'read-only-display-key',
       calendarIds: ['family@example.com', 'birthdays'],
       calendarFilter: true,
       showCalendarLegend: true,
@@ -87,6 +86,21 @@ test('invalid URL options are ignored; explicit blanks clear saved colors/locati
   });
   assert.equal(loaded.mode, 'linear');
   assert.equal(loaded.dayColor, '#123456');
+});
+
+test('legacy calendar read keys are ignored and stripped from copied kiosk URLs', () => {
+  const legacy = normalizeSettings({ ...DEFAULT_SETTINGS, calendarKey: 'old-secret' });
+  assert.equal(Object.hasOwn(legacy, 'calendarKey'), false);
+  const params = new URLSearchParams(
+    'calendarRelay=http://relay.local:5111&calendarKey=old-secret',
+  );
+  const settings = normalizeSettings(settingsFromParams(params));
+  assert.equal(settings.calendarRelay, 'http://relay.local:5111');
+  assert.equal(Object.hasOwn(settingsFromParams(params), 'calendarKey'), false);
+  const url = new URL(
+    displayUrl('https://example.com/clock/?calendarKey=old-secret', settings, false, true),
+  );
+  assert.equal(url.searchParams.has('calendarKey'), false);
 });
 
 test('DST repeated hour has the same dial position but triggers a solar refresh', () => {

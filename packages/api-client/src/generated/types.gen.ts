@@ -4434,25 +4434,10 @@ export type UpdateWatchlistEntryPlanesWatchlistEntryIdPutResponse = UpdateWatchl
 
 export type GetCalendarSnapshotData = {
     body?: never;
-    headers?: {
-        /**
-         * Authorization
-         */
-        authorization?: string | null;
-    };
     path?: never;
     query?: never;
     url: '/calendar/snapshot';
 };
-
-export type GetCalendarSnapshotErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetCalendarSnapshotError = GetCalendarSnapshotErrors[keyof GetCalendarSnapshotErrors];
 
 export type GetCalendarSnapshotResponses = {
     /**

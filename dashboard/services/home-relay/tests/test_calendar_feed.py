@@ -79,23 +79,16 @@ class CalendarFeedTests(unittest.TestCase):
         event = self.event(start="2026-11-10", end="2026-11-11", all_day=True)
         assert event.all_day
 
-    def test_endpoints_require_separate_keys_and_reject_oversized_payloads(self):
+    def test_read_is_keyless_but_publishing_requires_key_and_bounded_payload(self):
         app = FastAPI()
         app.include_router(calendar.router)
         with (
-            patch.dict(
-                os.environ, {"CALENDAR_READ_KEY": "reader", "CALENDAR_PUBLISH_KEY": "writer"}
-            ),
+            patch.dict(os.environ, {"CALENDAR_PUBLISH_KEY": "writer"}),
             patch.object(calendar, "cache", self.cache),
         ):
             client = TestClient(app)
-            assert client.get("/calendar/snapshot").status_code == 401
-            assert (
-                client.get(
-                    "/calendar/snapshot", headers={"Authorization": "Bearer writer"}
-                ).status_code
-                == 401
-            )
+            assert client.get("/calendar/snapshot").status_code == 200
+            assert client.put("/calendar/snapshot", json={}).status_code == 401
             assert (
                 client.put(
                     "/calendar/snapshot", headers={"Authorization": "Bearer reader"}, json={}
@@ -116,7 +109,7 @@ class CalendarFeedTests(unittest.TestCase):
                 "/calendar/snapshot", headers={"Authorization": "Bearer writer"}, json=payload
             )
             assert published.status_code == 200
-            response = client.get("/calendar/snapshot", headers={"Authorization": "Bearer reader"})
+            response = client.get("/calendar/snapshot")
             assert response.status_code == 200
             assert response.headers["cache-control"] == "no-store"
             assert len(response.json()["events"]) == 1
@@ -134,5 +127,20 @@ class CalendarFeedTests(unittest.TestCase):
                 ).status_code
                 == 422
             )
-        with patch.dict(os.environ, {"CALENDAR_READ_KEY": ""}):
-            assert TestClient(app).get("/calendar/snapshot").status_code == 503
+        with patch.dict(os.environ, {"CALENDAR_PUBLISH_KEY": ""}):
+            assert TestClient(app).put("/calendar/snapshot", json={}).status_code == 503
+
+    def test_reads_ignore_legacy_read_key_and_never_change_snapshot(self):
+        app = FastAPI()
+        app.include_router(calendar.router)
+        with (
+            patch.dict(os.environ, {"CALENDAR_READ_KEY": "obsolete-key"}),
+            patch.object(calendar, "cache", self.cache),
+        ):
+            client = TestClient(app)
+            for headers in [{}, {"Authorization": "Bearer invalid-old-key"}]:
+                response = client.get("/calendar/snapshot", headers=headers)
+                assert response.status_code == 200
+                assert response.headers["cache-control"] == "no-store"
+                assert response.json()["events"] == []
+            assert self.cache.read().updated_at is None

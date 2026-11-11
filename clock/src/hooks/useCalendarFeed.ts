@@ -9,15 +9,13 @@ export default function useCalendarFeed(settings: ClockSettings, visible: boolea
   const active = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const load = useCallback(async () => {
-    if (!settings.calendarRelay || !settings.calendarKey || active.current || document.hidden)
-      return;
+    if (!settings.calendarRelay || active.current || document.hidden) return;
     const controller = new AbortController();
     active.current = controller;
     const version = generation.current;
     try {
       const { data, response } = await getCalendarSnapshot({
         baseUrl: settings.calendarRelay,
-        headers: { authorization: `Bearer ${settings.calendarKey}` },
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]),
         cache: 'no-store',
         credentials: 'omit',
@@ -26,13 +24,7 @@ export default function useCalendarFeed(settings: ClockSettings, visible: boolea
       if (version !== generation.current) return;
       if (!response?.ok || !data || !Array.isArray(data.events) || data.events.length > 1000) {
         if (response?.status === 401 || response?.status === 403) setSnapshot(null);
-        throw new Error(
-          response?.status === 401
-            ? 'Calendar key rejected'
-            : response?.status === 503
-              ? 'Relay calendar sharing is not configured'
-              : `Calendar feed unavailable (${response?.status ?? 'network error'})`,
-        );
+        throw new Error(`Calendar feed unavailable (${response?.status ?? 'network error'})`);
       }
       setSnapshot(data);
       setError('');
@@ -46,7 +38,7 @@ export default function useCalendarFeed(settings: ClockSettings, visible: boolea
     } finally {
       if (active.current === controller) active.current = null;
     }
-  }, [settings.calendarRelay, settings.calendarKey]);
+  }, [settings.calendarRelay]);
 
   useEffect(() => {
     generation.current++;
@@ -68,9 +60,7 @@ export default function useCalendarFeed(settings: ClockSettings, visible: boolea
   }, [load]);
   useInterval(
     () => void load(),
-    visible && settings.calendarRelay && settings.calendarKey
-      ? settings.calendarPollSeconds * 1000
-      : null,
+    visible && settings.calendarRelay ? settings.calendarPollSeconds * 1000 : null,
   );
   return { snapshot, error };
 }

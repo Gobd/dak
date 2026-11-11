@@ -82,8 +82,6 @@ export function settingsFromParams(params: URLSearchParams): Partial<ClockSettin
     const relay = normalizeCalendarRelay(raw);
     if (relay || raw === '') settings.calendarRelay = relay;
   }
-  if (params.has('calendarKey'))
-    settings.calendarKey = params.get('calendarKey')!.trim().slice(0, 256);
   if (params.has('calendars')) {
     try {
       const ids: unknown = JSON.parse(params.get('calendars')!);
@@ -124,7 +122,6 @@ export function displayUrl(
   url.searchParams.set('lng', settings.longitude?.toString() ?? '');
   for (const key of COLOR_PARAMS) url.searchParams.set(key, settings[key] ?? '');
   url.searchParams.set('calendarRelay', settings.calendarRelay);
-  url.searchParams.set('calendarKey', settings.calendarKey);
   url.searchParams.set('calendars', JSON.stringify(settings.calendarIds));
   url.searchParams.set('eventStyle', settings.eventStyle);
   url.searchParams.set('eventPlacement', settings.eventPlacement);

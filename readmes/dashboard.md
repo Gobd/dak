@@ -100,7 +100,7 @@ Dashboard displays reminder notifications from iframed apps (health-tracker, mai
 
 ### Calendar feed for standalone Clock displays
 
-The Calendar widget can share its visible Google calendars with Clock through a bounded home-relay RAM snapshot. Configure a publishing key in the source browser's Calendar settings; the no-input Clock gets a separate read key and relay URL in its copied settings link. No event-history database is added. See [Clock setup and retention/security details](clock.md#optional-google-calendar-feed).
+The Calendar widget can share its visible Google calendars with Clock through a bounded home-relay RAM snapshot. Configure a publishing key in the source browser's Calendar settings; the no-input Clock only needs the local relay URL in its copied settings link—no read key. Calendar reads are available to anyone on the relay's trusted LAN/VPN; publishing remains key-protected. No event-history database is added. See [Clock setup and retention/security details](clock.md#optional-google-calendar-feed).
 
 ## Backend
 

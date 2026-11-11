@@ -50,7 +50,8 @@ socket.addEventListener('message', (event) => {
       ([name]) => name.toLowerCase() === 'authorization',
     )?.[1];
     const weather = paused.request.url.startsWith('https://api.open-meteo.com/');
-    const authorized = weather || preflight || auth === 'Bearer fictional-demo-read-key';
+    if (!weather && !preflight && auth)
+      failures.push('Clock sent credentials to keyless calendar read endpoint');
     const weatherFeed = {
       daily: {
         time: ['2026-06-21', '2026-06-22'],
@@ -62,7 +63,7 @@ socket.addEventListener('message', (event) => {
     };
     void send('Fetch.fulfillRequest', {
       requestId: paused.requestId,
-      responseCode: preflight ? 204 : authorized ? 200 : 401,
+      responseCode: preflight ? 204 : 200,
       responseHeaders: [
         { name: 'Content-Type', value: 'application/json' },
         { name: 'Access-Control-Allow-Origin', value: '*' },
@@ -71,11 +72,9 @@ socket.addEventListener('message', (event) => {
         { name: 'Access-Control-Allow-Private-Network', value: 'true' },
         { name: 'Cache-Control', value: 'no-store' },
       ],
-      body: Buffer.from(
-        preflight
-          ? ''
-          : JSON.stringify(authorized ? (weather ? weatherFeed : feed) : { detail: 'Invalid key' }),
-      ).toString('base64'),
+      body: Buffer.from(preflight ? '' : JSON.stringify(weather ? weatherFeed : feed)).toString(
+        'base64',
+      ),
     }).catch((error) => failures.push(error.message));
   }
 });
@@ -103,7 +102,6 @@ const shared = {
   theme: 'dark',
   f: '1',
   calendarRelay: 'http://127.0.0.1:5999',
-  calendarKey: 'fictional-demo-read-key',
   calendarFilter: '0',
   calendars: '[]',
   eventStyle: 'band',
@@ -306,6 +304,7 @@ try {
   // Exercise the real settings form: unsaved changes must be in Copy display URL.
   const formUrl = new URL(preview);
   formUrl.search = new URLSearchParams({ ...shared, ...variants[0][1], f: '0' }).toString();
+  formUrl.searchParams.set('calendarKey', 'obsolete-read-key');
   await send('Emulation.setDeviceMetricsOverride', {
     width: 960,
     height: 1100,
@@ -349,6 +348,8 @@ try {
     expression: `document.querySelector('form textarea')?.value`,
   });
   const copiedUrl = new URL(copied.result.value);
+  if (copiedUrl.searchParams.has('calendarKey'))
+    throw new Error('Copy URL retained obsolete calendar read key');
   const expected = {
     ...shared,
     ...variants[0][1],
@@ -382,6 +383,7 @@ try {
     ['paper', 'Paper', false],
     ['sand', 'Sand', false],
     ['dusk', 'Dusk', true],
+    ['slate-cream', 'Slate & Cream', true],
   ]) {
     await send('Emulation.setDeviceMetricsOverride', {
       width: 1280,
@@ -466,6 +468,20 @@ try {
       });
       return JSON.parse(result.result.value);
     };
+    for (const [shape, secondsLabel] of [
+      ['Linear / rectangle', 'Digital seconds & optional sweep'],
+      ['Circular', 'Smooth second hand'],
+      ['Linear / rectangle', 'Digital seconds & optional sweep'],
+    ]) {
+      await send('Runtime.evaluate', {
+        expression: `[...document.querySelectorAll('form button')].find(el => el.textContent === ${JSON.stringify(shape)}).click()`,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const labelState = await send('Runtime.evaluate', {
+        expression: `document.querySelector('form').textContent.includes(${JSON.stringify(secondsLabel)})`,
+      });
+      if (!labelState.result.value) throw new Error(`Incorrect seconds label for ${shape}`);
+    }
     const before = await measure();
     for (const label of [
       "Today's weather in info bar",
@@ -488,6 +504,93 @@ try {
       `Weather toggles keep stable dialog bounds without horizontal overflow at ${width}px.`,
     );
   }
+
+  // Geolocation is explicit, fills draft fields only, and survives Copy URL without keys.
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: 960,
+    height: 1100,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await send('Browser.grantPermissions', {
+    origin: new URL(preview).origin,
+    permissions: ['geolocation'],
+  });
+  await send('Emulation.setGeolocationOverride', {
+    latitude: 47.6062,
+    longitude: -122.3321,
+    accuracy: 10,
+  });
+  await send('Page.navigate', { url: formUrl.toString() });
+  await new Promise((resolve) => setTimeout(resolve, 650));
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('button[aria-label="Clock settings"]').click()`,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  await send('Runtime.evaluate', {
+    expression: `[...document.querySelectorAll('form button')].find(el => el.textContent === 'Use current location').click()`,
+    userGesture: true,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 650));
+  const location = await send('Runtime.evaluate', {
+    expression: `JSON.stringify([document.querySelector('input[aria-label="Latitude"]').value, document.querySelector('input[aria-label="Longitude"]').value])`,
+  });
+  if (location.result.value !== JSON.stringify(['47.606200', '-122.332100']))
+    throw new Error('Geolocation did not fill draft coordinates');
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('input[aria-label="Latitude"]').closest('fieldset').scrollIntoView({block:'start'})`,
+  });
+  const locationScreenshot = await send('Page.captureScreenshot', { format: 'png' });
+  await writeFile(
+    `${directory}/rectangle-location-settings.png`,
+    Buffer.from(locationScreenshot.data, 'base64'),
+  );
+  await send('Runtime.evaluate', {
+    expression: `document.querySelector('input[aria-label="Calendar relay URL"]').closest('fieldset').scrollIntoView({block:'start'})`,
+  });
+  const calendarScreenshot = await send('Page.captureScreenshot', { format: 'png' });
+  await writeFile(
+    `${directory}/rectangle-calendar-settings.png`,
+    Buffer.from(calendarScreenshot.data, 'base64'),
+  );
+  await send('Runtime.evaluate', {
+    expression: `(() => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {} } });
+    [...document.querySelectorAll('form button')].find(el => el.textContent === 'Copy display URL').click();
+  })()`,
+    userGesture: true,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const geoCopy = await send('Runtime.evaluate', {
+    expression: `document.querySelector('form textarea').value`,
+  });
+  const geoUrl = new URL(geoCopy.result.value);
+  if (
+    geoUrl.searchParams.get('lat') !== '47.6062' ||
+    geoUrl.searchParams.get('lng') !== '-122.3321' ||
+    geoUrl.searchParams.has('calendarKey')
+  )
+    throw new Error('Geolocation coordinates or keyless calendar settings lost in Copy URL');
+  await send('Runtime.evaluate', {
+    expression: `(() => {
+    Object.defineProperty(navigator, 'geolocation', { configurable: true, value: { getCurrentPosition: (success, failure) => failure({ code: 1 }) } });
+    [...document.querySelectorAll('form button')].find(el => el.textContent === 'Use current location').click();
+  })()`,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const denial = await send('Runtime.evaluate', {
+    expression: `JSON.stringify({text:document.querySelector('form').textContent, lat:document.querySelector('input[aria-label="Latitude"]').value, lng:document.querySelector('input[aria-label="Longitude"]').value})`,
+  });
+  const denied = JSON.parse(denial.result.value);
+  if (
+    !denied.text.includes('Location permission was denied') ||
+    denied.lat !== '47.606200' ||
+    denied.lng !== '-122.332100'
+  )
+    throw new Error('Geolocation denial cleared coordinates or omitted manual fallback');
+  console.log(
+    'Browser geolocation fills draft fields, copies into kiosk URL and handles permission denial without losing coordinates.',
+  );
 
   // Explicit browser smoke check: deselecting every calendar must keep all marks/legend off.
   const empty = new URL(preview);

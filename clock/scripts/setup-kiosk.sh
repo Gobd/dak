@@ -94,7 +94,7 @@ systemctl set-default multi-user.target
 echo ''
 echo 'Clock kiosk installed. No reboot has been performed.'
 echo 'Reboot when ready: sudo reboot'
-echo "URL is stored privately at $CONFIG_DIR/url (not printed; it may contain a read key)."
+echo "URL is stored privately at $CONFIG_DIR/url (not printed)."
 echo "Timezone: $(timedatectl show --property=Timezone --value)"
 echo 'Inspect synchronization with: timedatectl status'
 echo 'Display resolution/rotation and board boot files were not modified.'

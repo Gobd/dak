@@ -258,6 +258,6 @@ Most home-relay routes have **no authentication**. It's designed for trusted hom
 
 ### Share Google Calendar with Clock
 
-The Calendar widget can publish visible calendars to a bounded home-relay RAM snapshot for no-input Clock displays. No additional Google sign-in is needed on the clock. In the source kiosk's Calendar settings, enter `CALENDAR_PUBLISH_KEY` under **Clock calendar publishing key**; it stays in that browser's localStorage, not synced config. Configure the separate `CALENDAR_READ_KEY` on the clock.
+The Calendar widget can publish visible calendars to a bounded home-relay RAM snapshot for no-input Clock displays. No additional Google sign-in is needed on the clock. In the source kiosk's Calendar settings, enter `CALENDAR_PUBLISH_KEY` under **Clock calendar publishing key**; it stays in that browser's localStorage, not synced config. The Clock only needs the local relay URL; calendar reads require no key. Keep the relay on your LAN/VPN: anyone who can reach it can read shared event titles and times. Publishing remains protected by `CALENDAR_PUBLISH_KEY`.
 
 The relay holds one replace-only snapshot (no DB/history), max 1,000 events / 1 MiB, stale after 15 minutes and expired after 24 hours, with minute-by-minute cleanup. The source calendar must keep running and signed in. See [Clock setup, URL options, and security](../readmes/clock.md#optional-google-calendar-feed) for environment setup and no-input kiosk configuration.

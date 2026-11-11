@@ -4,8 +4,8 @@ import { CLOCK_THEMES, clockThemeColors } from './themes.ts';
 import { DEFAULT_SETTINGS, normalizeSettings } from './settings.ts';
 import { displayUrl, settingsFromParams } from './url.ts';
 
-test('all four starter palettes materialize editable colors and survive kiosk URLs with their theme', () => {
-  assert.equal(CLOCK_THEMES.length, 4);
+test('all starter palettes materialize editable colors and survive kiosk URLs with their theme', () => {
+  assert.equal(CLOCK_THEMES.length, 5);
   for (const theme of CLOCK_THEMES) {
     let index = 0;
     const palette = clockThemeColors(theme.id, (token) => {

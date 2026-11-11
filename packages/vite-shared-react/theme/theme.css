@@ -83,6 +83,15 @@
   --color-clock-dusk-text: oklch(94% 0.02 310);
   --color-clock-dusk-wipe: oklch(18% 0.025 280);
 
+  /* Original Clock demo palette: blue-gray and tan. */
+  --color-clock-slate-cream-day: #dcd4bd;
+  --color-clock-slate-cream-night: #293544;
+  --color-clock-slate-cream-hand: #f4efe4;
+  --color-clock-slate-cream-second: #d88d77;
+  --color-clock-slate-cream-bar: #293544;
+  --color-clock-slate-cream-text: #f4efe4;
+  --color-clock-slate-cream-wipe: #293544;
+
   /* Gold (achievements, highlights) */
   --color-gold: oklch(75% 0.15 85);
   --color-gold-hover: oklch(68% 0.17 85);

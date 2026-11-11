@@ -34,7 +34,6 @@ export interface ClockSettings {
   latitude: number | null;
   longitude: number | null;
   calendarRelay: string;
-  calendarKey: string;
   calendarIds: string[];
   calendarFilter: boolean;
   showCalendarLegend: boolean;
@@ -73,7 +72,6 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   latitude: null,
   longitude: null,
   calendarRelay: '',
-  calendarKey: '',
   calendarIds: [],
   calendarFilter: false,
   showCalendarLegend: false,
@@ -161,8 +159,6 @@ export function normalizeSettings(value: unknown): ClockSettings {
     latitude: located ? settings.latitude! : null,
     longitude: located ? settings.longitude! : null,
     calendarRelay: normalizeCalendarRelay(settings.calendarRelay),
-    calendarKey:
-      typeof settings.calendarKey === 'string' ? settings.calendarKey.trim().slice(0, 256) : '',
     calendarIds: Array.isArray(settings.calendarIds)
       ? [
           ...new Set(
