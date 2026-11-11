@@ -167,6 +167,14 @@ body {
   pointer-events: none;
 }
 
+.clock-settings-form {
+  overflow-anchor: none;
+}
+
+.clock-settings-form fieldset {
+  min-width: 0;
+}
+
 .clock-info {
   display: contents;
 }

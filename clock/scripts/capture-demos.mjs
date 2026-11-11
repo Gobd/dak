@@ -433,6 +433,62 @@ try {
     console.log(`Saved ${file}; real preset + Copy URL verified.`);
   }
 
+  // Weather help text must not resize/recenter the dialog or overflow narrow screens.
+  for (const [width, height] of [
+    [960, 1100],
+    [390, 844],
+  ]) {
+    const layoutUrl = new URL(formUrl);
+    layoutUrl.searchParams.set('showWeather', '0');
+    layoutUrl.searchParams.set('showTomorrowWeather', '0');
+    layoutUrl.searchParams.set('wipePast', '0');
+    await send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await send('Page.navigate', { url: layoutUrl.toString() });
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    await send('Runtime.evaluate', {
+      expression: `document.querySelector('button[aria-label="Clock settings"]').click()`,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const measure = async () => {
+      const result = await send('Runtime.evaluate', {
+        expression: `JSON.stringify((() => {
+        const panel = document.querySelector('[role="dialog"]').firstElementChild;
+        const scroller = document.querySelector('.clock-settings-form').parentElement.parentElement;
+        const rect = panel.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+          overflow: scroller.scrollWidth > scroller.clientWidth + 1 };
+      })())`,
+      });
+      return JSON.parse(result.result.value);
+    };
+    const before = await measure();
+    for (const label of [
+      "Today's weather in info bar",
+      "Tomorrow's weather in info bar",
+      "Today's weather in info bar",
+      "Tomorrow's weather in info bar",
+    ]) {
+      await send('Runtime.evaluate', {
+        expression: `[...document.querySelectorAll('form label')].find(el => el.textContent === ${JSON.stringify(label)}).querySelector('button').click()`,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const after = await measure();
+      for (const key of ['x', 'y', 'width', 'height'])
+        if (Math.abs(after[key] - before[key]) > 1)
+          throw new Error(`Weather toggle moved dialog ${key} at ${width}px`);
+      if (after.overflow || after.x < 0 || after.x + after.width > width)
+        throw new Error(`Weather help text overflows dialog at ${width}px`);
+    }
+    console.log(
+      `Weather toggles keep stable dialog bounds without horizontal overflow at ${width}px.`,
+    );
+  }
+
   // Explicit browser smoke check: deselecting every calendar must keep all marks/legend off.
   const empty = new URL(preview);
   empty.search = new URLSearchParams({

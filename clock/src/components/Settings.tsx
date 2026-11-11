@@ -150,9 +150,9 @@ export default function Settings({
   };
 
   return (
-    <Modal open onClose={onClose} title="Clock settings" fit>
+    <Modal open onClose={onClose} title="Clock settings" wide>
       <form
-        className="space-y-6"
+        className="clock-settings-form min-w-0 space-y-6"
         onSubmit={(event) => {
           event.preventDefault();
           const draft = draftSettings();
