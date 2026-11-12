@@ -1,6 +1,7 @@
 import type { ClockSettings } from './settings';
 import { MAX_EVENT_LANES, type ClockEvent } from './events.ts';
 import { labelBox, labelFits, type LabelBox } from './label-layout.ts';
+import { linearHourFontSize } from './hours.ts';
 
 const TAU = Math.PI * 2;
 const angle = (fraction: number) => fraction * TAU - Math.PI / 2;
@@ -139,7 +140,10 @@ export function drawEvents(
       const y =
         settings.eventPlacement === 'inside'
           ? 16 + trackStep * (event.lane + 0.5)
-          : height - 52 - trackStep * (event.lane + 0.5);
+          : height -
+            Math.max(52, linearHourFontSize(width, height, settings.hourLabelScale) * 2.5) -
+            trackStep * (event.lane + 0.5);
+      if (y < 4 || y > height - 4) continue;
       ctx.lineWidth = settings.showEventNames ? 3 : Math.max(2, trackStep * 0.6);
       if (settings.eventStyle === 'dot' && !event.allDay) {
         ctx.beginPath();

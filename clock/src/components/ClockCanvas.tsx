@@ -3,7 +3,7 @@ import type { ClockSettings } from '../lib/settings';
 import { dayFraction, dayKey, getSolarDay, type SolarDay } from '../lib/solar';
 import type { ClockEvent } from '../lib/events';
 import { drawEvents, faceRadius } from '../lib/draw-events';
-import { hourLabel } from '../lib/hours';
+import { hourLabel, hourLabelStep, linearHourFontSize } from '../lib/hours';
 
 const TAU = Math.PI * 2;
 const angle = (fraction: number) => fraction * TAU - Math.PI / 2;
@@ -58,14 +58,18 @@ function drawFace(
 ) {
   const mode = settings.mode;
   ctx.clearRect(0, 0, width, height);
-  ctx.font = `${Math.max(11, Math.min(17, width / 40))}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   if (mode === 'circle') {
     const x = width / 2;
     const y = height / 2;
     const radius = faceRadius(width, height, settings, events);
-    ctx.font = `${Math.max(10, radius * 0.052)}px sans-serif`;
+    ctx.font = `${(Math.max(10, radius * 0.052) * settings.hourLabelScale) / 100}px sans-serif`;
+    const labelStep = hourLabelStep(
+      TAU * radius * 0.88,
+      ctx.measureText('24').width,
+      radius < 130 ? 3 : 2,
+    );
     const thickness = radius * 0.24;
     const ring = radius - thickness / 2;
     ctx.lineWidth = thickness;
@@ -94,7 +98,7 @@ function drawFace(
         x + Math.cos(a) * radius * 0.98,
         y + Math.sin(a) * radius * 0.98,
       );
-      if (hour % (radius < 130 ? 3 : 2) === 0) {
+      if (hour % labelStep === 0) {
         ctx.fillStyle = ink;
         ctx.fillText(
           hourLabel(hour, settings.hourLabels),
@@ -120,6 +124,11 @@ function drawFace(
     const span = width;
     const top = 0;
     const barHeight = height;
+    const fontSize = linearHourFontSize(width, height, settings.hourLabelScale);
+    ctx.font = `${fontSize}px sans-serif`;
+    const labelWidth = ctx.measureText('24').width;
+    const labelStep = hourLabelStep(width, labelWidth, width < 600 ? 6 : 2);
+    const labelY = height - fontSize * 0.7;
     ctx.fillStyle = solar ? colors.night : colors.border;
     ctx.fillRect(left, top, span, barHeight);
     ctx.fillStyle = colors.day;
@@ -134,13 +143,13 @@ function drawFace(
       const ink = solar ? (isDay ? colors.dayText : colors.nightText) : colors.text;
       ctx.strokeStyle = ink;
       ctx.lineWidth = 1;
-      line(ctx, x, height - 42, x, height - 34);
-      if (hour % (width < 600 ? 6 : 2) === 0) {
+      line(ctx, x, height - fontSize * 2.1, x, height - fontSize * 1.7);
+      if (hour % labelStep === 0) {
         ctx.fillStyle = ink;
         ctx.fillText(
           hourLabel(hour, settings.hourLabels),
-          Math.max(12, Math.min(width - 12, x)),
-          height - 18,
+          Math.max(labelWidth / 2 + 2, Math.min(width - labelWidth / 2 - 2, x)),
+          labelY,
         );
       }
     }
@@ -344,6 +353,7 @@ export default function ClockCanvas({
     settings.showTimeMarker,
     settings.showSecondsMarker,
     settings.hourLabels,
+    settings.hourLabelScale,
     settings.seconds,
     settings.latitude,
     settings.longitude,

@@ -13,6 +13,9 @@ test('display URL round-trips every option, including blank coordinates and them
       hourLabels: '12h' as const,
       digitalTimeFormat: '12h' as const,
       rectangleBar: 'bottom' as const,
+      barHeight: 45,
+      infoScale: 150,
+      hourLabelScale: 220,
       barColor: '#000000',
       barTextColor: '#ffffff',
       wipePast: true,
@@ -68,7 +71,7 @@ test('invalid URL options are ignored; explicit blanks clear saved colors/locati
   assert.deepEqual(
     settingsFromParams(
       new URLSearchParams(
-        'mode=no&seconds=yes&date=bogus&lat=91&lng=0&dayColor=red&rectangleBar=no&wipeOpacity=101&wipeColor=red&showTomorrowWeather=yes&weatherUnit=kelvin',
+        'mode=no&seconds=yes&date=bogus&lat=91&lng=0&dayColor=red&rectangleBar=no&wipeOpacity=101&wipeColor=red&showTomorrowWeather=yes&weatherUnit=kelvin&barHeight=99&infoScale=NaN&hourLabelScale=0',
       ),
     ),
     {},

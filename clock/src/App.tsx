@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Maximize, Moon, Settings as SettingsIcon, Sun, Sunrise, Sunset } from 'lucide-react';
 import { useDarkMode, useInterval, useLocalStorage } from '@dak/hooks';
 import { Button } from '@dak/ui';
@@ -126,12 +126,17 @@ export default function App() {
     <main className={`clock-screen ${settings.mode}`} aria-label="Clock">
       <div
         className={`clock-display ${settings.mode === 'linear' ? `rectangle-bar-${settings.rectangleBar}` : ''}`}
-        style={{
-          ...clockColorStyles(settings),
-          ...(settings.mode === 'linear' && solar
-            ? { color: `var(--clock-${centerIsDay ? 'day' : 'night'}-text)` }
-            : {}),
-        }}
+        style={
+          {
+            ...clockColorStyles(settings),
+            '--clock-bar-height': `${settings.barHeight}%`,
+            '--clock-info-scale': settings.infoScale / 100,
+            '--clock-bar-scale': (settings.barHeight / 20) * (settings.infoScale / 100),
+            ...(settings.mode === 'linear' && solar
+              ? { color: `var(--clock-${centerIsDay ? 'day' : 'night'}-text)` }
+              : {}),
+          } as CSSProperties
+        }
       >
         <ClockCanvas settings={settings} dark={dark} events={dailyEvents} />
         <div className="clock-info">

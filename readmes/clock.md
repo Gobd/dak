@@ -5,11 +5,19 @@ A standalone canvas-based 24-hour clock at `/clock/`, designed to keep animation
 ## Display
 
 - **Circular:** fills the largest circle that fits the viewport, with hour labels and controls inside the rim. Midnight is at the top, noon at the bottom; the long hand rotates once per day and the shorter second hand once per minute. No header, footer, or legend. On square/circular displays the rim reaches the edges; rectangular screens have spare space on two sides.
-- **Linear / rectangle:** daylight/night shading fills the clock area edge-to-edge. Midnight is left, 24:00 right. A compact **top bar** (default) or **bottom bar** holds digital time, date, solar times, calendar legend/status, controls, and the optional agenda/weather. Choose **No bar — overlay** for the original layout. The current-time vertical marker and seconds sweep/track can be hidden independently without hiding digital seconds. Bottom hour labels appear every two hours on displays at least 600px wide, every six hours on narrower displays.
+- **Linear / rectangle:** daylight/night shading fills the clock area edge-to-edge. Midnight is left, 24:00 right. A compact **top bar** (default) or **bottom bar** holds digital time, date, solar times, calendar legend/status, controls, and the optional agenda/weather. Choose **No bar — overlay** for the original layout. The current-time vertical marker and seconds sweep/track can be hidden independently without hiding digital seconds. Bottom hour labels start at every two hours on displays at least 600px wide, every six hours on narrower displays; enlarged numbers automatically reduce density to avoid overlap.
 - **Rectangle elapsed-time wipe:** optionally cover midnight through now, including past labels and event marks. Choose a wipe color and opacity (0–100%); 100% gives a solid blackout. It never touches the info bar or circular clock.
 - Light sections show day, dark sections night. Boundaries mark sunrise/sunset; exact times are optional and hidden by default.
 - Optional digital time and date sit inside the clock. Small theme, fullscreen, and settings controls brighten on hover/focus; `f=1` removes them.
 - Polar day/night are handled without invalid solar labels.
+
+## Display sizes and distance
+
+**Bar height** reserves 10–60% of the screen (default 20%) for the rectangle's top/bottom bar; the clock gets the remainder. Increasing it enlarges the bar's text, weather icons, controls, dots and spacing together. Content wraps and can scroll inside the bar; enabling more details does not take more clock area. This setting does not affect overlay/circular mode.
+
+**Info text size** (75–200%, default 100%) fine-tunes bar text size, or digital time/date/solar/agenda/legend/status text in overlay/circular mode. **Clock hour number size** (100–300%, default 100%) independently enlarges dial/linear numbers. Linear numbers scale with viewport width, with a height limit to keep them on the clock. Label spacing adapts automatically, including on the circle.
+
+For a physical **12-inch-wide × 4-inch-high screen viewed from 10 feet**, small detailed labels are unlikely to be comfortable. Start with 200% hour numbers and a 35–45% bar, enable digital time, and hide unnecessary date/weather/calendar details. A rough starting target for important characters is about half an inch tall, not a guarantee of readability. Browser pixels cannot determine physical size: resolution, browser zoom, font proportions, contrast, eyesight and viewing angle all matter. Test the actual display at the intended distance. Increasing info text size may require removing content to prevent wrapping/scrolling; a kiosk without input should show only what fits.
 
 ## Settings and time
 
@@ -45,6 +53,7 @@ Valid URL values override saved settings. Missing/invalid values fall back to sa
 | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `digitalTimeFormat`                                                                                                                      | `24h` (default), `12h` with AM/PM; independent of dial labels                                                                 |
 | `barColor`, `barTextColor`                                                                                                               | Six-digit hex; blank for theme defaults; rectangle info bar only                                                              |
+| `barHeight`, `infoScale`, `hourLabelScale`                                                                                               | 10–60 (default 20), 75–200 (default 100), 100–300 (default 100); percentages                                                  |
 | `rectangleBar`                                                                                                                           | `top` (default), `bottom`, `overlay` — rectangle only                                                                         |
 | `wipePast`, `showTimeMarker`, `showSecondsMarker`                                                                                        | `1` or `0` — rectangle only                                                                                                   |
 | `wipeColor`                                                                                                                              | Six-digit hex, blank for theme default; rectangle only                                                                        |

@@ -1,5 +1,6 @@
 import {
   DATE_FORMATS,
+  SIZE_RANGES,
   normalizeCalendarRelay,
   normalizeColor,
   validCoordinates,
@@ -40,6 +41,17 @@ export function settingsFromParams(params: URLSearchParams): Partial<ClockSettin
   if (unit === 'fahrenheit' || unit === 'celsius') settings.weatherUnit = unit;
   const bar = params.get('rectangleBar');
   if (bar === 'top' || bar === 'bottom' || bar === 'overlay') settings.rectangleBar = bar;
+  for (const key of ['barHeight', 'infoScale', 'hourLabelScale'] as const) {
+    const raw = params.get(key);
+    const range = SIZE_RANGES[key];
+    if (
+      raw?.trim() &&
+      Number.isFinite(Number(raw)) &&
+      Number(raw) >= range.min &&
+      Number(raw) <= range.max
+    )
+      settings[key] = Math.round(Number(raw));
+  }
   const opacity = params.get('wipeOpacity');
   if (
     opacity?.trim() &&
@@ -114,6 +126,8 @@ export function displayUrl(
   url.searchParams.set('hourLabels', settings.hourLabels);
   url.searchParams.set('digitalTimeFormat', settings.digitalTimeFormat);
   url.searchParams.set('rectangleBar', settings.rectangleBar);
+  for (const key of ['barHeight', 'infoScale', 'hourLabelScale'] as const)
+    url.searchParams.set(key, settings[key].toString());
   url.searchParams.set('weatherUnit', settings.weatherUnit);
   url.searchParams.set('wipeOpacity', settings.wipeOpacity.toString());
   for (const key of BOOLEAN_PARAMS) url.searchParams.set(key, settings[key] ? '1' : '0');
