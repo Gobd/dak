@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Input, Modal, Toggle } from '@dak/ui';
+import { Button, Input, Modal, Slider, Toggle } from '@dak/ui';
 import { useCopyToClipboard } from '@dak/hooks';
 import {
   DATE_FORMATS,
@@ -96,6 +96,9 @@ export default function Settings({
   const [hourLabels, setHourLabels] = useState(settings.hourLabels);
   const [digitalTimeFormat, setDigitalTimeFormat] = useState(settings.digitalTimeFormat);
   const [rectangleBar, setRectangleBar] = useState(settings.rectangleBar);
+  const [barHeight, setBarHeight] = useState(settings.barHeight);
+  const [infoScale, setInfoScale] = useState(settings.infoScale);
+  const [hourLabelScale, setHourLabelScale] = useState(settings.hourLabelScale);
   const [barColor, setBarColor] = useState(settings.barColor);
   const [barTextColor, setBarTextColor] = useState(settings.barTextColor);
   const [barTheme] = useState(() => ({
@@ -177,6 +180,9 @@ export default function Settings({
       hourLabels,
       digitalTimeFormat,
       rectangleBar,
+      barHeight,
+      infoScale,
+      hourLabelScale,
       barColor,
       barTextColor,
       showWeather,
@@ -229,6 +235,32 @@ export default function Settings({
               </Button>
             ))}
           </div>
+        </fieldset>
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-semibold text-text mb-2">Display sizes</legend>
+          <Slider
+            label={`Info text size: ${infoScale}%`}
+            aria-label="Info text size"
+            value={infoScale}
+            onChange={setInfoScale}
+            min={75}
+            max={200}
+            step={5}
+          />
+          <Slider
+            label={`Clock hour number size: ${hourLabelScale}%`}
+            aria-label="Clock hour number size"
+            value={hourLabelScale}
+            onChange={setHourLabelScale}
+            min={100}
+            max={300}
+            step={10}
+          />
+          <p className="text-xs text-text-muted">
+            Larger clock numbers use fewer labels to avoid overlap. For a 12 × 4 inch display viewed
+            from 10 feet, try 200% numbers and a large digital time; hide extra details. Test on the
+            actual screen at that distance—resolution alone does not guarantee readability.
+          </p>
         </fieldset>
         {mode === 'linear' && (
           <>
@@ -308,6 +340,24 @@ export default function Settings({
                   <option value="overlay">No bar — overlay on clock</option>
                 </select>
               </label>
+              {rectangleBar !== 'overlay' && (
+                <>
+                  <Slider
+                    label={`Bar height: ${barHeight}% of screen`}
+                    aria-label="Bar height"
+                    value={barHeight}
+                    onChange={setBarHeight}
+                    min={10}
+                    max={60}
+                    step={1}
+                  />
+                  <p className="text-xs text-text-muted">
+                    Clock area: {100 - barHeight}%. Growing the bar also enlarges its text, icons
+                    and spacing. Info text size fine-tunes this. Extra content wraps and scrolls
+                    within the bar rather than shrinking the clock further.
+                  </p>
+                </>
+              )}
               <p className="text-xs text-text-muted">
                 Time, date, solar times and calendar legend/list share this position. No bar puts
                 them over the clock; weather requires a top/bottom bar.

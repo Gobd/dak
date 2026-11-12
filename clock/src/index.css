@@ -72,7 +72,7 @@ body {
 
 .clock-time {
   top: 24%;
-  font-size: clamp(20px, 6vmin, 64px);
+  font-size: calc(clamp(20px, 6vmin, 64px) * var(--clock-info-scale, 1));
   font-weight: 300;
   line-height: 1;
   white-space: nowrap;
@@ -82,7 +82,7 @@ body {
 .clock-date {
   top: 33%;
   width: 65%;
-  font-size: clamp(11px, 2.4vmin, 22px);
+  font-size: calc(clamp(11px, 2.4vmin, 22px) * var(--clock-info-scale, 1));
   pointer-events: none;
 }
 
@@ -93,6 +93,7 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   gap: 4px 16px;
+  font-size: calc(14px * var(--clock-info-scale, 1));
   pointer-events: none;
 }
 
@@ -122,7 +123,7 @@ body {
   width: 60%;
   max-height: 20%;
   overflow: hidden;
-  font-size: clamp(10px, 1.8vmin, 16px);
+  font-size: calc(clamp(10px, 1.8vmin, 16px) * var(--clock-info-scale, 1));
   pointer-events: none;
 }
 
@@ -152,7 +153,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 3px 12px;
-  font-size: clamp(9px, 1.8vmin, 14px);
+  font-size: calc(clamp(9px, 1.8vmin, 14px) * var(--clock-info-scale, 1));
   pointer-events: none;
 }
 
@@ -163,7 +164,7 @@ body {
   transform: translateX(-50%);
   width: 50%;
   text-align: center;
-  font-size: clamp(9px, 1.6vmin, 12px);
+  font-size: calc(clamp(9px, 1.6vmin, 12px) * var(--clock-info-scale, 1));
   pointer-events: none;
 }
 
@@ -195,10 +196,14 @@ body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 20px;
-  padding: 12px 20px;
+  --clock-detail-size: calc(12px * var(--clock-bar-scale, 1));
+  gap: calc(8px * var(--clock-bar-scale, 1)) calc(20px * var(--clock-bar-scale, 1));
+  padding: calc(8px * var(--clock-bar-scale, 1)) calc(20px * var(--clock-bar-scale, 1));
+  box-sizing: border-box;
+  height: var(--clock-bar-height, 20%);
+  min-height: 0;
   flex-shrink: 0;
-  max-height: 40%;
+  font-size: var(--clock-detail-size);
   overflow: auto;
   background: var(--clock-bar-background, var(--color-surface-raised));
   color: var(--clock-bar-text, var(--color-text));
@@ -220,23 +225,23 @@ body {
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-time {
-  font-size: clamp(22px, 3.5vmin, 36px);
+  font-size: calc(clamp(22px, 3.5vmin, 36px) * var(--clock-bar-scale, 1));
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-date {
-  font-size: 14px;
+  font-size: calc(14px * var(--clock-bar-scale, 1));
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-solar,
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-calendar-legend {
   justify-content: flex-start;
-  font-size: 12px;
+  font-size: var(--clock-detail-size);
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda {
   flex-basis: 100%;
   order: 2;
-  font-size: 12px;
+  font-size: var(--clock-detail-size);
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda ul {
@@ -275,6 +280,60 @@ body {
 .clock-weather-group .text-text-muted {
   color: inherit;
   opacity: 0.75;
+}
+
+.clock-agenda .text-xs,
+.clock-agenda .text-sm {
+  font-size: inherit;
+}
+
+.clock-solar svg {
+  width: 1em;
+  height: 1em;
+}
+
+/* Scale the small labels, weather icons, controls and calendar marks together. */
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info .text-xs,
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info .text-sm,
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-calendar-status,
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-weather-group,
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-weather {
+  font-size: var(--clock-detail-size);
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-info svg {
+  width: 1.4em;
+  height: 1.4em;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-controls button {
+  width: calc(40px * var(--clock-bar-scale, 1));
+  height: calc(40px * var(--clock-bar-scale, 1));
+  font-size: var(--clock-detail-size);
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-event-dot {
+  width: 0.5em;
+  height: 0.5em;
+}
+
+.linear .clock-display:not(.rectangle-bar-overlay) .clock-agenda li {
+  grid-template-columns: 0.5em minmax(0, 1fr) auto;
+  gap: 0.5em;
+  padding: 0.15em 0;
+}
+
+.linear
+  .clock-display:not(.rectangle-bar-overlay)
+  .clock-info
+  :is(
+    .clock-weather-group,
+    .clock-weather,
+    .clock-calendar-legend,
+    .clock-agenda ul,
+    .clock-controls
+  ) {
+  gap: 0.5em 1em;
 }
 
 .linear .clock-display:not(.rectangle-bar-overlay) .clock-info:empty {

@@ -13,6 +13,9 @@ export interface ClockSettings {
   hourLabels: '24h' | '12h';
   digitalTimeFormat: '24h' | '12h';
   rectangleBar: 'top' | 'bottom' | 'overlay';
+  barHeight: number;
+  infoScale: number;
+  hourLabelScale: number;
   barColor: string | null;
   barTextColor: string | null;
   showWeather: boolean;
@@ -51,6 +54,9 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   hourLabels: '24h',
   digitalTimeFormat: '24h',
   rectangleBar: 'top',
+  barHeight: 20,
+  infoScale: 100,
+  hourLabelScale: 100,
   barColor: null,
   barTextColor: null,
   showWeather: false,
@@ -117,6 +123,19 @@ export function normalizeCalendarRelay(value: unknown): string {
   }
 }
 
+export const SIZE_RANGES = {
+  barHeight: { min: 10, max: 60, default: 20 },
+  infoScale: { min: 75, max: 200, default: 100 },
+  hourLabelScale: { min: 100, max: 300, default: 100 },
+} as const;
+
+function normalizeSize(value: unknown, key: keyof typeof SIZE_RANGES): number {
+  const range = SIZE_RANGES[key];
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(range.min, Math.min(range.max, Math.round(value)))
+    : range.default;
+}
+
 // localStorage can contain an older schema, malformed values, or even null.
 export function normalizeSettings(value: unknown): ClockSettings {
   if (!value || typeof value !== 'object') return { ...DEFAULT_SETTINGS };
@@ -130,6 +149,9 @@ export function normalizeSettings(value: unknown): ClockSettings {
       settings.rectangleBar === 'bottom' || settings.rectangleBar === 'overlay'
         ? settings.rectangleBar
         : 'top',
+    barHeight: normalizeSize(settings.barHeight, 'barHeight'),
+    infoScale: normalizeSize(settings.infoScale, 'infoScale'),
+    hourLabelScale: normalizeSize(settings.hourLabelScale, 'hourLabelScale'),
     barColor: normalizeColor(settings.barColor),
     barTextColor: normalizeColor(settings.barTextColor),
     showWeather: typeof settings.showWeather === 'boolean' ? settings.showWeather : false,
